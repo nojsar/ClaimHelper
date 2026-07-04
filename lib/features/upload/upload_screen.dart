@@ -179,18 +179,38 @@ class _EmptyDropHint extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 36),
+      padding: const EdgeInsets.symmetric(vertical: 44, horizontal: 20),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border, style: BorderStyle.solid),
+        gradient: AppGradients.heroWash,
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.18)),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          Icon(Icons.cloud_upload_outlined, size: 40, color: AppColors.primary),
-          SizedBox(height: 8),
-          Text('No documents added yet',
-              style: TextStyle(color: AppColors.textSecondary)),
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              gradient: AppGradients.brand,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: const [
+                BoxShadow(
+                    color: Color(0x442563EB),
+                    blurRadius: 18,
+                    offset: Offset(0, 8),
+                    spreadRadius: -4),
+              ],
+            ),
+            child: const Icon(Icons.cloud_upload_rounded,
+                size: 30, color: Colors.white),
+          ),
+          const SizedBox(height: 14),
+          const Text('Add your documents to begin',
+              style: TextStyle(
+                  fontSize: 15.5, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 4),
+          const Text('PDF, JPG, PNG, or HEIC · up to a few files',
+              style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
         ],
       ),
     );
