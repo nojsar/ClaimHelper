@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "claimhelper-web-mock",
+      "runtimeExecutable": "C:\\Users\\Nojus\\dev\\flutter\\bin\\flutter.bat",
+      "runtimeArgs": ["run", "-d", "web-server", "--web-port", "8100", "--dart-define=USE_MOCKS=true"],
+      "port": 8100
+    }
+  ]
+}

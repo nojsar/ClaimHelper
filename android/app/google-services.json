@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "267339997414",
+    "project_id": "claimhelper-38152",
+    "storage_bucket": "claimhelper-38152.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:267339997414:android:3df67284ccf2bb49ce5b27",
+        "android_client_info": {
+          "package_name": "com.nojus.claimhelper"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCiDPogOIIAo8LjeTezTa5SLQKFPFOauUY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

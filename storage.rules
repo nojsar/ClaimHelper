@@ -1,0 +1,35 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function ownsCase(caseId) {
+      return request.auth != null
+        && firestore.get(/databases/(default)/documents/cases/$(caseId)).data.ownerUid
+             == request.auth.uid;
+    }
+
+    // Source uploads: PDF/JPG/PNG/HEIC/WebP up to 20 MB each, owner only.
+    match /tempCases/{caseId}/source/{fileName} {
+      allow read, delete: if ownsCase(caseId);
+      allow create, update: if ownsCase(caseId)
+        && request.resource.size < 20 * 1024 * 1024
+        && (
+          request.resource.contentType == 'application/pdf'
+          || request.resource.contentType.matches('image/(jpeg|png|heic|heif|webp)')
+        );
+    }
+
+    // Generated exports (e.g. appeal_packet.pdf) are written by Functions;
+    // owners may read/delete them.
+    match /cases/{caseId}/exports/{fileName} {
+      allow read, delete: if ownsCase(caseId);
+      allow write: if false;
+    }
+
+    // Everything else is closed.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

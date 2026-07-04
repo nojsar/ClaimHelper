@@ -1,0 +1,44 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function ownsCase() {
+      return signedIn() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // Fields only Cloud Functions (Admin SDK, which bypasses rules) may set.
+    function touchesServerOnlyFields() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasAny([
+        'paid', 'pricePaid', 'stripeSessionId', 'packet', 'preview',
+        'ownerUid', 'createdAt', 'consentConfirmedAt'
+      ]);
+    }
+
+    match /cases/{caseId} {
+      // Cases are created by the createCaseUploadSession function, not the client.
+      allow create: if false;
+      allow read: if ownsCase();
+      // Clients may edit their extraction review, guided answers, and status,
+      // but can never grant themselves entitlements or rewrite payment state.
+      allow update: if ownsCase() && !touchesServerOnlyFields();
+      // Deletion goes through deleteCaseAndFiles so Storage is cleaned too,
+      // but direct doc deletion by the owner is also allowed as a fallback.
+      allow delete: if ownsCase();
+    }
+
+    match /users/{uid} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+    }
+
+    match /purchases/{purchaseId} {
+      // Written exclusively by the Stripe webhook (Admin SDK).
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+  }
+}

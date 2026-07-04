@@ -1,0 +1,186 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../core/constants.dart';
+import '../../core/theme.dart';
+import '../../state/providers.dart';
+import '../../widgets/app_scaffold.dart';
+
+/// Settings & privacy: full disclaimer, delete-all-data, export data, and the
+/// mock-mode indicator when running without Firebase.
+class SettingsScreen extends ConsumerStatefulWidget {
+  const SettingsScreen({super.key});
+
+  @override
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  bool _deleting = false;
+
+  Future<void> _deleteAll() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete all your data?'),
+        content: const Text(
+          'This permanently deletes every case and all uploaded files from '
+          'our servers. This cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete everything'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() => _deleting = true);
+    try {
+      final backend = ref.read(backendProvider);
+      final cases = await backend.listMyCases();
+      for (final c in cases) {
+        await backend.deleteCaseAndFiles(c.id);
+      }
+      ref.invalidate(myCasesProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('All your data has been deleted.')));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Could not delete everything. Please retry.')));
+      }
+    } finally {
+      if (mounted) setState(() => _deleting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AppScaffold(
+      title: 'Settings & privacy',
+      child: ListView(
+        padding: const EdgeInsets.all(24),
+        children: [
+          if (runningInMockMode) _MockBanner(),
+          const Text('Your data',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 12),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.download_outlined),
+                  title: const Text('Export my data'),
+                  subtitle: const Text(
+                      'Download your saved cases and packets as PDFs from each '
+                      'packet screen.'),
+                  onTap: () => context.go('/account'),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: _deleting
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.delete_forever_outlined,
+                          color: AppColors.error),
+                  title: const Text('Delete all data',
+                      style: TextStyle(color: AppColors.error)),
+                  subtitle: const Text(
+                      'Remove every case and uploaded file permanently.'),
+                  onTap: _deleting ? null : _deleteAll,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text('Privacy',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 12),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final b in AppCopy.privacyBullets)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.check_circle_outline,
+                              size: 18, color: AppColors.accent),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text(b)),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text('Disclaimer',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF7ED),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFFED7AA)),
+            ),
+            child: const Text(AppCopy.disclaimer,
+                style: TextStyle(fontSize: 13, color: AppColors.warning)),
+          ),
+          const SizedBox(height: 24),
+          const Center(
+            child: Text('ClaimHelper · U.S. only at launch',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+}
+
+class _MockBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFBFDBFE)),
+      ),
+      child: Row(
+        children: const [
+          Icon(Icons.science_outlined, color: AppColors.primary),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Running in demo mode with mocked AI and payments. No Firebase '
+              'project or OpenAI key is used.',
+              style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
