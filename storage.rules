@@ -9,10 +9,14 @@ service firebase.storage {
              == request.auth.uid;
     }
 
-    // Source uploads: PDF/JPG/PNG/HEIC/WebP up to 20 MB each, owner only.
-    match /tempCases/{caseId}/source/{fileName} {
-      allow read, delete: if ownsCase(caseId);
-      allow create, update: if ownsCase(caseId)
+    // Source uploads: PDF/JPG/PNG/HEIC/WebP up to 20 MB each. Ownership is
+    // enforced directly from the uid in the path (no cross-service
+    // firestore.get, which fails intermittently). The extraction function
+    // additionally verifies the caller owns the case.
+    match /tempCases/{userId}/{caseId}/source/{fileName} {
+      allow read, delete: if request.auth != null && request.auth.uid == userId;
+      allow create, update: if request.auth != null
+        && request.auth.uid == userId
         && request.resource.size < 20 * 1024 * 1024
         && (
           request.resource.contentType == 'application/pdf'

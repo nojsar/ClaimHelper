@@ -20,7 +20,10 @@ export const scheduledCleanupExpiredFiles = onSchedule(
 
     for (const doc of expired.docs) {
       try {
-        await deleteCaseCompletely(doc.id);
+        await deleteCaseCompletely(
+          doc.id,
+          doc.get("ownerUid") as string | undefined,
+        );
         console.log(`Cleaned up expired case ${doc.id}`);
       } catch (err) {
         console.error(`Failed to clean up case ${doc.id}`, err);

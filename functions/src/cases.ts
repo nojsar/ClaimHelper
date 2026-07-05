@@ -48,7 +48,9 @@ export const createCaseUploadSession = onCall({ invoker: "public" }, async (requ
 
   return {
     caseId,
-    uploadPathPrefix: `tempCases/${caseId}/source/`,
+    // uid-scoped so the Storage rule can verify ownership from the path alone
+    // (no fragile cross-service firestore.get()).
+    uploadPathPrefix: `tempCases/${uid}/${caseId}/source/`,
     expiresAt: expiresAt.toDate().toISOString(),
   };
 });
@@ -62,12 +64,19 @@ export const createCaseUploadSession = onCall({ invoker: "public" }, async (requ
 export const deleteCaseAndFiles = onCall({ invoker: "public" }, async (request) => {
   const uid = requireUid(request);
   const snap = await requireOwnedCase(request.data?.caseId, uid);
-  await deleteCaseCompletely(snap.id);
+  await deleteCaseCompletely(snap.id, uid);
   return { deleted: true };
 });
 
-export async function deleteCaseCompletely(caseId: string): Promise<void> {
+export async function deleteCaseCompletely(
+  caseId: string,
+  ownerUid?: string,
+): Promise<void> {
   const bucket = getStorage().bucket();
+  if (ownerUid) {
+    await bucket.deleteFiles({ prefix: `tempCases/${ownerUid}/${caseId}/` });
+  }
+  // Legacy (pre uid-scoping) path — harmless if nothing matches.
   await bucket.deleteFiles({ prefix: `tempCases/${caseId}/` });
   await bucket.deleteFiles({ prefix: `cases/${caseId}/` });
   await getFirestore().collection("cases").doc(caseId).delete();

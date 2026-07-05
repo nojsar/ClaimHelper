@@ -29,7 +29,7 @@ export const extractDenialFromUploadedFile = onCall(
     const caseId = snap.id;
 
     const filePaths: string[] = request.data?.filePaths ?? [];
-    const prefix = `tempCases/${caseId}/source/`;
+    const prefix = `tempCases/${uid}/${caseId}/source/`;
     if (!Array.isArray(filePaths) || filePaths.length === 0) {
       throw new HttpsError("invalid-argument", "filePaths is required.");
     }
