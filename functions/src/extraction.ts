@@ -22,7 +22,7 @@ const MAX_TOTAL_BYTES = 45 * 1024 * 1024;
  * extraction on the case document.
  */
 export const extractDenialFromUploadedFile = onCall(
-  { secrets: [openaiApiKey], timeoutSeconds: 300, memory: "1GiB" },
+  { secrets: [openaiApiKey], timeoutSeconds: 300, memory: "1GiB", invoker: "public" },
   async (request) => {
     const uid = requireUid(request);
     const snap = await requireOwnedCase(request.data?.caseId, uid);

@@ -13,7 +13,7 @@ import { PACKET_SYSTEM_PROMPT, buildPacketUserPrompt } from "./openai/prompts";
  * the case document; the client renders tabs and exports the PDF locally.
  */
 export const generateAppealPacket = onCall(
-  { secrets: [openaiApiKey], timeoutSeconds: 300 },
+  { secrets: [openaiApiKey], timeoutSeconds: 300, invoker: "public" },
   async (request) => {
     const uid = requireUid(request);
     const snap = await requireOwnedCase(request.data?.caseId, uid);

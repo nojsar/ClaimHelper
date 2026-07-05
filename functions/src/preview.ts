@@ -13,7 +13,7 @@ import { PREVIEW_SYSTEM_PROMPT, buildPreviewUserPrompt } from "./openai/prompts"
  * source files are not re-sent to OpenAI.
  */
 export const generateFreePreview = onCall(
-  { secrets: [openaiApiKey], timeoutSeconds: 120 },
+  { secrets: [openaiApiKey], timeoutSeconds: 120, invoker: "public" },
   async (request) => {
     const uid = requireUid(request);
     const snap = await requireOwnedCase(request.data?.caseId, uid);

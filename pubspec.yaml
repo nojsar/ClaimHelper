@@ -24,6 +24,7 @@ dependencies:
   # File handling
   file_picker: ^10.0.0
   image_picker: ^1.1.2
+  web: ^1.1.0
 
   # PDF export
   pdf: ^3.11.1

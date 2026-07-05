@@ -10,6 +10,7 @@ import '../../core/theme.dart';
 import '../../services/backend.dart';
 import '../../state/intake_controller.dart';
 import '../../widgets/app_scaffold.dart';
+import 'file_drop.dart';
 
 class UploadScreen extends ConsumerStatefulWidget {
   const UploadScreen({super.key});
@@ -22,8 +23,31 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
   final List<PickedUpload> _files = [];
   bool _consent = false;
   bool _busy = false;
+  bool _dragging = false;
+  bool _hovering = false;
+  final FileDrop _fileDrop = FileDrop();
 
-  static const _allowedExt = ['pdf', 'jpg', 'jpeg', 'png', 'heic', 'heif', 'webp'];
+  static const _allowedExt = [
+    'pdf', 'jpg', 'jpeg', 'png', 'heic', 'heif', 'webp'
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Native browser drag-and-drop (web only; a no-op elsewhere).
+    _fileDrop.attach(
+      onFiles: _onDroppedFiles,
+      onDrag: (dragging) {
+        if (mounted && !_busy) setState(() => _dragging = dragging);
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _fileDrop.detach();
+    super.dispose();
+  }
 
   String _mimeFor(String name) {
     final ext = name.split('.').last.toLowerCase();
@@ -37,6 +61,27 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
     };
   }
 
+  bool _allowed(String name) =>
+      _allowedExt.contains(name.split('.').last.toLowerCase());
+
+  /// Adds files, skipping duplicates (by name + size).
+  void _addAll(Iterable<PickedUpload> incoming) {
+    setState(() {
+      for (final f in incoming) {
+        if (_files.any((e) => e.name == f.name && e.bytes.length == f.bytes.length)) {
+          continue;
+        }
+        _files.add(f);
+      }
+    });
+  }
+
+  void _rejectedSnack() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Skipped unsupported file. Use PDF, JPG, PNG, or HEIC.')));
+  }
+
   Future<void> _pickFiles() async {
     final result = await FilePicker.platform.pickFiles(
       allowMultiple: true,
@@ -45,14 +90,29 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
       withData: true,
     );
     if (result == null) return;
-    setState(() {
-      for (final f in result.files) {
-        if (f.bytes != null) {
-          _files.add(PickedUpload(
-              name: f.name, bytes: f.bytes!, mimeType: _mimeFor(f.name)));
-        }
+    _addAll([
+      for (final f in result.files)
+        if (f.bytes != null)
+          PickedUpload(name: f.name, bytes: f.bytes!, mimeType: _mimeFor(f.name)),
+    ]);
+  }
+
+  /// Files dropped onto the page via native browser drag-and-drop.
+  void _onDroppedFiles(List<DroppedFile> dropped) {
+    if (_busy) return;
+    if (mounted) setState(() => _dragging = false);
+    final added = <PickedUpload>[];
+    var rejected = 0;
+    for (final f in dropped) {
+      if (!_allowed(f.name)) {
+        rejected++;
+        continue;
       }
-    });
+      added.add(PickedUpload(
+          name: f.name, bytes: f.bytes, mimeType: _mimeFor(f.name)));
+    }
+    if (added.isNotEmpty) _addAll(added);
+    if (rejected > 0) _rejectedSnack();
   }
 
   Future<void> _takePhoto() async {
@@ -60,10 +120,9 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
     final shot = await picker.pickImage(source: ImageSource.camera);
     if (shot == null) return;
     final bytes = await shot.readAsBytes();
-    setState(() {
-      _files.add(PickedUpload(
-          name: shot.name, bytes: bytes, mimeType: _mimeFor(shot.name)));
-    });
+    _addAll([
+      PickedUpload(name: shot.name, bytes: bytes, mimeType: _mimeFor(shot.name)),
+    ]);
   }
 
   Future<void> _submit() async {
@@ -89,7 +148,6 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
   @override
   Widget build(BuildContext context) {
     final canSubmit = _consent && _files.isNotEmpty && !_busy;
-    // Camera capture only makes sense on mobile.
     final showCamera = !kIsWeb;
 
     return AppScaffold(
@@ -100,55 +158,76 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Add your documents',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800,
+                    letterSpacing: -0.5)),
             const SizedBox(height: 8),
             const Text(
               'Upload the denial letter, EOB, or prior-authorization denial. '
               'PDF, JPG, PNG, or HEIC. You can add more than one.',
-              style: TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
             ),
             const SizedBox(height: 20),
+
+            // Drop zone — click to browse anywhere; on web you can also drag &
+            // drop files onto the page (handled natively by FileDrop).
+            MouseRegion(
+              cursor: _busy ? MouseCursor.defer : SystemMouseCursors.click,
+              onEnter: (_) => setState(() => _hovering = true),
+              onExit: (_) => setState(() => _hovering = false),
+              child: GestureDetector(
+                onTap: _busy ? null : _pickFiles,
+                child: _DropZone(
+                  dragging: _dragging,
+                  hovering: _hovering,
+                  hasFiles: _files.isNotEmpty,
+                ),
+              ),
+            ),
+
+            if (_files.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Text('${_files.length} file${_files.length == 1 ? '' : 's'} added',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 14)),
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: _busy ? null : () => setState(_files.clear),
+                    icon: const Icon(Icons.delete_outline, size: 18),
+                    label: const Text('Clear all'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              ..._files.asMap().entries.map((e) => _FileRow(
+                    file: e.value,
+                    onRemove: _busy
+                        ? null
+                        : () => setState(() => _files.removeAt(e.key)),
+                  )),
+            ],
+
+            const SizedBox(height: 12),
             Wrap(
               spacing: 12,
               runSpacing: 12,
               children: [
                 OutlinedButton.icon(
                   onPressed: _busy ? null : _pickFiles,
-                  icon: const Icon(Icons.attach_file),
-                  label: Text(kIsWeb ? 'Choose files' : 'Choose from files'),
+                  icon: const Icon(Icons.attach_file, size: 18),
+                  label: Text(_files.isEmpty ? 'Choose files' : 'Add more files'),
                 ),
                 if (showCamera)
                   OutlinedButton.icon(
                     onPressed: _busy ? null : _takePhoto,
-                    icon: const Icon(Icons.photo_camera_outlined),
+                    icon: const Icon(Icons.photo_camera_outlined, size: 18),
                     label: const Text('Take a photo'),
                   ),
               ],
             ),
-            const SizedBox(height: 16),
-            if (_files.isEmpty)
-              _EmptyDropHint()
-            else
-              ..._files.asMap().entries.map((e) => Card(
-                    child: ListTile(
-                      leading: Icon(
-                        e.value.mimeType == 'application/pdf'
-                            ? Icons.picture_as_pdf_outlined
-                            : Icons.image_outlined,
-                        color: AppColors.primary,
-                      ),
-                      title: Text(e.value.name),
-                      subtitle: Text(
-                          '${(e.value.bytes.length / 1024).toStringAsFixed(0)} KB'),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: _busy
-                            ? null
-                            : () => setState(() => _files.removeAt(e.key)),
-                      ),
-                    ),
-                  )),
-            const SizedBox(height: 12),
+
+            const SizedBox(height: 20),
             _ConsentBox(
               value: _consent,
               onChanged: _busy
@@ -160,7 +239,7 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
               width: double.infinity,
               child: FilledButton.icon(
                 onPressed: canSubmit ? _submit : null,
-                icon: const Icon(Icons.auto_awesome),
+                icon: const Icon(Icons.auto_awesome_rounded),
                 label: const Text('Read my document'),
               ),
             ),
@@ -174,43 +253,133 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
   }
 }
 
-class _EmptyDropHint extends StatelessWidget {
+/// The visual drop area. Reacts to hover (mouse) and drag-over states.
+class _DropZone extends StatelessWidget {
+  const _DropZone({
+    required this.dragging,
+    required this.hovering,
+    required this.hasFiles,
+  });
+  final bool dragging;
+  final bool hovering;
+  final bool hasFiles;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final active = dragging || hovering;
+    final browseHint = kIsWeb ? 'or click to browse' : 'or tap to browse';
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 160),
+      curve: Curves.easeOut,
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 44, horizontal: 20),
+      padding: EdgeInsets.symmetric(vertical: dragging ? 52 : 44, horizontal: 20),
       decoration: BoxDecoration(
-        gradient: AppGradients.heroWash,
+        gradient: dragging ? null : AppGradients.heroWash,
+        color: dragging ? AppColors.primaryTint : null,
         borderRadius: BorderRadius.circular(AppRadii.lg),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.18)),
+        border: Border.all(
+          color: active ? AppColors.primary : AppColors.primary.withValues(alpha: 0.22),
+          width: dragging ? 2 : 1.4,
+        ),
+        boxShadow: active ? AppShadows.soft : null,
       ),
       child: Column(
         children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              gradient: AppGradients.brand,
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: const [
-                BoxShadow(
-                    color: Color(0x442563EB),
-                    blurRadius: 18,
-                    offset: Offset(0, 8),
-                    spreadRadius: -4),
-              ],
+          AnimatedScale(
+            scale: dragging ? 1.12 : 1.0,
+            duration: const Duration(milliseconds: 160),
+            child: Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                gradient: AppGradients.brand,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: const [
+                  BoxShadow(
+                      color: Color(0x442563EB),
+                      blurRadius: 18,
+                      offset: Offset(0, 8),
+                      spreadRadius: -4),
+                ],
+              ),
+              child: Icon(dragging ? Icons.file_download_rounded : Icons.cloud_upload_rounded,
+                  size: 30, color: Colors.white),
             ),
-            child: const Icon(Icons.cloud_upload_rounded,
-                size: 30, color: Colors.white),
           ),
           const SizedBox(height: 14),
-          const Text('Add your documents to begin',
-              style: TextStyle(
-                  fontSize: 15.5, fontWeight: FontWeight.w700)),
+          Text(
+            dragging
+                ? 'Drop your files to add them'
+                : (hasFiles
+                    ? 'Drag & drop more files'
+                    : 'Drag & drop your files here'),
+            style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700),
+          ),
           const SizedBox(height: 4),
-          const Text('PDF, JPG, PNG, or HEIC · up to a few files',
-              style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+          Text('$browseHint · PDF, JPG, PNG, or HEIC',
+              style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+        ],
+      ),
+    );
+  }
+}
+
+class _FileRow extends StatelessWidget {
+  const _FileRow({required this.file, required this.onRemove});
+  final PickedUpload file;
+  final VoidCallback? onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final isPdf = file.mimeType == 'application/pdf';
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadii.md),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: (isPdf ? AppColors.error : AppColors.primary)
+                  .withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              isPdf ? Icons.picture_as_pdf_rounded : Icons.image_rounded,
+              color: isPdf ? AppColors.error : AppColors.primary,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(file.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                Text('${(file.bytes.length / 1024).toStringAsFixed(0)} KB',
+                    style: const TextStyle(
+                        fontSize: 12, color: AppColors.textMuted)),
+              ],
+            ),
+          ),
+          const Icon(Icons.check_circle_rounded,
+              size: 18, color: AppColors.accent),
+          if (onRemove != null)
+            IconButton(
+              icon: const Icon(Icons.close_rounded, size: 18),
+              color: AppColors.textMuted,
+              onPressed: onRemove,
+              tooltip: 'Remove',
+            ),
         ],
       ),
     );
@@ -226,8 +395,8 @@ class _ConsentBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(10),
+        color: AppColors.surfaceAlt,
+        borderRadius: BorderRadius.circular(AppRadii.md),
         border: Border.all(color: AppColors.border),
       ),
       child: CheckboxListTile(
@@ -235,8 +404,10 @@ class _ConsentBox extends StatelessWidget {
         onChanged: onChanged,
         controlAffinity: ListTileControlAffinity.leading,
         contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.md)),
         title: const Text(AppCopy.consentText,
-            style: TextStyle(fontSize: 13, height: 1.35)),
+            style: TextStyle(fontSize: 13, height: 1.4)),
       ),
     );
   }

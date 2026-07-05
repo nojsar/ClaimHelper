@@ -11,7 +11,7 @@ import { requireUid, requireOwnedCase } from "./util";
  * may upload source files to. Files land in tempCases/{caseId}/source/ and
  * expire after 24h unless the case is saved or paid.
  */
-export const createCaseUploadSession = onCall(async (request) => {
+export const createCaseUploadSession = onCall({ invoker: "public" }, async (request) => {
   const uid = requireUid(request);
   const consentConfirmed = request.data?.consentConfirmed === true;
   if (!consentConfirmed) {
@@ -59,7 +59,7 @@ export const createCaseUploadSession = onCall(async (request) => {
  * temp and permanent Storage prefixes. Powers the "Delete case and files"
  * button and the settings-page "delete all data" action.
  */
-export const deleteCaseAndFiles = onCall(async (request) => {
+export const deleteCaseAndFiles = onCall({ invoker: "public" }, async (request) => {
   const uid = requireUid(request);
   const snap = await requireOwnedCase(request.data?.caseId, uid);
   await deleteCaseCompletely(snap.id);
@@ -78,7 +78,7 @@ export async function deleteCaseCompletely(caseId: string): Promise<void> {
  * Requires a non-anonymous account per product policy; the client links
  * anonymous auth to email first, so we verify the token is not anonymous.
  */
-export const saveCase = onCall(async (request) => {
+export const saveCase = onCall({ invoker: "public" }, async (request) => {
   const uid = requireUid(request);
   const snap = await requireOwnedCase(request.data?.caseId, uid);
   const provider = request.auth?.token.firebase.sign_in_provider;

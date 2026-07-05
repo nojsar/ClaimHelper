@@ -64,7 +64,11 @@ export const extractionSchema = {
     priorAuthNumber: { type: ["string", "null"] },
     dateOfService: { type: ["string", "null"] },
     denialDate: { type: ["string", "null"] },
-    appealDeadline: { type: ["string", "null"] },
+    appealDeadline: {
+      type: ["string", "null"],
+      description:
+        "Appeal filing deadline. Prefer an absolute ISO date (YYYY-MM-DD); if the document gives a relative period (e.g. 180 days), compute it from the denial/notice date. Null if unknown.",
+    },
     deniedItem: { type: ["string", "null"] },
     providerName: { type: ["string", "null"] },
     prescriberName: { type: ["string", "null"] },
@@ -72,7 +76,12 @@ export const extractionSchema = {
     amountBilled: { type: ["number", "null"] },
     patientResponsibility: { type: ["number", "null"] },
     appealInstructions: { type: ["string", "null"] },
-    phoneNumbers: { type: "array", items: { type: "string" } },
+    phoneNumbers: {
+      type: "array",
+      items: { type: "string" },
+      description:
+        "Dialable member-services or appeals phone numbers. Exclude TTY/relay codes like 'TTY 711' and standalone fax numbers.",
+    },
     mailingAddresses: { type: "array", items: { type: "string" } },
     missingFields: { type: "array", items: { type: "string" } },
     sourceSnippets: {

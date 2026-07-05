@@ -22,7 +22,7 @@ function stripeClient(): Stripe {
  * the PaymentService abstraction (IAP/RevenueCat to be added later).
  */
 export const createCheckoutSession = onCall(
-  { secrets: [stripeSecretKey] },
+  { secrets: [stripeSecretKey], invoker: "public" },
   async (request) => {
     const uid = requireUid(request);
     const snap = await requireOwnedCase(request.data?.caseId, uid);
