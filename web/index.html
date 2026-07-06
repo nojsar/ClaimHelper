@@ -6,7 +6,7 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#2563EB">
+  <meta name="theme-color" content="#070B14">
   <meta name="robots" content="index, follow, max-image-preview:large">
 
   <title>ClaimHelper — Turn a health-insurance denial into a ready-to-send appeal</title>
@@ -35,6 +35,10 @@
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
   <link rel="icon" type="image/png" href="favicon.png"/>
   <link rel="manifest" href="manifest.json">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Structured data: crawlers read this without executing the app -->
   <script type="application/ld+json">
@@ -89,106 +93,629 @@
   </script>
 
   <style>
-    #seo-fallback {
-      position: fixed; inset: 0; z-index: 0; overflow-y: auto;
-      background:
-        radial-gradient(1200px 600px at 50% -10%, #EFF4FF 0%, rgba(239,244,255,0) 60%),
-        #F6F8FC;
-      color: #0F172A;
-      font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    :root {
+      --bg: #070B14;
+      --bg2: #0B1220;
+      --ink: #EDF2FB;
+      --ink-dim: #93A2BD;
+      --blue: #2563EB;
+      --blue-soft: #60A5FA;
+      --teal: #0D9488;
+      --mint: #5EEAD4;
+      --red: #F43F5E;
+      --line: rgba(148, 163, 184, 0.14);
+      --max: 1180px;
+      --font-display: "Space Grotesk", "Inter", sans-serif;
+      --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: auto; }
+    html.app-mode #landing { display: none; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-body);
       -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
     }
-    #seo-fallback .wrap { max-width: 680px; margin: 0 auto; padding: 0 24px 72px; }
-    #seo-fallback .hero {
-      min-height: 100vh; min-height: 100svh;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      text-align: center; padding: 48px 0;
+    ::selection { background: rgba(37, 99, 235, 0.55); color: #fff; }
+
+    /* ---------- chrome ---------- */
+    .grain {
+      position: fixed; inset: -100%; z-index: 60; pointer-events: none; opacity: 0.05;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+      animation: grain 8s steps(10) infinite;
     }
-    #seo-fallback .brand { display: inline-flex; align-items: center; gap: 11px; font-weight: 800; font-size: 22px; letter-spacing: -0.5px; }
-    #seo-fallback .mark { width: 36px; height: 36px; border-radius: 11px; background: linear-gradient(135deg,#2563EB,#3B82F6); display:inline-flex; align-items:center; justify-content:center; color:#fff; font-size:20px; box-shadow: 0 8px 18px -5px rgba(37,99,235,.55); }
-    #seo-fallback .loading { display:inline-flex; align-items:center; gap:9px; margin:24px 0 20px; color:#64748B; font-size:13.5px; font-weight:600; }
-    #seo-fallback .spinner { width: 17px; height: 17px; border: 2.5px solid #DBEAFE; border-top-color: #2563EB; border-radius: 50%; animation: spin .8s linear infinite; }
+    @keyframes grain {
+      0%,100% { transform: translate(0,0); } 20% { transform: translate(-4%,3%); }
+      40% { transform: translate(3%,-4%); } 60% { transform: translate(-3%,-2%); }
+      80% { transform: translate(4%,2%); }
+    }
+    .progress-rail {
+      position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 70;
+      background: rgba(148,163,184,0.10);
+    }
+    #scrollbar {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--red), var(--blue), var(--mint));
+      box-shadow: 0 0 14px rgba(94, 234, 212, 0.6);
+    }
+    nav.topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px clamp(20px, 4vw, 48px);
+      background: linear-gradient(180deg, rgba(7,11,20,0.85), rgba(7,11,20,0));
+    }
+    .brand { display: flex; align-items: center; gap: 11px; font-family: var(--font-display); font-weight: 700; font-size: 19px; letter-spacing: -0.4px; }
+    .brand .mark {
+      width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
+      background: linear-gradient(135deg, var(--blue), #3B82F6); color: #fff; font-size: 17px;
+      box-shadow: 0 8px 22px -6px rgba(37, 99, 235, 0.7);
+    }
+    .btn {
+      font-family: var(--font-body); font-weight: 700; font-size: 15px; cursor: pointer;
+      border: 0; border-radius: 14px; padding: 15px 28px; transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .btn.primary {
+      color: #fff; background: linear-gradient(100deg, var(--blue), var(--teal));
+      box-shadow: 0 14px 34px -10px rgba(37, 99, 235, 0.65);
+    }
+    .btn.primary:hover { transform: translateY(-2px); box-shadow: 0 20px 44px -10px rgba(37, 99, 235, 0.8); }
+    .btn.ghost {
+      color: var(--ink); background: rgba(148,163,184,0.10); border: 1px solid var(--line); padding: 11px 20px; font-size: 13.5px;
+    }
+    .btn.ghost:hover { background: rgba(148,163,184,0.18); }
+
+    /* ---------- scenes ---------- */
+    .scene { position: relative; }
+    .wrap { max-width: var(--max); margin: 0 auto; padding: 0 clamp(20px, 4vw, 48px); }
+    .eyebrow {
+      font-size: 12.5px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase;
+      color: var(--blue-soft); margin-bottom: 18px;
+    }
+    h2.title {
+      font-family: var(--font-display); font-weight: 700; letter-spacing: -1.5px;
+      font-size: clamp(34px, 5.4vw, 62px); line-height: 1.04;
+    }
+    p.sub { color: var(--ink-dim); font-size: clamp(15px, 1.6vw, 18px); line-height: 1.65; max-width: 620px; margin-top: 18px; }
+
+    /* HERO */
+    .hero { min-height: 100vh; min-height: 100svh; display: grid; place-items: center; overflow: hidden; }
+    .hero video.bg {
+      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;
+      filter: saturate(1.05) contrast(1.04);
+      transform: scale(1.06);
+    }
+    .hero .veil {
+      position: absolute; inset: 0; z-index: 1;
+      background:
+        radial-gradient(1200px 500px at 50% 110%, rgba(7,11,20,0.9), transparent 60%),
+        linear-gradient(180deg, rgba(7,11,20,0.55) 0%, rgba(7,11,20,0.25) 40%, rgba(7,11,20,0.92) 100%);
+    }
+    .hero-copy { position: relative; z-index: 2; text-align: center; padding: 120px 22px 90px; max-width: 980px; }
+    .hero h1 {
+      font-family: var(--font-display); font-weight: 700; line-height: 0.98; letter-spacing: -2.5px;
+      font-size: clamp(52px, 10.5vw, 128px); text-shadow: 0 10px 60px rgba(0,0,0,0.55);
+    }
+    .hero h1 .line { display: block; }
+    .hero h1 em { font-style: normal; }
+    .hero h1 .no  { color: var(--red); text-shadow: 0 0 46px rgba(244, 63, 94, 0.55); }
+    .hero h1 .yes {
+      background: linear-gradient(92deg, var(--blue-soft), var(--mint));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      filter: drop-shadow(0 0 34px rgba(94, 234, 212, 0.35));
+    }
+    .hero .lead { color: #C7D2E5; font-size: clamp(16px, 2vw, 20px); line-height: 1.6; max-width: 640px; margin: 26px auto 34px; }
+    .cta-row { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    .cta-note { color: var(--ink-dim); font-size: 13px; font-weight: 600; letter-spacing: 0.2px; }
+    .scroll-cue {
+      position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%); z-index: 2;
+      color: var(--ink-dim); font-size: 11.5px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+    }
+    .cue-line { width: 1.5px; height: 44px; background: linear-gradient(180deg, var(--mint), transparent); animation: cue 1.8s ease-in-out infinite; }
+    @keyframes cue { 0%,100% { transform: scaleY(0.4); opacity:.4 } 50% { transform: scaleY(1); opacity:1 } }
+
+    /* ODDS — parallax paper field */
+    .odds { padding: clamp(120px, 16vh, 200px) 0; overflow: hidden; background: linear-gradient(180deg, var(--bg) 0%, #0A1020 55%, var(--bg) 100%); }
+    .odds .wrap { position: relative; z-index: 2; text-align: center; }
+    .paper-field { position: absolute; inset: 0; z-index: 1; perspective: 900px; pointer-events: none; }
+    .paper {
+      position: absolute; width: 120px; height: 150px; border-radius: 8px;
+      background: linear-gradient(160deg, #131C30, #0D1526);
+      border: 1px solid rgba(148,163,184,0.14);
+      box-shadow: 0 30px 60px -18px rgba(0,0,0,0.7);
+      padding: 14px 12px;
+    }
+    .paper i { display: block; height: 5px; border-radius: 3px; background: rgba(148,163,184,0.20); margin-bottom: 8px; }
+    .paper i:nth-child(1) { width: 55%; background: rgba(244,63,94,0.5); }
+    .paper i:nth-child(3) { width: 80%; }
+    .paper i:nth-child(4) { width: 62%; }
+    .odds .stat-row { display: flex; justify-content: center; gap: clamp(24px, 6vw, 80px); margin-top: 64px; flex-wrap: wrap; }
+    .stat { text-align: center; }
+    .stat b { display: block; font-family: var(--font-display); font-size: clamp(36px, 5vw, 58px); font-weight: 700; letter-spacing: -1.5px;
+      background: linear-gradient(90deg, var(--blue-soft), var(--mint)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .stat span { color: var(--ink-dim); font-size: 13.5px; font-weight: 600; }
+
+    /* HOW — glowing beam timeline */
+    .how { padding: clamp(120px, 16vh, 200px) 0; }
+    .how .head { text-align: center; margin-bottom: clamp(60px, 8vh, 96px); }
+    .steps { position: relative; max-width: 780px; margin: 0 auto; }
+    .beam {
+      position: absolute; left: 27px; top: 0; bottom: 0; width: 2px;
+      background: rgba(148,163,184,0.12); border-radius: 2px;
+    }
+    .beam .fill {
+      display: block; width: 100%; height: 100%;
+      background: linear-gradient(180deg, var(--blue), var(--mint));
+      box-shadow: 0 0 18px rgba(37, 99, 235, 0.8);
+      transform-origin: top; transform: scaleY(0);
+    }
+    .step { position: relative; display: flex; gap: 26px; padding: 0 0 clamp(44px, 6vh, 64px) 0; }
+    .step .dot {
+      flex: 0 0 56px; width: 56px; height: 56px; border-radius: 18px; display: grid; place-items: center;
+      background: linear-gradient(150deg, #101A30, #0C1424); border: 1px solid var(--line);
+      font-family: var(--font-display); font-weight: 700; color: var(--mint); font-size: 17px;
+      box-shadow: 0 16px 34px -14px rgba(0,0,0,0.8); z-index: 1;
+    }
+    .step h3 { font-family: var(--font-display); font-size: clamp(20px, 2.4vw, 26px); font-weight: 600; letter-spacing: -0.5px; margin-bottom: 8px; }
+    .step p { color: var(--ink-dim); line-height: 1.65; font-size: 15.5px; max-width: 560px; }
+
+    /* INSIDE — tilt cards + pricing */
+    .inside { padding: clamp(120px, 16vh, 200px) 0; background: linear-gradient(180deg, var(--bg) 0%, #0A1122 50%, var(--bg) 100%); }
+    .inside .head { text-align: center; margin-bottom: clamp(56px, 8vh, 88px); }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; perspective: 1200px; }
+    .deliverable {
+      border-radius: 20px; padding: 26px 24px; min-height: 168px;
+      background: linear-gradient(160deg, rgba(21,32,56,0.85), rgba(11,18,32,0.9));
+      border: 1px solid var(--line); transition: border-color .25s ease;
+      transform-style: preserve-3d; will-change: transform;
+    }
+    .deliverable:hover { border-color: rgba(96,165,250,0.45); }
+    .deliverable .ic {
+      width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; font-size: 20px;
+      background: rgba(37, 99, 235, 0.16); margin-bottom: 16px;
+    }
+    .deliverable h4 { font-family: var(--font-display); font-size: 17.5px; font-weight: 600; letter-spacing: -0.3px; margin-bottom: 7px; }
+    .deliverable p { color: var(--ink-dim); font-size: 13.5px; line-height: 1.55; }
+    .pricing { margin-top: clamp(64px, 9vh, 100px); display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 20px; max-width: 860px; margin-left: auto; margin-right: auto; }
+    .price-card {
+      border-radius: 24px; padding: 34px 30px; border: 1px solid var(--line);
+      background: linear-gradient(165deg, rgba(16,26,48,0.9), rgba(9,14,26,0.95));
+    }
+    .price-card.hot { border: 1.5px solid rgba(94,234,212,0.5); box-shadow: 0 30px 80px -30px rgba(13,148,136,0.55); position: relative; overflow: hidden; }
+    .price-card.hot::before {
+      content: ""; position: absolute; inset: -40%; z-index: 0;
+      background: radial-gradient(500px 220px at 80% -10%, rgba(37,99,235,0.28), transparent 60%);
+    }
+    .price-card > * { position: relative; z-index: 1; }
+    .price-card .tier { font-size: 13px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--ink-dim); }
+    .price-card .amount { font-family: var(--font-display); font-size: 54px; font-weight: 700; letter-spacing: -2px; margin: 10px 0 4px; }
+    .price-card.hot .amount { background: linear-gradient(92deg, var(--blue-soft), var(--mint)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .price-card .per { color: var(--ink-dim); font-size: 13px; margin-bottom: 20px; }
+    .price-card ul { list-style: none; margin: 0 0 26px; }
+    .price-card li { display: flex; gap: 10px; align-items: flex-start; color: #C7D2E5; font-size: 14px; line-height: 1.5; padding: 5px 0; }
+    .price-card li::before { content: "✓"; color: var(--mint); font-weight: 800; }
+
+    /* FINALE + FAQ */
+    .finale { padding: clamp(130px, 20vh, 230px) 0 90px; text-align: center; overflow: hidden; position: relative; }
+    .finale .glow {
+      position: absolute; left: 50%; top: 40%; transform: translate(-50%,-50%); width: 900px; height: 500px; z-index: 0;
+      background: radial-gradient(closest-side, rgba(13,148,136,0.28), rgba(37,99,235,0.12), transparent);
+      filter: blur(10px); pointer-events: none;
+    }
+    .finale .wrap { position: relative; z-index: 1; }
+    .finale h2 {
+      font-family: var(--font-display); font-weight: 700; letter-spacing: -3px; line-height: 0.95;
+      font-size: clamp(64px, 13vw, 180px);
+      background: linear-gradient(94deg, var(--blue-soft) 10%, var(--mint) 90%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      filter: drop-shadow(0 6px 50px rgba(94,234,212,0.25));
+    }
+    .finale p.sub { margin: 22px auto 36px; }
+    .faq { max-width: 780px; margin: clamp(90px, 12vh, 140px) auto 0; text-align: left; }
+    .faq h3 { font-family: var(--font-display); font-size: 24px; letter-spacing: -0.5px; margin-bottom: 20px; }
+    details {
+      border: 1px solid var(--line); border-radius: 16px; margin-bottom: 12px;
+      background: rgba(16,26,48,0.55); overflow: hidden;
+    }
+    summary {
+      cursor: pointer; padding: 18px 22px; font-weight: 700; font-size: 15.5px; list-style: none;
+      display: flex; justify-content: space-between; align-items: center; gap: 14px;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; font-family: var(--font-display); font-size: 22px; color: var(--mint); transition: transform .25s ease; }
+    details[open] summary::after { transform: rotate(45deg); }
+    details .a { padding: 0 22px 20px; color: var(--ink-dim); font-size: 14.5px; line-height: 1.65; }
+
+    footer {
+      border-top: 1px solid var(--line); padding: 44px clamp(20px, 4vw, 48px) 54px;
+      color: var(--ink-dim); font-size: 13px;
+    }
+    footer .cols { max-width: var(--max); margin: 0 auto; display: flex; flex-wrap: wrap; gap: 28px; justify-content: space-between; align-items: flex-start; }
+    footer a { color: #B9C6DE; text-decoration: none; }
+    footer a:hover { color: var(--mint); }
+    footer .links { display: flex; gap: 22px; flex-wrap: wrap; }
+    footer .fine { max-width: var(--max); margin: 26px auto 0; line-height: 1.6; color: #64748B; font-size: 12px; }
+
+    /* app loader shown while Flutter boots */
+    #app-loader {
+      position: fixed; inset: 0; z-index: 90; display: grid; place-items: center;
+      background: var(--bg);
+    }
+    #app-loader[hidden] { display: none; }
+    #app-loader .box { text-align: center; }
+    #app-loader .spinner {
+      width: 26px; height: 26px; margin: 18px auto 0; border-radius: 50%;
+      border: 3px solid rgba(148,163,184,0.25); border-top-color: var(--blue-soft);
+      animation: spin .8s linear infinite;
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
-    #seo-fallback h1 { font-size: clamp(30px, 6vw, 44px); line-height: 1.08; letter-spacing: -1.4px; margin: 0 0 16px; font-weight: 800; }
-    #seo-fallback .accent { background: linear-gradient(90deg,#2563EB,#0D9488); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    #seo-fallback p.lead { font-size: 17px; color: #475569; line-height: 1.6; margin: 0 auto 28px; max-width: 540px; }
-    #seo-fallback .cta { display:inline-block; background:#2563EB; color:#fff; text-decoration:none; font-weight:700; font-size:15px; padding:15px 28px; border-radius:14px; box-shadow: 0 12px 26px -8px rgba(37,99,235,.55); }
-    #seo-fallback .trust { margin-top: 22px; color:#94A3B8; font-size: 12.5px; }
-    #seo-fallback .details { text-align: left; border-top: 1px solid #E6EAF2; padding-top: 12px; color:#334155; }
-    #seo-fallback h2 { font-size: 19px; letter-spacing:-0.3px; margin: 32px 0 10px; color:#0F172A; }
-    #seo-fallback ul { line-height: 1.7; padding-left: 20px; margin: 0; }
-    #seo-fallback .muted { color:#94A3B8; font-size: 12.5px; margin-top: 26px; }
-    #seo-fallback a { color:#1D4ED8; }
+
+    @media (max-width: 640px) {
+      .paper-field { display: none; }
+      .beam { left: 23px; }
+      .step .dot { flex-basis: 48px; width: 48px; height: 48px; border-radius: 14px; }
+      nav.topbar .btn.ghost { padding: 9px 14px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .grain, .cue-line { animation: none; }
+      html { scroll-behavior: auto; }
+    }
   </style>
 </head>
 <body>
-  <!-- Crawlable content + branded loading state. Hidden once the Flutter app
-       paints its first frame. Same content the app presents (no cloaking). -->
-  <div id="seo-fallback">
-    <div class="wrap">
-      <div class="hero">
-        <div class="brand"><span class="mark">&#10003;</span> ClaimHelper</div>
-        <div class="loading" role="status" aria-label="Loading ClaimHelper">
-          <span class="spinner"></span> Loading your secure workspace…
+  <script>
+    // Deep links (Stripe returns, saved bookmarks, refreshes inside the app)
+    // boot Flutter immediately and never show the landing page.
+    if (location.hash && location.hash.indexOf('#/') === 0) {
+      document.documentElement.classList.add('app-mode');
+    }
+  </script>
+
+  <div id="landing">
+    <div class="grain"></div>
+    <div class="progress-rail"><div id="scrollbar"></div></div>
+
+    <nav class="topbar">
+      <div class="brand"><span class="mark">✓</span> ClaimHelper</div>
+      <button class="btn ghost" data-boot="/">Open the app →</button>
+    </nav>
+
+    <!-- SCENE 1 · HERO -->
+    <section class="scene hero" id="s-hero">
+      <video class="bg" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+        <source src="media/hero_denial.mp4" type="video/mp4">
+      </video>
+      <div class="veil"></div>
+      <div class="hero-copy">
+        <p class="eyebrow">Health-insurance denial?</p>
+        <h1>
+          <span class="line l-no">They said <em class="no">NO.</em></span>
+          <span class="line l-yes">Send back a <em class="yes">YES.</em></span>
+        </h1>
+        <p class="lead">Upload your denial letter. ClaimHelper reads it, builds your strongest arguments, and hands you a complete, ready-to-send appeal packet — in about 15 minutes.</p>
+        <div class="cta-row">
+          <button class="btn primary" data-boot="/upload">Start my free appeal preview</button>
+          <span class="cta-note">Free preview · $39 full packet · No subscription</span>
         </div>
-        <h1>Turn a denial letter into a <span class="accent">ready-to-send appeal</span> in 15 minutes.</h1>
-        <p class="lead">Upload your denied medication letter, EOB, or prior-authorization denial. ClaimHelper drafts the appeal paperwork — you review and send it.</p>
-        <a class="cta" href="/upload">Start your appeal packet</a>
-        <div class="trust">Private &amp; encrypted · Auto-deletes in 24h · You review before sending</div>
       </div>
+      <div class="scroll-cue">Scroll<span class="cue-line"></span></div>
+    </section>
 
-      <div class="details">
-      <p>Optimized for ADHD, GLP-1/weight-loss, migraine, autoimmune, and mental-health medication denials, prior authorizations, step therapy, and "not medically necessary" decisions.</p>
-
-      <h2>How it works</h2>
-      <ul>
-        <li><strong>Upload</strong> your denial letter, EOB, or prior-auth denial (PDF or photo).</li>
-        <li><strong>Review the facts</strong> — we extract the key details; you check and correct them.</li>
-        <li><strong>Answer a few questions</strong> that tailor the appeal to your plan and situation.</li>
-        <li><strong>Get your packet</strong> — appeal letter, checklists, a call script, and a polished PDF.</li>
-      </ul>
-
-      <h2>What's in your appeal packet</h2>
-      <ul>
-        <li>Plain-English summary of why you were denied</li>
-        <li>Appeal letter draft citing your plan's own denial reason</li>
-        <li>Evidence checklist — exactly what to attach and why</li>
-        <li>Doctor letter request draft for a supporting statement</li>
-        <li>Insurer call script with word-for-word talking points</li>
-        <li>Deadline tracker so you never miss your appeal window</li>
-        <li>PDF export</li>
-      </ul>
-
-      <h2>Simple pricing</h2>
-      <ul>
-        <li><strong>Free preview</strong> — denial type, amount at stake, and your likely appeal path.</li>
-        <li><strong>$39 full appeal packet</strong> — everything you need to submit.</li>
-      </ul>
-
-      <h2>Your privacy</h2>
-      <ul>
-        <li>Files are processed only to draft your appeal — never for AI training.</li>
-        <li>Uploads auto-delete after 24 hours unless you save your case.</li>
-        <li>Delete your case and files at any time. U.S. plans only at launch.</li>
-      </ul>
-
-      <p class="muted">ClaimHelper is a document drafting assistant. It does not provide medical, legal, or insurance advice, does not decide medical necessity, and does not guarantee approval. Always review every document before sending it and confirm deadlines with your insurer.</p>
+    <!-- SCENE 2 · THE ODDS -->
+    <section class="scene odds" id="s-odds">
+      <div class="paper-field" aria-hidden="true">
+        <div class="paper" data-depth="0.25" style="left:6%;  top:8%;  transform:rotate(-9deg)"><i></i><i></i><i></i><i></i></div>
+        <div class="paper" data-depth="0.55" style="left:16%; top:58%; transform:rotate(7deg)"><i></i><i></i><i></i><i></i></div>
+        <div class="paper" data-depth="0.4"  style="right:8%; top:12%; transform:rotate(10deg)"><i></i><i></i><i></i><i></i></div>
+        <div class="paper" data-depth="0.7"  style="right:18%;top:64%; transform:rotate(-6deg)"><i></i><i></i><i></i><i></i></div>
+        <div class="paper" data-depth="0.9"  style="left:44%; top:76%; transform:rotate(3deg)"><i></i><i></i><i></i><i></i></div>
       </div>
+      <div class="wrap">
+        <p class="eyebrow">The odds are designed to exhaust you</p>
+        <h2 class="title">Most people never appeal.<br>Insurers count on it.</h2>
+        <p class="sub" style="margin-left:auto;margin-right:auto">Fewer than 1 in 100 denied claims are ever appealed — yet appeals succeed remarkably often. The paperwork maze isn't an accident. ClaimHelper walks you through it in minutes instead of weekends.</p>
+        <div class="stat-row">
+          <div class="stat"><b data-count="15">15</b><span>minutes to a full packet</span></div>
+          <div class="stat"><b>$39</b><span>one-time · no subscription</span></div>
+          <div class="stat"><b data-count="7">7</b><span>documents, ready to send</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE 3 · HOW -->
+    <section class="scene how" id="s-how">
+      <div class="wrap">
+        <div class="head">
+          <p class="eyebrow">From denial to appeal</p>
+          <h2 class="title">Four steps. Zero jargon.</h2>
+        </div>
+        <div class="steps">
+          <div class="beam"><span class="fill"></span></div>
+          <div class="step">
+            <div class="dot">01</div>
+            <div>
+              <h3>Upload your denial</h3>
+              <p>Denial letter, EOB, or prior-authorization denial — PDF or photo. Encrypted, private, auto-deleted in 24h unless you save your case.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="dot">02</div>
+            <div>
+              <h3>We read the fine print</h3>
+              <p>ClaimHelper extracts the insurer, the denied item, the denial reason, and your deadlines — you check the facts and correct anything.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="dot">03</div>
+            <div>
+              <h3>Answer a few questions</h3>
+              <p>A short guided flow tailors the appeal to your plan and situation — step-therapy history, prior treatments, your doctor's take.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="dot">04</div>
+            <div>
+              <h3>Get your packet</h3>
+              <p>An appeal letter citing your plan's own denial reason, evidence checklist, doctor letter request, call script, deadline tracker, and a polished PDF.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE 4 · INSIDE -->
+    <section class="scene inside" id="s-inside">
+      <div class="wrap">
+        <div class="head">
+          <p class="eyebrow">What's in the packet</p>
+          <h2 class="title">Everything your appeal needs.</h2>
+        </div>
+        <div class="card-grid">
+          <div class="deliverable"><div class="ic">📄</div><h4>Appeal letter draft</h4><p>Cites your plan's own denial reason and rebuts it point by point. You review, sign, send.</p></div>
+          <div class="deliverable"><div class="ic">🧭</div><h4>Plain-English summary</h4><p>What the denial actually says, what it means, and what happens next — no insurance-speak.</p></div>
+          <div class="deliverable"><div class="ic">🗂️</div><h4>Evidence checklist</h4><p>Exactly which records to attach and why each one strengthens your case.</p></div>
+          <div class="deliverable"><div class="ic">🩺</div><h4>Doctor letter request</h4><p>A ready-to-send draft asking your doctor for the supporting statement insurers listen to.</p></div>
+          <div class="deliverable"><div class="ic">📞</div><h4>Insurer call script</h4><p>Word-for-word talking points for the phone call — including what not to say.</p></div>
+          <div class="deliverable"><div class="ic">⏰</div><h4>Deadline tracker</h4><p>Every appeal window and date that matters, so you never miss your shot.</p></div>
+          <div class="deliverable"><div class="ic">⬇️</div><h4>Polished PDF export</h4><p>The whole packet as one clean document, rendered on your device for privacy.</p></div>
+        </div>
+
+        <div class="pricing">
+          <div class="price-card">
+            <div class="tier">Free preview</div>
+            <div class="amount">$0</div>
+            <div class="per">no card required</div>
+            <ul>
+              <li>Denial type identified</li>
+              <li>Amount at stake</li>
+              <li>Your likely appeal path</li>
+            </ul>
+            <button class="btn ghost" data-boot="/upload">Get my free preview</button>
+          </div>
+          <div class="price-card hot">
+            <div class="tier">Full appeal packet</div>
+            <div class="amount">$39</div>
+            <div class="per">one-time · per case · no subscription</div>
+            <ul>
+              <li>All 7 documents, tailored to your denial</li>
+              <li>Saved to your account, export any time</li>
+              <li>Your files are never used to train AI</li>
+            </ul>
+            <button class="btn primary" data-boot="/upload">Start my appeal</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE 5 · FINALE + FAQ -->
+    <section class="scene finale" id="s-finale">
+      <div class="glow" aria-hidden="true"></div>
+      <div class="wrap">
+        <p class="eyebrow">Your claim. Your money. Your health.</p>
+        <h2>Get your YES.</h2>
+        <p class="sub" style="margin-left:auto;margin-right:auto">The first look is free — see what your denial really says and whether an appeal is worth it.</p>
+        <button class="btn primary" data-boot="/upload">Start my free appeal preview</button>
+
+        <div class="faq">
+          <h3>Questions, answered</h3>
+          <details>
+            <summary>Can I appeal a denied medication or prior authorization?</summary>
+            <div class="a">Yes. Most health-insurance denials — denied medications, prior authorizations, step-therapy requirements, formulary exclusions, and "not medically necessary" decisions — can be appealed. ClaimHelper drafts the appeal paperwork from your denial letter for you to review and send.</div>
+          </details>
+          <details>
+            <summary>What exactly is in the appeal packet?</summary>
+            <div class="a">A plain-English summary of your denial, an appeal letter draft, an evidence checklist, a doctor letter request draft, an insurer call script, a deadline tracker, and a PDF export.</div>
+          </details>
+          <details>
+            <summary>How much does it cost?</summary>
+            <div class="a">The preview — denial type, amount at stake, and likely appeal path — is free. The full appeal packet is a one-time $39 per case. No subscription.</div>
+          </details>
+          <details>
+            <summary>Is this legal or medical advice?</summary>
+            <div class="a">No. ClaimHelper is a document drafting assistant. It does not provide medical, legal, or insurance advice, does not decide medical necessity, and does not guarantee approval. You review every document before sending it.</div>
+          </details>
+          <details>
+            <summary>Is my health data private?</summary>
+            <div class="a">Your files are processed only to draft your appeal — never to train AI. Uploads auto-delete after 24 hours unless you save your case, and you can delete your case and files at any time.</div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="cols">
+        <div>
+          <div class="brand" style="margin-bottom:10px"><span class="mark">✓</span> ClaimHelper</div>
+          <div>Turn a health-insurance denial into a ready-to-send appeal.</div>
+        </div>
+        <div class="links">
+          <a href="terms.html">Terms of Service</a>
+          <a href="privacy.html">Privacy Policy</a>
+          <a href="mailto:support@getmyyes.com">support@getmyyes.com</a>
+        </div>
+      </div>
+      <p class="fine">© 2026 ClaimHelper · getmyyes.com · U.S. plans only at launch. ClaimHelper is a document drafting assistant. It does not provide medical, legal, or insurance advice, does not decide medical necessity, and does not guarantee your appeal will be approved. Always review every document before sending it and confirm deadlines directly with your insurer.</p>
+    </footer>
+  </div>
+
+  <div id="app-loader" hidden>
+    <div class="box">
+      <div class="brand" style="justify-content:center"><span class="mark">✓</span> ClaimHelper</div>
+      <div class="spinner"></div>
+      <p style="margin-top:14px;color:var(--ink-dim);font-size:13.5px">Opening your secure workspace…</p>
     </div>
   </div>
 
   <script>
-    // Hide the crawlable fallback once Flutter has rendered, so users see the app.
     (function () {
-      function hide() {
-        var el = document.getElementById('seo-fallback');
-        if (el) el.style.display = 'none';
+      var booting = false;
+
+      function bootApp(route) {
+        if (booting) return;
+        booting = true;
+        if (route && route !== '/') location.hash = '#' + route;
+        var loader = document.getElementById('app-loader');
+        if (loader) loader.hidden = false;
+        window.addEventListener('flutter-first-frame', function () {
+          var l = document.getElementById('landing');
+          if (l) l.remove();
+          if (loader) loader.remove();
+          document.body.style.overflow = '';
+        });
+        if (window.__lenis) { try { window.__lenis.destroy(); } catch (e) {} }
+        if (window.ScrollTrigger) { try { ScrollTrigger.killAll(); } catch (e) {} }
+        var s = document.createElement('script');
+        s.src = 'flutter_bootstrap.js';
+        s.async = true;
+        document.body.appendChild(s);
       }
-      window.addEventListener('flutter-first-frame', hide);
-      // Safety net in case the event is missed.
-      setTimeout(hide, 8000);
+      window.__bootApp = bootApp;
+
+      document.querySelectorAll('[data-boot]').forEach(function (el) {
+        el.addEventListener('click', function () {
+          bootApp(el.getAttribute('data-boot'));
+        });
+      });
+
+      // Deep link → straight into the app (landing hidden by the head script).
+      if (location.hash && location.hash.indexOf('#/') === 0) {
+        bootApp();
+        return;
+      }
+
+      // ---------- cinematic scroll (progressive enhancement) ----------
+      var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduceMotion) return;
+
+      function loadScript(src) {
+        return new Promise(function (resolve, reject) {
+          var s = document.createElement('script');
+          s.src = src; s.async = true;
+          s.onload = resolve; s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+
+      Promise.all([
+        loadScript('https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js')
+          .then(function () { return loadScript('https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js'); }),
+        loadScript('https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js').catch(function () {})
+      ]).then(function () {
+        if (!window.gsap || !window.ScrollTrigger) return;
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Smooth scrolling (Lenis) wired into ScrollTrigger.
+        if (window.Lenis) {
+          var lenis = new Lenis({ lerp: 0.1, smoothWheel: true });
+          window.__lenis = lenis;
+          lenis.on('scroll', ScrollTrigger.update);
+          gsap.ticker.add(function (t) { lenis.raf(t * 1000); });
+          gsap.ticker.lagSmoothing(0);
+        }
+
+        // Top progress bar.
+        gsap.to('#scrollbar', {
+          width: '100%', ease: 'none',
+          scrollTrigger: { trigger: document.body, start: 'top top', end: 'max', scrub: 0.3 }
+        });
+
+        // HERO: pinned NO → YES morph over the video.
+        var heroTl = gsap.timeline({
+          scrollTrigger: { trigger: '#s-hero', start: 'top top', end: '+=130%', scrub: 0.6, pin: true }
+        });
+        heroTl
+          .to('.hero video.bg', { scale: 1.18, ease: 'none' }, 0)
+          .to('.l-no', { letterSpacing: '0.14em', filter: 'blur(9px)', opacity: 0.06, ease: 'power2.in' }, 0)
+          .fromTo('.l-yes', { yPercent: 55, opacity: 0.0, filter: 'blur(6px)' },
+                            { yPercent: 0, opacity: 1, filter: 'blur(0px)', ease: 'power2.out' }, 0.12)
+          .to('.hero .lead, .hero .cta-row', { opacity: 1 }, 0.2)
+          .to('.scroll-cue', { opacity: 0 }, 0.05);
+
+        // Landing intro.
+        gsap.from('.hero-copy > *', { y: 34, opacity: 0, stagger: 0.12, duration: 1.1, ease: 'power3.out', delay: 0.15 });
+
+        // ODDS: parallax paper field + reveal.
+        document.querySelectorAll('.paper').forEach(function (p) {
+          var depth = parseFloat(p.getAttribute('data-depth') || '0.5');
+          gsap.to(p, {
+            yPercent: -140 * depth, rotation: '+=' + (depth * 14 - 7), ease: 'none',
+            scrollTrigger: { trigger: '#s-odds', start: 'top bottom', end: 'bottom top', scrub: true }
+          });
+        });
+        gsap.from('#s-odds .wrap > *', {
+          y: 44, opacity: 0, stagger: 0.14, duration: 0.9, ease: 'power3.out',
+          scrollTrigger: { trigger: '#s-odds', start: 'top 68%' }
+        });
+
+        // HOW: beam fill + step reveals.
+        gsap.to('.beam .fill', {
+          scaleY: 1, ease: 'none',
+          scrollTrigger: { trigger: '.steps', start: 'top 75%', end: 'bottom 45%', scrub: 0.5 }
+        });
+        gsap.utils.toArray('.step').forEach(function (el) {
+          gsap.from(el, {
+            x: -36, opacity: 0, duration: 0.8, ease: 'power3.out',
+            scrollTrigger: { trigger: el, start: 'top 80%' }
+          });
+        });
+
+        // INSIDE: card cascade + pointer tilt.
+        gsap.from('.deliverable', {
+          y: 54, opacity: 0, stagger: 0.07, duration: 0.75, ease: 'power3.out',
+          scrollTrigger: { trigger: '.card-grid', start: 'top 78%' }
+        });
+        gsap.from('.price-card', {
+          y: 60, opacity: 0, stagger: 0.14, duration: 0.85, ease: 'power3.out',
+          scrollTrigger: { trigger: '.pricing', start: 'top 82%' }
+        });
+        var fine = window.matchMedia('(pointer: fine)').matches;
+        if (fine) {
+          document.querySelectorAll('.deliverable').forEach(function (card) {
+            card.addEventListener('mousemove', function (e) {
+              var r = card.getBoundingClientRect();
+              var rx = ((e.clientY - r.top) / r.height - 0.5) * -10;
+              var ry = ((e.clientX - r.left) / r.width - 0.5) * 12;
+              card.style.transform = 'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) translateZ(6px)';
+            });
+            card.addEventListener('mouseleave', function () {
+              card.style.transform = 'rotateX(0deg) rotateY(0deg)';
+            });
+          });
+        }
+
+        // FINALE: the YES scales in.
+        gsap.from('.finale h2', {
+          scale: 0.6, opacity: 0, ease: 'power2.out',
+          scrollTrigger: { trigger: '#s-finale', start: 'top 70%', end: 'top 30%', scrub: 0.6 }
+        });
+        gsap.from('.finale .glow', {
+          opacity: 0, scale: 0.5, ease: 'none',
+          scrollTrigger: { trigger: '#s-finale', start: 'top 80%', end: 'top 25%', scrub: true }
+        });
+      }).catch(function () { /* CDN blocked → static page still fully readable */ });
     })();
   </script>
-  <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

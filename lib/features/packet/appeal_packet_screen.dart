@@ -7,6 +7,7 @@ import '../../core/theme.dart';
 import '../../models/appeal_case.dart';
 import '../../models/packet.dart';
 import '../../state/providers.dart';
+import '../../widgets/account_gate.dart';
 import '../../widgets/app_scaffold.dart';
 
 /// The paid deliverable. Tabs: Summary, Appeal Letter, Evidence, Doctor
@@ -161,17 +162,7 @@ class _PacketTabsState extends ConsumerState<_PacketTabs> {
         appBar: AppBar(
           title: const Text('Your appeal packet'),
           actions: [
-            IconButton(
-              tooltip: 'Save case',
-              icon: const Icon(Icons.bookmark_border),
-              onPressed: () async {
-                await ref.read(backendProvider).saveCase(widget.appealCase.id);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Case saved to your account.')));
-                }
-              },
-            ),
+            _SaveCaseButton(appealCase: widget.appealCase),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: FilledButton.icon(
@@ -219,6 +210,72 @@ class _PacketTabsState extends ConsumerState<_PacketTabs> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Save-case action with real feedback. The backend rejects anonymous
+/// sessions ("create an account to save"), which previously surfaced as a
+/// button that silently did nothing — now we gate through account creation
+/// (linking keeps the same uid, so the paid case stays owned) and always
+/// show a result.
+class _SaveCaseButton extends ConsumerStatefulWidget {
+  const _SaveCaseButton({required this.appealCase});
+  final AppealCase appealCase;
+
+  @override
+  ConsumerState<_SaveCaseButton> createState() => _SaveCaseButtonState();
+}
+
+class _SaveCaseButtonState extends ConsumerState<_SaveCaseButton> {
+  bool _busy = false;
+
+  Future<void> _save() async {
+    if (ref.read(authProvider).isAnonymous) {
+      final ok = await ensureAccount(
+        context,
+        ref,
+        title: 'Create an account to save',
+        reason: 'Saving keeps this case and its documents on your account. '
+            'Without it, unsaved files auto-delete after 24 hours.',
+      );
+      if (!ok || !mounted) return;
+    }
+    setState(() => _busy = true);
+    try {
+      await ref.read(backendProvider).saveCase(widget.appealCase.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Case saved to your account.')));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Could not save this case. Please try again.')));
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.appealCase.saved) {
+      return const IconButton(
+        tooltip: 'Saved to your account',
+        icon: Icon(Icons.bookmark_added, color: AppColors.accent),
+        onPressed: null,
+      );
+    }
+    return IconButton(
+      tooltip: 'Save case',
+      icon: _busy
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2))
+          : const Icon(Icons.bookmark_border),
+      onPressed: _busy ? null : _save,
     );
   }
 }

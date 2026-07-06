@@ -8,6 +8,7 @@ import '../../core/theme.dart';
 import '../../models/packet.dart';
 import '../../state/intake_controller.dart';
 import '../../state/providers.dart';
+import '../../widgets/account_gate.dart';
 import '../../widgets/app_scaffold.dart';
 
 /// Free preview + paywall. Generates the preview from the confirmed
@@ -64,6 +65,20 @@ class _PreviewPaywallScreenState
   }
 
   Future<void> _purchase() async {
+    // A purchase must belong to a real account: otherwise the paid packet
+    // lives on an unrecoverable anonymous session. Linking keeps the same
+    // uid, so this case stays owned by the user.
+    if (ref.read(authProvider).isAnonymous) {
+      final ok = await ensureAccount(
+        context,
+        ref,
+        title: 'Create your account first',
+        reason: 'Your paid appeal packet is stored on your account so you can '
+            'come back to it from any device. This takes 20 seconds, then '
+            'checkout continues.',
+      );
+      if (!ok || !mounted) return;
+    }
     setState(() => _purchasing = true);
     try {
       final backend = ref.read(backendProvider);

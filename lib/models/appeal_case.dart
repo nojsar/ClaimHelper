@@ -35,6 +35,8 @@ class AppealCase {
     this.paid = false,
     this.pricePaid,
     this.lastError,
+    this.generationProgress,
+    this.generationStage,
   });
 
   final String id;
@@ -53,7 +55,13 @@ class AppealCase {
   final double? pricePaid;
   final String? lastError;
 
+  /// Server-reported packet-generation progress (0..1) and stage label,
+  /// written by the generateAppealPacket function while the model runs.
+  final double? generationProgress;
+  final String? generationStage;
+
   factory AppealCase.fromJson(String id, Map<String, dynamic> json) {
+    final generation = json['generation'];
     return AppealCase(
       id: id,
       ownerUid: json['ownerUid'] as String?,
@@ -80,6 +88,11 @@ class AppealCase {
       paid: json['paid'] as bool? ?? false,
       pricePaid: (json['pricePaid'] as num?)?.toDouble(),
       lastError: json['lastError'] as String?,
+      generationProgress: generation is Map
+          ? (generation['progress'] as num?)?.toDouble()
+          : null,
+      generationStage:
+          generation is Map ? generation['stage'] as String? : null,
     );
   }
 

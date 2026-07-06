@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants.dart';
 import '../../core/theme.dart';
@@ -144,6 +145,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             child: const Text(AppCopy.disclaimer,
                 style: TextStyle(fontSize: 13, color: AppColors.warning)),
+          ),
+          const SizedBox(height: 24),
+          const Text('Legal',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 12),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.description_outlined),
+                  title: const Text('Terms of Service'),
+                  trailing: const Icon(Icons.open_in_new, size: 18),
+                  onTap: () => launchUrl(
+                      Uri.parse('https://getmyyes.com/terms.html')),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.privacy_tip_outlined),
+                  title: const Text('Privacy Policy'),
+                  trailing: const Icon(Icons.open_in_new, size: 18),
+                  onTap: () => launchUrl(
+                      Uri.parse('https://getmyyes.com/privacy.html')),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.mail_outline),
+                  title: const Text('Contact support'),
+                  subtitle: const Text('support@getmyyes.com'),
+                  onTap: () =>
+                      launchUrl(Uri.parse('mailto:support@getmyyes.com')),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 24),
           const Center(

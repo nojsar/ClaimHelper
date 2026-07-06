@@ -24,6 +24,23 @@ class PdfService {
     final doc = pw.Document();
     final dateStr = DateFormat.yMMMMd().format(DateTime.now());
 
+    // The built-in Helvetica has no Unicode support, and AI-drafted text
+    // regularly contains characters outside its codepage (em dashes, curly
+    // quotes, §, ≥ …) which makes doc.save() throw and the export "fail".
+    // Load full-Unicode Noto Sans; fall back to built-ins only if the font
+    // fetch fails (e.g. offline), where plain-ASCII packets still export.
+    pw.ThemeData? theme;
+    try {
+      theme = pw.ThemeData.withFont(
+        base: await PdfGoogleFonts.notoSansRegular(),
+        bold: await PdfGoogleFonts.notoSansBold(),
+        italic: await PdfGoogleFonts.notoSansItalic(),
+        boldItalic: await PdfGoogleFonts.notoSansBoldItalic(),
+      );
+    } catch (_) {
+      theme = null;
+    }
+
     pw.Widget heading(String text) => pw.Padding(
           padding: const pw.EdgeInsets.only(top: 16, bottom: 6),
           child: pw.Text(text,
@@ -41,6 +58,7 @@ class PdfService {
         pageTheme: pw.PageTheme(
           pageFormat: PdfPageFormat.letter,
           margin: const pw.EdgeInsets.all(40),
+          theme: theme,
         ),
         footer: (context) => pw.Container(
           alignment: pw.Alignment.centerLeft,

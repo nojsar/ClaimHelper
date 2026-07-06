@@ -37,6 +37,42 @@ export const generateAppealPacket = onCall(
       return { packet: existing };
     }
 
+    // Staged progress written to the case doc so the client can render a real
+    // progress bar while the model works. The ticker advances through labeled
+    // stages and parks at the cap until the model returns.
+    const stages: Array<{ p: number; label: string }> = [
+      { p: 0.06, label: "Confirming your purchase" },
+      { p: 0.14, label: "Re-reading your denial letter" },
+      { p: 0.24, label: "Analyzing the insurer's denial reason" },
+      { p: 0.34, label: "Mapping your strongest appeal arguments" },
+      { p: 0.46, label: "Drafting your appeal letter" },
+      { p: 0.58, label: "Building your evidence checklist" },
+      { p: 0.68, label: "Writing the doctor letter request" },
+      { p: 0.76, label: "Preparing your insurer call script" },
+      { p: 0.83, label: "Double-checking deadlines" },
+    ];
+    let stageIdx = 0;
+    let lastWrite: Promise<unknown> = Promise.resolve();
+    const writeProgress = (p: number, label: string) => {
+      lastWrite = snap.ref
+        .update({
+          generation: {
+            progress: p,
+            stage: label,
+            updatedAt: FieldValue.serverTimestamp(),
+          },
+        })
+        .catch(() => undefined);
+      return lastWrite;
+    };
+    await writeProgress(stages[0].p, stages[0].label);
+    const ticker = setInterval(() => {
+      if (stageIdx < stages.length - 1) {
+        stageIdx += 1;
+        void writeProgress(stages[stageIdx].p, stages[stageIdx].label);
+      }
+    }, 6000);
+
     try {
       const packet = await runStructured<Record<string, unknown>>({
         systemPrompt: PACKET_SYSTEM_PROMPT,
@@ -53,15 +89,26 @@ export const generateAppealPacket = onCall(
         schema: packetSchema as unknown as Record<string, unknown>,
       });
 
+      clearInterval(ticker);
+      await lastWrite;
+      await writeProgress(0.94, "Formatting your packet");
       await snap.ref.update({
         packet,
         status: "generated",
+        generation: {
+          progress: 1,
+          stage: "Ready",
+          updatedAt: FieldValue.serverTimestamp(),
+        },
         updatedAt: FieldValue.serverTimestamp(),
       });
       return { packet };
     } catch (err) {
+      clearInterval(ticker);
+      await lastWrite;
       await snap.ref.update({
         status: "error",
+        generation: null,
         lastError: err instanceof Error ? err.message : "Packet generation failed",
         updatedAt: FieldValue.serverTimestamp(),
       });

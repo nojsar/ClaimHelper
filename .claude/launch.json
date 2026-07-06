@@ -6,6 +6,12 @@
       "runtimeExecutable": "C:\\Users\\Nojus\\dev\\flutter\\bin\\flutter.bat",
       "runtimeArgs": ["run", "-d", "web-server", "--web-port", "8100", "--dart-define=USE_MOCKS=true"],
       "port": 8100
+    },
+    {
+      "name": "claimhelper-static-build",
+      "runtimeExecutable": "C:\\Users\\Nojus\\dev\\node\\npx.cmd",
+      "runtimeArgs": ["--yes", "http-server", "build/web", "-p", "8642", "-c-1"],
+      "port": 8642
     }
   ]
 }
