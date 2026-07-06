@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://claimhelper-38152.web.app/sitemap.xml
+Sitemap: https://getmyyes.com/sitemap.xml
