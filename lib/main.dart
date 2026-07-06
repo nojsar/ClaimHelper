@@ -24,11 +24,11 @@ Future<void> main() async {
     }
   }
 
-  runApp(const ProviderScope(child: ClaimHelperApp()));
+  runApp(const ProviderScope(child: GetMyYesApp()));
 }
 
-class ClaimHelperApp extends StatelessWidget {
-  const ClaimHelperApp({super.key});
+class GetMyYesApp extends StatelessWidget {
+  const GetMyYesApp({super.key});
 
   @override
   Widget build(BuildContext context) {

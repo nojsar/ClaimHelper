@@ -37,6 +37,22 @@ export const config = {
   get fullPacketPriceCents(): number {
     return Number(process.env.FULL_PACKET_PRICE_CENTS || 3900);
   },
+  /** One additional follow-up round, USD cents. */
+  get followUpRoundPriceCents(): number {
+    return Number(process.env.FOLLOWUP_ROUND_PRICE_CENTS || 1900);
+  },
+  /** Full Case upgrade (capped follow-up bundle), USD cents. */
+  get fullCasePriceCents(): number {
+    return Number(process.env.FULL_CASE_PRICE_CENTS || 5900);
+  },
+  /** Follow-up rounds included with every packet purchase. */
+  get freeFollowUpRounds(): number {
+    return Number(process.env.FREE_FOLLOWUP_ROUNDS || 2);
+  },
+  /** Hard cap of rounds granted by the Full Case upgrade — not unlimited. */
+  get fullCaseRoundsCap(): number {
+    return Number(process.env.FULL_CASE_ROUNDS_CAP || 100);
+  },
   /** Hours before unsaved source uploads are deleted. */
   get tempFileTtlHours(): number {
     return Number(process.env.TEMP_FILE_TTL_HOURS || 24);

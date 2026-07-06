@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:video_player/video_player.dart';
 
 import '../../core/theme.dart';
 import '../../models/appeal_case.dart';
@@ -123,6 +125,8 @@ class _GenerationTheater extends StatefulWidget {
 class _GenerationTheaterState extends State<_GenerationTheater>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulse;
+  VideoPlayerController? _video;
+  bool _videoReady = false;
 
   @override
   void initState() {
@@ -130,11 +134,38 @@ class _GenerationTheaterState extends State<_GenerationTheater>
     _pulse = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 2200))
       ..repeat();
+    _initVideo();
+  }
+
+  /// Ambient AI-assembly clip (Seedance) behind the progress card. Served
+  /// from the site's own /media path on web; if it can't load (dev server,
+  /// offline, mobile builds) the gradient background simply shows instead.
+  Future<void> _initVideo() async {
+    if (!kIsWeb) return;
+    try {
+      final controller = VideoPlayerController.networkUrl(
+          Uri.base.resolve('media/packet_assembly.mp4'));
+      await controller.initialize();
+      await controller.setLooping(true);
+      await controller.setVolume(0);
+      await controller.play();
+      if (!mounted) {
+        controller.dispose();
+        return;
+      }
+      setState(() {
+        _video = controller;
+        _videoReady = true;
+      });
+    } catch (_) {
+      // Gradient fallback.
+    }
   }
 
   @override
   void dispose() {
     _pulse.dispose();
+    _video?.dispose();
     super.dispose();
   }
 
@@ -153,13 +184,7 @@ class _GenerationTheaterState extends State<_GenerationTheater>
             builder: (context, v, _) {
               final indeterminate = target == null;
               return Container(
-                padding: const EdgeInsets.fromLTRB(28, 26, 28, 30),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF0B1220), Color(0xFF13203E)],
-                  ),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: const [
                     BoxShadow(
@@ -170,7 +195,40 @@ class _GenerationTheaterState extends State<_GenerationTheater>
                     ),
                   ],
                 ),
-                child: Column(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Stack(
+                    children: [
+                      // Ambient Seedance clip of papers assembling; sits under
+                      // a dark scrim so the progress UI stays readable.
+                      if (_videoReady && _video != null)
+                        Positioned.fill(
+                          child: FittedBox(
+                            fit: BoxFit.cover,
+                            clipBehavior: Clip.hardEdge,
+                            child: SizedBox(
+                              width: _video!.value.size.width,
+                              height: _video!.value.size.height,
+                              child: VideoPlayer(_video!),
+                            ),
+                          ),
+                        ),
+                      Positioned.fill(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: _videoReady
+                                  ? const [Color(0xD90B1220), Color(0xC613203E)]
+                                  : const [Color(0xFF0B1220), Color(0xFF13203E)],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(28, 26, 28, 30),
+                        child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (widget.paymentConfirmed) ...[
@@ -224,7 +282,11 @@ class _GenerationTheaterState extends State<_GenerationTheater>
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.white38, fontSize: 12),
                     ),
-                  ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },

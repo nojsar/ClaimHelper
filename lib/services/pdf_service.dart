@@ -64,7 +64,7 @@ class PdfService {
           alignment: pw.Alignment.centerLeft,
           margin: const pw.EdgeInsets.only(top: 10),
           child: pw.Text(
-            'ClaimHelper draft — review before sending. Not medical, legal, or '
+            'GetMyYes draft — review before sending. Not medical, legal, or '
             'insurance advice.  •  Page ${context.pageNumber} of ${context.pagesCount}',
             style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
           ),

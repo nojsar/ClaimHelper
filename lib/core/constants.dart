@@ -1,7 +1,7 @@
 /// Product copy that carries legal/safety weight lives here so it is easy to
 /// review in one place. Edit with care.
 abstract final class AppCopy {
-  static const appName = 'ClaimHelper';
+  static const appName = 'GetMyYes';
 
   static const tagline =
       'Turn your denied medication or treatment letter into a ready-to-send '
@@ -9,7 +9,7 @@ abstract final class AppCopy {
 
   static const subTagline =
       'Upload your denial letter, EOB, or prior-authorization denial. '
-      'ClaimHelper drafts the appeal paperwork — you review and send it.';
+      'GetMyYes drafts the appeal paperwork — you review and send it.';
 
   static const consentText =
       'I understand my documents may contain sensitive health and insurance '
@@ -18,7 +18,7 @@ abstract final class AppCopy {
       'I save my case.';
 
   static const disclaimer =
-      'ClaimHelper is a document drafting assistant. It does not provide '
+      'GetMyYes is a document drafting assistant. It does not provide '
       'medical advice, legal advice, or insurance representation, and it does '
       'not decide medical necessity. There is no guarantee your appeal will be '
       'approved. Always review every document before sending it, and confirm '
@@ -48,7 +48,14 @@ abstract final class UsStates {
 
 abstract final class Pricing {
   static const fullPacketUsd = 39;
-  static const humanReviewUsd = 79;
+  static const followUpRoundUsd = 19;
+  static const fullCaseUsd = 59;
+
+  /// Follow-up rounds included with every packet purchase.
+  static const freeFollowUpRounds = 2;
+
+  /// Full Case is capped — up to this many rounds per case, not unlimited.
+  static const fullCaseRoundsCap = 100;
 }
 
 /// Compile-time switch: `flutter run --dart-define=USE_MOCKS=true` runs the

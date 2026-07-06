@@ -1,35 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Calm, trustworthy healthcare-utility palette — refined for a premium feel:
-/// confident medical blue, reassuring teal, soft slate neutrals, tasteful tints.
+/// GetMyYes dark cinematic palette — matches the getmyyes.com landing:
+/// deep navy surfaces, confident blue, mint-teal accents, high-contrast type.
 abstract final class AppColors {
   // Brand blue
-  static const primary = Color(0xFF2563EB); // blue-600
-  static const primaryDark = Color(0xFF1D4ED8); // blue-700
+  static const primary = Color(0xFF2563EB); // blue-600 (buttons/brand)
+  static const primaryDark = Color(0xFF60A5FA); // readable blue on dark
   static const primaryDeep = Color(0xFF1E3A8A); // blue-900 (gradients)
-  static const primaryTint = Color(0xFFEFF4FF); // soft wash behind blue
+  static const primaryTint = Color(0xFF15213D); // soft wash behind blue
 
   // Reassuring health accent
-  static const accent = Color(0xFF0D9488); // teal-600
-  static const accentBright = Color(0xFF14B8A6);
-  static const accentTint = Color(0xFFECFDF5);
+  static const accent = Color(0xFF14B8A6); // teal, brightened for dark
+  static const accentBright = Color(0xFF5EEAD4);
+  static const accentTint = Color(0xFF0E2A26);
 
   // Neutrals
-  static const background = Color(0xFFF6F8FC);
-  static const surface = Colors.white;
-  static const surfaceAlt = Color(0xFFF1F5F9);
-  static const textPrimary = Color(0xFF0F172A); // slate-900
-  static const textSecondary = Color(0xFF475569); // slate-600
-  static const textMuted = Color(0xFF94A3B8); // slate-400
-  static const border = Color(0xFFE6EAF2);
-  static const borderStrong = Color(0xFFCBD5E1);
+  static const background = Color(0xFF070B14);
+  static const surface = Color(0xFF101A30);
+  static const surfaceAlt = Color(0xFF0C1424);
+  static const textPrimary = Color(0xFFEDF2FB);
+  static const textSecondary = Color(0xFFA5B3CD);
+  static const textMuted = Color(0xFF64748B);
+  static const border = Color(0xFF223050);
+  static const borderStrong = Color(0xFF33466B);
 
   // Status
-  static const warning = Color(0xFFB45309);
-  static const warningTint = Color(0xFFFFF7ED);
-  static const error = Color(0xFFDC2626);
-  static const errorTint = Color(0xFFFEF2F2);
+  static const warning = Color(0xFFFBBF24);
+  static const warningTint = Color(0xFF2A2010);
+  static const error = Color(0xFFF87171);
+  static const errorTint = Color(0xFF2A1418);
 }
 
 /// Gradients used sparingly for hero washes, CTA bands, and brand marks.
@@ -47,13 +47,13 @@ abstract final class AppGradients {
   );
 
   static const heroWash = LinearGradient(
-    colors: [Color(0xFFEFF4FF), Color(0xFFF6F8FC), Color(0xFFFFFFFF)],
+    colors: [Color(0xFF0B1220), Color(0xFF070B14), Color(0xFF070B14)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
 
   static const accentText = LinearGradient(
-    colors: [AppColors.primary, AppColors.accent],
+    colors: [AppColors.primaryDark, AppColors.accentBright],
   );
 }
 
@@ -97,7 +97,9 @@ abstract final class AppRadii {
 ThemeData buildAppTheme() {
   final scheme = ColorScheme.fromSeed(
     seedColor: AppColors.primary,
+    brightness: Brightness.dark,
     primary: AppColors.primary,
+    onPrimary: Colors.white,
     secondary: AppColors.accent,
     surface: AppColors.surface,
     error: AppColors.error,
@@ -214,7 +216,7 @@ ThemeData buildAppTheme() {
     ),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
-      backgroundColor: AppColors.textPrimary,
+      backgroundColor: const Color(0xFF1B2A4A),
       contentTextStyle: const TextStyle(color: Colors.white),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadii.sm),

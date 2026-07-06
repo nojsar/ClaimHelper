@@ -26,8 +26,22 @@ export const createCheckoutSession = onCall(
   async (request) => {
     const uid = requireUid(request);
     const snap = await requireOwnedCase(request.data?.caseId, uid);
-    if (snap.get("paid") === true) {
+
+    const kind = (request.data?.kind as string | undefined) ?? "packet";
+    if (!["packet", "followup_round", "full_case"].includes(kind)) {
+      throw new HttpsError("invalid-argument", "Unknown purchase kind.");
+    }
+    if (kind === "packet" && snap.get("paid") === true) {
       throw new HttpsError("already-exists", "This case is already unlocked.");
+    }
+    if (kind !== "packet" && snap.get("paid") !== true) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Purchase the appeal packet before adding follow-up rounds.",
+      );
+    }
+    if (kind === "full_case" && snap.get("fullCase") === true) {
+      throw new HttpsError("already-exists", "Full Case is already active here.");
     }
     // Purchases require a real account: an anonymous uid is unrecoverable if
     // the browser session is lost, which would orphan a paid packet. The
@@ -40,31 +54,57 @@ export const createCheckoutSession = onCall(
     }
     const email = (request.auth?.token.email as string | undefined) || undefined;
 
+    const products = {
+      packet: {
+        amount: config.fullPacketPriceCents,
+        name: "GetMyYes — Full Appeal Packet",
+        description:
+          "Appeal letter draft, evidence checklist, doctor letter request, " +
+          `call script, deadline checklist, PDF export. Includes ${config.freeFollowUpRounds} follow-up rounds.`,
+      },
+      followup_round: {
+        amount: config.followUpRoundPriceCents,
+        name: "GetMyYes — Follow-up Round",
+        description:
+          "One additional follow-up assistance round for your existing appeal case.",
+      },
+      full_case: {
+        amount: config.fullCasePriceCents,
+        name: "GetMyYes — Full Case Upgrade",
+        description:
+          `Up to ${config.fullCaseRoundsCap} follow-up rounds for this case (capped, not unlimited).`,
+      },
+    } as const;
+    const product = products[kind as keyof typeof products];
+
     const stripe = stripeClient();
     const base = config.appBaseUrl;
+    const returnPath =
+      kind === "packet"
+        ? `/#/case/${snap.id}/purchase-success?session_id={CHECKOUT_SESSION_ID}`
+        : `/#/case/${snap.id}/packet`;
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: [
         {
           price_data: {
             currency: "usd",
-            unit_amount: config.fullPacketPriceCents,
+            unit_amount: product.amount,
             product_data: {
-              name: "ClaimHelper — Full Appeal Packet",
-              description:
-                "Appeal letter draft, evidence checklist, doctor letter request, call script, deadline checklist, PDF export.",
+              name: product.name,
+              description: product.description,
             },
           },
           quantity: 1,
         },
       ],
-      metadata: { caseId: snap.id, uid },
+      metadata: { caseId: snap.id, uid, kind },
       client_reference_id: snap.id,
       // Prefills Checkout and lets Stripe send its payment receipt (enable
       // "Successful payments" emails in the Stripe dashboard for live mode).
       customer_email: email,
-      success_url: `${base}/#/case/${snap.id}/purchase-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${base}/#/case/${snap.id}/preview`,
+      success_url: `${base}${returnPath}`,
+      cancel_url: `${base}/#/case/${snap.id}/${kind === "packet" ? "preview" : "packet"}`,
     });
 
     await snap.ref.update({
@@ -108,27 +148,55 @@ export const stripeWebhook = onRequest(
       const session = event.data.object as Stripe.Checkout.Session;
       const caseId = session.metadata?.caseId ?? session.client_reference_id;
       const uid = session.metadata?.uid ?? null;
+      const kind = session.metadata?.kind ?? "packet";
       const buyerEmail =
         session.customer_details?.email ?? session.customer_email ?? null;
       if (caseId) {
         const db = getFirestore();
         const caseRef = db.collection("cases").doc(caseId);
+        const purchaseRef = db.collection("purchases").doc(session.id);
         const mailRef = db.collection("mail").doc();
         await db.runTransaction(async (tx) => {
-          const caseSnap = await tx.get(caseRef);
-          if (!caseSnap.exists || caseSnap.get("paid") === true) return;
-          tx.update(caseRef, {
-            paid: true,
-            status: "paid",
-            pricePaid: (session.amount_total ?? 0) / 100,
-            stripeSessionId: session.id,
-            // Paid cases must survive the 24h cleanup even without an account.
-            expiresAt: null,
-            updatedAt: FieldValue.serverTimestamp(),
-          });
-          tx.set(db.collection("purchases").doc(session.id), {
+          const [caseSnap, purchaseSnap] = await Promise.all([
+            tx.get(caseRef),
+            tx.get(purchaseRef),
+          ]);
+          // Stripe retries webhooks — the purchase doc keyed by session id
+          // makes each session apply exactly once.
+          if (!caseSnap.exists || purchaseSnap.exists) return;
+
+          if (kind === "packet") {
+            if (caseSnap.get("paid") === true) return;
+            tx.update(caseRef, {
+              paid: true,
+              status: "paid",
+              pricePaid: (session.amount_total ?? 0) / 100,
+              stripeSessionId: session.id,
+              followUpCredits: config.freeFollowUpRounds,
+              // Paid cases must survive the 24h cleanup even without an account.
+              expiresAt: null,
+              updatedAt: FieldValue.serverTimestamp(),
+            });
+          } else if (kind === "followup_round") {
+            const current =
+              (caseSnap.get("followUpCredits") as number | undefined) ??
+              config.freeFollowUpRounds;
+            tx.update(caseRef, {
+              followUpCredits: current + 1,
+              updatedAt: FieldValue.serverTimestamp(),
+            });
+          } else if (kind === "full_case") {
+            tx.update(caseRef, {
+              followUpCredits: config.fullCaseRoundsCap,
+              fullCase: true,
+              updatedAt: FieldValue.serverTimestamp(),
+            });
+          }
+
+          tx.set(purchaseRef, {
             uid,
             caseId,
+            kind,
             email: buyerEmail,
             amount: (session.amount_total ?? 0) / 100,
             currency: session.currency ?? "usd",
@@ -140,24 +208,34 @@ export const stripeWebhook = onRequest(
           // "Trigger Email" extension reading the `mail` collection; if the
           // extension isn't installed the doc is simply inert.
           if (buyerEmail) {
-            const packetUrl = `${config.appBaseUrl}/#/case/${caseId}/purchase-success`;
+            const isPacket = kind === "packet";
+            const packetUrl = isPacket
+              ? `${config.appBaseUrl}/#/case/${caseId}/purchase-success`
+              : `${config.appBaseUrl}/#/case/${caseId}/packet`;
+            const what = isPacket
+              ? "Full Appeal Packet"
+              : kind === "full_case"
+                ? `Full Case upgrade (up to ${config.fullCaseRoundsCap} follow-up rounds)`
+                : "additional follow-up round";
             tx.set(mailRef, {
               to: [buyerEmail],
               message: {
-                subject: "Your ClaimHelper appeal packet is unlocked",
+                subject: isPacket
+                  ? "Your GetMyYes appeal packet is unlocked"
+                  : "Your GetMyYes follow-up purchase is active",
                 text:
-                  "Thanks for your purchase! Your Full Appeal Packet is unlocked.\n\n" +
-                  `Open your packet any time: ${packetUrl}\n\n` +
+                  `Thanks for your purchase! Your ${what} is active.\n\n` +
+                  `Open your case any time: ${packetUrl}\n\n` +
                   "Sign in with the account you used at checkout to access it. " +
                   "Questions? Reply to this email.\n\n" +
-                  "ClaimHelper is a document drafting assistant — not medical, legal, " +
+                  "GetMyYes is a document drafting assistant — not medical, legal, " +
                   "or insurance advice. Review every document before sending.",
                 html:
-                  `<h2>Your appeal packet is unlocked 🎉</h2>` +
-                  `<p>Thanks for your purchase! Your <strong>Full Appeal Packet</strong> is ready to generate.</p>` +
-                  `<p><a href="${packetUrl}" style="background:#2563EB;color:#fff;padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:700">Open my packet</a></p>` +
+                  `<h2>You're all set 🎉</h2>` +
+                  `<p>Thanks for your purchase! Your <strong>${what}</strong> is active.</p>` +
+                  `<p><a href="${packetUrl}" style="background:#2563EB;color:#fff;padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:700">Open my case</a></p>` +
                   `<p>Sign in with the account you used at checkout to access it any time.</p>` +
-                  `<p style="color:#64748B;font-size:12px">ClaimHelper is a document drafting assistant — not medical, legal, or insurance advice. Review every document before sending.</p>`,
+                  `<p style="color:#64748B;font-size:12px">GetMyYes is a document drafting assistant — not medical, legal, or insurance advice. Review every document before sending.</p>`,
               },
               createdAt: FieldValue.serverTimestamp(),
             });

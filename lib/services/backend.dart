@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import '../models/appeal_case.dart';
 import '../models/extraction.dart';
+import '../models/follow_up.dart';
 import '../models/guided_answers.dart';
 import '../models/packet.dart';
 
@@ -71,4 +72,27 @@ abstract class Backend {
   Future<void> saveCase(String caseId);
 
   Future<void> deleteCaseAndFiles(String caseId);
+
+  /// Adds more source files to an existing case (e.g. documents the preview
+  /// flagged as missing); returns the storage paths of the new files.
+  Future<List<String>> addFilesToCase(
+    String caseId,
+    List<PickedUpload> files, {
+    void Function(double progress)? onProgress,
+  });
+
+  /// Persists free-text details the user supplied to fill preview gaps; the
+  /// backend feeds them into preview and packet generation.
+  Future<void> saveUserAdditions(String caseId, String text);
+
+  /// Generates one follow-up round (consumes a round server-side).
+  Future<FollowUpRound> generateFollowUp(
+    String caseId, {
+    required String outcome,
+    required String notes,
+  });
+
+  /// Checkout for extra follow-up capacity. kind: 'followup_round' ($19) or
+  /// 'full_case' (capped bundle). Returns the URL, or null when mocked.
+  Future<String?> createFollowUpCheckout(String caseId, {required String kind});
 }

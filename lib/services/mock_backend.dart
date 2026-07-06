@@ -2,6 +2,7 @@ import 'dart:async';
 
 import '../models/appeal_case.dart';
 import '../models/extraction.dart';
+import '../models/follow_up.dart';
 import '../models/guided_answers.dart';
 import '../models/packet.dart';
 import 'backend.dart';
@@ -159,8 +160,96 @@ class MockBackend implements Backend {
   Future<String?> createCheckoutSession(String caseId) async {
     // Mock checkout: mark paid immediately (simulates the Stripe webhook).
     await Future<void>.delayed(const Duration(milliseconds: 400));
+    _patch(
+        caseId,
+        (c) => c.copyWith(
+            paid: true,
+            pricePaid: 39,
+            followUpCredits: 2,
+            status: CaseStatus.paid));
+    return null;
+  }
+
+  @override
+  Future<List<String>> addFilesToCase(
+    String caseId,
+    List<PickedUpload> files, {
+    void Function(double progress)? onProgress,
+  }) async {
+    for (var i = 1; i <= 3; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      onProgress?.call(i / 3);
+    }
+    final paths =
+        files.map((f) => 'tempCases/$caseId/source/${f.name}').toList();
     _patch(caseId,
-        (c) => c.copyWith(paid: true, pricePaid: 39, status: CaseStatus.paid));
+        (c) => c.copyWith(sourceFilePaths: [...c.sourceFilePaths, ...paths]));
+    return paths;
+  }
+
+  @override
+  Future<void> saveUserAdditions(String caseId, String text) async {
+    // The mock preview doesn't consume additions; storing is a no-op.
+  }
+
+  @override
+  Future<FollowUpRound> generateFollowUp(
+    String caseId, {
+    required String outcome,
+    required String notes,
+  }) async {
+    await Future<void>.delayed(const Duration(seconds: 2));
+    final c = _cases[caseId]!;
+    final remaining = c.followUpCredits ?? 2;
+    if (!c.paid || remaining <= 0) {
+      throw StateError('No follow-up rounds left.');
+    }
+    final round = FollowUpRound(
+      outcome: outcome,
+      userNotes: notes,
+      situationSummary:
+          'The insurer\'s response keeps the denial in place on step-therapy '
+          'grounds. Your strongest path is a second-level appeal with the '
+          'prescriber documentation attached.',
+      recommendedNextSteps:
+          '1) Ask your prescriber for the trial/failure documentation.\n'
+          '2) Submit the second-level appeal letter below within the deadline.\n'
+          '3) If denied again, request external review through your state.',
+      responseLetter:
+          'To the Appeals Department,\n\nI am escalating my appeal of the '
+          'denial referenced above. [ATTACH: prescriber documentation of '
+          'alternatives tried or contraindicated]\n\nPlease reconsider and '
+          'approve coverage, or provide external-review instructions.\n\n'
+          'Sincerely,\n[Your name]',
+      callScript:
+          'Hi, I\'m calling about my pending appeal. Can you confirm you '
+          'received my second-level appeal, the review timeline, and whether '
+          'anything is missing from my file?',
+      deadlineNotes: 'Second-level appeals are commonly due within 60 days of '
+          'the latest denial — confirm with your insurer.',
+      warnings: const ['Confirm every deadline directly with your insurer.'],
+      disclaimer:
+          'This follow-up is a draft to help you continue your appeal. It is '
+          'not medical, legal, or insurance advice.',
+      createdAt: DateTime.now(),
+    );
+    _patch(
+        caseId,
+        (c) => c.copyWith(
+            followUps: [...c.followUps, round],
+            followUpCredits: remaining - 1));
+    return round;
+  }
+
+  @override
+  Future<String?> createFollowUpCheckout(String caseId,
+      {required String kind}) async {
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    _patch(
+        caseId,
+        (c) => kind == 'full_case'
+            ? c.copyWith(followUpCredits: 100, fullCase: true)
+            : c.copyWith(followUpCredits: (c.followUpCredits ?? 2) + 1));
     return null;
   }
 

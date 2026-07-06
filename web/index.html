@@ -9,29 +9,29 @@
   <meta name="theme-color" content="#070B14">
   <meta name="robots" content="index, follow, max-image-preview:large">
 
-  <title>ClaimHelper — Turn a health-insurance denial into a ready-to-send appeal</title>
-  <meta name="description" content="ClaimHelper turns a denied medication, prior-authorization, or 'not medically necessary' letter into a ready-to-review appeal packet in 15 minutes — appeal letter, evidence checklist, doctor request, call script, and PDF. U.S. only. Not legal or medical advice.">
+  <title>GetMyYes — Turn a health-insurance denial into a ready-to-send appeal</title>
+  <meta name="description" content="GetMyYes turns a denied medication, prior-authorization, or 'not medically necessary' letter into a ready-to-review appeal packet in 15 minutes — appeal letter, evidence checklist, doctor request, call script, and PDF. U.S. only. Not legal or medical advice.">
   <meta name="keywords" content="health insurance appeal, denied medication appeal, prior authorization denial, not medically necessary appeal, step therapy exception, formulary exception, insurance denial letter, appeal packet">
   <link rel="canonical" href="https://getmyyes.com/">
 
   <!-- Open Graph -->
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="ClaimHelper">
-  <meta property="og:title" content="ClaimHelper — Turn a denial letter into a ready-to-send appeal">
+  <meta property="og:site_name" content="GetMyYes">
+  <meta property="og:title" content="GetMyYes — Turn a denial letter into a ready-to-send appeal">
   <meta property="og:description" content="Upload a denied medication, prior-auth, or 'not medically necessary' letter and get a ready-to-review appeal packet in 15 minutes. Free preview, $39 full packet.">
   <meta property="og:url" content="https://getmyyes.com/">
   <meta property="og:image" content="https://getmyyes.com/icons/Icon-512.png">
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="ClaimHelper — Turn a denial letter into a ready-to-send appeal">
+  <meta name="twitter:title" content="GetMyYes — Turn a denial letter into a ready-to-send appeal">
   <meta name="twitter:description" content="A denied medication or prior-auth letter becomes a ready-to-review appeal packet in 15 minutes. Free preview, $39 full packet.">
   <meta name="twitter:image" content="https://getmyyes.com/icons/Icon-512.png">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="ClaimHelper">
+  <meta name="apple-mobile-web-app-title" content="GetMyYes">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
   <link rel="icon" type="image/png" href="favicon.png"/>
   <link rel="manifest" href="manifest.json">
@@ -47,7 +47,7 @@
     "@graph": [
       {
         "@type": "WebApplication",
-        "name": "ClaimHelper",
+        "name": "GetMyYes",
         "url": "https://getmyyes.com/",
         "applicationCategory": "HealthApplication",
         "operatingSystem": "Web, iOS, Android",
@@ -64,7 +64,7 @@
           {
             "@type": "Question",
             "name": "Can I appeal a denied medication or prior authorization?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Yes. Most health-insurance denials — including denied medications, prior authorizations, step-therapy requirements, formulary exclusions, and 'not medically necessary' decisions — can be appealed. ClaimHelper drafts the appeal paperwork from your denial letter for you to review and send." }
+            "acceptedAnswer": { "@type": "Answer", "text": "Yes. Most health-insurance denials — including denied medications, prior authorizations, step-therapy requirements, formulary exclusions, and 'not medically necessary' decisions — can be appealed. GetMyYes drafts the appeal paperwork from your denial letter for you to review and send." }
           },
           {
             "@type": "Question",
@@ -73,13 +73,13 @@
           },
           {
             "@type": "Question",
-            "name": "How much does ClaimHelper cost?",
+            "name": "How much does GetMyYes cost?",
             "acceptedAnswer": { "@type": "Answer", "text": "Uploading your denial and getting a preview — the denial type, amount at stake, and likely appeal path — is free. The full appeal packet is a one-time $39." }
           },
           {
             "@type": "Question",
-            "name": "Is ClaimHelper legal or medical advice?",
-            "acceptedAnswer": { "@type": "Answer", "text": "No. ClaimHelper is a document drafting assistant. It does not provide medical, legal, or insurance advice, does not decide medical necessity, and does not guarantee approval. You review every document before sending it." }
+            "name": "Is GetMyYes legal or medical advice?",
+            "acceptedAnswer": { "@type": "Answer", "text": "No. GetMyYes is a document drafting assistant. It does not provide medical, legal, or insurance advice, does not decide medical necessity, and does not guarantee approval. You review every document before sending it." }
           },
           {
             "@type": "Question",
@@ -194,10 +194,15 @@
     }
     .hero-copy { position: relative; z-index: 2; text-align: center; padding: 120px 22px 90px; max-width: 980px; }
     .hero h1 {
-      font-family: var(--font-display); font-weight: 700; line-height: 0.98; letter-spacing: -2.5px;
-      font-size: clamp(52px, 10.5vw, 128px); text-shadow: 0 10px 60px rgba(0,0,0,0.55);
+      font-family: var(--font-display); font-weight: 700; line-height: 1.02; letter-spacing: -2.5px;
+      font-size: clamp(42px, 9vw, 118px); text-shadow: 0 10px 60px rgba(0,0,0,0.55);
     }
-    .hero h1 .line { display: block; }
+    /* Lines never wrap mid-morph, and with the fx enhancement both lines
+       occupy the SAME grid cell so YES lands exactly where NO stood. */
+    .hero h1 .line { display: block; white-space: nowrap; will-change: transform, opacity, filter; }
+    html.fx .hero h1 { display: grid; justify-items: center; }
+    html.fx .hero h1 .line { grid-area: 1 / 1; }
+    html.fx .hero h1 .l-yes { opacity: 0; }
     .hero h1 em { font-style: normal; }
     .hero h1 .no  { color: var(--red); text-shadow: 0 0 46px rgba(244, 63, 94, 0.55); }
     .hero h1 .yes {
@@ -378,7 +383,7 @@
     <div class="progress-rail"><div id="scrollbar"></div></div>
 
     <nav class="topbar">
-      <div class="brand"><span class="mark">✓</span> ClaimHelper</div>
+      <div class="brand"><span class="mark">✓</span> GetMyYes</div>
       <button class="btn ghost" data-boot="/">Open the app →</button>
     </nav>
 
@@ -394,7 +399,7 @@
           <span class="line l-no">They said <em class="no">NO.</em></span>
           <span class="line l-yes">Send back a <em class="yes">YES.</em></span>
         </h1>
-        <p class="lead">Upload your denial letter. ClaimHelper reads it, builds your strongest arguments, and hands you a complete, ready-to-send appeal packet — in about 15 minutes.</p>
+        <p class="lead">Upload your denial letter. GetMyYes reads it, builds your strongest arguments, and hands you a complete, ready-to-send appeal packet — in about 15 minutes.</p>
         <div class="cta-row">
           <button class="btn primary" data-boot="/upload">Start my free appeal preview</button>
           <span class="cta-note">Free preview · $39 full packet · No subscription</span>
@@ -415,7 +420,7 @@
       <div class="wrap">
         <p class="eyebrow">The odds are designed to exhaust you</p>
         <h2 class="title">Most people never appeal.<br>Insurers count on it.</h2>
-        <p class="sub" style="margin-left:auto;margin-right:auto">Fewer than 1 in 100 denied claims are ever appealed — yet appeals succeed remarkably often. The paperwork maze isn't an accident. ClaimHelper walks you through it in minutes instead of weekends.</p>
+        <p class="sub" style="margin-left:auto;margin-right:auto">Fewer than 1 in 100 denied claims are ever appealed — yet appeals succeed remarkably often. The paperwork maze isn't an accident. GetMyYes walks you through it in minutes instead of weekends.</p>
         <div class="stat-row">
           <div class="stat"><b data-count="15">15</b><span>minutes to a full packet</span></div>
           <div class="stat"><b>$39</b><span>one-time · no subscription</span></div>
@@ -444,7 +449,7 @@
             <div class="dot">02</div>
             <div>
               <h3>We read the fine print</h3>
-              <p>ClaimHelper extracts the insurer, the denied item, the denial reason, and your deadlines — you check the facts and correct anything.</p>
+              <p>GetMyYes extracts the insurer, the denied item, the denial reason, and your deadlines — you check the facts and correct anything.</p>
             </div>
           </div>
           <div class="step">
@@ -522,7 +527,7 @@
           <h3>Questions, answered</h3>
           <details>
             <summary>Can I appeal a denied medication or prior authorization?</summary>
-            <div class="a">Yes. Most health-insurance denials — denied medications, prior authorizations, step-therapy requirements, formulary exclusions, and "not medically necessary" decisions — can be appealed. ClaimHelper drafts the appeal paperwork from your denial letter for you to review and send.</div>
+            <div class="a">Yes. Most health-insurance denials — denied medications, prior authorizations, step-therapy requirements, formulary exclusions, and "not medically necessary" decisions — can be appealed. GetMyYes drafts the appeal paperwork from your denial letter for you to review and send.</div>
           </details>
           <details>
             <summary>What exactly is in the appeal packet?</summary>
@@ -534,7 +539,7 @@
           </details>
           <details>
             <summary>Is this legal or medical advice?</summary>
-            <div class="a">No. ClaimHelper is a document drafting assistant. It does not provide medical, legal, or insurance advice, does not decide medical necessity, and does not guarantee approval. You review every document before sending it.</div>
+            <div class="a">No. GetMyYes is a document drafting assistant. It does not provide medical, legal, or insurance advice, does not decide medical necessity, and does not guarantee approval. You review every document before sending it.</div>
           </details>
           <details>
             <summary>Is my health data private?</summary>
@@ -547,7 +552,7 @@
     <footer>
       <div class="cols">
         <div>
-          <div class="brand" style="margin-bottom:10px"><span class="mark">✓</span> ClaimHelper</div>
+          <div class="brand" style="margin-bottom:10px"><span class="mark">✓</span> GetMyYes</div>
           <div>Turn a health-insurance denial into a ready-to-send appeal.</div>
         </div>
         <div class="links">
@@ -556,13 +561,13 @@
           <a href="mailto:support@getmyyes.com">support@getmyyes.com</a>
         </div>
       </div>
-      <p class="fine">© 2026 ClaimHelper · getmyyes.com · U.S. plans only at launch. ClaimHelper is a document drafting assistant. It does not provide medical, legal, or insurance advice, does not decide medical necessity, and does not guarantee your appeal will be approved. Always review every document before sending it and confirm deadlines directly with your insurer.</p>
+      <p class="fine">© 2026 GetMyYes · getmyyes.com · U.S. plans only at launch. GetMyYes is a document drafting assistant. It does not provide medical, legal, or insurance advice, does not decide medical necessity, and does not guarantee your appeal will be approved. Always review every document before sending it and confirm deadlines directly with your insurer.</p>
     </footer>
   </div>
 
   <div id="app-loader" hidden>
     <div class="box">
-      <div class="brand" style="justify-content:center"><span class="mark">✓</span> ClaimHelper</div>
+      <div class="brand" style="justify-content:center"><span class="mark">✓</span> GetMyYes</div>
       <div class="spinner"></div>
       <p style="margin-top:14px;color:var(--ink-dim);font-size:13.5px">Opening your secure workspace…</p>
     </div>
@@ -626,9 +631,16 @@
         if (!window.gsap || !window.ScrollTrigger) return;
         gsap.registerPlugin(ScrollTrigger);
 
+        var fine = window.matchMedia('(pointer: fine)').matches;
+
+        // Marks the enhanced experience: the hero lines become grid-stacked
+        // (YES lands exactly where NO stood) — see html.fx CSS rules.
+        document.documentElement.classList.add('fx');
+
         // Smooth scrolling (Lenis) wired into ScrollTrigger.
+        var lenis = null;
         if (window.Lenis) {
-          var lenis = new Lenis({ lerp: 0.1, smoothWheel: true });
+          lenis = new Lenis({ lerp: 0.1, smoothWheel: true });
           window.__lenis = lenis;
           lenis.on('scroll', ScrollTrigger.update);
           gsap.ticker.add(function (t) { lenis.raf(t * 1000); });
@@ -641,20 +653,97 @@
           scrollTrigger: { trigger: document.body, start: 'top top', end: 'max', scrub: 0.3 }
         });
 
-        // HERO: pinned NO → YES morph over the video.
+        // HERO video: on desktop the film advances WITH the scroll instead of
+        // looping — the scroll position is the playhead. Touch devices keep
+        // the autoplay loop (mobile browsers throttle seek-scrubbing).
+        var heroVideo = document.querySelector('.hero video.bg');
+        var scrubVideo = !!(fine && heroVideo);
+        if (scrubVideo) {
+          heroVideo.removeAttribute('loop');
+          heroVideo.pause();
+          heroVideo.currentTime = 0;
+        }
+        function scrubHeroVideo(progress) {
+          if (!scrubVideo || !heroVideo.duration) return;
+          var t = progress * Math.max(0, heroVideo.duration - 0.08);
+          if (Math.abs(heroVideo.currentTime - t) > 0.02) heroVideo.currentTime = t;
+        }
+
+        // HERO: pinned NO → YES morph over the video. The NO line recedes in
+        // place (scale/blur — transforms only, so it can never re-wrap) and
+        // the YES line rises into the exact same grid cell.
         var heroTl = gsap.timeline({
-          scrollTrigger: { trigger: '#s-hero', start: 'top top', end: '+=130%', scrub: 0.6, pin: true }
+          scrollTrigger: {
+            trigger: '#s-hero', start: 'top top', end: '+=130%', scrub: 0.6, pin: true,
+            onUpdate: function (self) { scrubHeroVideo(self.progress); }
+          }
         });
         heroTl
           .to('.hero video.bg', { scale: 1.18, ease: 'none' }, 0)
-          .to('.l-no', { letterSpacing: '0.14em', filter: 'blur(9px)', opacity: 0.06, ease: 'power2.in' }, 0)
+          .to('.l-no', { scale: 1.14, filter: 'blur(9px)', opacity: 0, ease: 'power2.in' }, 0)
           .fromTo('.l-yes', { yPercent: 55, opacity: 0.0, filter: 'blur(6px)' },
                             { yPercent: 0, opacity: 1, filter: 'blur(0px)', ease: 'power2.out' }, 0.12)
-          .to('.hero .lead, .hero .cta-row', { opacity: 1 }, 0.2)
           .to('.scroll-cue', { opacity: 0 }, 0.05);
 
         // Landing intro.
         gsap.from('.hero-copy > *', { y: 34, opacity: 0, stagger: 0.12, duration: 1.1, ease: 'power3.out', delay: 0.15 });
+
+        // PHASE SNAPPING: when scrolling stops, settle at the nearest scene
+        // boundary so the page is never caught half-scrolled. Inside the
+        // pinned hero we always resolve to fully-NO or fully-YES; elsewhere
+        // we only snap when a boundary is close (tall sections stay readable).
+        var snapPoints = [];
+        function computeSnaps() {
+          snapPoints = [0];
+          if (heroTl.scrollTrigger) snapPoints.push(Math.round(heroTl.scrollTrigger.end));
+          ['#s-odds', '#s-how', '#s-inside', '#s-finale'].forEach(function (sel) {
+            var el = document.querySelector(sel);
+            if (el) snapPoints.push(Math.round(el.getBoundingClientRect().top + window.scrollY));
+          });
+        }
+        ScrollTrigger.addEventListener('refresh', computeSnaps);
+        computeSnaps();
+
+        var snapTimer = null;
+        var snapping = false;
+        function snapTo(y) {
+          snapping = true;
+          if (lenis) {
+            lenis.scrollTo(y, {
+              duration: 0.85,
+              easing: function (t) { return 1 - Math.pow(1 - t, 3); },
+              onComplete: function () { snapping = false; }
+            });
+          } else {
+            window.scrollTo({ top: y, behavior: 'smooth' });
+            setTimeout(function () { snapping = false; }, 700);
+          }
+        }
+        function trySnap() {
+          if (booting || snapping || !snapPoints.length) return;
+          var y = window.scrollY;
+          var heroEnd = heroTl.scrollTrigger ? heroTl.scrollTrigger.end : 0;
+          // Inside the pinned hero: always resolve the morph.
+          if (heroEnd > 0 && y > 2 && y < heroEnd - 2) {
+            snapTo(y < heroEnd / 2 ? 0 : heroEnd);
+            return;
+          }
+          var best = null, bestD = Infinity;
+          snapPoints.forEach(function (p) {
+            var d = Math.abs(p - y);
+            if (d < bestD) { bestD = d; best = p; }
+          });
+          if (best === null || bestD < 3) return;
+          if (bestD > window.innerHeight * 0.45) return;
+          snapTo(best);
+        }
+        function queueSnap() {
+          if (snapping) return;
+          clearTimeout(snapTimer);
+          snapTimer = setTimeout(trySnap, 240);
+        }
+        if (lenis) lenis.on('scroll', queueSnap);
+        else window.addEventListener('scroll', queueSnap, { passive: true });
 
         // ODDS: parallax paper field + reveal.
         document.querySelectorAll('.paper').forEach(function (p) {
@@ -690,7 +779,6 @@
           y: 60, opacity: 0, stagger: 0.14, duration: 0.85, ease: 'power3.out',
           scrollTrigger: { trigger: '.pricing', start: 'top 82%' }
         });
-        var fine = window.matchMedia('(pointer: fine)').matches;
         if (fine) {
           document.querySelectorAll('.deliverable').forEach(function (card) {
             card.addEventListener('mousemove', function (e) {

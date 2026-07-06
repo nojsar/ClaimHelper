@@ -24,8 +24,8 @@ class BrandMark extends StatelessWidget {
           ),
         ],
       ),
-      child: Icon(Icons.verified_user_rounded,
-          color: Colors.white, size: size * 0.58),
+      child: Icon(Icons.check_rounded,
+          color: Colors.white, size: size * 0.62),
     );
   }
 }
@@ -43,7 +43,7 @@ class Wordmark extends StatelessWidget {
       children: [
         BrandMark(size: markSize),
         const SizedBox(width: 10),
-        Text('ClaimHelper',
+        Text('GetMyYes',
             style: TextStyle(
               fontSize: fontSize,
               fontWeight: FontWeight.w800,

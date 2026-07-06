@@ -1,4 +1,5 @@
 import 'extraction.dart';
+import 'follow_up.dart';
 import 'guided_answers.dart';
 import 'packet.dart';
 
@@ -37,6 +38,9 @@ class AppealCase {
     this.lastError,
     this.generationProgress,
     this.generationStage,
+    this.followUps = const [],
+    this.followUpCredits,
+    this.fullCase = false,
   });
 
   final String id;
@@ -59,6 +63,15 @@ class AppealCase {
   /// written by the generateAppealPacket function while the model runs.
   final double? generationProgress;
   final String? generationStage;
+
+  /// Follow-up assistance rounds already generated, and how many rounds are
+  /// still available. Cases paid before the counter existed default to the
+  /// included allowance server-side; mirror that here for display.
+  final List<FollowUpRound> followUps;
+  final int? followUpCredits;
+  final bool fullCase;
+
+  int get remainingFollowUps => paid ? (followUpCredits ?? 2) : 0;
 
   factory AppealCase.fromJson(String id, Map<String, dynamic> json) {
     final generation = json['generation'];
@@ -93,6 +106,12 @@ class AppealCase {
           : null,
       generationStage:
           generation is Map ? generation['stage'] as String? : null,
+      followUps: (json['followUps'] as List<dynamic>? ?? [])
+          .whereType<Map>()
+          .map((m) => FollowUpRound.fromJson(Map<String, dynamic>.from(m)))
+          .toList(),
+      followUpCredits: (json['followUpCredits'] as num?)?.toInt(),
+      fullCase: json['fullCase'] as bool? ?? false,
     );
   }
 
@@ -121,6 +140,9 @@ class AppealCase {
     bool? saved,
     double? pricePaid,
     String? lastError,
+    List<FollowUpRound>? followUps,
+    int? followUpCredits,
+    bool? fullCase,
   }) {
     return AppealCase(
       id: id,
@@ -138,6 +160,9 @@ class AppealCase {
       paid: paid ?? this.paid,
       pricePaid: pricePaid ?? this.pricePaid,
       lastError: lastError ?? this.lastError,
+      followUps: followUps ?? this.followUps,
+      followUpCredits: followUpCredits ?? this.followUpCredits,
+      fullCase: fullCase ?? this.fullCase,
     );
   }
 }

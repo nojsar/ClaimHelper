@@ -5,6 +5,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 
 import '../models/appeal_case.dart';
 import '../models/extraction.dart';
+import '../models/follow_up.dart';
 import '../models/guided_answers.dart';
 import '../models/packet.dart';
 import 'backend.dart';
@@ -211,5 +212,59 @@ class FirebaseBackend implements Backend {
     await _functions
         .httpsCallable('deleteCaseAndFiles')
         .call<Map<String, dynamic>>({'caseId': caseId});
+  }
+
+  @override
+  Future<List<String>> addFilesToCase(
+    String caseId,
+    List<PickedUpload> files, {
+    void Function(double progress)? onProgress,
+  }) async {
+    final uid = await ensureSignedIn();
+    // Same uid-scoped prefix createCaseUploadSession hands out, so the
+    // existing Storage rules apply unchanged.
+    final session = UploadSession(
+      caseId: caseId,
+      uploadPathPrefix: 'tempCases/$uid/$caseId/source/',
+    );
+    final paths =
+        await uploadSourceFiles(session, files, onProgress: onProgress);
+    await _db.collection('cases').doc(caseId).update({
+      'sourceFilePaths': FieldValue.arrayUnion(paths),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    return paths;
+  }
+
+  @override
+  Future<void> saveUserAdditions(String caseId, String text) {
+    return _db.collection('cases').doc(caseId).update({
+      'userAdditions': text,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  @override
+  Future<FollowUpRound> generateFollowUp(
+    String caseId, {
+    required String outcome,
+    required String notes,
+  }) async {
+    final result = await _functions
+        .httpsCallable('generateFollowUp',
+            options: HttpsCallableOptions(timeout: const Duration(minutes: 5)))
+        .call<Map<String, dynamic>>(
+            {'caseId': caseId, 'outcome': outcome, 'notes': notes});
+    return FollowUpRound.fromJson(
+        Map<String, dynamic>.from(result.data['followUp'] as Map));
+  }
+
+  @override
+  Future<String?> createFollowUpCheckout(String caseId,
+      {required String kind}) async {
+    final result = await _functions
+        .httpsCallable('createCheckoutSession')
+        .call<Map<String, dynamic>>({'caseId': caseId, 'kind': kind});
+    return result.data['checkoutUrl'] as String?;
   }
 }

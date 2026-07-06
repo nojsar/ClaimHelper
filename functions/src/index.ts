@@ -6,5 +6,6 @@ export { createCaseUploadSession, deleteCaseAndFiles, saveCase } from "./cases";
 export { extractDenialFromUploadedFile } from "./extraction";
 export { generateFreePreview } from "./preview";
 export { generateAppealPacket, saveGuidedAnswers } from "./packet";
+export { generateFollowUp } from "./followup";
 export { createCheckoutSession, stripeWebhook } from "./payments";
 export { scheduledCleanupExpiredFiles } from "./cleanup";

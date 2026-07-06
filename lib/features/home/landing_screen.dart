@@ -585,7 +585,7 @@ class _TrustBand extends StatelessWidget {
                 height: 1.15)),
         const SizedBox(height: 14),
         const Text(
-          'ClaimHelper is a document drafting assistant — not medical, legal, '
+          'GetMyYes is a document drafting assistant — not medical, legal, '
           'or insurance advice. We never train AI on your documents, and you '
           'review everything before it\'s sent.',
           style: TextStyle(
@@ -878,7 +878,7 @@ class _Footer extends StatelessWidget {
                   children: const [
                     BrandMark(size: 28),
                     SizedBox(width: 10),
-                    Text('ClaimHelper',
+                    Text('GetMyYes',
                         style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w800,
@@ -902,7 +902,7 @@ class _Footer extends StatelessWidget {
                   runSpacing: 8,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Text('© ${DateTime.now().year} ClaimHelper · U.S. only at launch',
+                    Text('© ${DateTime.now().year} GetMyYes · U.S. only at launch',
                         style: TextStyle(
                             fontSize: 12.5,
                             color: Colors.white.withValues(alpha: 0.55))),

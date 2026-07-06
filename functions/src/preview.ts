@@ -1,5 +1,5 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import { openaiApiKey } from "./config";
 import { requireUid, requireOwnedCase } from "./util";
 import { runStructured } from "./openai/client";
@@ -17,6 +17,27 @@ export const generateFreePreview = onCall(
   async (request) => {
     const uid = requireUid(request);
     const snap = await requireOwnedCase(request.data?.caseId, uid);
+
+    // Abuse guard: 5 previews per rolling hour per user, anonymous included.
+    const db = getFirestore();
+    const rlRef = db.collection("rateLimits").doc(`preview_${uid}`);
+    await db.runTransaction(async (tx) => {
+      const rl = await tx.get(rlRef);
+      const now = Date.now();
+      const hourStart = rl.exists ? ((rl.get("hourStart") as number) ?? 0) : 0;
+      const count = rl.exists ? ((rl.get("count") as number) ?? 0) : 0;
+      if (now - hourStart > 3_600_000) {
+        tx.set(rlRef, { hourStart: now, count: 1 });
+      } else if (count >= 5) {
+        const mins = Math.max(1, Math.ceil((hourStart + 3_600_000 - now) / 60_000));
+        throw new HttpsError(
+          "resource-exhausted",
+          `Preview limit reached (5 per hour). Try again in about ${mins} min.`,
+        );
+      } else {
+        tx.update(rlRef, { count: count + 1 });
+      }
+    });
 
     const extraction = snap.get("extraction");
     if (!extraction) {
@@ -36,7 +57,10 @@ export const generateFreePreview = onCall(
         userContent: [
           {
             type: "input_text",
-            text: buildPreviewUserPrompt(JSON.stringify(effectiveExtraction)),
+            text: buildPreviewUserPrompt(
+              JSON.stringify(effectiveExtraction),
+              (snap.get("userAdditions") as string | undefined) ?? null,
+            ),
           },
         ],
         schemaName: "denial_preview",
@@ -51,6 +75,7 @@ export const generateFreePreview = onCall(
       });
       return { preview };
     } catch (err) {
+      if (err instanceof HttpsError) throw err;
       await snap.ref.update({
         status: "error",
         lastError: err instanceof Error ? err.message : "Preview failed",

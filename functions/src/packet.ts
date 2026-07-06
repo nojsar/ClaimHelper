@@ -82,6 +82,7 @@ export const generateAppealPacket = onCall(
             text: buildPacketUserPrompt(
               JSON.stringify(extraction),
               JSON.stringify(guidedAnswers),
+              (snap.get("userAdditions") as string | undefined) ?? null,
             ),
           },
         ],

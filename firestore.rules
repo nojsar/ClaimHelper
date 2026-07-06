@@ -15,7 +15,8 @@ service cloud.firestore {
     function touchesServerOnlyFields() {
       return request.resource.data.diff(resource.data).affectedKeys().hasAny([
         'paid', 'pricePaid', 'stripeSessionId', 'packet', 'preview',
-        'ownerUid', 'createdAt', 'consentConfirmedAt'
+        'ownerUid', 'createdAt', 'consentConfirmedAt',
+        'followUps', 'followUpCredits', 'fullCase', 'generation'
       ]);
     }
 

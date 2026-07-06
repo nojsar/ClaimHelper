@@ -132,7 +132,7 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFF7ED),
+                color: AppColors.warningTint,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(

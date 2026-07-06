@@ -139,9 +139,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF7ED),
+              color: AppColors.warningTint,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFFED7AA)),
+              border: Border.all(color: AppColors.warning.withValues(alpha: 0.35)),
             ),
             child: const Text(AppCopy.disclaimer,
                 style: TextStyle(fontSize: 13, color: AppColors.warning)),
@@ -181,7 +181,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           const SizedBox(height: 24),
           const Center(
-            child: Text('ClaimHelper · U.S. only at launch',
+            child: Text('GetMyYes · U.S. only at launch',
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
           ),
           const SizedBox(height: 24),
@@ -198,9 +198,9 @@ class _MockBanner extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
+        color: AppColors.primaryTint,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFBFDBFE)),
+        border: Border.all(color: AppColors.borderStrong),
       ),
       child: Row(
         children: const [

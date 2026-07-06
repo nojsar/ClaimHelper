@@ -134,6 +134,47 @@ export const previewSchema = {
   },
 } as const;
 
+export const followUpSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: [
+    "situationSummary",
+    "recommendedNextSteps",
+    "responseLetter",
+    "callScript",
+    "deadlineNotes",
+    "warnings",
+    "disclaimer",
+  ],
+  properties: {
+    situationSummary: {
+      type: "string",
+      description:
+        "Plain-English reading of where the case stands after the insurer's response.",
+    },
+    recommendedNextSteps: {
+      type: "string",
+      description:
+        "Concrete ordered next moves (second-level appeal, external review, regulator complaint, provide documents, etc.).",
+    },
+    responseLetter: {
+      type: "string",
+      description:
+        "Ready-to-review draft of the next written response (follow-up letter, second-level appeal, or external-review request), matching the situation.",
+    },
+    callScript: {
+      type: "string",
+      description: "Updated word-for-word insurer call script for this stage.",
+    },
+    deadlineNotes: {
+      type: ["string", "null"],
+      description: "Any deadlines now in play, or null if none are known.",
+    },
+    warnings: { type: "array", items: { type: "string" } },
+    disclaimer: { type: "string" },
+  },
+} as const;
+
 export const packetSchema = {
   type: "object",
   additionalProperties: false,
