@@ -188,7 +188,7 @@ class _GenerationTheaterState extends State<_GenerationTheater>
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: const [
                     BoxShadow(
-                      color: Color(0x552563EB),
+                      color: Color(0x550891B2),
                       blurRadius: 46,
                       offset: Offset(0, 18),
                       spreadRadius: -18,
@@ -220,8 +220,8 @@ class _GenerationTheaterState extends State<_GenerationTheater>
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: _videoReady
-                                  ? const [Color(0xD90B1220), Color(0xC613203E)]
-                                  : const [Color(0xFF0B1220), Color(0xFF13203E)],
+                                  ? const [Color(0xD9081925), Color(0xC60F2A3A)]
+                                  : const [Color(0xFF081925), Color(0xFF0F2A3A)],
                             ),
                           ),
                         ),
@@ -327,7 +327,7 @@ class _PacketAssembly extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(90),
                   gradient: RadialGradient(colors: [
-                    const Color(0xFF2563EB)
+                    const Color(0xFF0891B2)
                         .withValues(alpha: 0.24 + 0.10 * sweep),
                     Colors.transparent,
                   ]),
@@ -365,7 +365,7 @@ class _PacketAssembly extends StatelessWidget {
                     shape: BoxShape.circle,
                     gradient: AppGradients.brand,
                     boxShadow: const [
-                      BoxShadow(color: Color(0x882563EB), blurRadius: 22),
+                      BoxShadow(color: Color(0x880891B2), blurRadius: 22),
                     ],
                   ),
                   child: const Icon(Icons.check_rounded,
@@ -468,12 +468,12 @@ class _ProgressBar extends StatelessWidget {
                     child: Container(
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(colors: [
-                          Color(0xFF2563EB),
+                          Color(0xFF0891B2),
                           Color(0xFF0D9488),
                           Color(0xFF5EEAD4),
                         ]),
                         boxShadow: [
-                          BoxShadow(color: Color(0x662563EB), blurRadius: 10),
+                          BoxShadow(color: Color(0x660891B2), blurRadius: 10),
                         ],
                       ),
                     ),
@@ -487,7 +487,7 @@ class _ProgressBar extends StatelessWidget {
                         decoration: const BoxDecoration(
                           gradient: LinearGradient(colors: [
                             Colors.transparent,
-                            Color(0xFF2563EB),
+                            Color(0xFF0891B2),
                             Color(0xFF5EEAD4),
                             Colors.transparent,
                           ]),

@@ -85,7 +85,7 @@ class AppScaffold extends StatelessWidget {
             constraints: BoxConstraints(maxWidth: maxWidth),
             child: Padding(
               padding: EdgeInsets.only(top: showChrome ? 66 : 0),
-              child: child,
+              child: _BodyEntrance(child: child),
             ),
           ),
         ),
@@ -141,6 +141,31 @@ class _NavLink extends StatelessWidget {
         textStyle: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600),
       ),
       child: Text(label),
+    );
+  }
+}
+
+/// Gentle zoom-in for page content on load. Lives on the BODY only — the
+/// sticky header chrome stays perfectly still while pages come in.
+class _BodyEntrance extends StatelessWidget {
+  const _BodyEntrance({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOutCubic,
+      child: child,
+      builder: (context, t, inner) => Opacity(
+        opacity: t,
+        child: Transform.scale(
+          scale: 0.97 + 0.03 * t,
+          alignment: Alignment.topCenter,
+          child: inner,
+        ),
+      ),
     );
   }
 }

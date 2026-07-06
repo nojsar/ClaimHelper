@@ -1,29 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// GetMyYes dark cinematic palette — matches the getmyyes.com landing:
-/// deep navy surfaces, confident blue, mint-teal accents, high-contrast type.
+/// GetMyYes dark clinical palette — calm medical teal/cyan on deep marine
+/// surfaces: the trust of a hospital brand with the drama of the landing.
 abstract final class AppColors {
-  // Brand blue
-  static const primary = Color(0xFF2563EB); // blue-600 (buttons/brand)
-  static const primaryDark = Color(0xFF60A5FA); // readable blue on dark
-  static const primaryDeep = Color(0xFF1E3A8A); // blue-900 (gradients)
-  static const primaryTint = Color(0xFF15213D); // soft wash behind blue
+  // Clinical cyan (brand)
+  static const primary = Color(0xFF0891B2); // cyan-600 (buttons/brand)
+  static const primaryDark = Color(0xFF67E8F9); // readable cyan on dark
+  static const primaryDeep = Color(0xFF155E75); // cyan-800 (gradients)
+  static const primaryTint = Color(0xFF0B2530); // soft wash behind cyan
 
   // Reassuring health accent
-  static const accent = Color(0xFF14B8A6); // teal, brightened for dark
+  static const accent = Color(0xFF2DD4BF); // teal-400
   static const accentBright = Color(0xFF5EEAD4);
-  static const accentTint = Color(0xFF0E2A26);
+  static const accentTint = Color(0xFF0A2723);
 
-  // Neutrals
-  static const background = Color(0xFF070B14);
-  static const surface = Color(0xFF101A30);
-  static const surfaceAlt = Color(0xFF0C1424);
-  static const textPrimary = Color(0xFFEDF2FB);
-  static const textSecondary = Color(0xFFA5B3CD);
-  static const textMuted = Color(0xFF64748B);
-  static const border = Color(0xFF223050);
-  static const borderStrong = Color(0xFF33466B);
+  // Neutrals — deep marine, slightly green-shifted for the medical feel
+  static const background = Color(0xFF06121B);
+  static const surface = Color(0xFF0D1F2D);
+  static const surfaceAlt = Color(0xFF091A26);
+  static const textPrimary = Color(0xFFE9F3F9);
+  static const textSecondary = Color(0xFFA7BCCB);
+  static const textMuted = Color(0xFF64808F);
+  static const border = Color(0xFF1D3A4C);
+  static const borderStrong = Color(0xFF2F566C);
 
   // Status
   static const warning = Color(0xFFFBBF24);
@@ -35,7 +35,7 @@ abstract final class AppColors {
 /// Gradients used sparingly for hero washes, CTA bands, and brand marks.
 abstract final class AppGradients {
   static const brand = LinearGradient(
-    colors: [AppColors.primary, Color(0xFF3B82F6)],
+    colors: [AppColors.primary, Color(0xFF22D3EE)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -47,7 +47,7 @@ abstract final class AppGradients {
   );
 
   static const heroWash = LinearGradient(
-    colors: [Color(0xFF0B1220), Color(0xFF070B14), Color(0xFF070B14)],
+    colors: [Color(0xFF081925), Color(0xFF06121B), Color(0xFF06121B)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
@@ -94,6 +94,21 @@ abstract final class AppRadii {
   static const xl = 28.0;
 }
 
+/// Route transitions are disabled so the persistent header chrome never
+/// zooms with navigation — AppScaffold animates the page *body* instead.
+class NoTransitionsBuilder extends PageTransitionsBuilder {
+  const NoTransitionsBuilder();
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) =>
+      child;
+}
+
 ThemeData buildAppTheme() {
   final scheme = ColorScheme.fromSeed(
     seedColor: AppColors.primary,
@@ -119,6 +134,14 @@ ThemeData buildAppTheme() {
   );
 
   return base.copyWith(
+    pageTransitionsTheme: const PageTransitionsTheme(builders: {
+      TargetPlatform.android: NoTransitionsBuilder(),
+      TargetPlatform.iOS: NoTransitionsBuilder(),
+      TargetPlatform.linux: NoTransitionsBuilder(),
+      TargetPlatform.macOS: NoTransitionsBuilder(),
+      TargetPlatform.windows: NoTransitionsBuilder(),
+      TargetPlatform.fuchsia: NoTransitionsBuilder(),
+    }),
     appBarTheme: AppBarTheme(
       backgroundColor: AppColors.surface.withValues(alpha: 0.85),
       surfaceTintColor: Colors.transparent,
@@ -216,7 +239,7 @@ ThemeData buildAppTheme() {
     ),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
-      backgroundColor: const Color(0xFF1B2A4A),
+      backgroundColor: const Color(0xFF143243),
       contentTextStyle: const TextStyle(color: Colors.white),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadii.sm),

@@ -34,22 +34,30 @@ class LandingScreen extends StatelessWidget {
 }
 
 /// Centers section content to a max width with consistent horizontal padding.
+/// [fillViewport] stretches the section to roughly one screen height and
+/// centers its content, so one scroll gesture reveals one segment at a time.
 class _Section extends StatelessWidget {
   const _Section({
     required this.child,
-    this.padding = const EdgeInsets.symmetric(horizontal: 24, vertical: 72),
+    this.padding = const EdgeInsets.symmetric(horizontal: 24, vertical: 96),
     this.color,
     this.gradient,
+    this.fillViewport = false,
   });
   final Widget child;
   final EdgeInsets padding;
   final Color? color;
   final Gradient? gradient;
+  final bool fillViewport;
 
   @override
   Widget build(BuildContext context) {
+    final minH =
+        fillViewport ? MediaQuery.sizeOf(context).height - 66 : 0.0;
     return Container(
       width: double.infinity,
+      constraints: BoxConstraints(minHeight: minH),
+      alignment: Alignment.center,
       decoration: BoxDecoration(color: color, gradient: gradient),
       child: Padding(
         padding: padding,
@@ -321,6 +329,7 @@ class _LogosStrip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 26),
       child: Wrap(
         alignment: WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.center,
         spacing: 30,
         runSpacing: 14,
         children: const [
@@ -406,7 +415,9 @@ class _HowItWorks extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _Section(
+      fillViewport: true,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           const SectionHeader(
             eyebrow: 'How it works',
@@ -488,8 +499,10 @@ class _WhatsIncluded extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _Section(
-      color: AppColors.surface,
+      color: AppColors.surfaceAlt,
+      fillViewport: true,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           const SectionHeader(
             eyebrow: 'Everything you get',
@@ -595,6 +608,7 @@ class _TrustBand extends StatelessWidget {
     );
 
     return _Section(
+      fillViewport: true,
       child: Container(
         padding: EdgeInsets.all(wide ? 44 : 28),
         decoration: BoxDecoration(
@@ -624,8 +638,10 @@ class _PricingTeaser extends StatelessWidget {
   Widget build(BuildContext context) {
     final wide = MediaQuery.sizeOf(context).width > 720;
     return _Section(
-      color: AppColors.surface,
+      color: AppColors.surfaceAlt,
+      fillViewport: true,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           const SectionHeader(
             eyebrow: 'Simple pricing',
@@ -814,7 +830,7 @@ class _ClosingCta extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _Section(
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 72),
+      padding: const EdgeInsets.fromLTRB(24, 40, 24, 96),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 56),
         decoration: BoxDecoration(
@@ -864,7 +880,7 @@ class _Footer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: AppColors.textPrimary,
+      color: const Color(0xFF04121C),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1120),

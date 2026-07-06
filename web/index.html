@@ -6,7 +6,7 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#070B14">
+  <meta name="theme-color" content="#06121B">
   <meta name="robots" content="index, follow, max-image-preview:large">
 
   <title>GetMyYes — Turn a health-insurance denial into a ready-to-send appeal</title>
@@ -94,12 +94,12 @@
 
   <style>
     :root {
-      --bg: #070B14;
-      --bg2: #0B1220;
+      --bg: #06121B;
+      --bg2: #081925;
       --ink: #EDF2FB;
       --ink-dim: #93A2BD;
-      --blue: #2563EB;
-      --blue-soft: #60A5FA;
+      --blue: #0891B2;
+      --blue-soft: #67E8F9;
       --teal: #0D9488;
       --mint: #5EEAD4;
       --red: #F43F5E;
@@ -118,7 +118,7 @@
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
     }
-    ::selection { background: rgba(37, 99, 235, 0.55); color: #fff; }
+    ::selection { background: rgba(8, 145, 178, 0.55); color: #fff; }
 
     /* ---------- chrome ---------- */
     .grain {
@@ -144,13 +144,13 @@
       position: fixed; top: 0; left: 0; right: 0; z-index: 50;
       display: flex; align-items: center; justify-content: space-between;
       padding: 18px clamp(20px, 4vw, 48px);
-      background: linear-gradient(180deg, rgba(7,11,20,0.85), rgba(7,11,20,0));
+      background: linear-gradient(180deg, rgba(6,18,27,0.85), rgba(6,18,27,0));
     }
     .brand { display: flex; align-items: center; gap: 11px; font-family: var(--font-display); font-weight: 700; font-size: 19px; letter-spacing: -0.4px; }
     .brand .mark {
       width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
-      background: linear-gradient(135deg, var(--blue), #3B82F6); color: #fff; font-size: 17px;
-      box-shadow: 0 8px 22px -6px rgba(37, 99, 235, 0.7);
+      background: linear-gradient(135deg, var(--blue), #22D3EE); color: #fff; font-size: 17px;
+      box-shadow: 0 8px 22px -6px rgba(8, 145, 178, 0.7);
     }
     .btn {
       font-family: var(--font-body); font-weight: 700; font-size: 15px; cursor: pointer;
@@ -158,9 +158,9 @@
     }
     .btn.primary {
       color: #fff; background: linear-gradient(100deg, var(--blue), var(--teal));
-      box-shadow: 0 14px 34px -10px rgba(37, 99, 235, 0.65);
+      box-shadow: 0 14px 34px -10px rgba(8, 145, 178, 0.65);
     }
-    .btn.primary:hover { transform: translateY(-2px); box-shadow: 0 20px 44px -10px rgba(37, 99, 235, 0.8); }
+    .btn.primary:hover { transform: translateY(-2px); box-shadow: 0 20px 44px -10px rgba(8, 145, 178, 0.8); }
     .btn.ghost {
       color: var(--ink); background: rgba(148,163,184,0.10); border: 1px solid var(--line); padding: 11px 20px; font-size: 13.5px;
     }
@@ -189,8 +189,8 @@
     .hero .veil {
       position: absolute; inset: 0; z-index: 1;
       background:
-        radial-gradient(1200px 500px at 50% 110%, rgba(7,11,20,0.9), transparent 60%),
-        linear-gradient(180deg, rgba(7,11,20,0.55) 0%, rgba(7,11,20,0.25) 40%, rgba(7,11,20,0.92) 100%);
+        radial-gradient(1200px 500px at 50% 110%, rgba(6,18,27,0.9), transparent 60%),
+        linear-gradient(180deg, rgba(6,18,27,0.55) 0%, rgba(6,18,27,0.25) 40%, rgba(6,18,27,0.92) 100%);
     }
     .hero-copy { position: relative; z-index: 2; text-align: center; padding: 120px 22px 90px; max-width: 980px; }
     .hero h1 {
@@ -222,12 +222,12 @@
     @keyframes cue { 0%,100% { transform: scaleY(0.4); opacity:.4 } 50% { transform: scaleY(1); opacity:1 } }
 
     /* ODDS — parallax paper field */
-    .odds { padding: clamp(120px, 16vh, 200px) 0; overflow: hidden; background: linear-gradient(180deg, var(--bg) 0%, #0A1020 55%, var(--bg) 100%); }
+    .odds { padding: clamp(120px, 16vh, 200px) 0; overflow: hidden; background: linear-gradient(180deg, var(--bg) 0%, #0A1D2A 55%, var(--bg) 100%); }
     .odds .wrap { position: relative; z-index: 2; text-align: center; }
     .paper-field { position: absolute; inset: 0; z-index: 1; perspective: 900px; pointer-events: none; }
     .paper {
       position: absolute; width: 120px; height: 150px; border-radius: 8px;
-      background: linear-gradient(160deg, #131C30, #0D1526);
+      background: linear-gradient(160deg, #12222F, #0B1B27);
       border: 1px solid rgba(148,163,184,0.14);
       box-shadow: 0 30px 60px -18px rgba(0,0,0,0.7);
       padding: 14px 12px;
@@ -253,13 +253,13 @@
     .beam .fill {
       display: block; width: 100%; height: 100%;
       background: linear-gradient(180deg, var(--blue), var(--mint));
-      box-shadow: 0 0 18px rgba(37, 99, 235, 0.8);
+      box-shadow: 0 0 18px rgba(8, 145, 178, 0.8);
       transform-origin: top; transform: scaleY(0);
     }
     .step { position: relative; display: flex; gap: 26px; padding: 0 0 clamp(44px, 6vh, 64px) 0; }
     .step .dot {
       flex: 0 0 56px; width: 56px; height: 56px; border-radius: 18px; display: grid; place-items: center;
-      background: linear-gradient(150deg, #101A30, #0C1424); border: 1px solid var(--line);
+      background: linear-gradient(150deg, #0D1F2D, #091A26); border: 1px solid var(--line);
       font-family: var(--font-display); font-weight: 700; color: var(--mint); font-size: 17px;
       box-shadow: 0 16px 34px -14px rgba(0,0,0,0.8); z-index: 1;
     }
@@ -267,31 +267,31 @@
     .step p { color: var(--ink-dim); line-height: 1.65; font-size: 15.5px; max-width: 560px; }
 
     /* INSIDE — tilt cards + pricing */
-    .inside { padding: clamp(120px, 16vh, 200px) 0; background: linear-gradient(180deg, var(--bg) 0%, #0A1122 50%, var(--bg) 100%); }
+    .inside { padding: clamp(120px, 16vh, 200px) 0; background: linear-gradient(180deg, var(--bg) 0%, #0A1D2A 50%, var(--bg) 100%); }
     .inside .head { text-align: center; margin-bottom: clamp(56px, 8vh, 88px); }
     .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; perspective: 1200px; }
     .deliverable {
       border-radius: 20px; padding: 26px 24px; min-height: 168px;
-      background: linear-gradient(160deg, rgba(21,32,56,0.85), rgba(11,18,32,0.9));
+      background: linear-gradient(160deg, rgba(18,36,50,0.85), rgba(9,26,38,0.9));
       border: 1px solid var(--line); transition: border-color .25s ease;
       transform-style: preserve-3d; will-change: transform;
     }
-    .deliverable:hover { border-color: rgba(96,165,250,0.45); }
+    .deliverable:hover { border-color: rgba(103,232,249,0.45); }
     .deliverable .ic {
       width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; font-size: 20px;
-      background: rgba(37, 99, 235, 0.16); margin-bottom: 16px;
+      background: rgba(8, 145, 178, 0.16); margin-bottom: 16px;
     }
     .deliverable h4 { font-family: var(--font-display); font-size: 17.5px; font-weight: 600; letter-spacing: -0.3px; margin-bottom: 7px; }
     .deliverable p { color: var(--ink-dim); font-size: 13.5px; line-height: 1.55; }
     .pricing { margin-top: clamp(64px, 9vh, 100px); display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 20px; max-width: 860px; margin-left: auto; margin-right: auto; }
     .price-card {
       border-radius: 24px; padding: 34px 30px; border: 1px solid var(--line);
-      background: linear-gradient(165deg, rgba(16,26,48,0.9), rgba(9,14,26,0.95));
+      background: linear-gradient(165deg, rgba(13,31,45,0.9), rgba(7,20,30,0.95));
     }
     .price-card.hot { border: 1.5px solid rgba(94,234,212,0.5); box-shadow: 0 30px 80px -30px rgba(13,148,136,0.55); position: relative; overflow: hidden; }
     .price-card.hot::before {
       content: ""; position: absolute; inset: -40%; z-index: 0;
-      background: radial-gradient(500px 220px at 80% -10%, rgba(37,99,235,0.28), transparent 60%);
+      background: radial-gradient(500px 220px at 80% -10%, rgba(8,145,178,0.28), transparent 60%);
     }
     .price-card > * { position: relative; z-index: 1; }
     .price-card .tier { font-size: 13px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--ink-dim); }
@@ -306,7 +306,7 @@
     .finale { padding: clamp(130px, 20vh, 230px) 0 90px; text-align: center; overflow: hidden; position: relative; }
     .finale .glow {
       position: absolute; left: 50%; top: 40%; transform: translate(-50%,-50%); width: 900px; height: 500px; z-index: 0;
-      background: radial-gradient(closest-side, rgba(13,148,136,0.28), rgba(37,99,235,0.12), transparent);
+      background: radial-gradient(closest-side, rgba(13,148,136,0.28), rgba(8,145,178,0.12), transparent);
       filter: blur(10px); pointer-events: none;
     }
     .finale .wrap { position: relative; z-index: 1; }
@@ -322,7 +322,7 @@
     .faq h3 { font-family: var(--font-display); font-size: 24px; letter-spacing: -0.5px; margin-bottom: 20px; }
     details {
       border: 1px solid var(--line); border-radius: 16px; margin-bottom: 12px;
-      background: rgba(16,26,48,0.55); overflow: hidden;
+      background: rgba(13,31,45,0.55); overflow: hidden;
     }
     summary {
       cursor: pointer; padding: 18px 22px; font-weight: 700; font-size: 15.5px; list-style: none;
@@ -654,8 +654,10 @@
         });
 
         // HERO video: on desktop the film advances WITH the scroll instead of
-        // looping — the scroll position is the playhead. Touch devices keep
-        // the autoplay loop (mobile browsers throttle seek-scrubbing).
+        // looping. Every frame we lerp the playhead toward the scroll-derived
+        // target — small sequential seeks decode smoothly, where hard seeking
+        // snapped between keyframes and looked like cuts. Touch devices keep
+        // the autoplay loop (they throttle seeking).
         var heroVideo = document.querySelector('.hero video.bg');
         var scrubVideo = !!(fine && heroVideo);
         if (scrubVideo) {
@@ -663,21 +665,30 @@
           heroVideo.pause();
           heroVideo.currentTime = 0;
         }
-        function scrubHeroVideo(progress) {
-          if (!scrubVideo || !heroVideo.duration) return;
-          var t = progress * Math.max(0, heroVideo.duration - 0.08);
-          if (Math.abs(heroVideo.currentTime - t) > 0.02) heroVideo.currentTime = t;
-        }
 
         // HERO: pinned NO → YES morph over the video. The NO line recedes in
         // place (scale/blur — transforms only, so it can never re-wrap) and
-        // the YES line rises into the exact same grid cell.
+        // the YES line rises into the exact same grid cell. The long pin
+        // stretches the film across more scroll so it never rushes.
         var heroTl = gsap.timeline({
           scrollTrigger: {
-            trigger: '#s-hero', start: 'top top', end: '+=130%', scrub: 0.6, pin: true,
-            onUpdate: function (self) { scrubHeroVideo(self.progress); }
+            trigger: '#s-hero', start: 'top top', end: '+=170%', scrub: 0.6, pin: true
           }
         });
+
+        // The lerp reads the trigger's progress directly each tick — no
+        // callback plumbing to go stale.
+        if (scrubVideo) {
+          gsap.ticker.add(function () {
+            var st = heroTl.scrollTrigger;
+            if (!st || !heroVideo.duration || heroVideo.seeking) return;
+            var target = st.progress * Math.max(0, heroVideo.duration - 0.1);
+            var cur = heroVideo.currentTime;
+            var diff = target - cur;
+            if (Math.abs(diff) < 0.008) return;
+            heroVideo.currentTime = cur + diff * 0.11;
+          });
+        }
         heroTl
           .to('.hero video.bg', { scale: 1.18, ease: 'none' }, 0)
           .to('.l-no', { scale: 1.14, filter: 'blur(9px)', opacity: 0, ease: 'power2.in' }, 0)
@@ -710,13 +721,13 @@
           snapping = true;
           if (lenis) {
             lenis.scrollTo(y, {
-              duration: 0.85,
+              duration: 1.15,
               easing: function (t) { return 1 - Math.pow(1 - t, 3); },
               onComplete: function () { snapping = false; }
             });
           } else {
             window.scrollTo({ top: y, behavior: 'smooth' });
-            setTimeout(function () { snapping = false; }, 700);
+            setTimeout(function () { snapping = false; }, 900);
           }
         }
         function trySnap() {
