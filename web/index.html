@@ -20,13 +20,16 @@
   <meta property="og:title" content="GetMyYes — Turn a denial letter into a ready-to-send appeal">
   <meta property="og:description" content="Upload a denied medication, prior-auth, or 'not medically necessary' letter and get a ready-to-review appeal packet in 15 minutes. Free preview, $39 full packet.">
   <meta property="og:url" content="https://getmyyes.com/">
-  <meta property="og:image" content="https://getmyyes.com/icons/Icon-512.png">
+  <meta property="og:image" content="https://getmyyes.com/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="GetMyYes — Turn a denial letter into a ready-to-send appeal">
   <meta name="twitter:description" content="A denied medication or prior-auth letter becomes a ready-to-review appeal packet in 15 minutes. Free preview, $39 full packet.">
-  <meta name="twitter:image" content="https://getmyyes.com/icons/Icon-512.png">
+  <meta name="twitter:image" content="https://getmyyes.com/og-image.png">
+  <meta name="twitter:image:alt" content="GetMyYes — They said NO. Send back a YES.">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -54,7 +57,9 @@
         "description": "Turns a health-insurance denial letter, EOB, or prior-authorization denial into a ready-to-review appeal packet: plain-English summary, appeal letter, evidence checklist, doctor letter request, insurer call script, deadline tracker, and PDF export.",
         "offers": [
           { "@type": "Offer", "name": "Free preview", "price": "0", "priceCurrency": "USD" },
-          { "@type": "Offer", "name": "Full Appeal Packet", "price": "39", "priceCurrency": "USD" }
+          { "@type": "Offer", "name": "Full Appeal Packet (includes 2 follow-up rounds)", "price": "39", "priceCurrency": "USD" },
+          { "@type": "Offer", "name": "Additional Follow-up Round", "price": "19", "priceCurrency": "USD" },
+          { "@type": "Offer", "name": "Full Case Upgrade (up to 100 follow-up rounds)", "price": "59", "priceCurrency": "USD" }
         ],
         "areaServed": "US"
       },
@@ -80,6 +85,11 @@
             "@type": "Question",
             "name": "Is GetMyYes legal or medical advice?",
             "acceptedAnswer": { "@type": "Answer", "text": "No. GetMyYes is a document drafting assistant. It does not provide medical, legal, or insurance advice, does not decide medical necessity, and does not guarantee approval. You review every document before sending it." }
+          },
+          {
+            "@type": "Question",
+            "name": "What happens after I send the appeal?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Your packet includes 2 follow-up rounds. When the insurer replies — or ignores you — report what happened and GetMyYes drafts your next move: a second-level appeal, an external-review request, or a status demand letter. Extra rounds are $19 each, or the $59 Full Case upgrade covers up to 100 rounds per case (not unlimited)." }
           },
           {
             "@type": "Question",
@@ -165,6 +175,9 @@
       color: var(--ink); background: rgba(148,163,184,0.10); border: 1px solid var(--line); padding: 11px 20px; font-size: 13.5px;
     }
     .btn.ghost:hover { background: rgba(148,163,184,0.18); }
+    .btn:focus-visible, summary:focus-visible, footer a:focus-visible, details:focus-within summary {
+      outline: 2px solid var(--mint); outline-offset: 3px; border-radius: 8px;
+    }
 
     /* ---------- scenes ---------- */
     .scene { position: relative; }
@@ -505,6 +518,7 @@
             <div class="per">one-time · per case · no subscription</div>
             <ul>
               <li>All 7 documents, tailored to your denial</li>
+              <li>2 follow-up rounds included — keep going after the insurer replies</li>
               <li>Saved to your account, export any time</li>
               <li>Your files are never used to train AI</li>
             </ul>
@@ -540,6 +554,10 @@
           <details>
             <summary>Is this legal or medical advice?</summary>
             <div class="a">No. GetMyYes is a document drafting assistant. It does not provide medical, legal, or insurance advice, does not decide medical necessity, and does not guarantee approval. You review every document before sending it.</div>
+          </details>
+          <details>
+            <summary>What happens after I send the appeal?</summary>
+            <div class="a">Your packet includes 2 follow-up rounds. When the insurer replies — or ignores you — report what happened and GetMyYes drafts your next move: a second-level appeal, an external-review request, or a status demand letter. Extra rounds are $19 each, or the $59 Full Case upgrade covers up to 100 rounds per case (not unlimited).</div>
           </details>
           <details>
             <summary>Is my health data private?</summary>
@@ -653,42 +671,18 @@
           scrollTrigger: { trigger: document.body, start: 'top top', end: 'max', scrub: 0.3 }
         });
 
-        // HERO video: on desktop the film advances WITH the scroll instead of
-        // looping. Every frame we lerp the playhead toward the scroll-derived
-        // target — small sequential seeks decode smoothly, where hard seeking
-        // snapped between keyframes and looked like cuts. Touch devices keep
-        // the autoplay loop (they throttle seeking).
-        var heroVideo = document.querySelector('.hero video.bg');
-        var scrubVideo = !!(fine && heroVideo);
-        if (scrubVideo) {
-          heroVideo.removeAttribute('loop');
-          heroVideo.pause();
-          heroVideo.currentTime = 0;
-        }
+        // HERO video: simple autoplay loop — scroll-scrubbing H.264 stutters
+        // without a dense-keyframe re-encode, so the film just plays and the
+        // subtle scale tween below ties it to the scroll instead.
 
         // HERO: pinned NO → YES morph over the video. The NO line recedes in
         // place (scale/blur — transforms only, so it can never re-wrap) and
-        // the YES line rises into the exact same grid cell. The long pin
-        // stretches the film across more scroll so it never rushes.
+        // the YES line rises into the exact same grid cell.
         var heroTl = gsap.timeline({
           scrollTrigger: {
             trigger: '#s-hero', start: 'top top', end: '+=170%', scrub: 0.6, pin: true
           }
         });
-
-        // The lerp reads the trigger's progress directly each tick — no
-        // callback plumbing to go stale.
-        if (scrubVideo) {
-          gsap.ticker.add(function () {
-            var st = heroTl.scrollTrigger;
-            if (!st || !heroVideo.duration || heroVideo.seeking) return;
-            var target = st.progress * Math.max(0, heroVideo.duration - 0.1);
-            var cur = heroVideo.currentTime;
-            var diff = target - cur;
-            if (Math.abs(diff) < 0.008) return;
-            heroVideo.currentTime = cur + diff * 0.11;
-          });
-        }
         heroTl
           .to('.hero video.bg', { scale: 1.18, ease: 'none' }, 0)
           .to('.l-no', { scale: 1.14, filter: 'blur(9px)', opacity: 0, ease: 'power2.in' }, 0)
