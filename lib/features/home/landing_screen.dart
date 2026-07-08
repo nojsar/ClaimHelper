@@ -880,7 +880,7 @@ class _Footer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: const Color(0xFF04121C),
+      color: AppColors.ink,
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1120),

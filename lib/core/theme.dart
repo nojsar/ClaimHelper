@@ -1,67 +1,72 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// GetMyYes dark clinical palette — calm medical teal/cyan on deep marine
-/// surfaces: the trust of a hospital brand with the drama of the landing.
+/// THE CASE FILE — the app wears the same paper world as getmyyes.com:
+/// bone paper, warm ink, carmine stamp red, approval green, letterpress type.
 abstract final class AppColors {
-  // Clinical cyan (brand)
-  static const primary = Color(0xFF0891B2); // cyan-600 (buttons/brand)
-  static const primaryDark = Color(0xFF67E8F9); // readable cyan on dark
-  static const primaryDeep = Color(0xFF155E75); // cyan-800 (gradients)
-  static const primaryTint = Color(0xFF0B2530); // soft wash behind cyan
+  // Stamp carmine (brand / emphasis)
+  static const primary = Color(0xFFB3202A); // carmine — spinners, accents
+  static const primaryDark = Color(0xFF8F1922); // deep carmine for links/text
+  static const primaryDeep = Color(0xFF6E1219); // darkest red (gradients)
+  static const primaryTint = Color(0xFFF3E2DE); // red-tinted paper wash
 
-  // Reassuring health accent
-  static const accent = Color(0xFF2DD4BF); // teal-400
-  static const accentBright = Color(0xFF5EEAD4);
-  static const accentTint = Color(0xFF0A2723);
+  // Approval green (success / progress)
+  static const accent = Color(0xFF14724F);
+  static const accentBright = Color(0xFF1E9A6B);
+  static const accentTint = Color(0xFFE4EDE0);
 
-  // Neutrals — deep marine, slightly green-shifted for the medical feel
-  static const background = Color(0xFF06121B);
-  static const surface = Color(0xFF0D1F2D);
-  static const surfaceAlt = Color(0xFF091A26);
-  static const textPrimary = Color(0xFFE9F3F9);
-  static const textSecondary = Color(0xFFA7BCCB);
-  static const textMuted = Color(0xFF64808F);
-  static const border = Color(0xFF1D3A4C);
-  static const borderStrong = Color(0xFF2F566C);
+  // Paper & ink neutrals
+  static const background = Color(0xFFF3EDDF); // bone paper
+  static const surface = Color(0xFFFBF7EC); // letter paper
+  static const surfaceAlt = Color(0xFFEAE1CC); // deeper cream
+  static const textPrimary = Color(0xFF1C160C); // warm ink
+  static const textSecondary = Color(0xFF57503F);
+  static const textMuted = Color(0xFF7A7159);
+  static const border = Color(0xFFDCD2BA);
+  static const borderStrong = Color(0xFFB9AC8F);
+
+  // Ink (buttons, footer, dark panels)
+  static const ink = Color(0xFF1C160C);
+  static const inkSoft = Color(0xFF2A2213);
 
   // Status
-  static const warning = Color(0xFFFBBF24);
-  static const warningTint = Color(0xFF2A2010);
-  static const error = Color(0xFFF87171);
-  static const errorTint = Color(0xFF2A1418);
+  static const warning = Color(0xFF8C5A08);
+  static const warningTint = Color(0xFFF4E8CB);
+  static const error = Color(0xFFB3202A);
+  static const errorTint = Color(0xFFF5DFDD);
 }
 
 /// Gradients used sparingly for hero washes, CTA bands, and brand marks.
 abstract final class AppGradients {
   static const brand = LinearGradient(
-    colors: [AppColors.primary, Color(0xFF22D3EE)],
+    colors: [AppColors.primary, Color(0xFFD92632)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const cta = LinearGradient(
-    colors: [AppColors.primary, AppColors.primaryDeep],
+    colors: [AppColors.ink, AppColors.inkSoft],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const heroWash = LinearGradient(
-    colors: [Color(0xFF081925), Color(0xFF06121B), Color(0xFF06121B)],
+    colors: [Color(0xFFF7F1E3), Color(0xFFF3EDDF), Color(0xFFF3EDDF)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
 
+  /// NO-red into YES-green — the whole product in one gradient.
   static const accentText = LinearGradient(
-    colors: [AppColors.primaryDark, AppColors.accentBright],
+    colors: [AppColors.primary, AppColors.accent],
   );
 }
 
-/// Soft, layered shadows — never harsh.
+/// Warm paper shadows — graphite on a desk, never cold blue.
 abstract final class AppShadows {
   static const soft = [
     BoxShadow(
-      color: Color(0x0F1E293B),
+      color: Color(0x1F3C2E12),
       blurRadius: 24,
       offset: Offset(0, 8),
       spreadRadius: -6,
@@ -70,7 +75,7 @@ abstract final class AppShadows {
 
   static const lifted = [
     BoxShadow(
-      color: Color(0x1A1E40AF),
+      color: Color(0x333C2E12),
       blurRadius: 40,
       offset: Offset(0, 18),
       spreadRadius: -10,
@@ -79,7 +84,7 @@ abstract final class AppShadows {
 
   static const subtle = [
     BoxShadow(
-      color: Color(0x0A0F172A),
+      color: Color(0x143C2E12),
       blurRadius: 12,
       offset: Offset(0, 4),
       spreadRadius: -4,
@@ -88,10 +93,10 @@ abstract final class AppShadows {
 }
 
 abstract final class AppRadii {
-  static const sm = 10.0;
-  static const md = 14.0;
-  static const lg = 20.0;
-  static const xl = 28.0;
+  static const sm = 6.0;
+  static const md = 8.0;
+  static const lg = 12.0;
+  static const xl = 16.0;
 }
 
 /// Route transitions are disabled so the persistent header chrome never
@@ -112,7 +117,7 @@ class NoTransitionsBuilder extends PageTransitionsBuilder {
 ThemeData buildAppTheme() {
   final scheme = ColorScheme.fromSeed(
     seedColor: AppColors.primary,
-    brightness: Brightness.dark,
+    brightness: Brightness.light,
     primary: AppColors.primary,
     onPrimary: Colors.white,
     secondary: AppColors.accent,
@@ -120,9 +125,26 @@ ThemeData buildAppTheme() {
     error: AppColors.error,
   );
 
-  final textTheme = GoogleFonts.plusJakartaSansTextTheme().apply(
+  // Landing pairing: Fraunces serif for headings, IBM Plex Sans for UI.
+  final body = GoogleFonts.ibmPlexSansTextTheme().apply(
     bodyColor: AppColors.textPrimary,
     displayColor: AppColors.textPrimary,
+  );
+  TextStyle serif(TextStyle? base, {FontWeight weight = FontWeight.w600}) =>
+      GoogleFonts.fraunces(
+        textStyle: base,
+        fontWeight: weight,
+        color: AppColors.textPrimary,
+        letterSpacing: -0.4,
+      );
+  final textTheme = body.copyWith(
+    displayLarge: serif(body.displayLarge, weight: FontWeight.w700),
+    displayMedium: serif(body.displayMedium, weight: FontWeight.w700),
+    displaySmall: serif(body.displaySmall, weight: FontWeight.w700),
+    headlineLarge: serif(body.headlineLarge, weight: FontWeight.w700),
+    headlineMedium: serif(body.headlineMedium),
+    headlineSmall: serif(body.headlineSmall),
+    titleLarge: serif(body.titleLarge),
   );
 
   final base = ThemeData(
@@ -143,15 +165,13 @@ ThemeData buildAppTheme() {
       TargetPlatform.fuchsia: NoTransitionsBuilder(),
     }),
     appBarTheme: AppBarTheme(
-      backgroundColor: AppColors.surface.withValues(alpha: 0.85),
+      backgroundColor: AppColors.background.withValues(alpha: 0.92),
       surfaceTintColor: Colors.transparent,
       foregroundColor: AppColors.textPrimary,
       elevation: 0,
       scrolledUnderElevation: 0,
       centerTitle: false,
-      titleTextStyle: textTheme.titleLarge?.copyWith(
-        fontWeight: FontWeight.w700,
-      ),
+      titleTextStyle: textTheme.titleLarge,
     ),
     cardTheme: CardThemeData(
       color: AppColors.surface,
@@ -159,35 +179,41 @@ ThemeData buildAppTheme() {
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadii.lg),
-        side: const BorderSide(color: AppColors.border),
+        side: const BorderSide(color: AppColors.borderStrong, width: 0.8),
       ),
       margin: EdgeInsets.zero,
     ),
+    // Primary actions are ink-black documents stamps — like the landing.
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.ink,
+        foregroundColor: AppColors.background,
         padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 18),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadii.md),
+          borderRadius: BorderRadius.circular(AppRadii.sm),
         ),
-        textStyle: textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.1,
+        textStyle: GoogleFonts.ibmPlexMono(
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+          letterSpacing: 0.8,
         ),
         elevation: 0,
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.primaryDark,
-        backgroundColor: AppColors.surface,
+        foregroundColor: AppColors.textPrimary,
+        backgroundColor: Colors.transparent,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
-        side: const BorderSide(color: AppColors.borderStrong),
+        side: const BorderSide(color: AppColors.ink, width: 1.3),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadii.md),
+          borderRadius: BorderRadius.circular(AppRadii.sm),
         ),
-        textStyle: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+        textStyle: GoogleFonts.ibmPlexMono(
+          fontWeight: FontWeight.w600,
+          fontSize: 13.5,
+          letterSpacing: 0.8,
+        ),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
@@ -199,7 +225,7 @@ ThemeData buildAppTheme() {
     chipTheme: ChipThemeData(
       backgroundColor: AppColors.surface,
       selectedColor: AppColors.primaryTint,
-      side: const BorderSide(color: AppColors.border),
+      side: const BorderSide(color: AppColors.borderStrong),
       labelStyle: textTheme.bodyMedium?.copyWith(
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
@@ -207,7 +233,7 @@ ThemeData buildAppTheme() {
       secondaryLabelStyle: textTheme.bodyMedium,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(999),
-        side: const BorderSide(color: AppColors.border),
+        side: const BorderSide(color: AppColors.borderStrong),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
     ),
@@ -221,11 +247,11 @@ ThemeData buildAppTheme() {
       hintStyle: const TextStyle(color: AppColors.textMuted),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadii.md),
-        borderSide: const BorderSide(color: AppColors.border),
+        borderSide: const BorderSide(color: AppColors.borderStrong),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadii.md),
-        borderSide: const BorderSide(color: AppColors.border),
+        borderSide: const BorderSide(color: AppColors.borderStrong),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadii.md),
@@ -239,8 +265,8 @@ ThemeData buildAppTheme() {
     ),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
-      backgroundColor: const Color(0xFF143243),
-      contentTextStyle: const TextStyle(color: Colors.white),
+      backgroundColor: AppColors.ink,
+      contentTextStyle: const TextStyle(color: AppColors.background),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadii.sm),
       ),

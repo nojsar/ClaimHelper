@@ -188,7 +188,7 @@ class _GenerationTheaterState extends State<_GenerationTheater>
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: const [
                     BoxShadow(
-                      color: Color(0x550891B2),
+                      color: Color(0x66B3202A),
                       blurRadius: 46,
                       offset: Offset(0, 18),
                       spreadRadius: -18,
@@ -220,8 +220,8 @@ class _GenerationTheaterState extends State<_GenerationTheater>
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: _videoReady
-                                  ? const [Color(0xD9081925), Color(0xC60F2A3A)]
-                                  : const [Color(0xFF081925), Color(0xFF0F2A3A)],
+                                  ? const [Color(0xD91C160C), Color(0xC62A2213)]
+                                  : const [Color(0xFF1C160C), Color(0xFF2A2213)],
                             ),
                           ),
                         ),
@@ -236,11 +236,11 @@ class _GenerationTheaterState extends State<_GenerationTheater>
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: const [
                           Icon(Icons.verified_rounded,
-                              color: Color(0xFF34D399), size: 18),
+                              color: Color(0xFF2FB380), size: 18),
                           SizedBox(width: 7),
                           Text('Payment confirmed',
                               style: TextStyle(
-                                  color: Color(0xFF34D399),
+                                  color: Color(0xFF2FB380),
                                   fontSize: 13,
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: 0.3)),
@@ -327,8 +327,8 @@ class _PacketAssembly extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(90),
                   gradient: RadialGradient(colors: [
-                    const Color(0xFF0891B2)
-                        .withValues(alpha: 0.24 + 0.10 * sweep),
+                    const Color(0xFFB3202A)
+                        .withValues(alpha: 0.26 + 0.10 * sweep),
                     Colors.transparent,
                   ]),
                 ),
@@ -345,10 +345,10 @@ class _PacketAssembly extends StatelessWidget {
                   child: Container(
                     width: 2.5,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF5EEAD4).withValues(alpha: 0.85),
+                      color: const Color(0xFFE8C877).withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(2),
                       boxShadow: const [
-                        BoxShadow(color: Color(0x885EEAD4), blurRadius: 14),
+                        BoxShadow(color: Color(0x88E8C877), blurRadius: 14),
                       ],
                     ),
                   ),
@@ -365,7 +365,7 @@ class _PacketAssembly extends StatelessWidget {
                     shape: BoxShape.circle,
                     gradient: AppGradients.brand,
                     boxShadow: const [
-                      BoxShadow(color: Color(0x880891B2), blurRadius: 22),
+                      BoxShadow(color: Color(0x88B3202A), blurRadius: 22),
                     ],
                   ),
                   child: const Icon(Icons.check_rounded,
@@ -466,14 +466,15 @@ class _ProgressBar extends StatelessWidget {
                     alignment: Alignment.centerLeft,
                     widthFactor: value!.clamp(0.02, 1.0),
                     child: Container(
+                      // Denial red → paperwork gold → approval green.
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(colors: [
-                          Color(0xFF0891B2),
-                          Color(0xFF0D9488),
-                          Color(0xFF5EEAD4),
+                          Color(0xFFB3202A),
+                          Color(0xFFC99A3A),
+                          Color(0xFF1E9A6B),
                         ]),
                         boxShadow: [
-                          BoxShadow(color: Color(0x660891B2), blurRadius: 10),
+                          BoxShadow(color: Color(0x66B3202A), blurRadius: 10),
                         ],
                       ),
                     ),
@@ -487,8 +488,8 @@ class _ProgressBar extends StatelessWidget {
                         decoration: const BoxDecoration(
                           gradient: LinearGradient(colors: [
                             Colors.transparent,
-                            Color(0xFF0891B2),
-                            Color(0xFF5EEAD4),
+                            Color(0xFFB3202A),
+                            Color(0xFFE8C877),
                             Colors.transparent,
                           ]),
                         ),
