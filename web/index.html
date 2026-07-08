@@ -6,7 +6,7 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#06121B">
+  <meta name="theme-color" content="#F3EDDF">
   <meta name="robots" content="index, follow, max-image-preview:large">
 
   <title>GetMyYes — Turn a health-insurance denial into a ready-to-send appeal</title>
@@ -33,7 +33,7 @@
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="GetMyYes">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
   <link rel="icon" type="image/png" href="favicon.png"/>
@@ -41,7 +41,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 
   <!-- Structured data: crawlers read this without executing the app -->
   <script type="application/ld+json">
@@ -103,284 +103,658 @@
   </script>
 
   <style>
+    /* ============================================================
+       THE CASE FILE — a bureaucratic dreamworld in living paper.
+       Bone paper · carmine ink · approval green · letterpress type.
+       ============================================================ */
     :root {
-      --bg: #06121B;
-      --bg2: #081925;
-      --ink: #EDF2FB;
-      --ink-dim: #93A2BD;
-      --blue: #0891B2;
-      --blue-soft: #67E8F9;
-      --teal: #0D9488;
-      --mint: #5EEAD4;
-      --red: #F43F5E;
-      --line: rgba(148, 163, 184, 0.14);
-      --max: 1180px;
-      --font-display: "Space Grotesk", "Inter", sans-serif;
-      --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --paper: #F3EDDF;
+      --paper-2: #EAE1CC;
+      --paper-3: #E2D7BC;
+      --ink: #1C160C;
+      --ink-soft: #57503F;
+      --ink-faint: #7A7159;
+      --red: #B3202A;
+      --red-bright: #D92632;
+      --green: #14724F;
+      --green-bright: #1E9A6B;
+      --gold: #A67C1B;
+      --line: rgba(28, 22, 12, 0.16);
+      --line-strong: rgba(28, 22, 12, 0.34);
+      --max: 1220px;
+      --serif: "Fraunces", "Georgia", serif;
+      --mono: "IBM Plex Mono", "Courier New", monospace;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: auto; }
     html.app-mode #landing { display: none; }
     body {
-      background: var(--bg);
+      background: var(--paper);
       color: var(--ink);
-      font-family: var(--font-body);
+      font-family: var(--serif);
+      font-optical-sizing: auto;
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
     }
-    ::selection { background: rgba(8, 145, 178, 0.55); color: #fff; }
+    ::selection { background: var(--red); color: var(--paper); }
 
-    /* ---------- chrome ---------- */
-    .grain {
-      position: fixed; inset: -100%; z-index: 60; pointer-events: none; opacity: 0.05;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
-      animation: grain 8s steps(10) infinite;
+    /* ---------- paper atmosphere ---------- */
+    .paper-grain {
+      position: fixed; inset: 0; z-index: 80; pointer-events: none; opacity: 0.5;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0.55 0 0 0 0 0.5 0 0 0 0 0.42 0 0 0 0.055 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E");
+      mix-blend-mode: multiply;
     }
-    @keyframes grain {
-      0%,100% { transform: translate(0,0); } 20% { transform: translate(-4%,3%); }
-      40% { transform: translate(3%,-4%); } 60% { transform: translate(-3%,-2%); }
-      80% { transform: translate(4%,2%); }
+    .paper-vignette {
+      position: fixed; inset: 0; z-index: 79; pointer-events: none;
+      background: radial-gradient(140% 110% at 50% 40%, transparent 62%, rgba(94, 76, 40, 0.13) 100%);
     }
+
+    /* rough rubber-stamp ink edges (SVG displacement) */
+    svg.defs { position: absolute; width: 0; height: 0; }
+    .stamped { filter: url(#roughen); }
+
+    /* ---------- case-progress rail ---------- */
     .progress-rail {
-      position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 70;
-      background: rgba(148,163,184,0.10);
+      position: fixed; top: 0; left: 0; right: 0; height: 4px; z-index: 90;
+      background: rgba(28,22,12,0.08);
     }
-    #scrollbar {
-      height: 100%; width: 0%;
-      background: linear-gradient(90deg, var(--red), var(--blue), var(--mint));
-      box-shadow: 0 0 14px rgba(94, 234, 212, 0.6);
+    #scrollbar { height: 100%; width: 0%; background: var(--red); }
+    #case-page {
+      position: fixed; right: 18px; bottom: 18px; z-index: 90;
+      font-family: var(--mono); font-size: 10.5px; letter-spacing: 1.5px;
+      color: var(--ink-soft); text-transform: uppercase;
+      background: var(--paper); border: 1px solid var(--line-strong);
+      padding: 7px 12px; border-radius: 2px;
+      box-shadow: 2px 2px 0 rgba(28,22,12,0.14);
     }
-    nav.topbar {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+
+    /* ---------- masthead ---------- */
+    nav.masthead {
+      position: fixed; top: 4px; left: 0; right: 0; z-index: 70;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 18px clamp(20px, 4vw, 48px);
-      background: linear-gradient(180deg, rgba(6,18,27,0.85), rgba(6,18,27,0));
+      padding: 16px clamp(18px, 4vw, 44px);
+      background: linear-gradient(180deg, rgba(243,237,223,0.94) 55%, rgba(243,237,223,0));
+      transition: padding .3s ease, background .3s ease, box-shadow .3s ease;
     }
-    .brand { display: flex; align-items: center; gap: 11px; font-family: var(--font-display); font-weight: 700; font-size: 19px; letter-spacing: -0.4px; }
-    .brand .mark {
-      width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
-      background: linear-gradient(135deg, var(--blue), #22D3EE); color: #fff; font-size: 17px;
-      box-shadow: 0 8px 22px -6px rgba(8, 145, 178, 0.7);
+    nav.masthead.scrolled {
+      padding: 9px clamp(18px, 4vw, 44px);
+      background: rgba(243,237,223,0.97);
+      box-shadow: 0 1px 0 var(--line-strong), 0 8px 24px -14px rgba(28,22,12,0.35);
     }
-    .btn {
-      font-family: var(--font-body); font-weight: 700; font-size: 15px; cursor: pointer;
-      border: 0; border-radius: 14px; padding: 15px 28px; transition: transform .18s ease, box-shadow .18s ease;
+    .brand {
+      display: flex; align-items: baseline; gap: 10px;
+      font-family: var(--serif); font-weight: 800; font-size: 21px;
+      letter-spacing: -0.4px; font-variation-settings: "SOFT" 40, "WONK" 1;
     }
-    .btn.primary {
-      color: #fff; background: linear-gradient(100deg, var(--blue), var(--teal));
-      box-shadow: 0 14px 34px -10px rgba(8, 145, 178, 0.65);
+    .brand .tick {
+      font-family: var(--mono); font-weight: 600; font-size: 12px;
+      color: var(--paper); background: var(--red);
+      padding: 3px 7px; border-radius: 2px; transform: rotate(-4deg);
+      display: inline-block; white-space: nowrap;
     }
-    .btn.primary:hover { transform: translateY(-2px); box-shadow: 0 20px 44px -10px rgba(8, 145, 178, 0.8); }
-    .btn.ghost {
-      color: var(--ink); background: rgba(148,163,184,0.10); border: 1px solid var(--line); padding: 11px 20px; font-size: 13.5px;
+    @media (max-width: 560px) {
+      .brand small { display: none; }
+      .brand { font-size: 19px; }
+      .mast-cta { padding: 9px 13px; font-size: 11.5px; }
     }
-    .btn.ghost:hover { background: rgba(148,163,184,0.18); }
-    .btn:focus-visible, summary:focus-visible, footer a:focus-visible, details:focus-within summary {
-      outline: 2px solid var(--mint); outline-offset: 3px; border-radius: 8px;
+    .brand small {
+      font-family: var(--mono); font-weight: 400; font-size: 10px;
+      color: var(--ink-faint); letter-spacing: 2px;
     }
+    .mast-cta {
+      font-family: var(--mono); font-size: 12.5px; font-weight: 600; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--ink); background: transparent;
+      border: 1.5px solid var(--ink); padding: 10px 18px; cursor: pointer;
+      border-radius: 2px; transition: all .18s ease;
+      box-shadow: 3px 3px 0 var(--ink);
+    }
+    .mast-cta:hover { background: var(--ink); color: var(--paper); transform: translate(1px, 1px); box-shadow: 2px 2px 0 var(--ink); }
 
-    /* ---------- scenes ---------- */
+    /* ---------- shared section furniture ---------- */
     .scene { position: relative; }
-    .wrap { max-width: var(--max); margin: 0 auto; padding: 0 clamp(20px, 4vw, 48px); }
-    .eyebrow {
-      font-size: 12.5px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase;
-      color: var(--blue-soft); margin-bottom: 18px;
+    .wrap { max-width: var(--max); margin: 0 auto; padding: 0 clamp(18px, 4vw, 44px); }
+    .file-tab {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-family: var(--mono); font-size: 11px; font-weight: 600;
+      letter-spacing: 2.5px; text-transform: uppercase; color: var(--ink-soft);
+      border: 1px solid var(--line-strong); border-bottom: 0;
+      background: var(--paper-2); padding: 8px 16px 10px;
+      border-radius: 6px 6px 0 0; position: relative; top: 1px;
     }
-    h2.title {
-      font-family: var(--font-display); font-weight: 700; letter-spacing: -1.5px;
-      font-size: clamp(34px, 5.4vw, 62px); line-height: 1.04;
+    .file-tab::before { content: "■"; color: var(--red); font-size: 8px; }
+    .rule { height: 1px; background: var(--line-strong); }
+    h2.headline {
+      font-family: var(--serif); font-weight: 640; line-height: 0.98;
+      letter-spacing: -0.02em; font-size: clamp(38px, 6vw, 78px);
+      font-variation-settings: "SOFT" 24, "WONK" 0;
     }
-    p.sub { color: var(--ink-dim); font-size: clamp(15px, 1.6vw, 18px); line-height: 1.65; max-width: 620px; margin-top: 18px; }
+    h2.headline em { font-style: italic; font-variation-settings: "SOFT" 90, "WONK" 1; }
+    p.lede {
+      font-family: var(--serif); font-size: clamp(16px, 1.8vw, 20px);
+      line-height: 1.62; color: var(--ink-soft); max-width: 560px; font-weight: 420;
+    }
+    .margin-note {
+      font-family: var(--mono); font-size: 11px; line-height: 1.7;
+      letter-spacing: 0.5px; color: var(--red); max-width: 190px;
+    }
+    .btn-ink {
+      font-family: var(--mono); font-weight: 600; font-size: 14px; letter-spacing: 1px;
+      text-transform: uppercase; cursor: pointer; border-radius: 2px;
+      background: var(--ink); color: var(--paper); border: 1.5px solid var(--ink);
+      padding: 17px 30px; transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+      box-shadow: 5px 5px 0 rgba(179, 32, 42, 0.9);
+    }
+    .btn-ink:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0 rgba(179, 32, 42, 0.9); background: #2A2213; }
+    .btn-paper {
+      font-family: var(--mono); font-weight: 600; font-size: 13px; letter-spacing: 1px;
+      text-transform: uppercase; cursor: pointer; border-radius: 2px;
+      background: transparent; color: var(--ink); border: 1.5px solid var(--ink);
+      padding: 15px 26px; transition: all .15s ease; box-shadow: 4px 4px 0 rgba(28,22,12,0.22);
+    }
+    .btn-paper:hover { background: var(--ink); color: var(--paper); transform: translate(1px,1px); box-shadow: 2px 2px 0 rgba(28,22,12,0.22); }
+    .btn-ink:focus-visible, .btn-paper:focus-visible, .mast-cta:focus-visible,
+    summary:focus-visible, footer a:focus-visible {
+      outline: 2.5px solid var(--red); outline-offset: 3px;
+    }
 
-    /* HERO */
-    .hero { min-height: 100vh; min-height: 100svh; display: grid; place-items: center; overflow: hidden; }
-    .hero video.bg {
-      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;
-      filter: saturate(1.05) contrast(1.04);
-      transform: scale(1.06);
+    /* ============ SCENE I · THE DENIAL (hero) ============ */
+    .hero {
+      min-height: 100vh; min-height: 100svh;
+      display: grid; align-items: center; overflow: hidden;
+      padding: 118px 0 40px;
     }
-    .hero .veil {
-      position: absolute; inset: 0; z-index: 1;
-      background:
-        radial-gradient(1200px 500px at 50% 110%, rgba(6,18,27,0.9), transparent 60%),
-        linear-gradient(180deg, rgba(6,18,27,0.55) 0%, rgba(6,18,27,0.25) 40%, rgba(6,18,27,0.92) 100%);
+    .hero-grid {
+      display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+      gap: clamp(28px, 5vw, 72px); align-items: center;
     }
-    .hero-copy { position: relative; z-index: 2; text-align: center; padding: 120px 22px 90px; max-width: 980px; }
-    .hero h1 {
-      font-family: var(--font-display); font-weight: 700; line-height: 1.02; letter-spacing: -2.5px;
-      font-size: clamp(42px, 9vw, 118px); text-shadow: 0 10px 60px rgba(0,0,0,0.55);
+    .hero-copy .casefile-no {
+      font-family: var(--mono); font-size: 11.5px; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--ink-faint); margin-bottom: 26px;
+      display: flex; align-items: center; gap: 12px;
     }
-    /* Lines never wrap mid-morph, and with the fx enhancement both lines
-       occupy the SAME grid cell so YES lands exactly where NO stood. */
-    .hero h1 .line { display: block; white-space: nowrap; will-change: transform, opacity, filter; }
-    html.fx .hero h1 { display: grid; justify-items: center; }
-    html.fx .hero h1 .line { grid-area: 1 / 1; }
-    html.fx .hero h1 .l-yes { opacity: 0; }
-    .hero h1 em { font-style: normal; }
-    .hero h1 .no  { color: var(--red); text-shadow: 0 0 46px rgba(244, 63, 94, 0.55); }
-    .hero h1 .yes {
-      background: linear-gradient(92deg, var(--blue-soft), var(--mint));
-      -webkit-background-clip: text; background-clip: text; color: transparent;
-      filter: drop-shadow(0 0 34px rgba(94, 234, 212, 0.35));
+    .hero-copy .casefile-no::after { content: ""; flex: 1; height: 1px; background: var(--line-strong); }
+    h1.display {
+      font-family: var(--serif); font-weight: 560; line-height: 0.96;
+      letter-spacing: -0.025em; font-size: clamp(52px, 7.6vw, 108px);
+      font-variation-settings: "SOFT" 12, "WONK" 0;
     }
-    .hero .lead { color: #C7D2E5; font-size: clamp(16px, 2vw, 20px); line-height: 1.6; max-width: 640px; margin: 26px auto 34px; }
-    .cta-row { display: flex; flex-direction: column; align-items: center; gap: 14px; }
-    .cta-note { color: var(--ink-dim); font-size: 13px; font-weight: 600; letter-spacing: 0.2px; }
+    h1.display .w { display: inline-block; }
+    h1.display em.no {
+      font-style: italic; color: var(--red);
+      font-variation-settings: "SOFT" 80, "WONK" 1;
+    }
+    h1.display .swap {
+      display: block; font-style: italic; font-weight: 400;
+      font-size: 0.62em; color: var(--ink-soft); margin-top: 18px;
+      font-variation-settings: "SOFT" 100, "WONK" 1;
+    }
+    h1.display .swap b {
+      font-style: italic; font-weight: 700; color: var(--green);
+    }
+    .hero-copy .lede { margin: 30px 0 36px; }
+    .cta-row { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+    .cta-note { font-family: var(--mono); font-size: 11px; letter-spacing: 1px; color: var(--ink-faint); text-transform: uppercase; line-height: 1.8; }
+
+    /* — the letter (Exhibit A) — */
+    .exhibit {
+      position: relative; perspective: 1200px;
+    }
+    .exhibit .tag {
+      position: absolute; top: -14px; left: 26px; z-index: 9;
+      font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: 2.5px;
+      background: var(--gold); color: var(--paper); padding: 6px 13px;
+      transform: rotate(-2.5deg); border-radius: 1px;
+      box-shadow: 2px 3px 8px rgba(28,22,12,0.3);
+    }
+    /* coffee ring on the desk — the office is lived-in */
+    .exhibit::after {
+      content: ""; position: absolute; left: -54px; bottom: -34px; z-index: 0;
+      width: 118px; height: 100px; border-radius: 50%;
+      border: 7px solid rgba(139, 108, 48, 0.16);
+      box-shadow: inset 0 0 0 2px rgba(139, 108, 48, 0.05);
+      transform: rotate(-8deg) scaleY(0.92);
+      pointer-events: none;
+    }
+    .letter {
+      position: relative; z-index: 1; background: #FBF7EC;
+      border: 1px solid var(--line-strong);
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.6) inset,
+        14px 18px 44px -12px rgba(60, 46, 18, 0.38),
+        4px 6px 0 -1px #E5DCC4, 8px 12px 0 -2px #DDD2B4;
+      padding: clamp(22px, 3vw, 40px) clamp(22px, 3vw, 42px);
+      font-family: var(--mono); font-size: clamp(10px, 1.05vw, 12.5px);
+      line-height: 1.85; color: #3E382B;
+      transform: rotate(0.8deg);
+    }
+    .letter .lh { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+    .letter .lh .co { font-weight: 600; letter-spacing: 1.5px; font-size: 1.05em; }
+    .letter .lh .co small { display: block; font-weight: 400; letter-spacing: 0.5px; color: #837A62; font-size: 0.85em; }
+    .letter .lh .date { color: #837A62; }
+    .letter p { margin-bottom: 12px; }
+    .letter .re { font-weight: 600; letter-spacing: 0.5px; }
+    .letter .hl { position: relative; white-space: nowrap; }
+    .letter .hl .circ {
+      position: absolute; inset: -6px -10px; pointer-events: none;
+    }
+    .letter .hl .circ path {
+      fill: none; stroke: var(--red-bright); stroke-width: 2.2;
+      stroke-linecap: round; opacity: 0.9;
+    }
+    /* red-pen margin notes live in a reserved rail INSIDE the letter,
+       like a real marked-up memo — never off the page. */
+    .letter .note {
+      position: absolute; font-family: var(--mono); font-size: 9.5px;
+      color: var(--red-bright); line-height: 1.55; letter-spacing: 0.2px;
+      width: 132px; right: 14px; transform: rotate(-1.5deg); font-weight: 500;
+      display: none;
+    }
+    @media (min-width: 981px) {
+      .letter { padding-right: 168px; }
+      .letter .note { display: block; }
+    }
+    .letter .sig { margin-top: 16px; color: #837A62; }
+
+    /* the DENIED imprint (stamped by the 3D stamp) */
+    .imprint {
+      position: absolute; z-index: 5; right: 8%; top: 34%;
+      font-family: var(--mono); font-weight: 600; font-size: clamp(30px, 3.6vw, 46px);
+      letter-spacing: 6px; color: var(--red-bright);
+      border: 5px solid var(--red-bright); border-radius: 6px;
+      padding: 8px 22px; transform: rotate(-11deg) scale(1);
+      opacity: 0; pointer-events: none; mix-blend-mode: multiply;
+    }
+    .imprint.on { opacity: 0.92; }
+    .imprint::after {
+      content: "CLAIM 2026-088213"; display: block; font-size: 10px; letter-spacing: 3px;
+      border-top: 2px solid var(--red-bright); margin-top: 4px; padding-top: 3px; text-align: center;
+    }
+    .splat { position: absolute; z-index: 4; pointer-events: none; opacity: 0; }
+    .splat path { fill: var(--red-bright); opacity: 0.75; }
+
+    /* 3D stamp canvas floats over the letter */
+    #stamp3d {
+      position: absolute; inset: -30% -26% -16% -26%; z-index: 7; pointer-events: none;
+    }
+    #stamp3d canvas { width: 100% !important; height: 100% !important; }
+    @media (max-width: 620px) { #stamp3d { display: none; } }
+
     .scroll-cue {
-      position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%); z-index: 2;
-      color: var(--ink-dim); font-size: 11.5px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase;
-      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      font-family: var(--mono); font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+      color: var(--ink-faint); display: flex; flex-direction: column; align-items: center; gap: 8px;
     }
-    .cue-line { width: 1.5px; height: 44px; background: linear-gradient(180deg, var(--mint), transparent); animation: cue 1.8s ease-in-out infinite; }
-    @keyframes cue { 0%,100% { transform: scaleY(0.4); opacity:.4 } 50% { transform: scaleY(1); opacity:1 } }
+    .scroll-cue .pen { width: 1px; height: 40px; background: linear-gradient(180deg, var(--red), transparent); animation: cue 1.9s ease-in-out infinite; transform-origin: top; }
+    @keyframes cue { 0%,100% { transform: scaleY(0.35); opacity: .4; } 50% { transform: scaleY(1); opacity: 1; } }
 
-    /* ODDS — parallax paper field */
-    .odds { padding: clamp(120px, 16vh, 200px) 0; overflow: hidden; background: linear-gradient(180deg, var(--bg) 0%, #0A1D2A 55%, var(--bg) 100%); }
-    .odds .wrap { position: relative; z-index: 2; text-align: center; }
-    .paper-field { position: absolute; inset: 0; z-index: 1; perspective: 900px; pointer-events: none; }
-    .paper {
-      position: absolute; width: 120px; height: 150px; border-radius: 8px;
-      background: linear-gradient(160deg, #12222F, #0B1B27);
-      border: 1px solid rgba(148,163,184,0.14);
-      box-shadow: 0 30px 60px -18px rgba(0,0,0,0.7);
-      padding: 14px 12px;
+    /* ============ TICKER — the wall of no ============ */
+    .ticker {
+      border-top: 1.5px solid var(--ink); border-bottom: 1.5px solid var(--ink);
+      background: var(--paper-2); overflow: hidden; padding: 13px 0;
+      transform: rotate(-0.6deg) scale(1.02); position: relative; z-index: 3;
     }
-    .paper i { display: block; height: 5px; border-radius: 3px; background: rgba(148,163,184,0.20); margin-bottom: 8px; }
-    .paper i:nth-child(1) { width: 55%; background: rgba(244,63,94,0.5); }
-    .paper i:nth-child(3) { width: 80%; }
-    .paper i:nth-child(4) { width: 62%; }
-    .odds .stat-row { display: flex; justify-content: center; gap: clamp(24px, 6vw, 80px); margin-top: 64px; flex-wrap: wrap; }
-    .stat { text-align: center; }
-    .stat b { display: block; font-family: var(--font-display); font-size: clamp(36px, 5vw, 58px); font-weight: 700; letter-spacing: -1.5px;
-      background: linear-gradient(90deg, var(--blue-soft), var(--mint)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .stat span { color: var(--ink-dim); font-size: 13.5px; font-weight: 600; }
+    .ticker .track {
+      display: flex; gap: 44px; white-space: nowrap; width: max-content;
+      font-family: var(--mono); font-size: 12.5px; font-weight: 600;
+      letter-spacing: 2.5px; text-transform: uppercase; color: var(--red);
+      animation: tick 34s linear infinite;
+    }
+    .ticker .track span::before { content: "✕ "; color: var(--ink-faint); }
+    @keyframes tick { to { transform: translateX(-50%); } }
 
-    /* HOW — glowing beam timeline */
-    .how { padding: clamp(120px, 16vh, 200px) 0; }
-    .how .head { text-align: center; margin-bottom: clamp(60px, 8vh, 96px); }
-    .steps { position: relative; max-width: 780px; margin: 0 auto; }
-    .beam {
-      position: absolute; left: 27px; top: 0; bottom: 0; width: 2px;
-      background: rgba(148,163,184,0.12); border-radius: 2px;
+    /* ============ SCENE II · THE ODDS ============ */
+    .odds { padding: clamp(110px, 15vh, 190px) 0 clamp(90px, 12vh, 160px); }
+    .odds-grid { display: grid; grid-template-columns: 220px 1fr; gap: clamp(24px, 4vw, 60px); align-items: start; }
+    .scene-roman {
+      font-family: var(--serif); font-style: italic; font-weight: 300;
+      font-size: clamp(80px, 9vw, 150px); line-height: 0.8; color: transparent;
+      -webkit-text-stroke: 1.5px var(--ink-faint);
+      font-variation-settings: "SOFT" 100;
     }
-    .beam .fill {
-      display: block; width: 100%; height: 100%;
-      background: linear-gradient(180deg, var(--blue), var(--mint));
-      box-shadow: 0 0 18px rgba(8, 145, 178, 0.8);
-      transform-origin: top; transform: scaleY(0);
+    .scene-kicker { font-family: var(--mono); font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--ink-faint); margin-top: 14px; }
+    .odds .headline { max-width: 800px; }
+    .odds .lede { margin-top: 26px; }
+    .actuary {
+      margin-top: 58px; border: 1.5px solid var(--ink); background: #FBF7EC;
+      box-shadow: 8px 8px 0 var(--paper-3);
     }
-    .step { position: relative; display: flex; gap: 26px; padding: 0 0 clamp(44px, 6vh, 64px) 0; }
-    .step .dot {
-      flex: 0 0 56px; width: 56px; height: 56px; border-radius: 18px; display: grid; place-items: center;
-      background: linear-gradient(150deg, #0D1F2D, #091A26); border: 1px solid var(--line);
-      font-family: var(--font-display); font-weight: 700; color: var(--mint); font-size: 17px;
-      box-shadow: 0 16px 34px -14px rgba(0,0,0,0.8); z-index: 1;
+    .actuary .row {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
     }
-    .step h3 { font-family: var(--font-display); font-size: clamp(20px, 2.4vw, 26px); font-weight: 600; letter-spacing: -0.5px; margin-bottom: 8px; }
-    .step p { color: var(--ink-dim); line-height: 1.65; font-size: 15.5px; max-width: 560px; }
+    .actuary .cell {
+      padding: clamp(20px, 3vw, 34px); border-right: 1px solid var(--line-strong);
+      position: relative;
+    }
+    .actuary .cell:last-child { border-right: 0; }
+    .actuary .num {
+      font-family: var(--serif); font-weight: 620; letter-spacing: -0.03em;
+      font-size: clamp(40px, 5.2vw, 76px); line-height: 1;
+      font-variation-settings: "SOFT" 30;
+    }
+    .actuary .num sup { font-size: 0.45em; font-style: italic; font-weight: 400; }
+    .actuary .cap {
+      font-family: var(--mono); font-size: 11px; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--ink-soft); margin-top: 12px; line-height: 1.7;
+    }
+    .actuary .cell.redcell .num { color: var(--red); }
+    .actuary .cell.greencell .num { color: var(--green); }
+    .actuary .foot {
+      border-top: 1px solid var(--line-strong); font-family: var(--mono);
+      font-size: 10px; letter-spacing: 1px; color: var(--ink-faint);
+      padding: 10px 18px; text-transform: uppercase;
+    }
 
-    /* INSIDE — tilt cards + pricing */
-    .inside { padding: clamp(120px, 16vh, 200px) 0; background: linear-gradient(180deg, var(--bg) 0%, #0A1D2A 50%, var(--bg) 100%); }
-    .inside .head { text-align: center; margin-bottom: clamp(56px, 8vh, 88px); }
-    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; perspective: 1200px; }
-    .deliverable {
-      border-radius: 20px; padding: 26px 24px; min-height: 168px;
-      background: linear-gradient(160deg, rgba(18,36,50,0.85), rgba(9,26,38,0.9));
-      border: 1px solid var(--line); transition: border-color .25s ease;
-      transform-style: preserve-3d; will-change: transform;
+    /* ============ SCENE III · THE METHOD (case board) ============ */
+    .method { padding: clamp(100px, 14vh, 180px) 0; background:
+      linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 18%, var(--paper-2) 82%, var(--paper) 100%); }
+    .method .head { display: grid; grid-template-columns: 220px 1fr; gap: clamp(24px, 4vw, 60px); margin-bottom: clamp(48px, 7vh, 90px); align-items: start; }
+    .board { position: relative; }
+    #string-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+    #string-svg path { fill: none; stroke: var(--red); stroke-width: 2; opacity: 0.85; }
+    .cards { position: relative; z-index: 2; display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(14px, 2vw, 26px); }
+    .index-card {
+      background: #FDFAF1; border: 1px solid var(--line-strong);
+      box-shadow: 6px 8px 22px -8px rgba(60,46,18,0.35);
+      padding: 24px 22px 26px; position: relative;
+      background-image: repeating-linear-gradient(180deg, transparent 0 27px, rgba(122, 148, 181, 0.25) 27px 28px);
     }
-    .deliverable:hover { border-color: rgba(103,232,249,0.45); }
-    .deliverable .ic {
-      width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; font-size: 20px;
-      background: rgba(8, 145, 178, 0.16); margin-bottom: 16px;
+    .index-card::before { /* red top rule of a real index card */
+      content: ""; position: absolute; left: 0; right: 0; top: 40px;
+      height: 1.5px; background: rgba(179, 32, 42, 0.4);
     }
-    .deliverable h4 { font-family: var(--font-display); font-size: 17.5px; font-weight: 600; letter-spacing: -0.3px; margin-bottom: 7px; }
-    .deliverable p { color: var(--ink-dim); font-size: 13.5px; line-height: 1.55; }
-    .pricing { margin-top: clamp(64px, 9vh, 100px); display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 20px; max-width: 860px; margin-left: auto; margin-right: auto; }
-    .price-card {
-      border-radius: 24px; padding: 34px 30px; border: 1px solid var(--line);
-      background: linear-gradient(165deg, rgba(13,31,45,0.9), rgba(7,20,30,0.95));
+    .index-card .pin {
+      position: absolute; top: -9px; left: 50%; width: 18px; height: 18px;
+      transform: translateX(-50%);
+      background: radial-gradient(circle at 35% 30%, #E75A4E, var(--red) 65%, #7A1017);
+      border-radius: 50%; box-shadow: 0 4px 6px rgba(28,22,12,0.4), inset -2px -3px 4px rgba(0,0,0,0.35);
     }
-    .price-card.hot { border: 1.5px solid rgba(94,234,212,0.5); box-shadow: 0 30px 80px -30px rgba(13,148,136,0.55); position: relative; overflow: hidden; }
-    .price-card.hot::before {
-      content: ""; position: absolute; inset: -40%; z-index: 0;
-      background: radial-gradient(500px 220px at 80% -10%, rgba(8,145,178,0.28), transparent 60%);
+    .index-card .step-no {
+      font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: 2px;
+      color: var(--red); text-transform: uppercase;
     }
-    .price-card > * { position: relative; z-index: 1; }
-    .price-card .tier { font-size: 13px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--ink-dim); }
-    .price-card .amount { font-family: var(--font-display); font-size: 54px; font-weight: 700; letter-spacing: -2px; margin: 10px 0 4px; }
-    .price-card.hot .amount { background: linear-gradient(92deg, var(--blue-soft), var(--mint)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .price-card .per { color: var(--ink-dim); font-size: 13px; margin-bottom: 20px; }
-    .price-card ul { list-style: none; margin: 0 0 26px; }
-    .price-card li { display: flex; gap: 10px; align-items: flex-start; color: #C7D2E5; font-size: 14px; line-height: 1.5; padding: 5px 0; }
-    .price-card li::before { content: "✓"; color: var(--mint); font-weight: 800; }
+    .index-card h3 {
+      font-family: var(--serif); font-weight: 640; font-size: clamp(19px, 1.9vw, 24px);
+      letter-spacing: -0.02em; margin: 14px 0 10px; line-height: 1.32;
+      font-variation-settings: "SOFT" 40;
+    }
+    .index-card p { font-family: var(--mono); font-size: 11.5px; line-height: 1.95; color: var(--ink-soft); }
+    .index-card:nth-child(1) { transform: rotate(-1.6deg); }
+    .index-card:nth-child(2) { transform: rotate(1.1deg) translateY(26px); }
+    .index-card:nth-child(3) { transform: rotate(-0.8deg); }
+    .index-card:nth-child(4) { transform: rotate(1.8deg) translateY(20px); }
 
-    /* FINALE + FAQ */
-    .finale { padding: clamp(130px, 20vh, 230px) 0 90px; text-align: center; overflow: hidden; position: relative; }
-    .finale .glow {
-      position: absolute; left: 50%; top: 40%; transform: translate(-50%,-50%); width: 900px; height: 500px; z-index: 0;
-      background: radial-gradient(closest-side, rgba(13,148,136,0.28), rgba(8,145,178,0.12), transparent);
-      filter: blur(10px); pointer-events: none;
+    /* ============ SCENE IV · THE PACKET (fanned exhibits) ============ */
+    .packet { padding: clamp(110px, 15vh, 190px) 0; overflow: hidden; }
+    .packet .head { display: grid; grid-template-columns: 220px 1fr; gap: clamp(24px, 4vw, 60px); align-items: start; margin-bottom: clamp(40px, 6vh, 72px); }
+    .fan-zone { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(26px, 4vw, 64px); align-items: center; }
+    .fan { position: relative; height: clamp(360px, 44vw, 520px); perspective: 1400px; }
+    .doc {
+      position: absolute; left: 13%; right: 11%; top: 6%; bottom: 10%;
+      background: #FBF7EC; border: 1px solid var(--line-strong);
+      box-shadow: 10px 14px 30px -10px rgba(60,46,18,0.4);
+      transform-origin: 12% 96%;
+      padding: 26px 24px; overflow: hidden;
     }
-    .finale .wrap { position: relative; z-index: 1; }
-    .finale h2 {
-      font-family: var(--font-display); font-weight: 700; letter-spacing: -3px; line-height: 0.95;
-      font-size: clamp(64px, 13vw, 180px);
-      background: linear-gradient(94deg, var(--blue-soft) 10%, var(--mint) 90%);
-      -webkit-background-clip: text; background-clip: text; color: transparent;
-      filter: drop-shadow(0 6px 50px rgba(94,234,212,0.25));
+    .doc .dt {
+      font-family: var(--mono); font-size: 10.5px; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--red);
+      display: flex; justify-content: space-between;
+      border-bottom: 1.5px solid var(--ink); padding-bottom: 10px; margin-bottom: 14px;
     }
-    .finale p.sub { margin: 22px auto 36px; }
-    .faq { max-width: 780px; margin: clamp(90px, 12vh, 140px) auto 0; text-align: left; }
-    .faq h3 { font-family: var(--font-display); font-size: 24px; letter-spacing: -0.5px; margin-bottom: 20px; }
-    details {
-      border: 1px solid var(--line); border-radius: 16px; margin-bottom: 12px;
-      background: rgba(13,31,45,0.55); overflow: hidden;
+    .doc .dt span:last-child { color: var(--ink-faint); }
+    .doc h4 { font-family: var(--serif); font-weight: 620; font-size: 22px; letter-spacing: -0.02em; margin-bottom: 10px; font-variation-settings: "SOFT" 40; }
+    .doc .fake { height: 7px; background: var(--paper-3); margin: 9px 0; border-radius: 1px; }
+    .doc .fake.w60 { width: 60%; } .doc .fake.w85 { width: 85%; } .doc .fake.w72 { width: 72%; }
+    .doc .clip {
+      position: absolute; top: -12px; right: 30px; width: 26px; height: 54px;
+      border: 3.5px solid #9A9482; border-radius: 12px 12px 4px 4px;
+      border-bottom: 0; opacity: 0.9;
     }
-    summary {
-      cursor: pointer; padding: 18px 22px; font-weight: 700; font-size: 15.5px; list-style: none;
-      display: flex; justify-content: space-between; align-items: center; gap: 14px;
+    .doc-list { list-style: none; counter-reset: doc; }
+    .doc-list li {
+      counter-increment: doc; padding: 17px 4px 16px 0;
+      border-bottom: 1px solid var(--line); display: flex; align-items: baseline; gap: 18px;
+      cursor: default;
     }
-    summary::-webkit-details-marker { display: none; }
-    summary::after { content: "+"; font-family: var(--font-display); font-size: 22px; color: var(--mint); transition: transform .25s ease; }
-    details[open] summary::after { transform: rotate(45deg); }
-    details .a { padding: 0 22px 20px; color: var(--ink-dim); font-size: 14.5px; line-height: 1.65; }
+    .doc-list li::before {
+      content: counter(doc, decimal-leading-zero);
+      font-family: var(--mono); font-size: 11px; color: var(--red); font-weight: 600;
+      min-width: 26px;
+    }
+    .doc-list li b {
+      font-family: var(--serif); font-weight: 620; font-size: clamp(17px, 1.7vw, 21px);
+      letter-spacing: -0.015em; flex: 1; font-variation-settings: "SOFT" 40;
+      transition: font-variation-settings .35s ease, color .2s ease;
+    }
+    .doc-list li:hover b { font-variation-settings: "SOFT" 100, "WONK" 1; color: var(--red); font-style: italic; }
+    .doc-list li span { font-family: var(--mono); font-size: 10.5px; letter-spacing: 1px; color: var(--ink-faint); text-transform: uppercase; }
 
-    footer {
-      border-top: 1px solid var(--line); padding: 44px clamp(20px, 4vw, 48px) 54px;
-      color: var(--ink-dim); font-size: 13px;
+    /* ============ SCENE V · THE LONG GAME (follow-ups ledger) ============ */
+    .longgame { padding: clamp(100px, 14vh, 170px) 0; }
+    .ledger {
+      display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: clamp(28px, 5vw, 80px); align-items: center;
     }
-    footer .cols { max-width: var(--max); margin: 0 auto; display: flex; flex-wrap: wrap; gap: 28px; justify-content: space-between; align-items: flex-start; }
-    footer a { color: #B9C6DE; text-decoration: none; }
-    footer a:hover { color: var(--mint); }
-    footer .links { display: flex; gap: 22px; flex-wrap: wrap; }
-    footer .fine { max-width: var(--max); margin: 26px auto 0; line-height: 1.6; color: #64748B; font-size: 12px; }
+    .ledger-copy .headline { font-size: clamp(34px, 4.6vw, 62px); }
+    .ledger-copy .lede { margin-top: 24px; }
+    .ledger-table {
+      border: 1.5px solid var(--ink); background: #FBF7EC;
+      box-shadow: 10px 10px 0 var(--paper-3); font-family: var(--mono);
+    }
+    .ledger-table .lt-head {
+      display: flex; justify-content: space-between; padding: 14px 20px;
+      border-bottom: 1.5px solid var(--ink); font-size: 10.5px; font-weight: 600;
+      letter-spacing: 2.5px; text-transform: uppercase; background: var(--paper-2);
+    }
+    .ledger-table .lt-row {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 14px;
+      padding: 18px 20px; border-bottom: 1px solid var(--line);
+      font-size: 13px;
+    }
+    .ledger-table .lt-row:last-of-type { border-bottom: 0; }
+    .ledger-table .lt-row .what { color: var(--ink); }
+    .ledger-table .lt-row .what small { display: block; color: var(--ink-faint); font-size: 10.5px; margin-top: 4px; letter-spacing: 0.5px; }
+    .ledger-table .lt-row .amt { font-weight: 600; font-size: 15px; white-space: nowrap; }
+    .ledger-table .lt-row .amt.free { color: var(--green); }
+    .ledger-table .lt-cap {
+      border-top: 1.5px dashed var(--line-strong); padding: 12px 20px;
+      font-size: 10px; letter-spacing: 1px; color: var(--ink-faint); text-transform: uppercase;
+    }
 
-    /* app loader shown while Flutter boots */
+    /* ============ SCENE VI · THE RECKONING (pricing receipts) ============ */
+    .reckoning { padding: clamp(100px, 14vh, 180px) 0; background:
+      linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 20%, var(--paper-2) 80%, var(--paper) 100%); }
+    .reckoning .head { display: grid; grid-template-columns: 220px 1fr; gap: clamp(24px, 4vw, 60px); margin-bottom: clamp(44px, 6vh, 80px); align-items: start; }
+    .receipts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 420px)); gap: clamp(22px, 3vw, 44px); justify-content: center; }
+    .receipt {
+      background: #FDFAF1; border: 1px solid var(--line-strong);
+      padding: 30px 28px 26px; position: relative; font-family: var(--mono);
+      box-shadow: 8px 12px 30px -10px rgba(60,46,18,0.35);
+      transition: transform .28s cubic-bezier(.2,.9,.3,1.2), box-shadow .28s ease;
+    }
+    .receipt:hover {
+      transform: translateY(-9px) rotate(-0.5deg);
+      box-shadow: 12px 22px 44px -12px rgba(60,46,18,0.45);
+    }
+    .receipt::before, .receipt::after {
+      content: ""; position: absolute; left: 0; right: 0; height: 12px;
+      background-image: radial-gradient(circle at 8px 0px, transparent 6px, #FDFAF1 6.5px);
+      background-size: 22px 12px; background-repeat: repeat-x;
+    }
+    .receipt::before { top: -11px; transform: rotate(180deg); }
+    .receipt::after { bottom: -11px; }
+    .receipt .r-head { text-align: center; border-bottom: 1.5px dashed var(--line-strong); padding-bottom: 16px; margin-bottom: 16px; }
+    .receipt .r-head .r-title { font-size: 11px; font-weight: 600; letter-spacing: 3.5px; text-transform: uppercase; color: var(--ink-soft); }
+    .receipt .price {
+      font-family: var(--serif); font-weight: 560; font-size: clamp(56px, 6vw, 84px);
+      letter-spacing: -0.03em; line-height: 1; margin-top: 12px;
+      font-variation-settings: "SOFT" 30;
+    }
+    .receipt.paid .price { color: var(--red); }
+    .receipt .per { font-size: 10px; letter-spacing: 2px; color: var(--ink-faint); text-transform: uppercase; margin-top: 8px; }
+    .receipt ul { list-style: none; margin: 6px 0 20px; }
+    .receipt li {
+      display: flex; justify-content: space-between; gap: 12px;
+      font-size: 12px; line-height: 1.6; padding: 8px 0;
+      border-bottom: 1px dotted var(--line);
+    }
+    .receipt li span:last-child { color: var(--green); font-weight: 600; white-space: nowrap; }
+    .receipt .r-stamp {
+      position: absolute; right: 14px; top: 96px;
+      font-size: 13px; font-weight: 600; letter-spacing: 3px; color: var(--green-bright);
+      border: 3px solid var(--green-bright); border-radius: 4px; padding: 5px 12px;
+      transform: rotate(9deg); opacity: 0.85; mix-blend-mode: multiply;
+    }
+    .receipt .btn-ink, .receipt .btn-paper { width: 100%; }
+    .receipt .barcode {
+      margin-top: 18px; height: 34px;
+      background: repeating-linear-gradient(90deg, var(--ink) 0 2px, transparent 2px 5px, var(--ink) 5px 6px, transparent 6px 11px);
+      opacity: 0.8;
+    }
+
+    /* ============ SCENE VII · THE VERDICT (ink finale) ============ */
+    .verdict {
+      background: var(--ink); color: var(--paper);
+      padding: clamp(120px, 18vh, 220px) 0 clamp(80px, 10vh, 130px);
+      position: relative; overflow: hidden;
+    }
+    .verdict::before { /* letterpress texture on ink */
+      content: ""; position: absolute; inset: 0; opacity: 0.14;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='v'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23v)' opacity='0.5'/%3E%3C/svg%3E");
+    }
+    .verdict .wrap { position: relative; z-index: 2; text-align: center; }
+    .verdict .vk { font-family: var(--mono); font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: rgba(243,237,223,0.5); }
+    .verdict h2 {
+      font-family: var(--serif); font-weight: 500; font-style: italic;
+      font-size: clamp(64px, 12vw, 190px); line-height: 0.95; letter-spacing: -0.03em;
+      margin: 28px 0 20px; font-variation-settings: "SOFT" 100, "WONK" 1;
+    }
+    .verdict h2 .yes-word { color: var(--green-bright); position: relative; white-space: nowrap; }
+    .verdict .approved-wrap { position: relative; display: inline-block; }
+    .approved-stamp {
+      position: absolute; left: 50%; top: -34%;
+      font-family: var(--mono); font-weight: 600; font-size: clamp(15px, 2vw, 26px);
+      letter-spacing: 5px; color: var(--green-bright);
+      border: 4px solid var(--green-bright); border-radius: 5px; padding: 7px 20px;
+      transform: translateX(-50%) rotate(-8deg); opacity: 0;
+    }
+    .approved-stamp.on { opacity: 0.95; }
+    .verdict .sub {
+      font-family: var(--serif); font-size: clamp(15px, 1.8vw, 19px); font-weight: 380;
+      color: rgba(243,237,223,0.72); max-width: 520px; margin: 0 auto 40px; line-height: 1.65;
+    }
+    .verdict .btn-ink {
+      background: var(--paper); color: var(--ink); border-color: var(--paper);
+      box-shadow: 5px 5px 0 var(--green-bright);
+    }
+    .verdict .btn-ink:hover { background: #fff; box-shadow: 2px 2px 0 var(--green-bright); }
+
+    /* FAQ drawer inside verdict */
+    .faq { max-width: 760px; margin: clamp(80px, 11vh, 140px) auto 0; text-align: left; }
+    .faq .faq-tab { color: rgba(243,237,223,0.55); border-color: rgba(243,237,223,0.3); background: rgba(243,237,223,0.06); }
+    .faq details {
+      border-bottom: 1px solid rgba(243,237,223,0.18);
+      background: transparent;
+    }
+    .faq details:first-of-type { border-top: 1.5px solid rgba(243,237,223,0.35); }
+    .faq summary {
+      cursor: pointer; list-style: none; padding: 20px 6px;
+      display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      font-family: var(--serif); font-weight: 560; font-size: clamp(16px, 1.8vw, 20px);
+      letter-spacing: -0.01em; font-variation-settings: "SOFT" 40;
+      transition: color .2s ease;
+    }
+    .faq summary:hover { color: var(--green-bright); }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary::after {
+      content: "＋"; font-family: var(--mono); font-size: 15px; color: var(--green-bright);
+      transition: transform .25s ease;
+    }
+    .faq details[open] summary::after { transform: rotate(45deg); }
+    .faq .a {
+      font-family: var(--mono); font-size: 12.5px; line-height: 2;
+      color: rgba(243,237,223,0.66); padding: 0 6px 22px; max-width: 640px;
+    }
+
+    footer.colophon {
+      background: var(--ink); color: rgba(243,237,223,0.6);
+      border-top: 1px solid rgba(243,237,223,0.18);
+      padding: 40px clamp(18px, 4vw, 44px) 52px;
+      font-family: var(--mono); font-size: 11px; letter-spacing: 0.5px; line-height: 2;
+    }
+    footer .cols { max-width: var(--max); margin: 0 auto; display: flex; flex-wrap: wrap; gap: 26px; justify-content: space-between; }
+    footer a { color: rgba(243,237,223,0.85); text-decoration: none; border-bottom: 1px solid rgba(243,237,223,0.3); }
+    footer a:hover { color: var(--green-bright); border-color: var(--green-bright); }
+    footer .fine { max-width: var(--max); margin: 22px auto 0; color: rgba(243,237,223,0.55); font-size: 10px; line-height: 1.9; }
+
+    /* ---------- ink-ring cursor companion (fine pointers) ---------- */
+    #ink-ring {
+      position: fixed; left: 0; top: 0; z-index: 110; pointer-events: none;
+      width: 30px; height: 30px; border: 1.5px solid var(--red);
+      border-radius: 50%; opacity: 0; mix-blend-mode: multiply;
+      transform: translate(-50%, -50%);
+      transition: width .22s ease, height .22s ease, background .22s ease, opacity .3s ease;
+    }
+    #ink-ring.on { opacity: 0.8; }
+    #ink-ring.hot { width: 52px; height: 52px; background: rgba(179,32,42,0.12); }
+    @media (pointer: coarse) { #ink-ring { display: none; } }
+
+    /* ---------- app loader (paper theme) ---------- */
     #app-loader {
-      position: fixed; inset: 0; z-index: 90; display: grid; place-items: center;
-      background: var(--bg);
+      position: fixed; inset: 0; z-index: 120; display: grid; place-items: center;
+      background: var(--paper);
     }
     #app-loader[hidden] { display: none; }
-    #app-loader .box { text-align: center; }
-    #app-loader .spinner {
-      width: 26px; height: 26px; margin: 18px auto 0; border-radius: 50%;
-      border: 3px solid rgba(148,163,184,0.25); border-top-color: var(--blue-soft);
-      animation: spin .8s linear infinite;
+    #app-loader .box { text-align: center; font-family: var(--mono); }
+    #app-loader .stampline {
+      font-size: 12px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase;
+      color: var(--red); border: 3px solid var(--red); border-radius: 4px;
+      display: inline-block; padding: 8px 18px; transform: rotate(-4deg);
+      animation: pulse 1.4s ease-in-out infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes pulse { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
+    #app-loader p { margin-top: 18px; color: var(--ink-faint); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; }
 
-    @media (max-width: 640px) {
-      .paper-field { display: none; }
-      .beam { left: 23px; }
-      .step .dot { flex-basis: 48px; width: 48px; height: 48px; border-radius: 14px; }
-      nav.topbar .btn.ghost { padding: 9px 14px; }
+    /* ---------- responsive ---------- */
+    @media (max-width: 980px) {
+      .hero-grid { grid-template-columns: 1fr; gap: 46px; }
+      .exhibit { max-width: 560px; margin: 0 auto; }
+      .odds-grid, .method .head, .packet .head, .reckoning .head { grid-template-columns: 1fr; gap: 18px; }
+      .scene-roman { font-size: 64px; display: inline-block; }
+      .cards { grid-template-columns: 1fr 1fr; }
+      .index-card:nth-child(2), .index-card:nth-child(4) { transform: rotate(1deg); }
+      .fan-zone { grid-template-columns: 1fr; }
+      .fan { max-width: 520px; margin: 0 auto; width: 100%; }
+      .ledger { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 620px) {
+      .cards { grid-template-columns: 1fr; }
+      .actuary .row { grid-template-columns: 1fr; }
+      .actuary .cell { border-right: 0; border-bottom: 1px solid var(--line-strong); }
+      .actuary .cell:last-child { border-bottom: 0; }
+      #case-page { display: none; }
+      .letter .note { display: none; }
+    }
+    @media (max-width: 400px) {
+      /* tiny screens: let the highlighted phrases wrap; hide the circles
+         (an ellipse can't wrap with its text). */
+      .letter .hl { white-space: normal; }
+      .letter .hl .circ { display: none; }
     }
     @media (prefers-reduced-motion: reduce) {
-      .grain, .cue-line { animation: none; }
-      html { scroll-behavior: auto; }
+      .ticker .track, .scroll-cue .pen, #app-loader .stampline { animation: none; }
+      .imprint { opacity: 0.92; }
+      #stamp3d { display: none; }
     }
   </style>
+  <noscript>
+    <style>
+      /* No JS: the case file arrives fully stamped and annotated. */
+      .imprint { opacity: 0.92; }
+      .approved-stamp { opacity: 0.95; }
+      #ink-ring, #stamp3d { display: none; }
+    </style>
+  </noscript>
 </head>
 <body>
   <script>
@@ -391,154 +765,293 @@
     }
   </script>
 
-  <div id="landing">
-    <div class="grain"></div>
-    <div class="progress-rail"><div id="scrollbar"></div></div>
+  <!-- rough-ink SVG filter for stamps -->
+  <svg class="defs" aria-hidden="true">
+    <filter id="roughen">
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="11" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="4.5"/>
+    </filter>
+  </svg>
 
-    <nav class="topbar">
-      <div class="brand"><span class="mark">✓</span> GetMyYes</div>
-      <button class="btn ghost" data-boot="/">Open the app →</button>
+  <div id="landing">
+    <div class="paper-grain" aria-hidden="true"></div>
+    <div class="paper-vignette" aria-hidden="true"></div>
+    <div class="progress-rail"><div id="scrollbar"></div></div>
+    <div id="case-page" aria-hidden="true">Case file · p. <b id="pg">1</b>/7</div>
+
+    <nav class="masthead">
+      <div class="brand"><span class="tick stamped">✓ YES</span> GetMyYes <small>EST. 2026</small></div>
+      <button class="mast-cta" data-boot="/">Open the app →</button>
     </nav>
 
-    <!-- SCENE 1 · HERO -->
-    <section class="scene hero" id="s-hero">
-      <video class="bg" autoplay muted loop playsinline preload="auto" aria-hidden="true">
-        <source src="media/hero_denial.mp4" type="video/mp4">
-      </video>
-      <div class="veil"></div>
-      <div class="hero-copy">
-        <p class="eyebrow">Health-insurance denial?</p>
-        <h1>
-          <span class="line l-no">They said <em class="no">NO.</em></span>
-          <span class="line l-yes">Send back a <em class="yes">YES.</em></span>
-        </h1>
-        <p class="lead">Upload your denial letter. GetMyYes reads it, builds your strongest arguments, and hands you a complete, ready-to-send appeal packet — in about 15 minutes.</p>
-        <div class="cta-row">
-          <button class="btn primary" data-boot="/upload">Start my free appeal preview</button>
-          <span class="cta-note">Free preview · $39 full packet · No subscription</span>
+    <!-- ============ SCENE I · THE DENIAL ============ -->
+    <section class="scene hero" id="s1">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <div class="casefile-no">Case №&nbsp;2026-088213&nbsp;·&nbsp;in re: you&nbsp;v.&nbsp;your&nbsp;insurer</div>
+          <h1 class="display">
+            <span class="w">The</span> <span class="w">insurer</span> <span class="w">stamped</span> <em class="no w">NO.</em>
+            <span class="swap">We draft the <b>comeback.</b></span>
+          </h1>
+          <p class="lede">Upload the denial letter. GetMyYes reads the fine print, builds your strongest arguments, and hands you a complete, ready-to-send appeal packet — in about fifteen minutes.</p>
+          <div class="cta-row">
+            <button class="btn-ink" data-boot="/upload">Open my case — free</button>
+            <span class="cta-note">Free preview · $39 full packet<br>No subscription. Ever.</span>
+          </div>
+        </div>
+
+        <div class="exhibit" id="exhibit">
+          <span class="tag stamped">EXHIBIT A — THE DENIAL</span>
+          <div class="letter" id="letter">
+            <div class="lh">
+              <div class="co">MERIDIAN HEALTH<small>Pharmacy benefits administration</small></div>
+              <div class="date">JUNE 18, 2026</div>
+            </div>
+            <p class="re">RE: PRIOR AUTHORIZATION — <span class="hl" id="hl1">DETERMINATION: DENIED<svg class="circ" viewBox="0 0 200 40" preserveAspectRatio="none"><path id="circ1" d="M14,20 C30,2 170,0 188,16 C196,30 160,39 90,38 C40,37 8,32 14,18"/></svg></span></p>
+            <p>Dear Member, after review of the documentation received, coverage for the requested medication has been denied. The plan requires <span class="hl" id="hl2">trial and failure of two formulary alternatives<svg class="circ" viewBox="0 0 200 40" preserveAspectRatio="none"><path id="circ2" d="M10,22 C40,4 168,2 190,18 C194,32 150,40 80,38 C30,36 6,30 12,20"/></svg></span> before this agent may be authorized (step-therapy protocol §4.2).</p>
+            <p>You have the right to appeal this determination. Appeals must be filed <span class="hl" id="hl3">within 60 days of this notice<svg class="circ" viewBox="0 0 200 40" preserveAspectRatio="none"><path id="circ3" d="M12,20 C34,3 166,1 189,15 C197,29 158,39 86,38 C36,37 6,31 13,19"/></svg></span> with supporting clinical documentation from your prescriber.</p>
+            <p class="sig">Sincerely,<br>Utilization Review Committee</p>
+
+            <span class="note" id="note1" style="top:16%;">← appealable. they must cite plan language — and we cite it back.</span>
+            <span class="note" id="note2" style="top:46%;">← “fail first.” your history may already satisfy this. we ask.</span>
+            <span class="note" id="note3" style="top:73%;">← the clock. your packet tracks it so you never miss it.</span>
+          </div>
+          <div class="imprint stamped" id="imprint">DENIED</div>
+          <svg class="splat" id="splat1" viewBox="0 0 100 100" style="right:4%; top:26%; width:52px; height:52px;">
+            <path d="M50 18c6 8 16 2 20 10s-6 12 0 20-14 8-12 18-14 4-20 10-12-8-22-6-4-14-12-18 8-12 4-20 12-6 16-14 18-8 26 0z"/>
+          </svg>
+          <div id="stamp3d" aria-hidden="true"></div>
         </div>
       </div>
-      <div class="scroll-cue">Scroll<span class="cue-line"></span></div>
+      <div class="scroll-cue">Turn the page<span class="pen"></span></div>
     </section>
 
-    <!-- SCENE 2 · THE ODDS -->
-    <section class="scene odds" id="s-odds">
-      <div class="paper-field" aria-hidden="true">
-        <div class="paper" data-depth="0.25" style="left:6%;  top:8%;  transform:rotate(-9deg)"><i></i><i></i><i></i><i></i></div>
-        <div class="paper" data-depth="0.55" style="left:16%; top:58%; transform:rotate(7deg)"><i></i><i></i><i></i><i></i></div>
-        <div class="paper" data-depth="0.4"  style="right:8%; top:12%; transform:rotate(10deg)"><i></i><i></i><i></i><i></i></div>
-        <div class="paper" data-depth="0.7"  style="right:18%;top:64%; transform:rotate(-6deg)"><i></i><i></i><i></i><i></i></div>
-        <div class="paper" data-depth="0.9"  style="left:44%; top:76%; transform:rotate(3deg)"><i></i><i></i><i></i><i></i></div>
+    <!-- ============ THE WALL OF NO ============ -->
+    <div class="ticker" aria-hidden="true">
+      <div class="track" id="ticker-track">
+        <span>Not medically necessary</span><span>Step therapy required</span><span>Prior authorization denied</span><span>Formulary exclusion</span><span>Out of network</span><span>Experimental / investigational</span><span>Missing information</span><span>Benefit excluded</span>
+        <span>Not medically necessary</span><span>Step therapy required</span><span>Prior authorization denied</span><span>Formulary exclusion</span><span>Out of network</span><span>Experimental / investigational</span><span>Missing information</span><span>Benefit excluded</span>
       </div>
-      <div class="wrap">
-        <p class="eyebrow">The odds are designed to exhaust you</p>
-        <h2 class="title">Most people never appeal.<br>Insurers count on it.</h2>
-        <p class="sub" style="margin-left:auto;margin-right:auto">Fewer than 1 in 100 denied claims are ever appealed — yet appeals succeed remarkably often. The paperwork maze isn't an accident. GetMyYes walks you through it in minutes instead of weekends.</p>
-        <div class="stat-row">
-          <div class="stat"><b data-count="15">15</b><span>minutes to a full packet</span></div>
-          <div class="stat"><b>$39</b><span>one-time · no subscription</span></div>
-          <div class="stat"><b data-count="7">7</b><span>documents, ready to send</span></div>
+    </div>
+
+    <!-- ============ SCENE II · THE ODDS ============ -->
+    <section class="scene odds" id="s2">
+      <div class="wrap odds-grid">
+        <div>
+          <div class="scene-roman">II</div>
+          <div class="scene-kicker">The odds</div>
+        </div>
+        <div>
+          <h2 class="headline">The maze is the point.<br><em>Walking out is yours.</em></h2>
+          <p class="lede" style="margin-top:26px">Fewer than one in a hundred denied claims is ever appealed — and insurers know it. The paperwork is designed to outlast you. It takes us about fifteen minutes.</p>
+          <div class="actuary" id="actuary">
+            <div class="row">
+              <div class="cell redcell">
+                <div class="num" data-count="1"><sup>&lt;</sup>1<sup>%</sup></div>
+                <div class="cap">of denied claims are ever appealed</div>
+              </div>
+              <div class="cell">
+                <div class="num"><span id="cnt15">15</span><sup>min</sup></div>
+                <div class="cap">from denial letter to a full packet</div>
+              </div>
+              <div class="cell greencell">
+                <div class="num">7</div>
+                <div class="cap">documents, tailored &amp; ready to send</div>
+              </div>
+            </div>
+            <div class="foot">Source: published appeal-rate studies of U.S. marketplace plans · your outcome is never guaranteed</div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- SCENE 3 · HOW -->
-    <section class="scene how" id="s-how">
+    <!-- ============ SCENE III · THE METHOD ============ -->
+    <section class="scene method" id="s3">
       <div class="wrap">
         <div class="head">
-          <p class="eyebrow">From denial to appeal</p>
-          <h2 class="title">Four steps. Zero jargon.</h2>
-        </div>
-        <div class="steps">
-          <div class="beam"><span class="fill"></span></div>
-          <div class="step">
-            <div class="dot">01</div>
-            <div>
-              <h3>Upload your denial</h3>
-              <p>Denial letter, EOB, or prior-authorization denial — PDF or photo. Encrypted, private, auto-deleted in 24h unless you save your case.</p>
-            </div>
+          <div>
+            <div class="scene-roman">III</div>
+            <div class="scene-kicker">The method</div>
           </div>
-          <div class="step">
-            <div class="dot">02</div>
-            <div>
+          <div>
+            <h2 class="headline">Four moves.<br><em>No legalese.</em></h2>
+          </div>
+        </div>
+        <div class="board" id="board">
+          <svg id="string-svg" aria-hidden="true"><path id="string-path" d=""/></svg>
+          <div class="cards">
+            <div class="index-card" data-anchor>
+              <span class="pin"></span>
+              <div class="step-no">Move 01 — evidence in</div>
+              <h3>Upload the denial</h3>
+              <p>Letter, EOB, or prior-auth denial. PDF or photo. Encrypted, private, auto-deleted in 24h unless you save your case.</p>
+            </div>
+            <div class="index-card" data-anchor>
+              <span class="pin"></span>
+              <div class="step-no">Move 02 — the read</div>
               <h3>We read the fine print</h3>
-              <p>GetMyYes extracts the insurer, the denied item, the denial reason, and your deadlines — you check the facts and correct anything.</p>
+              <p>The insurer, the denied item, the stated reason, the deadline — extracted for you. You check the facts and correct anything.</p>
             </div>
-          </div>
-          <div class="step">
-            <div class="dot">03</div>
-            <div>
+            <div class="index-card" data-anchor>
+              <span class="pin"></span>
+              <div class="step-no">Move 03 — your side</div>
               <h3>Answer a few questions</h3>
-              <p>A short guided flow tailors the appeal to your plan and situation — step-therapy history, prior treatments, your doctor's take.</p>
+              <p>A short guided flow tailors the appeal to your plan and situation — treatment history, your doctor's take, what you want back.</p>
             </div>
-          </div>
-          <div class="step">
-            <div class="dot">04</div>
-            <div>
-              <h3>Get your packet</h3>
-              <p>An appeal letter citing your plan's own denial reason, evidence checklist, doctor letter request, call script, deadline tracker, and a polished PDF.</p>
+            <div class="index-card" data-anchor>
+              <span class="pin"></span>
+              <div class="step-no">Move 04 — the comeback</div>
+              <h3>Take the packet</h3>
+              <p>An appeal letter that cites their own denial language, checklists, a call script, a deadline tracker, and one polished PDF.</p>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- SCENE 4 · INSIDE -->
-    <section class="scene inside" id="s-inside">
+    <!-- ============ SCENE IV · THE PACKET ============ -->
+    <section class="scene packet" id="s4">
       <div class="wrap">
         <div class="head">
-          <p class="eyebrow">What's in the packet</p>
-          <h2 class="title">Everything your appeal needs.</h2>
-        </div>
-        <div class="card-grid">
-          <div class="deliverable"><div class="ic">📄</div><h4>Appeal letter draft</h4><p>Cites your plan's own denial reason and rebuts it point by point. You review, sign, send.</p></div>
-          <div class="deliverable"><div class="ic">🧭</div><h4>Plain-English summary</h4><p>What the denial actually says, what it means, and what happens next — no insurance-speak.</p></div>
-          <div class="deliverable"><div class="ic">🗂️</div><h4>Evidence checklist</h4><p>Exactly which records to attach and why each one strengthens your case.</p></div>
-          <div class="deliverable"><div class="ic">🩺</div><h4>Doctor letter request</h4><p>A ready-to-send draft asking your doctor for the supporting statement insurers listen to.</p></div>
-          <div class="deliverable"><div class="ic">📞</div><h4>Insurer call script</h4><p>Word-for-word talking points for the phone call — including what not to say.</p></div>
-          <div class="deliverable"><div class="ic">⏰</div><h4>Deadline tracker</h4><p>Every appeal window and date that matters, so you never miss your shot.</p></div>
-          <div class="deliverable"><div class="ic">⬇️</div><h4>Polished PDF export</h4><p>The whole packet as one clean document, rendered on your device for privacy.</p></div>
-        </div>
-
-        <div class="pricing">
-          <div class="price-card">
-            <div class="tier">Free preview</div>
-            <div class="amount">$0</div>
-            <div class="per">no card required</div>
-            <ul>
-              <li>Denial type identified</li>
-              <li>Amount at stake</li>
-              <li>Your likely appeal path</li>
-            </ul>
-            <button class="btn ghost" data-boot="/upload">Get my free preview</button>
+          <div>
+            <div class="scene-roman">IV</div>
+            <div class="scene-kicker">The packet</div>
           </div>
-          <div class="price-card hot">
-            <div class="tier">Full appeal packet</div>
-            <div class="amount">$39</div>
-            <div class="per">one-time · per case · no subscription</div>
-            <ul>
-              <li>All 7 documents, tailored to your denial</li>
-              <li>2 follow-up rounds included — keep going after the insurer replies</li>
-              <li>Saved to your account, export any time</li>
-              <li>Your files are never used to train AI</li>
+          <div>
+            <h2 class="headline">Exhibit B: <em>the comeback,</em><br>in seven documents.</h2>
+          </div>
+        </div>
+        <div class="fan-zone">
+          <div class="fan" id="fan">
+            <div class="doc" data-fan="0">
+              <span class="clip"></span>
+              <div class="dt"><span>Deadline tracker</span><span>07 / 07</span></div>
+              <h4>Every date that matters</h4>
+              <div class="fake w85"></div><div class="fake w72"></div><div class="fake w60"></div>
+            </div>
+            <div class="doc" data-fan="1">
+              <div class="dt"><span>Call script</span><span>05 / 07</span></div>
+              <h4>Word-for-word phone lines</h4>
+              <div class="fake w72"></div><div class="fake w85"></div><div class="fake w60"></div>
+            </div>
+            <div class="doc" data-fan="2">
+              <div class="dt"><span>Doctor letter request</span><span>04 / 07</span></div>
+              <h4>What to hand your prescriber</h4>
+              <div class="fake w60"></div><div class="fake w85"></div><div class="fake w72"></div>
+            </div>
+            <div class="doc" data-fan="3">
+              <div class="dt"><span>Evidence checklist</span><span>03 / 07</span></div>
+              <h4>Exactly what to attach</h4>
+              <div class="fake w85"></div><div class="fake w60"></div><div class="fake w72"></div>
+            </div>
+            <div class="doc" data-fan="4">
+              <div class="dt"><span>Appeal letter</span><span>02 / 07</span></div>
+              <h4>Their words, cited back</h4>
+              <div class="fake w72"></div><div class="fake w60"></div><div class="fake w85"></div>
+              <div class="fake w72"></div><div class="fake w60"></div>
+            </div>
+          </div>
+          <div>
+            <ul class="doc-list">
+              <li><b>Plain-English summary</b><span>why · what · next</span></li>
+              <li><b>Appeal letter draft</b><span>cites their reason</span></li>
+              <li><b>Evidence checklist</b><span>attach · why</span></li>
+              <li><b>Doctor letter request</b><span>ready to hand over</span></li>
+              <li><b>Insurer call script</b><span>word for word</span></li>
+              <li><b>Deadline tracker</b><span>never miss the window</span></li>
+              <li><b>Polished PDF export</b><span>one clean file</span></li>
             </ul>
-            <button class="btn primary" data-boot="/upload">Start my appeal</button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- SCENE 5 · FINALE + FAQ -->
-    <section class="scene finale" id="s-finale">
-      <div class="glow" aria-hidden="true"></div>
+    <!-- ============ SCENE V · THE LONG GAME ============ -->
+    <section class="scene longgame" id="s5">
+      <div class="wrap ledger">
+        <div class="ledger-copy">
+          <div class="scene-roman" style="font-size:clamp(60px,7vw,110px)">V</div>
+          <div class="scene-kicker" style="margin-bottom:22px">The long game</div>
+          <h2 class="headline">They reply.<br><em>You reply harder.</em></h2>
+          <p class="lede" style="margin-top:24px">An appeal is rarely one letter. When the insurer answers — or ignores you — report what happened and GetMyYes drafts the next move: a second-level appeal, an external-review request, or a status demand.</p>
+        </div>
+        <div class="ledger-table" id="ledger">
+          <div class="lt-head"><span>Follow-up ledger</span><span>Per case</span></div>
+          <div class="lt-row">
+            <div class="what">2 follow-up rounds, included with your packet<small>usable immediately — no waiting period</small></div>
+            <div class="amt free">$0</div>
+          </div>
+          <div class="lt-row">
+            <div class="what">Each additional round<small>one insurer response → one drafted comeback</small></div>
+            <div class="amt">$19</div>
+          </div>
+          <div class="lt-row">
+            <div class="what">Full Case upgrade<small>up to 100 rounds — the whole fight, not unlimited</small></div>
+            <div class="amt">$59</div>
+          </div>
+          <div class="lt-cap">One round = one submission · include everything you have</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SCENE VI · THE RECKONING ============ -->
+    <section class="scene reckoning" id="s6">
       <div class="wrap">
-        <p class="eyebrow">Your claim. Your money. Your health.</p>
-        <h2>Get your YES.</h2>
-        <p class="sub" style="margin-left:auto;margin-right:auto">The first look is free — see what your denial really says and whether an appeal is worth it.</p>
-        <button class="btn primary" data-boot="/upload">Start my free appeal preview</button>
+        <div class="head">
+          <div>
+            <div class="scene-roman">VI</div>
+            <div class="scene-kicker">The reckoning</div>
+          </div>
+          <div>
+            <h2 class="headline">Free to look.<br><em>$39 to fight.</em></h2>
+          </div>
+        </div>
+        <div class="receipts">
+          <div class="receipt">
+            <div class="r-head">
+              <div class="r-title">Receipt · The first look</div>
+              <div class="price">$0</div>
+              <div class="per">No card · no strings</div>
+            </div>
+            <ul>
+              <li><span>Denial type identified</span><span>incl.</span></li>
+              <li><span>Amount at stake</span><span>incl.</span></li>
+              <li><span>Likely appeal path</span><span>incl.</span></li>
+              <li><span>Missing-info checklist</span><span>incl.</span></li>
+            </ul>
+            <button class="btn-paper" data-boot="/upload">Get my free preview</button>
+            <div class="barcode" aria-hidden="true"></div>
+          </div>
+          <div class="receipt paid">
+            <div class="r-stamp stamped">WORTH IT</div>
+            <div class="r-head">
+              <div class="r-title">Receipt · The full packet</div>
+              <div class="price">$39</div>
+              <div class="per">One-time · per case · no subscription</div>
+            </div>
+            <ul>
+              <li><span>All 7 documents, tailored</span><span>incl.</span></li>
+              <li><span>2 follow-up rounds</span><span>incl.</span></li>
+              <li><span>Saved to your account</span><span>incl.</span></li>
+              <li><span>Never used to train AI</span><span>promise</span></li>
+            </ul>
+            <button class="btn-ink" data-boot="/upload">Start my appeal</button>
+            <div class="barcode" aria-hidden="true"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SCENE VII · THE VERDICT ============ -->
+    <section class="scene verdict" id="s7">
+      <div class="wrap">
+        <div class="vk">Scene VII · The verdict</div>
+        <h2><span class="approved-wrap"><span class="approved-stamp stamped" id="approved">APPROVED</span>Get your <span class="yes-word">YES.</span></span></h2>
+        <p class="sub">The first look is free — see what your denial actually says, what's at stake, and whether the fight is worth it. Then decide.</p>
+        <button class="btn-ink" data-boot="/upload">Open my case — free</button>
 
         <div class="faq">
-          <h3>Questions, answered</h3>
+          <span class="file-tab faq-tab">Questions · answered</span>
           <details>
             <summary>Can I appeal a denied medication or prior authorization?</summary>
             <div class="a">Yes. Most health-insurance denials — denied medications, prior authorizations, step-therapy requirements, formulary exclusions, and "not medically necessary" decisions — can be appealed. GetMyYes drafts the appeal paperwork from your denial letter for you to review and send.</div>
@@ -546,6 +1059,10 @@
           <details>
             <summary>What exactly is in the appeal packet?</summary>
             <div class="a">A plain-English summary of your denial, an appeal letter draft, an evidence checklist, a doctor letter request draft, an insurer call script, a deadline tracker, and a PDF export.</div>
+          </details>
+          <details>
+            <summary>What happens after I send the appeal?</summary>
+            <div class="a">Your packet includes 2 follow-up rounds. When the insurer replies — or ignores you — report what happened and GetMyYes drafts your next move: a second-level appeal, an external-review request, or a status demand letter. Extra rounds are $19 each, or the $59 Full Case upgrade covers up to 100 rounds per case (not unlimited).</div>
           </details>
           <details>
             <summary>How much does it cost?</summary>
@@ -556,10 +1073,6 @@
             <div class="a">No. GetMyYes is a document drafting assistant. It does not provide medical, legal, or insurance advice, does not decide medical necessity, and does not guarantee approval. You review every document before sending it.</div>
           </details>
           <details>
-            <summary>What happens after I send the appeal?</summary>
-            <div class="a">Your packet includes 2 follow-up rounds. When the insurer replies — or ignores you — report what happened and GetMyYes drafts your next move: a second-level appeal, an external-review request, or a status demand letter. Extra rounds are $19 each, or the $59 Full Case upgrade covers up to 100 rounds per case (not unlimited).</div>
-          </details>
-          <details>
             <summary>Is my health data private?</summary>
             <div class="a">Your files are processed only to draft your appeal — never to train AI. Uploads auto-delete after 24 hours unless you save your case, and you can delete your case and files at any time.</div>
           </details>
@@ -567,15 +1080,15 @@
       </div>
     </section>
 
-    <footer>
+    <footer class="colophon">
       <div class="cols">
         <div>
-          <div class="brand" style="margin-bottom:10px"><span class="mark">✓</span> GetMyYes</div>
-          <div>Turn a health-insurance denial into a ready-to-send appeal.</div>
+          <b style="color:rgba(243,237,223,0.9)">GETMYYES</b> · turn a health-insurance denial into a ready-to-send appeal<br>
+          Case files set in Fraunces &amp; IBM Plex Mono.
         </div>
-        <div class="links">
-          <a href="terms.html">Terms of Service</a>
-          <a href="privacy.html">Privacy Policy</a>
+        <div>
+          <a href="terms.html">Terms of Service</a> &nbsp;·&nbsp;
+          <a href="privacy.html">Privacy Policy</a> &nbsp;·&nbsp;
           <a href="mailto:support@getmyyes.com">support@getmyyes.com</a>
         </div>
       </div>
@@ -583,11 +1096,12 @@
     </footer>
   </div>
 
+  <div id="ink-ring" aria-hidden="true"></div>
+
   <div id="app-loader" hidden>
     <div class="box">
-      <div class="brand" style="justify-content:center"><span class="mark">✓</span> GetMyYes</div>
-      <div class="spinner"></div>
-      <p style="margin-top:14px;color:var(--ink-dim);font-size:13.5px">Opening your secure workspace…</p>
+      <div class="stampline">FILING…</div>
+      <p>Opening your secure workspace</p>
     </div>
   </div>
 
@@ -628,9 +1142,28 @@
         return;
       }
 
-      // ---------- cinematic scroll (progressive enhancement) ----------
+      // Case-file page indicator.
+      var scenes = ['s1', 's2', 's3', 's4', 's5', 's6', 's7'];
+      function updatePage() {
+        var y = window.scrollY + window.innerHeight * 0.4;
+        var page = 1;
+        for (var i = 0; i < scenes.length; i++) {
+          var el = document.getElementById(scenes[i]);
+          if (el && el.offsetTop <= y) page = i + 1;
+        }
+        var pg = document.getElementById('pg');
+        if (pg) pg.textContent = page;
+      }
+      window.addEventListener('scroll', updatePage, { passive: true });
+
       var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (reduceMotion) return;
+      if (reduceMotion) {
+        // Static case file: stamps pre-applied, circles drawn, everything readable.
+        document.querySelectorAll('.letter .circ path').forEach(function (p) { p.style.strokeDasharray = 'none'; });
+        document.getElementById('imprint').classList.add('on');
+        document.getElementById('approved').classList.add('on');
+        return;
+      }
 
       function loadScript(src) {
         return new Promise(function (resolve, reject) {
@@ -644,18 +1177,12 @@
       Promise.all([
         loadScript('https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js')
           .then(function () { return loadScript('https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js'); }),
-        loadScript('https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js').catch(function () {})
+        loadScript('https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js').catch(function () {}),
+        loadScript('https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js').catch(function () {})
       ]).then(function () {
         if (!window.gsap || !window.ScrollTrigger) return;
         gsap.registerPlugin(ScrollTrigger);
 
-        var fine = window.matchMedia('(pointer: fine)').matches;
-
-        // Marks the enhanced experience: the hero lines become grid-stacked
-        // (YES lands exactly where NO stood) — see html.fx CSS rules.
-        document.documentElement.classList.add('fx');
-
-        // Smooth scrolling (Lenis) wired into ScrollTrigger.
         var lenis = null;
         if (window.Lenis) {
           lenis = new Lenis({ lerp: 0.1, smoothWheel: true });
@@ -665,149 +1192,373 @@
           gsap.ticker.lagSmoothing(0);
         }
 
-        // Top progress bar.
         gsap.to('#scrollbar', {
           width: '100%', ease: 'none',
           scrollTrigger: { trigger: document.body, start: 'top top', end: 'max', scrub: 0.3 }
         });
 
-        // HERO video: simple autoplay loop — scroll-scrubbing H.264 stutters
-        // without a dense-keyframe re-encode, so the film just plays and the
-        // subtle scale tween below ties it to the scroll instead.
+        /* ---------- hero entrance ---------- */
+        gsap.from('.hero-copy > *', { y: 30, opacity: 0, stagger: 0.1, duration: 1, ease: 'power3.out', delay: 0.1 });
+        gsap.from('#exhibit', { y: 44, opacity: 0, rotate: 3, duration: 1.1, ease: 'power3.out', delay: 0.25 });
 
-        // HERO: pinned NO → YES morph over the video. The NO line recedes in
-        // place (scale/blur — transforms only, so it can never re-wrap) and
-        // the YES line rises into the exact same grid cell.
-        var heroTl = gsap.timeline({
-          scrollTrigger: {
-            trigger: '#s-hero', start: 'top top', end: '+=170%', scrub: 0.6, pin: true
-          }
-        });
-        heroTl
-          .to('.hero video.bg', { scale: 1.18, ease: 'none' }, 0)
-          .to('.l-no', { scale: 1.14, filter: 'blur(9px)', opacity: 0, ease: 'power2.in' }, 0)
-          .fromTo('.l-yes', { yPercent: 55, opacity: 0.0, filter: 'blur(6px)' },
-                            { yPercent: 0, opacity: 1, filter: 'blur(0px)', ease: 'power2.out' }, 0.12)
-          .to('.scroll-cue', { opacity: 0 }, 0.05);
+        /* ---------- 3D STAMP (Three.js) ---------- */
+        var stampReady = false, stampGroup = null, renderer = null, scene3 = null, cam = null;
+        var mouseX = 0, mouseY = 0;
+        function buildStamp() {
+          if (!window.THREE) return false;
+          var host = document.getElementById('stamp3d');
+          if (!host) return false;
+          var w = host.clientWidth, h = host.clientHeight;
+          if (!w || !h) return false; // hidden on small screens
+          renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+          renderer.setSize(w, h);
+          renderer.shadowMap.enabled = true;
+          renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+          host.appendChild(renderer.domElement);
 
-        // Landing intro.
-        gsap.from('.hero-copy > *', { y: 34, opacity: 0, stagger: 0.12, duration: 1.1, ease: 'power3.out', delay: 0.15 });
+          scene3 = new THREE.Scene();
+          cam = new THREE.PerspectiveCamera(30, w / h, 0.1, 100);
+          cam.position.set(0, 2.2, 12.2);
+          cam.lookAt(0.6, 0.8, 0);
 
-        // PHASE SNAPPING: when scrolling stops, settle at the nearest scene
-        // boundary so the page is never caught half-scrolled. Inside the
-        // pinned hero we always resolve to fully-NO or fully-YES; elsewhere
-        // we only snap when a boundary is close (tall sections stay readable).
-        var snapPoints = [];
-        function computeSnaps() {
-          snapPoints = [0];
-          if (heroTl.scrollTrigger) snapPoints.push(Math.round(heroTl.scrollTrigger.end));
-          ['#s-odds', '#s-how', '#s-inside', '#s-finale'].forEach(function (sel) {
-            var el = document.querySelector(sel);
-            if (el) snapPoints.push(Math.round(el.getBoundingClientRect().top + window.scrollY));
+          var amb = new THREE.AmbientLight(0xfff4e0, 0.85);
+          scene3.add(amb);
+          var key = new THREE.DirectionalLight(0xfff1d6, 1.5);
+          key.position.set(3, 6, 4);
+          key.castShadow = true;
+          key.shadow.mapSize.set(1024, 1024);
+          scene3.add(key);
+          var rim = new THREE.DirectionalLight(0xd8e2ff, 0.5);
+          rim.position.set(-4, 3, -3);
+          scene3.add(rim);
+
+          // ground plane just to catch the stamp's shadow (invisible material)
+          var shadowMat = new THREE.ShadowMaterial({ opacity: 0.05 });
+          window.__stampShadowMat = shadowMat;
+          var ground = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), shadowMat);
+          ground.rotation.x = -Math.PI / 2;
+          ground.position.y = -0.72;
+          ground.receiveShadow = true;
+          scene3.add(ground);
+
+          // — the stamp —
+          stampGroup = new THREE.Group();
+          var wood = new THREE.MeshStandardMaterial({ color: 0x8a5a2b, roughness: 0.55, metalness: 0.05 });
+          var woodDark = new THREE.MeshStandardMaterial({ color: 0x6e441d, roughness: 0.6 });
+          var rubber = new THREE.MeshStandardMaterial({ color: 0xb3202a, roughness: 0.9 });
+
+          var base = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.14, 0.42, 48), woodDark);
+          base.castShadow = true;
+          stampGroup.add(base);
+          var pad = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.06, 0.16, 48), rubber);
+          pad.position.y = -0.28;
+          pad.castShadow = true;
+          stampGroup.add(pad);
+          var neck = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.34, 0.75, 32), wood);
+          neck.position.y = 0.55;
+          neck.castShadow = true;
+          stampGroup.add(neck);
+          var knobStem = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.2, 0.5, 32), wood);
+          knobStem.position.y = 1.12;
+          stampGroup.add(knobStem);
+          var knob = new THREE.Mesh(new THREE.SphereGeometry(0.46, 40, 28), wood);
+          knob.position.y = 1.62;
+          knob.scale.y = 1.12;
+          knob.castShadow = true;
+          stampGroup.add(knob);
+          var band = new THREE.Mesh(new THREE.TorusGeometry(1.06, 0.045, 14, 60), new THREE.MeshStandardMaterial({ color: 0xc9a24a, roughness: 0.35, metalness: 0.7 }));
+          band.rotation.x = Math.PI / 2;
+          band.position.y = 0.02;
+          stampGroup.add(band);
+
+          stampGroup.scale.setScalar(0.55);
+          stampGroup.position.set(1.8, 6.2, 0.4);   // hovering high, off-stage
+          stampGroup.rotation.z = 0.14;
+          scene3.add(stampGroup);
+
+          window.addEventListener('mousemove', function (e) {
+            mouseX = (e.clientX / window.innerWidth - 0.5);
+            mouseY = (e.clientY / window.innerHeight - 0.5);
+          }, { passive: true });
+
+          window.addEventListener('resize', function () {
+            var w2 = host.clientWidth, h2 = host.clientHeight;
+            if (!w2 || !h2) return;
+            cam.aspect = w2 / h2;
+            cam.updateProjectionMatrix();
+            renderer.setSize(w2, h2);
           });
-        }
-        ScrollTrigger.addEventListener('refresh', computeSnaps);
-        computeSnaps();
 
-        var snapTimer = null;
-        var snapping = false;
-        function snapTo(y) {
-          snapping = true;
-          if (lenis) {
-            lenis.scrollTo(y, {
-              duration: 1.15,
-              easing: function (t) { return 1 - Math.pow(1 - t, 3); },
-              onComplete: function () { snapping = false; }
-            });
-          } else {
-            window.scrollTo({ top: y, behavior: 'smooth' });
-            setTimeout(function () { snapping = false; }, 900);
-          }
-        }
-        function trySnap() {
-          if (booting || snapping || !snapPoints.length) return;
-          var y = window.scrollY;
-          var heroEnd = heroTl.scrollTrigger ? heroTl.scrollTrigger.end : 0;
-          // Inside the pinned hero: always resolve the morph.
-          if (heroEnd > 0 && y > 2 && y < heroEnd - 2) {
-            snapTo(y < heroEnd / 2 ? 0 : heroEnd);
-            return;
-          }
-          var best = null, bestD = Infinity;
-          snapPoints.forEach(function (p) {
-            var d = Math.abs(p - y);
-            if (d < bestD) { bestD = d; best = p; }
+          // Only spend GPU while the hero is on screen.
+          var heroVisible = true;
+          ScrollTrigger.create({
+            trigger: '#s1', start: 'top bottom', end: 'bottom top',
+            onToggle: function (self) { heroVisible = self.isActive; }
           });
-          if (best === null || bestD < 3) return;
-          if (bestD > window.innerHeight * 0.45) return;
-          snapTo(best);
-        }
-        function queueSnap() {
-          if (snapping) return;
-          clearTimeout(snapTimer);
-          snapTimer = setTimeout(trySnap, 240);
-        }
-        if (lenis) lenis.on('scroll', queueSnap);
-        else window.addEventListener('scroll', queueSnap, { passive: true });
 
-        // ODDS: parallax paper field + reveal.
-        document.querySelectorAll('.paper').forEach(function (p) {
-          var depth = parseFloat(p.getAttribute('data-depth') || '0.5');
+          gsap.ticker.add(function () {
+            if (!renderer || !heroVisible) return;
+            // idle drift + gentle mouse parallax after the slam
+            if (stampReady && stampGroup) {
+              stampGroup.position.x += ((2.3 + mouseX * 0.5) - stampGroup.position.x) * 0.04;
+              stampGroup.rotation.y += (mouseX * 0.5 - stampGroup.rotation.y) * 0.03;
+              stampGroup.position.y += ((2.9 + Math.sin(performance.now() / 900) * 0.09 + mouseY * -0.25) - stampGroup.position.y) * 0.035;
+            }
+            renderer.render(scene3, cam);
+          });
+          return true;
+        }
+
+        function slam() {
+          var imprint = document.getElementById('imprint');
+          var splat = document.getElementById('splat1');
+          var tl = gsap.timeline();
+          if (stampGroup) {
+            tl.to(stampGroup.position, { x: 1.7, y: -0.15, duration: 0.34, ease: 'power3.in' }, 0)
+              .to(stampGroup.rotation, { z: -0.02, duration: 0.3, ease: 'power2.in' }, 0)
+              .to(window.__stampShadowMat || {}, { opacity: 0.22, duration: 0.3 }, 0)
+              .to(stampGroup.scale, { y: 0.46, duration: 0.09, ease: 'power2.out' }, 0.34)
+              .to(stampGroup.scale, { y: 0.55, duration: 0.32, ease: 'elastic.out(1.4, 0.4)' }, 0.44)
+              .to(window.__stampShadowMat || {}, { opacity: 0.05, duration: 0.5 }, 0.55)
+              .to(stampGroup.position, { x: 2.3, y: 2.9, duration: 0.8, ease: 'power2.out', onComplete: function () { stampReady = true; } }, 0.52);
+          }
+          tl.add(function () {
+            imprint.classList.add('on');
+          }, stampGroup ? 0.36 : 0)
+            .fromTo(imprint, { scale: 1.5, opacity: 0 }, { scale: 1, opacity: 0.92, duration: 0.18, ease: 'power4.out' }, stampGroup ? 0.36 : 0)
+            .fromTo(splat, { scale: 0.2, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(2.5)' }, stampGroup ? 0.4 : 0.05)
+            .fromTo('#landing', { x: 0 }, { x: 6, duration: 0.05, repeat: 5, yoyo: true, ease: 'none', clearProps: 'transform' }, stampGroup ? 0.36 : 0);
+        }
+
+        var built = buildStamp();
+        // The slam happens shortly after arrival — the moment the visitor
+        // understands the whole product.
+        gsap.delayedCall(built ? 1.15 : 0.9, slam);
+
+        /* ---------- hero letter annotations draw on scroll ---------- */
+        document.querySelectorAll('.letter .circ path').forEach(function (p, i) {
+          var len = p.getTotalLength();
+          p.style.strokeDasharray = len;
+          p.style.strokeDashoffset = len;
           gsap.to(p, {
-            yPercent: -140 * depth, rotation: '+=' + (depth * 14 - 7), ease: 'none',
-            scrollTrigger: { trigger: '#s-odds', start: 'top bottom', end: 'bottom top', scrub: true }
+            strokeDashoffset: 0, duration: 0.9, ease: 'power2.inOut',
+            scrollTrigger: { trigger: '#s2', start: 'top 92%', end: 'top 60%', scrub: 0.4 },
+            delay: i * 0.15
           });
         });
-        gsap.from('#s-odds .wrap > *', {
-          y: 44, opacity: 0, stagger: 0.14, duration: 0.9, ease: 'power3.out',
-          scrollTrigger: { trigger: '#s-odds', start: 'top 68%' }
+        gsap.from('.letter .note', {
+          opacity: 0, x: 14, stagger: 0.18, duration: 0.6, ease: 'power2.out',
+          scrollTrigger: { trigger: '#s2', start: 'top 88%' }
         });
 
-        // HOW: beam fill + step reveals.
-        gsap.to('.beam .fill', {
-          scaleY: 1, ease: 'none',
-          scrollTrigger: { trigger: '.steps', start: 'top 75%', end: 'bottom 45%', scrub: 0.5 }
+        /* ---------- odds ---------- */
+        gsap.from('#s2 .headline, #s2 .lede', {
+          y: 40, opacity: 0, stagger: 0.12, duration: 0.9, ease: 'power3.out',
+          scrollTrigger: { trigger: '#s2', start: 'top 72%' }
         });
-        gsap.utils.toArray('.step').forEach(function (el) {
-          gsap.from(el, {
-            x: -36, opacity: 0, duration: 0.8, ease: 'power3.out',
-            scrollTrigger: { trigger: el, start: 'top 80%' }
+        gsap.from('#actuary', {
+          y: 60, opacity: 0, duration: 0.9, ease: 'power3.out',
+          scrollTrigger: { trigger: '#actuary', start: 'top 85%' }
+        });
+        gsap.from('.actuary .num', {
+          scale: 1.6, opacity: 0, rotation: -6, stagger: 0.12, duration: 0.5, ease: 'back.out(2)',
+          scrollTrigger: { trigger: '#actuary', start: 'top 78%' }
+        });
+
+        /* ---------- method: red string draws between pins ---------- */
+        function drawString() {
+          var svg = document.getElementById('string-svg');
+          var path = document.getElementById('string-path');
+          var board = document.getElementById('board');
+          if (!svg || !path || !board) return;
+          var br = board.getBoundingClientRect();
+          var pins = board.querySelectorAll('.index-card .pin');
+          if (!pins.length) return;
+          var d = '';
+          pins.forEach(function (pin, i) {
+            var r = pin.getBoundingClientRect();
+            var x = r.left - br.left + r.width / 2;
+            var y = r.top - br.top + r.height / 2;
+            if (i === 0) d = 'M ' + x + ' ' + y;
+            else {
+              var prev = pins[i - 1].getBoundingClientRect();
+              var px = prev.left - br.left + prev.width / 2;
+              var py = prev.top - br.top + prev.height / 2;
+              var mx = (px + x) / 2;
+              var sag = 46 + i * 8;
+              d += ' Q ' + mx + ' ' + (Math.max(py, y) + sag) + ' ' + x + ' ' + y;
+            }
           });
+          path.setAttribute('d', d);
+          var len = path.getTotalLength();
+          path.style.strokeDasharray = len;
+          path.style.strokeDashoffset = len;
+          gsap.to(path, {
+            strokeDashoffset: 0, ease: 'none',
+            scrollTrigger: { trigger: '#board', start: 'top 80%', end: 'top 30%', scrub: 0.5 }
+          });
+        }
+        drawString();
+        ScrollTrigger.addEventListener('refreshInit', function () {
+          var p = document.getElementById('string-path');
+          if (p) { p.style.strokeDasharray = ''; p.style.strokeDashoffset = ''; }
+        });
+        window.addEventListener('resize', function () { requestAnimationFrame(drawString); });
+
+        gsap.from('.index-card', {
+          y: 60, opacity: 0, rotation: function (i) { return (i % 2 ? 5 : -5); },
+          stagger: 0.12, duration: 0.7, ease: 'back.out(1.5)',
+          scrollTrigger: { trigger: '#board', start: 'top 82%' }
         });
 
-        // INSIDE: card cascade + pointer tilt.
-        gsap.from('.deliverable', {
-          y: 54, opacity: 0, stagger: 0.07, duration: 0.75, ease: 'power3.out',
-          scrollTrigger: { trigger: '.card-grid', start: 'top 78%' }
-        });
-        gsap.from('.price-card', {
-          y: 60, opacity: 0, stagger: 0.14, duration: 0.85, ease: 'power3.out',
-          scrollTrigger: { trigger: '.pricing', start: 'top 82%' }
-        });
-        if (fine) {
-          document.querySelectorAll('.deliverable').forEach(function (card) {
-            card.addEventListener('mousemove', function (e) {
-              var r = card.getBoundingClientRect();
-              var rx = ((e.clientY - r.top) / r.height - 0.5) * -10;
-              var ry = ((e.clientX - r.left) / r.width - 0.5) * 12;
-              card.style.transform = 'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) translateZ(6px)';
+        /* ---------- packet fan ---------- */
+        var fanDocs = gsap.utils.toArray('.doc');
+        fanDocs.forEach(function (doc, i) {
+          var order = parseInt(doc.getAttribute('data-fan'), 10);
+          gsap.fromTo(doc,
+            { rotation: 0, y: 30, opacity: 0 },
+            {
+              rotation: (order - 4) * 6, y: 0, opacity: 1,
+              duration: 0.85, ease: 'power3.out',
+              scrollTrigger: { trigger: '#fan', start: 'top 74%' },
+              delay: (4 - order) * 0.1
             });
-            card.addEventListener('mouseleave', function () {
-              card.style.transform = 'rotateX(0deg) rotateY(0deg)';
-            });
+        });
+        gsap.from('.doc-list li', {
+          x: 44, opacity: 0, stagger: 0.08, duration: 0.6, ease: 'power3.out',
+          scrollTrigger: { trigger: '.doc-list', start: 'top 78%' }
+        });
+
+        /* ---------- ledger ---------- */
+        gsap.from('.ledger-copy > *', {
+          y: 36, opacity: 0, stagger: 0.1, duration: 0.8, ease: 'power3.out',
+          scrollTrigger: { trigger: '#s5', start: 'top 72%' }
+        });
+        gsap.from('#ledger', {
+          y: 50, opacity: 0, rotation: 1.2, duration: 0.9, ease: 'power3.out',
+          scrollTrigger: { trigger: '#ledger', start: 'top 82%' }
+        });
+        gsap.from('.lt-row', {
+          opacity: 0, x: -24, stagger: 0.14, duration: 0.5, ease: 'power2.out',
+          scrollTrigger: { trigger: '#ledger', start: 'top 74%' }
+        });
+
+        /* ---------- receipts ---------- */
+        gsap.from('.receipt', {
+          y: 70, opacity: 0, rotation: function (i) { return i ? 2 : -2; },
+          stagger: 0.16, duration: 0.85, ease: 'power3.out', clearProps: 'all',
+          scrollTrigger: { trigger: '.receipts', start: 'top 80%' }
+        });
+        gsap.from('.receipt .r-stamp', {
+          scale: 2.2, opacity: 0, rotation: 30, duration: 0.4, ease: 'power4.out',
+          scrollTrigger: { trigger: '.receipts', start: 'top 62%' }
+        });
+
+        /* ---------- verdict: green stamp ---------- */
+        gsap.from('.verdict h2', {
+          y: 60, opacity: 0, duration: 1, ease: 'power3.out',
+          scrollTrigger: { trigger: '#s7', start: 'top 74%' }
+        });
+        ScrollTrigger.create({
+          trigger: '#s7', start: 'top 46%',
+          onEnter: function () {
+            var ap = document.getElementById('approved');
+            if (ap.classList.contains('on')) return;
+            ap.classList.add('on');
+            gsap.fromTo(ap,
+              { scale: 2.4, opacity: 0, rotation: -20 },
+              { scale: 1, opacity: 0.95, rotation: -8, duration: 0.34, ease: 'power4.out' });
+            gsap.fromTo('#landing', { x: 0 }, { x: 5, duration: 0.05, repeat: 4, yoyo: true, ease: 'none', clearProps: 'transform' });
+          }
+        });
+
+        /* ---------- variable-font hover on masthead brand ---------- */
+        var brandEl = document.querySelector('.brand');
+        if (brandEl) {
+          brandEl.addEventListener('mouseenter', function () {
+            gsap.to(brandEl, { fontVariationSettings: '"SOFT" 100, "WONK" 1', duration: 0.5, ease: 'power2.out' });
+          });
+          brandEl.addEventListener('mouseleave', function () {
+            gsap.to(brandEl, { fontVariationSettings: '"SOFT" 40, "WONK" 1', duration: 0.5, ease: 'power2.out' });
           });
         }
 
-        // FINALE: the YES scales in.
-        gsap.from('.finale h2', {
-          scale: 0.6, opacity: 0, ease: 'power2.out',
-          scrollTrigger: { trigger: '#s-finale', start: 'top 70%', end: 'top 30%', scrub: 0.6 }
+        /* ---------- masthead compresses once the case is open ---------- */
+        ScrollTrigger.create({
+          start: 60, end: 'max',
+          onUpdate: function (self) {
+            document.querySelector('nav.masthead').classList.toggle('scrolled', self.scroll() > 60);
+          }
         });
-        gsap.from('.finale .glow', {
-          opacity: 0, scale: 0.5, ease: 'none',
-          scrollTrigger: { trigger: '#s-finale', start: 'top 80%', end: 'top 25%', scrub: true }
+
+        /* ---------- italic words soften as their scene arrives ---------- */
+        gsap.utils.toArray('h2.headline em').forEach(function (em) {
+          gsap.fromTo(em,
+            { fontVariationSettings: '"SOFT" 0, "WONK" 0' },
+            {
+              fontVariationSettings: '"SOFT" 92, "WONK" 1', ease: 'none',
+              scrollTrigger: { trigger: em, start: 'top 88%', end: 'top 45%', scrub: 0.4 }
+            });
         });
-      }).catch(function () { /* CDN blocked → static page still fully readable */ });
+
+        /* ---------- odds: the fifteen counts itself ---------- */
+        var cnt15 = document.getElementById('cnt15');
+        if (cnt15) {
+          var counter = { v: 0 };
+          gsap.to(counter, {
+            v: 15, duration: 1.1, ease: 'power2.out',
+            scrollTrigger: { trigger: '#actuary', start: 'top 78%' },
+            onUpdate: function () { cnt15.textContent = Math.round(counter.v); }
+          });
+        }
+
+        var fine = window.matchMedia('(pointer: fine)').matches;
+
+        /* ---------- ink-ring cursor companion ---------- */
+        if (fine) {
+          var ring = document.getElementById('ink-ring');
+          var rx = gsap.quickTo(ring, 'x', { duration: 0.35, ease: 'power3.out' });
+          var ry = gsap.quickTo(ring, 'y', { duration: 0.35, ease: 'power3.out' });
+          var ringOn = false;
+          window.addEventListener('mousemove', function (e) {
+            if (!ringOn) { ring.classList.add('on'); ringOn = true; }
+            rx(e.clientX); ry(e.clientY);
+          }, { passive: true });
+          document.querySelectorAll('[data-boot], summary, footer a').forEach(function (el) {
+            el.addEventListener('mouseenter', function () { ring.classList.add('hot'); });
+            el.addEventListener('mouseleave', function () { ring.classList.remove('hot'); });
+          });
+        }
+
+        /* ---------- the letter leans with the reader ---------- */
+        if (fine) {
+          var letterEl = document.getElementById('letter');
+          var exhibitEl = document.getElementById('exhibit');
+          if (letterEl && exhibitEl) {
+            var lrx = gsap.quickTo(letterEl, 'rotationY', { duration: 0.6, ease: 'power2.out' });
+            var lry = gsap.quickTo(letterEl, 'rotationX', { duration: 0.6, ease: 'power2.out' });
+            exhibitEl.addEventListener('mousemove', function (e) {
+              var r = exhibitEl.getBoundingClientRect();
+              lrx(((e.clientX - r.left) / r.width - 0.5) * 5);
+              lry(((e.clientY - r.top) / r.height - 0.5) * -4);
+            });
+            exhibitEl.addEventListener('mouseleave', function () { lrx(0); lry(0); });
+          }
+        }
+
+        /* ---------- the top exhibit lifts when the fan is visited ---------- */
+        var fanEl = document.getElementById('fan');
+        var topDoc = document.querySelector('.doc[data-fan="4"]');
+        if (fine && fanEl && topDoc) {
+          fanEl.addEventListener('mouseenter', function () {
+            gsap.to(topDoc, { y: -18, rotation: 2, duration: 0.45, ease: 'power3.out' });
+          });
+          fanEl.addEventListener('mouseleave', function () {
+            gsap.to(topDoc, { y: 0, rotation: 0, duration: 0.5, ease: 'power3.out' });
+          });
+        }
+      }).catch(function () { /* CDN blocked → static case file still fully readable */ });
     })();
   </script>
 </body>
