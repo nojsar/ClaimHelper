@@ -1,6 +1,9 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import 'core/theme.dart';
 import 'features/account/account_screen.dart';
 import 'features/extraction/extraction_review_screen.dart';
 import 'features/guided/guided_questions_screen.dart';
@@ -15,7 +18,16 @@ import 'features/upload/upload_screen.dart';
 final appRouter = GoRouter(
   initialLocation: '/',
   routes: [
-    GoRoute(path: '/', builder: (_, __) => const LandingScreen()),
+    // getmyyes.com has ONE homepage: the static Case File landing that
+    // index.html serves before the app boots. On web, the app's own root
+    // route hands the visitor back to it (full page return) instead of
+    // rendering a duplicate in-app marketing home. Mobile builds, which
+    // have no static landing, keep the in-app LandingScreen.
+    GoRoute(
+      path: '/',
+      builder: (_, __) =>
+          kIsWeb ? const _ExitToLanding() : const LandingScreen(),
+    ),
     GoRoute(path: '/upload', builder: (_, __) => const UploadScreen()),
     GoRoute(
       path: '/processing',
@@ -55,3 +67,31 @@ final appRouter = GoRouter(
     body: Center(child: Text('Page not found: ${state.uri}')),
   ),
 );
+
+/// Web-only: leaving the app toward `/` performs a full navigation to the
+/// site origin WITHOUT the `#/` hash, so index.html shows the real landing
+/// instead of re-booting the app.
+class _ExitToLanding extends StatefulWidget {
+  const _ExitToLanding();
+
+  @override
+  State<_ExitToLanding> createState() => _ExitToLandingState();
+}
+
+class _ExitToLandingState extends State<_ExitToLanding> {
+  @override
+  void initState() {
+    super.initState();
+    launchUrl(Uri.parse('${Uri.base.origin}/'), webOnlyWindowName: '_self');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      backgroundColor: AppColors.background,
+      body: Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      ),
+    );
+  }
+}
