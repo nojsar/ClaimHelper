@@ -87,8 +87,12 @@ function choosePost(history) {
 }
 
 if (dryRun) {
-  const preview = compose(posts[0]);
-  console.log(`[marketing] Dry run (${[...preview.text].length} code points):\n\n${preview.text}`);
+  const previews = posts.map((post) => ({ id: post.id, ...compose(post) }));
+  const longest = previews.reduce((a, b) =>
+    [...a.text].length >= [...b.text].length ? a : b,
+  );
+  console.log(`[marketing] Validated ${previews.length} posts; longest is ${longest.id} (${[...longest.text].length} code points).`);
+  console.log(`\nNext-post preview:\n\n${previews[0].text}`);
   process.exit(0);
 }
 

@@ -7,8 +7,9 @@
  * Hosting). Google does not support IndexNow — it discovers via sitemap.xml
  * and Search Console instead.
  *
- * Usage:  node tools/indexnow-ping.mjs            # pings every sitemap URL
- *         node tools/indexnow-ping.mjs <url> ...  # pings specific URLs
+ * Usage:  node tools/indexnow-ping.mjs             # pings every sitemap URL
+ *         node tools/indexnow-ping.mjs <url> ...   # pings specific URLs
+ *         node tools/indexnow-ping.mjs --dry-run   # validates without sending
  *
  * Run after every Hosting deploy that adds or changes public pages.
  */
@@ -26,17 +27,33 @@ function sitemapUrls() {
   return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1].trim());
 }
 
-const urls = process.argv.slice(2).length ? process.argv.slice(2) : sitemapUrls();
+const dryRun = process.argv.includes("--dry-run");
+const requested = process.argv.slice(2).filter((arg) => arg !== "--dry-run");
+const urls = requested.length ? requested : sitemapUrls();
+if (urls.length === 0) throw new Error("No URLs found to submit.");
+for (const value of urls) {
+  const url = new URL(value);
+  if (url.protocol !== "https:" || url.hostname !== HOST) {
+    throw new Error(`Refusing to submit an off-site or insecure URL: ${value}`);
+  }
+}
+
+const payload = {
+  host: HOST,
+  key: KEY,
+  keyLocation: `https://${HOST}/${KEY}.txt`,
+  urlList: urls,
+};
+
+if (dryRun) {
+  console.log(`IndexNow dry run: ${urls.length} validated URL(s); key file ${payload.keyLocation}`);
+  process.exit(0);
+}
 
 const res = await fetch("https://api.indexnow.org/indexnow", {
   method: "POST",
   headers: { "Content-Type": "application/json; charset=utf-8" },
-  body: JSON.stringify({
-    host: HOST,
-    key: KEY,
-    keyLocation: `https://${HOST}/${KEY}.txt`,
-    urlList: urls,
-  }),
+  body: JSON.stringify(payload),
 });
 
 // 200 = accepted, 202 = accepted (key validation pending). Anything else is a

@@ -9,6 +9,12 @@ const guidesRoot = path.join(webRoot, "appeals");
 const buildRoot = path.join(projectRoot, "build", "web");
 const siteOrigin = "https://getmyyes.com";
 const mode = process.argv[2] ?? "generate";
+const discoveryFiles = [
+  "sitemap.xml",
+  "feed.xml",
+  "robots.txt",
+  "ae1eb6c514f913f2fa38028ca8b6699b.txt",
+];
 
 function fail(message) {
   throw new Error(`[marketing] ${message}`);
@@ -61,6 +67,20 @@ async function guideModel() {
   for (const name of names) {
     const html = await readFile(path.join(guidesRoot, name), "utf8");
     allHtml.set(name, html);
+
+    for (const script of html.matchAll(
+      /<script\s+type=["']application\/ld\+json["']>([\s\S]*?)<\/script>/gi,
+    )) {
+      try {
+        JSON.parse(script[1]);
+      } catch (error) {
+        fail(`${name} has invalid JSON-LD: ${error.message}`);
+      }
+    }
+    const ids = [...html.matchAll(/\sid=["']([^"']+)["']/g)].map((found) => found[1]);
+    if (new Set(ids).size !== ids.length) fail(`${name} contains duplicate HTML ids.`);
+    if (!html.includes("/api/track")) fail(`${name} is missing the first-party visit counter.`);
+
     if (name === "index.html") continue;
 
     const slug = name.slice(0, -5);
@@ -193,18 +213,18 @@ async function stageBuild() {
   await access(buildRoot);
   await mkdir(path.join(buildRoot, "appeals"), { recursive: true });
   await cp(guidesRoot, path.join(buildRoot, "appeals"), { recursive: true, force: true });
-  for (const name of ["sitemap.xml", "feed.xml", "robots.txt"]) {
+  for (const name of discoveryFiles) {
     await cp(path.join(webRoot, name), path.join(buildRoot, name), { force: true });
   }
-  console.log("[marketing] Staged guides, sitemap, feed, and robots.txt in build/web.");
+  console.log("[marketing] Staged guides and search-discovery files in build/web.");
 }
 
 async function verifyBuild() {
   const pages = await guideModel();
   await validatePosts(pages);
-  await assertEqual(path.join(webRoot, "sitemap.xml"), path.join(buildRoot, "sitemap.xml"), "sitemap.xml");
-  await assertEqual(path.join(webRoot, "feed.xml"), path.join(buildRoot, "feed.xml"), "feed.xml");
-  await assertEqual(path.join(webRoot, "robots.txt"), path.join(buildRoot, "robots.txt"), "robots.txt");
+  for (const name of discoveryFiles) {
+    await assertEqual(path.join(webRoot, name), path.join(buildRoot, name), name);
+  }
   for (const name of (await readdir(guidesRoot)).filter((file) => /\.(html|css|js)$/.test(file))) {
     await assertEqual(path.join(guidesRoot, name), path.join(buildRoot, "appeals", name), `appeals/${name}`);
   }
