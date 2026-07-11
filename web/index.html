@@ -687,18 +687,6 @@
     footer a:hover { color: var(--green-bright); border-color: var(--green-bright); }
     footer .fine { max-width: var(--max); margin: 22px auto 0; color: rgba(243,237,223,0.55); font-size: 10px; line-height: 1.9; }
 
-    /* ---------- ink-ring cursor companion (fine pointers) ---------- */
-    #ink-ring {
-      position: fixed; left: 0; top: 0; z-index: 110; pointer-events: none;
-      width: 30px; height: 30px; border: 1.5px solid var(--red);
-      border-radius: 50%; opacity: 0; mix-blend-mode: multiply;
-      transform: translate(-50%, -50%);
-      transition: width .22s ease, height .22s ease, background .22s ease, opacity .3s ease;
-    }
-    #ink-ring.on { opacity: 0.8; }
-    #ink-ring.hot { width: 52px; height: 52px; background: rgba(179,32,42,0.12); }
-    @media (pointer: coarse) { #ink-ring { display: none; } }
-
     /* ---------- app loader (paper theme) ---------- */
     #app-loader {
       position: fixed; inset: 0; z-index: 120; display: grid; place-items: center;
@@ -752,7 +740,7 @@
       /* No JS: the case file arrives fully stamped and annotated. */
       .imprint { opacity: 0.92; }
       .approved-stamp { opacity: 0.95; }
-      #ink-ring, #stamp3d { display: none; }
+      #stamp3d { display: none; }
     </style>
   </noscript>
 </head>
@@ -1096,7 +1084,6 @@
     </footer>
   </div>
 
-  <div id="ink-ring" aria-hidden="true"></div>
 
   <div id="app-loader" hidden>
     <div class="box">
@@ -1514,22 +1501,6 @@
         }
 
         var fine = window.matchMedia('(pointer: fine)').matches;
-
-        /* ---------- ink-ring cursor companion ---------- */
-        if (fine) {
-          var ring = document.getElementById('ink-ring');
-          var rx = gsap.quickTo(ring, 'x', { duration: 0.35, ease: 'power3.out' });
-          var ry = gsap.quickTo(ring, 'y', { duration: 0.35, ease: 'power3.out' });
-          var ringOn = false;
-          window.addEventListener('mousemove', function (e) {
-            if (!ringOn) { ring.classList.add('on'); ringOn = true; }
-            rx(e.clientX); ry(e.clientY);
-          }, { passive: true });
-          document.querySelectorAll('[data-boot], summary, footer a').forEach(function (el) {
-            el.addEventListener('mouseenter', function () { ring.classList.add('hot'); });
-            el.addEventListener('mouseleave', function () { ring.classList.remove('hot'); });
-          });
-        }
 
         /* ---------- the letter leans with the reader ---------- */
         if (fine) {
