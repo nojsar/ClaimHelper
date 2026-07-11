@@ -2,8 +2,10 @@ name: Marketing autopilot
 
 on:
   schedule:
-    # Useful evergreen guide twice a week. UTC avoids daylight-saving drift.
-    - cron: "17 15 * * 2,5"
+    # Useful evergreen guide 3x/week (Mon, Wed, Fri). UTC avoids DST drift.
+    # Frequency is deliberately paced to the guide library size — raise it as
+    # the weekly generator grows the rotation pool, not ahead of it.
+    - cron: "17 15 * * 1,3,5"
   workflow_dispatch:
     inputs:
       dry_run:
