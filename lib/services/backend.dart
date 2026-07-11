@@ -59,7 +59,12 @@ abstract class Backend {
   Future<FreePreview> generateFreePreview(String caseId, DenialExtraction current);
 
   /// Returns a checkout URL to redirect to (web) — null when mocked/paid.
-  Future<String?> createCheckoutSession(String caseId);
+  /// kind: 'packet' ($39) or 'packet_plus' ($59 packet + capped follow-ups).
+  Future<String?> createCheckoutSession(String caseId, {String kind = 'packet'});
+
+  /// Opt-in deadline reminders: stores the email on the case, sends a recap
+  /// now, and schedules nudges server-side until the case is paid or deleted.
+  Future<void> saveReminderEmail(String caseId, String email);
 
   Future<AppealPacket> generateAppealPacket(String caseId);
 

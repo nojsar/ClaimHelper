@@ -157,11 +157,19 @@ class FirebaseBackend implements Backend {
   }
 
   @override
-  Future<String?> createCheckoutSession(String caseId) async {
+  Future<String?> createCheckoutSession(String caseId,
+      {String kind = 'packet'}) async {
     final result = await _functions
         .httpsCallable('createCheckoutSession')
-        .call<Map<String, dynamic>>({'caseId': caseId});
+        .call<Map<String, dynamic>>({'caseId': caseId, 'kind': kind});
     return result.data['checkoutUrl'] as String?;
+  }
+
+  @override
+  Future<void> saveReminderEmail(String caseId, String email) async {
+    await _functions
+        .httpsCallable('saveReminderEmail')
+        .call<Map<String, dynamic>>({'caseId': caseId, 'email': email});
   }
 
   @override

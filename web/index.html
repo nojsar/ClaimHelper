@@ -417,7 +417,7 @@
       box-shadow: 8px 8px 0 var(--paper-3);
     }
     .actuary .row {
-      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      display: grid; grid-template-columns: repeat(4, 1fr);
     }
     .actuary .cell {
       padding: clamp(20px, 3vw, 34px); border-right: 1px solid var(--line-strong);
@@ -685,27 +685,77 @@
     footer a:hover { color: var(--green-bright); border-color: var(--green-bright); }
     footer .fine { max-width: var(--max); margin: 22px auto 0; color: rgba(243,237,223,0.55); font-size: 10px; line-height: 1.9; }
 
-    /* ---------- app loader (paper theme) ---------- */
+    /* ---------- app loader (the caseworker's desk, CSS-only) ---------- */
     #app-loader {
       position: fixed; inset: 0; z-index: 120; display: grid; place-items: center;
       background: var(--paper);
     }
     #app-loader[hidden] { display: none; }
     #app-loader .box { text-align: center; font-family: var(--mono); }
-    #app-loader .stampline {
-      font-size: 12px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase;
-      color: var(--red); border: 3px solid var(--red); border-radius: 4px;
-      display: inline-block; padding: 8px 18px; transform: rotate(-4deg);
-      animation: pulse 1.4s ease-in-out infinite;
+    #app-loader .desk { position: relative; width: 150px; height: 190px; margin: 0 auto; }
+    #app-loader .sheet {
+      position: absolute; inset: 0; background: #FBF7EC;
+      border: 1.5px solid var(--ink); box-shadow: 5px 6px 0 rgba(28,22,12,0.12);
+      padding: 20px 14px 14px;
     }
-    @keyframes pulse { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
-    #app-loader p { margin-top: 18px; color: var(--ink-faint); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; }
+    #app-loader .sheet::before {
+      content: ""; position: absolute; left: 12px; right: 12px; top: 13px;
+      height: 2px; background: var(--ink); opacity: 0.85;
+    }
+    #app-loader .tl {
+      height: 4px; border-radius: 2px; background: rgba(28,22,12,0.5);
+      margin: 12px 0 0; transform-origin: left center; transform: scaleX(0);
+      animation: typeline 3s linear infinite;
+    }
+    #app-loader .tl:nth-child(1) { animation-delay: 0.00s; width: 44%; }
+    #app-loader .tl:nth-child(2) { animation-delay: 0.35s; width: 88%; }
+    #app-loader .tl:nth-child(3) { animation-delay: 0.75s; width: 78%; }
+    #app-loader .tl:nth-child(4) { animation-delay: 1.15s; width: 92%; }
+    #app-loader .tl:nth-child(5) { animation-delay: 1.55s; width: 56%; }
+    @keyframes typeline {
+      0% { transform: scaleX(0); }
+      10% { transform: scaleX(0); }
+      28% { transform: scaleX(1); }
+      92% { transform: scaleX(1); opacity: 1; }
+      100% { transform: scaleX(1); opacity: 0; }
+    }
+    #app-loader .stampring {
+      position: absolute; right: -16px; bottom: -6px; width: 74px; height: 74px;
+      border: 3px solid var(--red); border-radius: 50%;
+      display: grid; place-items: center;
+      font-size: 8px; font-weight: 600; letter-spacing: 2px; color: var(--red);
+      text-transform: uppercase; transform: rotate(-14deg) scale(0);
+      box-shadow: inset 0 0 0 3px #FBF7EC, inset 0 0 0 4px var(--red);
+      animation: slam 3s cubic-bezier(0.22, 1.4, 0.36, 1) infinite;
+    }
+    @keyframes slam {
+      0%, 62% { transform: rotate(-14deg) scale(0); opacity: 0; }
+      72% { transform: rotate(-14deg) scale(1.06); opacity: 1; }
+      78% { transform: rotate(-14deg) scale(0.98); opacity: 0.95; }
+      94% { transform: rotate(-14deg) scale(1); opacity: 0.9; }
+      100% { transform: rotate(-14deg) scale(1); opacity: 0; }
+    }
+    #app-loader .ripple {
+      position: absolute; right: -16px; bottom: -6px; width: 74px; height: 74px;
+      border: 1.5px solid var(--red); border-radius: 50%; opacity: 0;
+      animation: ripple 3s ease-out infinite;
+    }
+    @keyframes ripple {
+      0%, 72% { transform: scale(1); opacity: 0; }
+      76% { opacity: 0.55; }
+      100% { transform: scale(1.7); opacity: 0; }
+    }
+    #app-loader p { margin-top: 26px; color: var(--ink-faint); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; animation: loaderpulse 1.6s ease-in-out infinite; }
+    @keyframes loaderpulse { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
 
     /* ---------- responsive ---------- */
     @media (max-width: 980px) {
       .hero-grid { grid-template-columns: 1fr; gap: 46px; }
       .exhibit { max-width: 560px; margin: 0 auto; }
       .odds-grid, .method .head, .packet .head, .reckoning .head { grid-template-columns: 1fr; gap: 18px; }
+      .actuary .row { grid-template-columns: 1fr 1fr; }
+      .actuary .cell:nth-child(2) { border-right: 0; }
+      .actuary .cell:nth-child(-n+2) { border-bottom: 1px solid var(--line-strong); }
       .scene-roman { font-size: 64px; display: inline-block; }
       .cards { grid-template-columns: 1fr 1fr; }
       .index-card:nth-child(2), .index-card:nth-child(4) { transform: rotate(1deg); }
@@ -728,7 +778,9 @@
       .letter .hl .circ { display: none; }
     }
     @media (prefers-reduced-motion: reduce) {
-      .ticker .track, .scroll-cue .pen, #app-loader .stampline { animation: none; }
+      .ticker .track, .scroll-cue .pen, #app-loader .tl, #app-loader .stampring, #app-loader .ripple, #app-loader p { animation: none; }
+      #app-loader .tl { transform: scaleX(1); }
+      #app-loader .stampring { transform: rotate(-14deg) scale(1); opacity: 0.9; }
       .imprint { opacity: 0.92; }
       #stamp3d { display: none; }
     }
@@ -829,12 +881,16 @@
         </div>
         <div>
           <h2 class="headline">The maze is the point.<br><em>Walking out is yours.</em></h2>
-          <p class="lede" style="margin-top:26px">Fewer than one in a hundred denied claims is ever appealed — and insurers know it. The paperwork is designed to outlast you. It takes us about fifteen minutes.</p>
+          <p class="lede" style="margin-top:26px">Fewer than one in a hundred denied claims is ever appealed — and insurers know it. But here's the number they'd rather you didn't see: when people <em>do</em> appeal, roughly four in ten denials get overturned. The paperwork is designed to outlast you. It takes us about fifteen minutes.</p>
           <div class="actuary" id="actuary">
             <div class="row">
               <div class="cell redcell">
                 <div class="num" data-count="1"><sup>&lt;</sup>1<sup>%</sup></div>
                 <div class="cap">of denied claims are ever appealed</div>
+              </div>
+              <div class="cell greencell">
+                <div class="num">4<sup>in</sup>10</div>
+                <div class="cap">appealed denials get overturned</div>
               </div>
               <div class="cell">
                 <div class="num"><span id="cnt15">15</span><sup>min</sup></div>
@@ -845,7 +901,7 @@
                 <div class="cap">documents, tailored &amp; ready to send</div>
               </div>
             </div>
-            <div class="foot">Source: published appeal-rate studies of U.S. marketplace plans · your outcome is never guaranteed</div>
+            <div class="foot">Source: published appeal-rate and overturn-rate studies of U.S. marketplace plans (KFF) · your outcome is never guaranteed</div>
           </div>
         </div>
       </div>
@@ -1020,6 +1076,7 @@
               <li><span>2 follow-up rounds</span><span>incl.</span></li>
               <li><span>Saved to your account</span><span>incl.</span></li>
               <li><span>Never used to train AI</span><span>promise</span></li>
+              <li><span>14-day accuracy guarantee</span><span>refund</span></li>
             </ul>
             <button class="btn-ink" data-boot="/upload">Start my appeal</button>
             <div class="barcode" aria-hidden="true"></div>
@@ -1085,7 +1142,17 @@
 
   <div id="app-loader" hidden>
     <div class="box">
-      <div class="stampline">FILING…</div>
+      <div class="desk">
+        <div class="sheet">
+          <div class="tl"></div>
+          <div class="tl"></div>
+          <div class="tl"></div>
+          <div class="tl"></div>
+          <div class="tl"></div>
+        </div>
+        <div class="ripple" aria-hidden="true"></div>
+        <div class="stampring">Filing</div>
+      </div>
       <p>Opening your secure workspace</p>
     </div>
   </div>

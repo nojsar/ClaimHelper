@@ -28,13 +28,14 @@ export const createCheckoutSession = onCall(
     const snap = await requireOwnedCase(request.data?.caseId, uid);
 
     const kind = (request.data?.kind as string | undefined) ?? "packet";
-    if (!["packet", "followup_round", "full_case"].includes(kind)) {
+    if (!["packet", "packet_plus", "followup_round", "full_case"].includes(kind)) {
       throw new HttpsError("invalid-argument", "Unknown purchase kind.");
     }
-    if (kind === "packet" && snap.get("paid") === true) {
+    const isInitialPurchase = kind === "packet" || kind === "packet_plus";
+    if (isInitialPurchase && snap.get("paid") === true) {
       throw new HttpsError("already-exists", "This case is already unlocked.");
     }
-    if (kind !== "packet" && snap.get("paid") !== true) {
+    if (!isInitialPurchase && snap.get("paid") !== true) {
       throw new HttpsError(
         "failed-precondition",
         "Purchase the appeal packet before adding follow-up rounds.",
@@ -62,6 +63,13 @@ export const createCheckoutSession = onCall(
           "Appeal letter draft, evidence checklist, doctor letter request, " +
           `call script, deadline checklist, PDF export. Includes ${config.freeFollowUpRounds} follow-up rounds.`,
       },
+      packet_plus: {
+        amount: config.fullCasePriceCents,
+        name: "GetMyYes — Full Case (Packet + follow-ups)",
+        description:
+          "Everything in the Full Appeal Packet, plus up to " +
+          `${config.fullCaseRoundsCap} follow-up rounds until your case is resolved (capped, not unlimited).`,
+      },
       followup_round: {
         amount: config.followUpRoundPriceCents,
         name: "GetMyYes — Follow-up Round",
@@ -79,10 +87,9 @@ export const createCheckoutSession = onCall(
 
     const stripe = stripeClient();
     const base = config.appBaseUrl;
-    const returnPath =
-      kind === "packet"
-        ? `/#/case/${snap.id}/purchase-success?session_id={CHECKOUT_SESSION_ID}`
-        : `/#/case/${snap.id}/packet`;
+    const returnPath = isInitialPurchase
+      ? `/#/case/${snap.id}/purchase-success?session_id={CHECKOUT_SESSION_ID}`
+      : `/#/case/${snap.id}/packet`;
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: [
@@ -104,7 +111,7 @@ export const createCheckoutSession = onCall(
       // "Successful payments" emails in the Stripe dashboard for live mode).
       customer_email: email,
       success_url: `${base}${returnPath}`,
-      cancel_url: `${base}/#/case/${snap.id}/${kind === "packet" ? "preview" : "packet"}`,
+      cancel_url: `${base}/#/case/${snap.id}/${isInitialPurchase ? "preview" : "packet"}`,
     });
 
     await snap.ref.update({
@@ -165,14 +172,18 @@ export const stripeWebhook = onRequest(
           // makes each session apply exactly once.
           if (!caseSnap.exists || purchaseSnap.exists) return;
 
-          if (kind === "packet") {
+          if (kind === "packet" || kind === "packet_plus") {
             if (caseSnap.get("paid") === true) return;
             tx.update(caseRef, {
               paid: true,
               status: "paid",
               pricePaid: (session.amount_total ?? 0) / 100,
               stripeSessionId: session.id,
-              followUpCredits: config.freeFollowUpRounds,
+              followUpCredits:
+                kind === "packet_plus"
+                  ? config.fullCaseRoundsCap
+                  : config.freeFollowUpRounds,
+              ...(kind === "packet_plus" ? { fullCase: true } : {}),
               // Paid cases must survive the 24h cleanup even without an account.
               expiresAt: null,
               updatedAt: FieldValue.serverTimestamp(),
@@ -208,15 +219,18 @@ export const stripeWebhook = onRequest(
           // "Trigger Email" extension reading the `mail` collection; if the
           // extension isn't installed the doc is simply inert.
           if (buyerEmail) {
-            const isPacket = kind === "packet";
+            const isPacket = kind === "packet" || kind === "packet_plus";
             const packetUrl = isPacket
               ? `${config.appBaseUrl}/#/case/${caseId}/purchase-success`
               : `${config.appBaseUrl}/#/case/${caseId}/packet`;
-            const what = isPacket
-              ? "Full Appeal Packet"
-              : kind === "full_case"
-                ? `Full Case upgrade (up to ${config.fullCaseRoundsCap} follow-up rounds)`
-                : "additional follow-up round";
+            const what =
+              kind === "packet"
+                ? "Full Appeal Packet"
+                : kind === "packet_plus"
+                  ? `Full Case (packet + up to ${config.fullCaseRoundsCap} follow-up rounds)`
+                  : kind === "full_case"
+                    ? `Full Case upgrade (up to ${config.fullCaseRoundsCap} follow-up rounds)`
+                    : "additional follow-up round";
             tx.set(mailRef, {
               to: [buyerEmail],
               message: {

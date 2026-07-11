@@ -150,6 +150,13 @@ class MockBackend implements Backend {
         'A supporting statement from your prescriber',
       ],
       recommendedPacketType: 'Step-therapy exception appeal packet',
+      letterOpening:
+          'Dear ${current.insurerName ?? 'Appeals Department'}: I am writing '
+          'to appeal your denial of ${current.deniedItem ?? 'the requested '
+          'medication'}, issued under your step-therapy protocol §4.2. Your '
+          'own letter states coverage requires "trial and failure of two '
+          'formulary alternatives" — my treatment history, documented below, '
+          'already satisfies that requirement.',
     );
     _patch(caseId,
         (c) => c.copyWith(preview: preview, status: CaseStatus.preview));
@@ -157,17 +164,25 @@ class MockBackend implements Backend {
   }
 
   @override
-  Future<String?> createCheckoutSession(String caseId) async {
+  Future<String?> createCheckoutSession(String caseId,
+      {String kind = 'packet'}) async {
     // Mock checkout: mark paid immediately (simulates the Stripe webhook).
     await Future<void>.delayed(const Duration(milliseconds: 400));
+    final plus = kind == 'packet_plus';
     _patch(
         caseId,
         (c) => c.copyWith(
             paid: true,
-            pricePaid: 39,
-            followUpCredits: 2,
+            pricePaid: plus ? 59 : 39,
+            followUpCredits: plus ? 100 : 2,
+            fullCase: plus ? true : null,
             status: CaseStatus.paid));
     return null;
+  }
+
+  @override
+  Future<void> saveReminderEmail(String caseId, String email) async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
   }
 
   @override

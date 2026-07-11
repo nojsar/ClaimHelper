@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme.dart';
 import '../../state/intake_controller.dart';
 import '../../widgets/app_scaffold.dart';
+import '../../widgets/case_loader.dart';
 
 /// Shows upload progress, then extraction status, then routes to review.
 /// Also handles the error state with a retry back to Upload.
@@ -47,16 +48,18 @@ class ProcessingScreen extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(
-                width: 64,
-                height: 64,
-                child: CircularProgressIndicator(
-                  value: progress,
-                  strokeWidth: 5,
-                  color: AppColors.primary,
-                ),
+              CaseLoader(
+                progress: progress,
+                messages: state.uploading
+                    ? const ['Filing your documents…', 'Sealing the envelope…']
+                    : const [
+                        'Reading the fine print…',
+                        'Finding the denial reason…',
+                        'Extracting every date and number…',
+                        'Checking the appeal deadline…',
+                      ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 22),
               Text(label,
                   style: const TextStyle(
                       fontSize: 17, fontWeight: FontWeight.w600)),

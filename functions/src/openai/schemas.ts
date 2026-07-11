@@ -108,6 +108,7 @@ export const previewSchema = {
     "likelyAppealPath",
     "missingInfo",
     "recommendedPacketType",
+    "letterOpening",
   ],
   properties: {
     denialSummary: {
@@ -130,6 +131,11 @@ export const previewSchema = {
     recommendedPacketType: {
       type: "string",
       description: "Short label for the packet that fits this denial, e.g. 'Prior authorization appeal packet'.",
+    },
+    letterOpening: {
+      type: "string",
+      description:
+        "The first 2-3 sentences of the appeal letter the full packet will contain, personalized with the insurer's name and the specific denial reason, citing the plan/denial language back where the extraction provides it. First person, addressed to the appeals department. No invented facts; use placeholders like [claim number] only if essential.",
     },
   },
 } as const;

@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,12 +8,14 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants.dart';
 import '../../core/theme.dart';
+import '../../models/extraction.dart';
 import '../../models/packet.dart';
 import '../../services/backend.dart';
 import '../../state/intake_controller.dart';
 import '../../state/providers.dart';
 import '../../widgets/account_gate.dart';
 import '../../widgets/app_scaffold.dart';
+import '../../widgets/case_loader.dart';
 
 /// Free preview + paywall. Generates the preview from the confirmed
 /// extraction, lets the user supply anything the preview flagged as missing
@@ -29,14 +33,23 @@ class PreviewPaywallScreen extends ConsumerStatefulWidget {
 class _PreviewPaywallScreenState
     extends ConsumerState<PreviewPaywallScreen> {
   FreePreview? _preview;
+  DenialExtraction? _extraction;
   bool _loading = true;
   bool _purchasing = false;
   String? _error;
+
+  /// 'packet' or 'packet_plus' — which tier the buy button charges.
+  String _selectedKind = 'packet';
 
   // "Add the missing pieces" state.
   final _detailsCtrl = TextEditingController();
   final List<PickedUpload> _extraFiles = [];
   bool _updating = false;
+
+  // Deadline-reminder opt-in state.
+  final _reminderCtrl = TextEditingController();
+  bool _savingReminder = false;
+  bool _reminderSaved = false;
 
   @override
   void initState() {
@@ -47,6 +60,7 @@ class _PreviewPaywallScreenState
   @override
   void dispose() {
     _detailsCtrl.dispose();
+    _reminderCtrl.dispose();
     super.dispose();
   }
 
@@ -84,6 +98,7 @@ class _PreviewPaywallScreenState
         if (c?.preview != null) {
           setState(() {
             _preview = c!.preview;
+            _extraction = ex;
             _loading = false;
           });
           return;
@@ -92,6 +107,7 @@ class _PreviewPaywallScreenState
       final preview = await backend.generateFreePreview(widget.caseId, ex);
       setState(() {
         _preview = preview;
+        _extraction = ex;
         _loading = false;
       });
     } catch (e) {
@@ -171,6 +187,7 @@ class _PreviewPaywallScreenState
       if (!mounted) return;
       setState(() {
         _preview = preview;
+        _extraction = ex;
         _extraFiles.clear();
         _detailsCtrl.clear();
       });
@@ -204,7 +221,8 @@ class _PreviewPaywallScreenState
     setState(() => _purchasing = true);
     try {
       final backend = ref.read(backendProvider);
-      final url = await backend.createCheckoutSession(widget.caseId);
+      final url = await backend.createCheckoutSession(widget.caseId,
+          kind: _selectedKind);
       if (url != null) {
         // Web: redirect to Stripe Checkout.
         await launchUrl(Uri.parse(url), webOnlyWindowName: '_self');
@@ -222,12 +240,54 @@ class _PreviewPaywallScreenState
     }
   }
 
+  Future<void> _saveReminder() async {
+    final email = _reminderCtrl.text.trim();
+    if (!email.contains('@') || !email.contains('.')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Enter a valid email address.')));
+      return;
+    }
+    setState(() => _savingReminder = true);
+    try {
+      await ref
+          .read(backendProvider)
+          .saveReminderEmail(widget.caseId, email);
+      if (mounted) setState(() => _reminderSaved = true);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Could not save reminders. Please retry.')));
+      }
+    } finally {
+      if (mounted) setState(() => _savingReminder = false);
+    }
+  }
+
+  /// Days until the extracted appeal deadline, or null when unknown/past.
+  int? get _daysToDeadline {
+    final raw = _extraction?.appealDeadline;
+    if (raw == null) return null;
+    final deadline = DateTime.tryParse(raw);
+    if (deadline == null) return null;
+    final days = deadline.difference(DateTime.now()).inDays;
+    return (days >= 0 && days <= 365) ? days : null;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
       return const AppScaffold(
         title: 'Your preview',
-        child: Center(child: CircularProgressIndicator()),
+        child: Center(
+          child: CaseLoader(
+            messages: [
+              'Reading the fine print…',
+              'Weighing the denial reason…',
+              'Citing their words back…',
+              'Opening your appeal letter…',
+            ],
+          ),
+        ),
       );
     }
     if (_error != null) {
@@ -237,6 +297,7 @@ class _PreviewPaywallScreenState
       );
     }
     final p = _preview!;
+    final days = _daysToDeadline;
 
     return AppScaffold(
       title: 'Your free preview',
@@ -245,7 +306,15 @@ class _PreviewPaywallScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (days != null) ...[
+              _DeadlineBanner(days: days),
+              const SizedBox(height: 16),
+            ],
             _PreviewCard(preview: p),
+            if (p.letterOpening != null && p.letterOpening!.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              _LetterTeaserCard(opening: p.letterOpening!),
+            ],
             if (p.missingInfo.isNotEmpty) ...[
               const SizedBox(height: 20),
               _MissingPiecesCard(
@@ -260,14 +329,69 @@ class _PreviewPaywallScreenState
             const SizedBox(height: 20),
             _PaywallCard(
               recommended: p.recommendedPacketType,
+              amountAtStake: p.amountAtStake,
+              daysToDeadline: days,
               purchasing: _purchasing,
+              selectedKind: _selectedKind,
+              onSelectKind: (k) => setState(() => _selectedKind = k),
               onBuy: _purchase,
+            ),
+            const SizedBox(height: 20),
+            _ReminderCard(
+              controller: _reminderCtrl,
+              saving: _savingReminder,
+              saved: _reminderSaved,
+              daysToDeadline: days,
+              onSave: _saveReminder,
             ),
             const SizedBox(height: 16),
             const DisclaimerChip(),
             const SizedBox(height: 24),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Legitimate urgency: the appeal window from their own denial letter.
+class _DeadlineBanner extends StatelessWidget {
+  const _DeadlineBanner({required this.days});
+  final int days;
+
+  @override
+  Widget build(BuildContext context) {
+    final urgent = days <= 21;
+    final label = days == 0
+        ? 'Your appeal deadline is today.'
+        : 'Your appeal window closes in $days ${days == 1 ? 'day' : 'days'}.';
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: urgent ? AppColors.primaryTint : AppColors.surfaceAlt,
+        borderRadius: BorderRadius.circular(AppRadii.md),
+        border: Border.all(
+            color: urgent ? AppColors.primary : AppColors.borderStrong,
+            width: urgent ? 1.2 : 0.8),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.timer_outlined,
+              size: 20,
+              color: urgent ? AppColors.primaryDark : AppColors.textSecondary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              '$label Filing on time keeps every appeal level open.',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color:
+                    urgent ? AppColors.primaryDark : AppColors.textPrimary,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -331,6 +455,125 @@ class _PreviewCard extends StatelessWidget {
                   ),
                 ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The strongest conversion moment: the real opening of THEIR appeal letter,
+/// already citing the insurer's language back — then the page fades and
+/// blurs into the paywall.
+class _LetterTeaserCard extends StatelessWidget {
+  const _LetterTeaserCard({required this.opening});
+  final String opening;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: const [
+                Icon(Icons.history_edu_outlined,
+                    color: AppColors.primaryDark),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text('Your appeal letter is already started',
+                      style: TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w800)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Stack(
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 46),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceAlt,
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
+                    border: Border.all(color: AppColors.borderStrong),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        opening,
+                        style: const TextStyle(
+                            fontFamily: AppFonts.serif,
+                            fontSize: 15.5,
+                            height: 1.65),
+                      ),
+                      const SizedBox(height: 14),
+                      // The cut-off: blurred ghost lines standing in for the
+                      // rest of the letter.
+                      ClipRect(
+                        child: ImageFiltered(
+                          imageFilter:
+                              ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              for (final w in const [0.95, 0.88, 0.97, 0.6])
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 5),
+                                  child: FractionallySizedBox(
+                                    widthFactor: w,
+                                    child: Container(
+                                        height: 9,
+                                        color: AppColors.textSecondary
+                                            .withValues(alpha: 0.5)),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.vertical(
+                          bottom: Radius.circular(AppRadii.sm)),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          AppColors.surfaceAlt.withValues(alpha: 0),
+                          AppColors.surfaceAlt,
+                        ],
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.lock_outline,
+                            size: 15, color: AppColors.textSecondary),
+                        SizedBox(width: 6),
+                        Text('The full letter is in your packet',
+                            style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textSecondary)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -442,11 +685,19 @@ class _MissingPiecesCard extends StatelessWidget {
 class _PaywallCard extends StatelessWidget {
   const _PaywallCard({
     required this.recommended,
+    required this.amountAtStake,
+    required this.daysToDeadline,
     required this.purchasing,
+    required this.selectedKind,
+    required this.onSelectKind,
     required this.onBuy,
   });
   final String recommended;
+  final String? amountAtStake;
+  final int? daysToDeadline;
   final bool purchasing;
+  final String selectedKind;
+  final ValueChanged<String> onSelectKind;
   final VoidCallback onBuy;
 
   static const _includes = [
@@ -457,40 +708,72 @@ class _PaywallCard extends StatelessWidget {
     'Insurer call script',
     'Deadline / reminder checklist',
     'PDF export',
-    '${Pricing.freeFollowUpRounds} follow-up rounds when the insurer replies',
   ];
 
   @override
   Widget build(BuildContext context) {
+    final plus = selectedKind == 'packet_plus';
+    final price = plus ? Pricing.fullCaseUsd : Pricing.fullPacketUsd;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                const Icon(Icons.workspace_premium_outlined,
-                    color: AppColors.primaryDark),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text('Full Appeal Packet',
-                      style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary)),
+            // The anchor: their number vs. ours.
+            if (amountAtStake != null) ...[
+              Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.accentTint,
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
-                Text('\$${Pricing.fullPacketUsd}',
-                    style: const TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.primaryDark)),
-              ],
-            ),
-            const SizedBox(height: 4),
+                child: Text.rich(
+                  TextSpan(
+                    style: const TextStyle(fontSize: 14.5, height: 1.5),
+                    children: [
+                      const TextSpan(text: 'On the table: '),
+                      TextSpan(
+                          text: amountAtStake!,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.accentBright)),
+                      TextSpan(
+                          text:
+                              '. The complete appeal packet costs \$$price — once, ever.'),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
             Text('Recommended: $recommended',
                 style: const TextStyle(color: AppColors.textSecondary)),
-            const Divider(height: 24),
+            const SizedBox(height: 14),
+            _TierOption(
+              selected: !plus,
+              title: 'Full Appeal Packet',
+              price: Pricing.fullPacketUsd,
+              caption:
+                  'Everything below, plus ${Pricing.freeFollowUpRounds} follow-up '
+                  'rounds when the insurer replies.',
+              onTap: purchasing ? null : () => onSelectKind('packet'),
+            ),
+            const SizedBox(height: 10),
+            _TierOption(
+              selected: plus,
+              title: 'Full Case — until it\'s resolved',
+              price: Pricing.fullCaseUsd,
+              badge: 'BEST VALUE',
+              caption:
+                  'Everything in the packet, plus up to ${Pricing.fullCaseRoundsCap} '
+                  'follow-up rounds — second-level appeals, external review, '
+                  'every insurer reply handled.',
+              onTap: purchasing ? null : () => onSelectKind('packet_plus'),
+            ),
+            const Divider(height: 26),
             for (final i in _includes)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 3),
@@ -517,14 +800,229 @@ class _PaywallCard extends StatelessWidget {
                     : const Icon(Icons.lock_open),
                 label: Text(purchasing
                     ? 'Starting checkout…'
-                    : 'Unlock full packet — \$${Pricing.fullPacketUsd}'),
+                    : plus
+                        ? 'Unlock full case — \$${Pricing.fullCaseUsd}'
+                        : 'Unlock full packet — \$${Pricing.fullPacketUsd}'),
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Icon(Icons.verified_user_outlined,
+                    size: 17, color: AppColors.accent),
+                SizedBox(width: 7),
+                Expanded(
+                  child: Text(
+                    '14-day guarantee: if your packet doesn\'t accurately '
+                    'address your denial, email us for a full refund.',
+                    style: TextStyle(fontSize: 12.5, height: 1.45),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
             const Text(
-              'One-time payment · no subscription · '
-              'includes ${Pricing.freeFollowUpRounds} follow-up rounds',
+              'Published marketplace data: roughly 4 in 10 appealed denials '
+              'are overturned. Fewer than 1 in 100 people ever appeal. '
+              'One-time payment · no subscription.',
               style: TextStyle(fontSize: 12.5, color: AppColors.textMuted),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TierOption extends StatelessWidget {
+  const _TierOption({
+    required this.selected,
+    required this.title,
+    required this.price,
+    required this.caption,
+    required this.onTap,
+    this.badge,
+  });
+
+  final bool selected;
+  final String title;
+  final int price;
+  final String caption;
+  final String? badge;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadii.md),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primaryTint : AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadii.md),
+          border: Border.all(
+            color: selected ? AppColors.primaryDark : AppColors.borderStrong,
+            width: selected ? 1.6 : 0.8,
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              selected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_unchecked,
+              size: 20,
+              color:
+                  selected ? AppColors.primaryDark : AppColors.textSecondary,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(title,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w800, fontSize: 15)),
+                      ),
+                      if (badge != null)
+                        Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 7, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: AppColors.accent,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(badge!,
+                              style: const TextStyle(
+                                  fontFamily: AppFonts.mono,
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.8,
+                                  color: Colors.white)),
+                        ),
+                      Text('\$$price',
+                          style: const TextStyle(
+                              fontSize: 19,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.primaryDark)),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(caption,
+                      style: const TextStyle(
+                          fontSize: 12.5,
+                          height: 1.45,
+                          color: AppColors.textSecondary)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// "Not ready to decide" path: capture the email, send the recap now, and
+/// let the server nudge before the deadline. Opt-in by pressing the button.
+class _ReminderCard extends StatelessWidget {
+  const _ReminderCard({
+    required this.controller,
+    required this.saving,
+    required this.saved,
+    required this.daysToDeadline,
+    required this.onSave,
+  });
+
+  final TextEditingController controller;
+  final bool saving;
+  final bool saved;
+  final int? daysToDeadline;
+  final VoidCallback onSave;
+
+  @override
+  Widget build(BuildContext context) {
+    if (saved) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: const [
+              Icon(Icons.mark_email_read_outlined, color: AppColors.accent),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Reminders on. We emailed you the case link and will nudge '
+                  'you before your deadline. Stop any time by deleting the case.',
+                  style: TextStyle(height: 1.45),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: const [
+                Icon(Icons.schedule_send_outlined,
+                    color: AppColors.primaryDark, size: 20),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text('Deciding later? Don\'t lose the deadline.',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w800, fontSize: 15)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              daysToDeadline != null
+                  ? 'We\'ll email you this preview now and remind you before '
+                      'your $daysToDeadline-day window closes. No marketing, ever.'
+                  : 'We\'ll email you this preview now and nudge you so the '
+                      'appeal window doesn\'t slip. No marketing, ever.',
+              style: const TextStyle(
+                  color: AppColors.textSecondary, height: 1.45, fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      hintText: 'you@email.com',
+                      isDense: true,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                FilledButton(
+                  onPressed: saving ? null : onSave,
+                  child: saving
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
+                      : const Text('Remind me'),
+                ),
+              ],
             ),
           ],
         ),

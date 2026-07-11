@@ -8,6 +8,7 @@ class FreePreview {
     required this.likelyAppealPath,
     this.missingInfo = const [],
     required this.recommendedPacketType,
+    this.letterOpening,
   });
 
   final String denialSummary;
@@ -15,6 +16,11 @@ class FreePreview {
   final String likelyAppealPath;
   final List<String> missingInfo;
   final String recommendedPacketType;
+
+  /// First sentences of the real appeal letter — shown (then cut off) on the
+  /// paywall so the user sees the packet already citing their denial back.
+  /// Nullable: previews stored before this field existed don't have it.
+  final String? letterOpening;
 
   factory FreePreview.fromJson(Map<String, dynamic> json) => FreePreview(
         denialSummary: json['denialSummary'] as String? ?? '',
@@ -25,6 +31,7 @@ class FreePreview {
             .toList(),
         recommendedPacketType:
             json['recommendedPacketType'] as String? ?? 'Appeal packet',
+        letterOpening: json['letterOpening'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -33,6 +40,7 @@ class FreePreview {
         'likelyAppealPath': likelyAppealPath,
         'missingInfo': missingInfo,
         'recommendedPacketType': recommendedPacketType,
+        'letterOpening': letterOpening,
       };
 }
 

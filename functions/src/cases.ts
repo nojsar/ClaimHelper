@@ -80,7 +80,16 @@ export async function deleteCaseCompletely(
   // Legacy (pre uid-scoping) path — harmless if nothing matches.
   await bucket.deleteFiles({ prefix: `tempCases/${caseId}/` });
   await bucket.deleteFiles({ prefix: `cases/${caseId}/` });
-  await getFirestore().collection("cases").doc(caseId).delete();
+  const db = getFirestore();
+  // Withdrawing the case withdraws its reminders too.
+  const reminders = await db
+    .collection("reminders")
+    .where("caseId", "==", caseId)
+    .get();
+  for (const doc of reminders.docs) {
+    await doc.ref.delete();
+  }
+  await db.collection("cases").doc(caseId).delete();
 }
 
 /**
