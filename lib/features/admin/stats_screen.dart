@@ -7,10 +7,6 @@ import '../../core/constants.dart';
 import '../../core/theme.dart';
 import '../../widgets/app_scaffold.dart';
 
-/// Owner-only UID allowed to read analytics_daily (enforced for real by
-/// Firestore rules — this constant only shapes the UI).
-const _adminUid = '6ZETq21uHIartXQlCCrZnZiQhb83';
-
 /// Private traffic dashboard, fed by the first-party cookieless counters in
 /// `analytics_daily`. Reachable at /#/stats; invisible to normal users and
 /// unreadable by them (rules gate reads to the owner account).
@@ -36,7 +32,7 @@ class StatsScreen extends StatelessWidget {
             return const Center(
                 child: CircularProgressIndicator(color: AppColors.primary));
           }
-          if (user == null || user.uid != _adminUid) {
+          if (user == null || user.uid != kAdminUid) {
             return const Center(
               child: Padding(
                 padding: EdgeInsets.all(32),

@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -95,6 +96,7 @@ class AppScaffold extends StatelessWidget {
 
   List<Widget> _defaultActions(BuildContext context, bool wide) {
     return [
+      _AdminNav(wide: wide),
       if (wide) ...[
         _NavLink(label: 'My cases', onTap: () => context.go('/account')),
         const SizedBox(width: 4),
@@ -123,6 +125,31 @@ class AppScaffold extends StatelessWidget {
         ),
       ],
     ];
+  }
+}
+
+/// Owner-only "Analytics" entry in the top bar. Renders nothing for everyone
+/// else; the data itself is additionally gated by Firestore rules.
+class _AdminNav extends StatelessWidget {
+  const _AdminNav({required this.wide});
+  final bool wide;
+
+  @override
+  Widget build(BuildContext context) {
+    if (kUseMocks) return const SizedBox.shrink();
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snap) {
+        if (snap.data?.uid != kAdminUid) return const SizedBox.shrink();
+        return wide
+            ? _NavLink(label: 'Analytics', onTap: () => context.go('/stats'))
+            : IconButton(
+                tooltip: 'Analytics',
+                icon: const Icon(Icons.insights_outlined),
+                onPressed: () => context.go('/stats'),
+              );
+      },
+    );
   }
 }
 

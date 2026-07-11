@@ -1,7 +1,7 @@
 import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import Stripe from "stripe";
-import { config, stripeSecretKey, stripeWebhookSecret } from "./config";
+import { ADMIN_UID, config, stripeSecretKey, stripeWebhookSecret } from "./config";
 import { requireUid, requireOwnedCase } from "./util";
 import { bumpDaily } from "./analytics";
 
@@ -55,6 +55,36 @@ export const createCheckoutSession = onCall(
       );
     }
     const email = (request.auth?.token.email as string | undefined) || undefined;
+
+    // Owner account: skip Stripe entirely and apply the entitlement directly
+    // (comped). The client already treats a null checkoutUrl as "resolved
+    // instantly". Deliberately no funnel/revenue counters on this path.
+    if (uid === ADMIN_UID) {
+      const update: Record<string, unknown> = {
+        updatedAt: FieldValue.serverTimestamp(),
+      };
+      if (isInitialPurchase) {
+        update.paid = true;
+        update.status = "paid";
+        update.pricePaid = 0;
+        update.followUpCredits =
+          kind === "packet_plus"
+            ? config.fullCaseRoundsCap
+            : config.freeFollowUpRounds;
+        if (kind === "packet_plus") update.fullCase = true;
+        update.expiresAt = null;
+      } else if (kind === "followup_round") {
+        const current =
+          (snap.get("followUpCredits") as number | undefined) ??
+          config.freeFollowUpRounds;
+        update.followUpCredits = current + 1;
+      } else {
+        update.followUpCredits = config.fullCaseRoundsCap;
+        update.fullCase = true;
+      }
+      await snap.ref.update(update);
+      return { checkoutUrl: null, comped: true };
+    }
 
     const products = {
       packet: {

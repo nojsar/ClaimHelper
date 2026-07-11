@@ -9,6 +9,14 @@ export const openaiApiKey = defineSecret("OPENAI_API_KEY");
 export const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
 export const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 
+/**
+ * Owner account (dunojus10@gmail.com). Gets comped checkout (no Stripe) and
+ * is excluded from funnel/revenue counters so live testing never skews stats.
+ * Analytics reads are gated to this uid in firestore.rules; the matching
+ * client constant is kAdminUid in lib/core/constants.dart.
+ */
+export const ADMIN_UID = "6ZETq21uHIartXQlCCrZnZiQhb83";
+
 /** Non-secret configuration, read from env with safe defaults. */
 export const config = {
   /** Model is configurable — never hardcode a model name at call sites. */

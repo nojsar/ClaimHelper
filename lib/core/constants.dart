@@ -62,3 +62,9 @@ abstract final class Pricing {
 /// Compile-time switch: `flutter run --dart-define=USE_MOCKS=true` runs the
 /// whole app against an in-memory backend (no Firebase project needed).
 const bool kUseMocks = bool.fromEnvironment('USE_MOCKS');
+
+/// Owner account uid (dunojus10@gmail.com). Shows the Analytics nav button
+/// and unlocks the /stats dashboard UI. Real enforcement is server-side:
+/// firestore.rules gate analytics reads and createCheckoutSession comps
+/// purchases for this uid only.
+const String kAdminUid = '6ZETq21uHIartXQlCCrZnZiQhb83';
