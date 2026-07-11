@@ -7,7 +7,7 @@ This is intentionally a small, durable acquisition system—not a mass-content o
 - Every deploy validates every appeal-guide link, generates `sitemap.xml` and `feed.xml`, and refuses to deploy if the crawlable guide copy in `build/web` is missing or stale.
 - Search engines can discover the guide hub from the homepage and every guide from the sitemap.
 - After a successful deploy, the script submits all sitemap URLs to IndexNow so participating search engines can recrawl changes. Google still uses the sitemap and Search Console.
-- GitHub Actions can publish one useful evergreen guide to Bluesky each Monday, Wednesday, and Friday. It rotates the queue, adds campaign tags, and refuses to post twice within 36 hours.
+- GitHub Actions can publish one useful evergreen guide to Bluesky each Monday, Wednesday, and Friday. It rotates the queue, adds campaign tags and a branded link card, and refuses to post twice within 36 hours.
 - The private owner dashboard at `https://getmyyes.com/#/stats` reports visits, funnel conversion, top pages/referrers/countries, revenue, and campaign traffic without analytics cookies.
 
 ## One-time setup: search
@@ -32,6 +32,8 @@ A sitemap is a discovery hint, not a ranking guarantee. The internal links and g
 Edit `marketing/posts.json` to change the approved evergreen queue. The automation never invents health or insurance claims at runtime; it only rotates copy reviewed in the repository.
 
 `tools/guide-topics.md` is a researched publishing backlog, not an automatic medical-content generator. New guides still need authoritative-source review before they are added to `web/appeals/`; once added, the build automatically includes them in the sitemap and feed.
+
+When adding or renaming a guide, run `uv run tools/og-image.py --all`, then commit the generated `web/appeals/og/*.png` files. The script installs Pillow in uv's isolated cache; the build fails if a guide's branded social image is missing or too large for Bluesky.
 
 ## Normal deploy
 

@@ -1,4 +1,4 @@
-import { access, cp, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { access, cp, mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
@@ -80,6 +80,28 @@ async function guideModel() {
     const ids = [...html.matchAll(/\sid=["']([^"']+)["']/g)].map((found) => found[1]);
     if (new Set(ids).size !== ids.length) fail(`${name} contains duplicate HTML ids.`);
     if (!html.includes("/api/track")) fail(`${name} is missing the first-party visit counter.`);
+
+    const socialSlug = name === "index.html" ? "index" : name.slice(0, -5);
+    const expectedSocialImage = `${siteOrigin}/appeals/og/${socialSlug}.png`;
+    const socialImage = match(
+      html,
+      /<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i,
+      "an Open Graph image",
+      name,
+    );
+    if (socialImage !== expectedSocialImage) {
+      fail(`${name} Open Graph image is ${socialImage}; expected ${expectedSocialImage}.`);
+    }
+    const socialImageFile = path.join(guidesRoot, "og", `${socialSlug}.png`);
+    let socialImageSize;
+    try {
+      socialImageSize = (await stat(socialImageFile)).size;
+    } catch {
+      fail(`${name} points to missing social image appeals/og/${socialSlug}.png.`);
+    }
+    if (socialImageSize > 950_000) {
+      fail(`appeals/og/${socialSlug}.png is too large for the Bluesky upload limit.`);
+    }
 
     if (name === "index.html") continue;
 
@@ -227,6 +249,14 @@ async function verifyBuild() {
   }
   for (const name of (await readdir(guidesRoot)).filter((file) => /\.(html|css|js)$/.test(file))) {
     await assertEqual(path.join(guidesRoot, name), path.join(buildRoot, "appeals", name), `appeals/${name}`);
+  }
+  const socialImagesRoot = path.join(guidesRoot, "og");
+  for (const name of (await readdir(socialImagesRoot)).filter((file) => file.endsWith(".png"))) {
+    await assertEqual(
+      path.join(socialImagesRoot, name),
+      path.join(buildRoot, "appeals", "og", name),
+      `appeals/og/${name}`,
+    );
   }
   console.log(`[marketing] Verified deploy artifact: ${pages.length} guides are crawlable and current.`);
 }

@@ -55,6 +55,41 @@ function compose(post) {
   return { text, facets };
 }
 
+function meta(html, property) {
+  const tag = html.match(
+    new RegExp(`<meta\\s+(?:property|name)="${property}"\\s+content="([^"]+)"`, "i"),
+  );
+  return tag?.[1] ?? null;
+}
+
+/**
+ * Link card for a post: Bluesky does NOT unfurl URLs posted via the API, so
+ * we attach an app.bsky.embed.external ourselves — title/description from the
+ * guide's own OG tags, thumbnail from its generated card in web/appeals/og/
+ * (see tools/og-image.py). Returns null when anything is missing, in which
+ * case the post goes out as plain text + link, exactly like before.
+ */
+async function cardFor(post) {
+  try {
+    const slug = post.path.replace(/\/$/, "").split("/").pop();
+    const html = await readFile(
+      path.join(projectRoot, "web", "appeals", `${slug}.html`),
+      "utf8",
+    );
+    const title = meta(html, "og:title");
+    const description = meta(html, "og:description") ?? meta(html, "description");
+    const imageUrl = meta(html, "og:image");
+    if (!title || !description || !imageUrl?.includes("/appeals/og/")) return null;
+    const image = await readFile(
+      path.join(projectRoot, "web", "appeals", "og", `${slug}.png`),
+    );
+    if (image.byteLength > 950_000) return null; // Bluesky blob limit is ~1MB
+    return { title, description, image };
+  } catch {
+    return null;
+  }
+}
+
 function historyFrom(feed) {
   return (feed.feed || [])
     .map((entry) => entry?.post?.record)
@@ -92,6 +127,15 @@ if (dryRun) {
     [...a.text].length >= [...b.text].length ? a : b,
   );
   console.log(`[marketing] Validated ${previews.length} posts; longest is ${longest.id} (${[...longest.text].length} code points).`);
+  const cards = [];
+  for (const post of posts) {
+    if (!(await cardFor(post))) cards.push(post.id);
+  }
+  console.log(
+    cards.length
+      ? `[marketing] Missing link cards (would post as plain text): ${cards.join(", ")}`
+      : "[marketing] Every post has a link card ready.",
+  );
   console.log(`\nNext-post preview:\n\n${previews[0].text}`);
   process.exit(0);
 }
@@ -118,6 +162,35 @@ if (!selected) {
 }
 
 const composed = compose(selected);
+
+// Attach the link card when the guide's OG assets are available; a failed
+// upload downgrades to a plain-text post rather than skipping the slot.
+let embed;
+const card = await cardFor(selected);
+if (card) {
+  try {
+    const uploaded = await jsonRequest(`${service}/xrpc/com.atproto.repo.uploadBlob`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session.accessJwt}`,
+        "Content-Type": "image/png",
+      },
+      body: card.image,
+    });
+    embed = {
+      $type: "app.bsky.embed.external",
+      external: {
+        uri: campaignUrl(selected),
+        title: card.title,
+        description: card.description,
+        thumb: uploaded.blob,
+      },
+    };
+  } catch (error) {
+    console.warn(`[marketing] Thumbnail upload failed, posting without a card: ${error.message}`);
+  }
+}
+
 const result = await jsonRequest(`${service}/xrpc/com.atproto.repo.createRecord`, {
   method: "POST",
   headers: {
@@ -131,8 +204,9 @@ const result = await jsonRequest(`${service}/xrpc/com.atproto.repo.createRecord`
       $type: "app.bsky.feed.post",
       text: composed.text,
       facets: composed.facets,
+      ...(embed ? { embed } : {}),
       createdAt: new Date().toISOString(),
     },
   }),
 });
-console.log(`[marketing] Published ${selected.id}: ${result.uri}`);
+console.log(`[marketing] Published ${selected.id}${embed ? " with link card" : ""}: ${result.uri}`);
