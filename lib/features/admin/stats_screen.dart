@@ -110,8 +110,8 @@ class _StatsBodyState extends State<_StatsBody> {
                   _StatTile(
                       'Pageviews', s.total('pageviews'), s.week('pageviews')),
                   _StatTile('App opens', s.total('boots'), s.week('boots')),
-                  _StatTile.money('Revenue', s.totalRevenueCents,
-                      s.weekRevenueCents),
+                  _StatTile.money(
+                      'Revenue', s.totalRevenueCents, s.weekRevenueCents),
                 ],
               ),
               const SizedBox(height: 28),
@@ -130,7 +130,14 @@ class _StatsBodyState extends State<_StatsBody> {
               ),
               const SizedBox(height: 28),
               const _SectionTitle('Top referrers'),
-              _TopList(entries: s.topReferrers, emptyLabel: 'Direct only so far.'),
+              _TopList(
+                  entries: s.topReferrers, emptyLabel: 'Direct only so far.'),
+              const SizedBox(height: 28),
+              const _SectionTitle('Top campaigns'),
+              _TopList(
+                entries: s.topCampaigns,
+                emptyLabel: 'No tagged campaign visits yet.',
+              ),
               const SizedBox(height: 28),
               const _SectionTitle('Top pages'),
               _TopList(entries: s.topPaths, emptyLabel: 'No pageviews yet.'),
@@ -161,11 +168,9 @@ class _Summary {
     return _Summary(days);
   }
 
-  int total(String field) =>
-      days.fold(0, (acc, d) => acc + d.count(field));
-  int week(String field) => days
-      .skip(days.length - 7)
-      .fold(0, (acc, d) => acc + d.count(field));
+  int total(String field) => days.fold(0, (acc, d) => acc + d.count(field));
+  int week(String field) =>
+      days.skip(days.length - 7).fold(0, (acc, d) => acc + d.count(field));
   int funnel(String step) =>
       days.fold(0, (acc, d) => acc + d.funnelCount(step));
   int get totalRevenueCents => total('revenueCents');
@@ -183,6 +188,7 @@ class _Summary {
   }
 
   List<MapEntry<String, int>> get topReferrers => _topOf('referrers');
+  List<MapEntry<String, int>> get topCampaigns => _topOf('campaigns');
   List<MapEntry<String, int>> get topPaths => _topOf('paths');
   List<MapEntry<String, int>> get topCountries => _topOf('countries');
 }
@@ -254,8 +260,7 @@ class _StatTile extends StatelessWidget {
                   color: AppColors.textPrimary)),
           const SizedBox(height: 2),
           Text('${_fmt(value7)} in last 7 days',
-              style:
-                  const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
         ],
       ),
     );
@@ -268,9 +273,8 @@ class _DailyBars extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final max = days
-        .map((d) => d.count('visits'))
-        .fold(0, (a, b) => a > b ? a : b);
+    final max =
+        days.map((d) => d.count('visits')).fold(0, (a, b) => a > b ? a : b);
     return Container(
       height: 140,
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
@@ -292,9 +296,8 @@ class _DailyBars extends StatelessWidget {
                       message: '${d.key}: ${d.count('visits')} visits',
                       child: Container(
                         margin: const EdgeInsets.symmetric(horizontal: 1.5),
-                        height: max == 0
-                            ? 2
-                            : 4 + 104 * d.count('visits') / max,
+                        height:
+                            max == 0 ? 2 : 4 + 104 * d.count('visits') / max,
                         decoration: BoxDecoration(
                           color: d.count('visits') == 0
                               ? AppColors.surfaceAlt
@@ -374,8 +377,8 @@ class _FunnelRow extends StatelessWidget {
         SizedBox(
           width: 150,
           child: Text(label,
-              style: const TextStyle(
-                  fontSize: 13, fontWeight: FontWeight.w600)),
+              style:
+                  const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
         ),
         Expanded(
           child: ClipRRect(
@@ -395,7 +398,8 @@ class _FunnelRow extends StatelessWidget {
                 ? '$value'
                 : '$value  (${(conversion! * 100).toStringAsFixed(1)}%)',
             textAlign: TextAlign.right,
-            style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            style:
+                const TextStyle(fontSize: 13, color: AppColors.textSecondary),
           ),
         ),
       ],

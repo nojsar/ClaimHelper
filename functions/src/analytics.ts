@@ -72,6 +72,25 @@ const SELF_HOSTS = new Set([
   "localhost",
 ]);
 
+/** A bounded, aggregate campaign label parsed from standard UTM parameters. */
+function campaignFromRequest(req: {
+  headers: { referer?: string | string[] };
+}): string | null {
+  const raw = req.headers.referer;
+  const referer = Array.isArray(raw) ? raw[0] : String(raw ?? "");
+  if (!referer) return null;
+  try {
+    const url = new URL(referer);
+    const source = keyify(url.searchParams.get("utm_source"), 28);
+    const medium = keyify(url.searchParams.get("utm_medium"), 28);
+    const name = keyify(url.searchParams.get("utm_campaign"), 36);
+    if (!source && !medium && !name) return null;
+    return [source || "unknown", medium || "unknown", name || "untagged"].join(" | ");
+  } catch {
+    return null;
+  }
+}
+
 /**
  * trackEvent
  * Public HTTP endpoint the web client pings with navigator.sendBeacon.
@@ -107,6 +126,8 @@ export const trackEvent = onRequest(
         fields["pageviews"] = 1;
         fields[`paths.${path}`] = 1;
         if (country) fields[`countries.${country}`] = 1;
+        const campaign = campaignFromRequest(req);
+        if (campaign) fields[`campaigns.${campaign}`] = 1;
         if (typeof body?.ref === "string" && body.ref) {
           try {
             const host = new URL(body.ref).hostname.toLowerCase();

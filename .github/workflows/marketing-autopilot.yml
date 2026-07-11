@@ -1,0 +1,44 @@
+name: Marketing autopilot
+
+on:
+  schedule:
+    # Useful evergreen guide twice a week. UTC avoids daylight-saving drift.
+    - cron: "17 15 * * 2,5"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Preview a post without publishing"
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: getmyyes-marketing-autopilot
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate the guide library
+        run: node tool/marketing_build.mjs
+      - name: Publish the next useful guide
+        env:
+          BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
+          BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
+        shell: bash
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            node tool/post_bluesky.mjs --dry-run
+          else
+            node tool/post_bluesky.mjs
+          fi
+

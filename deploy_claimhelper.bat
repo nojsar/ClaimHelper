@@ -26,12 +26,22 @@ call firebase functions:secrets:set OPENAI_API_KEY --data-file "%TEMP%\ch_key.tx
 del "%TEMP%\ch_key.txt" >nul 2>&1
 
 echo.
-echo [3/4] Building the web app...
+echo [3/5] Generating and validating marketing assets...
+call node tool\marketing_build.mjs
+if errorlevel 1 goto :fail
+
+echo.
+echo [4/5] Building the web app...
 call flutter build web
 if errorlevel 1 goto :fail
 
 echo.
-echo [4/4] Deploying functions, rules, indexes, and hosting...
+echo [4b/5] Staging crawlable guides and discovery files...
+call node tool\marketing_build.mjs --stage-build
+if errorlevel 1 goto :fail
+
+echo.
+echo [5/5] Deploying functions, rules, indexes, and hosting...
 REM --force auto-configures the Artifact Registry cleanup policy. If Firebase
 REM Storage isn't set up yet, drop ",storage" from the list below.
 call firebase deploy --only functions,firestore:rules,firestore:indexes,storage,hosting --force

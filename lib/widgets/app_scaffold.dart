@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -105,8 +106,7 @@ class AppScaffold extends StatelessWidget {
         FilledButton(
           onPressed: () => context.go('/upload'),
           style: FilledButton.styleFrom(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
             textStyle:
                 const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700),
           ),
@@ -136,7 +136,10 @@ class _AdminNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (kUseMocks) return const SizedBox.shrink();
+    // Widget tests and demo shells may render the shared chrome before a
+    // Firebase app exists. The owner shortcut is optional UI, so it should
+    // disappear instead of making the entire page fail to build.
+    if (kUseMocks || Firebase.apps.isEmpty) return const SizedBox.shrink();
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snap) {

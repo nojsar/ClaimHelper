@@ -1,0 +1,47 @@
+[
+  {
+    "id": "appeal-step-by-step",
+    "path": "/appeals/how-to-appeal-health-insurance-denial",
+    "text": "Denied by health insurance? Map the evidence, deadlines, internal appeal, and next review step."
+  },
+  {
+    "id": "appeal-letter-template",
+    "path": "/appeals/appeal-letter-template",
+    "text": "A free fill-in insurance appeal letter, plus what to attach and how to prove you filed it."
+  },
+  {
+    "id": "medical-necessity",
+    "path": "/appeals/not-medically-necessary",
+    "text": "“Not medically necessary”? Ask which clinical criterion was not met, then answer it with evidence."
+  },
+  {
+    "id": "prior-authorization",
+    "path": "/appeals/prior-authorization-denied",
+    "text": "Prior-auth denials can be administrative, clinical, or step-therapy related. Identify which one first."
+  },
+  {
+    "id": "step-therapy",
+    "path": "/appeals/step-therapy-denial",
+    "text": "“Try the cheaper drug first” may allow exceptions for prior failures, contraindications, or likely harm."
+  },
+  {
+    "id": "formulary-exclusion",
+    "path": "/appeals/formulary-exclusion-denial",
+    "text": "A formulary exception usually must address each covered alternative. Organize the evidence first."
+  },
+  {
+    "id": "out-of-network",
+    "path": "/appeals/out-of-network-denial",
+    "text": "Out-of-network denials can involve emergency care, network gaps, or billing. Identify the rule first."
+  },
+  {
+    "id": "experimental-denial",
+    "path": "/appeals/experimental-investigational-denial",
+    "text": "Called “experimental”? Request the exact policy and evidence cutoff, then compare your record to it."
+  },
+  {
+    "id": "external-review",
+    "path": "/appeals/external-review",
+    "text": "Internal appeal denied? An independent external review may be next. Check eligibility and deadlines."
+  }
+]

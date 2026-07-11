@@ -12,6 +12,8 @@
   },
   "hosting": {
     "public": "build/web",
+    "predeploy": ["node tool/marketing_build.mjs --verify-build"],
+    "cleanUrls": true,
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
