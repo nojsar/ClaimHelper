@@ -15,6 +15,10 @@
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
+        "source": "/api/track",
+        "function": "trackEvent"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

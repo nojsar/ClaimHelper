@@ -1165,8 +1165,10 @@
       // the route, and (on first load) the referrer hostname — no cookies,
       // no identifiers, no fingerprinting. Aggregated into daily totals
       // server-side; individual requests are not stored.
-      var TRACK_URL =
-        'https://us-central1-claimhelper-38152.cloudfunctions.net/trackEvent';
+      // Same-origin Hosting rewrite to the trackEvent function. Routing
+      // through Hosting (instead of cloudfunctions.net) lets the server see
+      // the x-country-code header for aggregate per-country counts.
+      var TRACK_URL = '/api/track';
       function track(t, path) {
         try {
           if (/^(localhost|127\.|192\.168\.)/.test(location.hostname)) return;

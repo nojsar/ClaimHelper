@@ -85,6 +85,16 @@ export const trackEvent = onRequest(
       res.status(204).send("");
       return;
     }
+    // Country of the visit, resolved by Firebase Hosting for requests routed
+    // through the /api/track rewrite (x-country-code). Aggregate-only, like
+    // everything else here — the IP it derives from is never stored.
+    const rawCountry = String(req.headers["x-country-code"] ?? "").toUpperCase();
+    const country = /^[A-Z]{2}$/.test(rawCountry) ? rawCountry : null;
+    if (req.query.echo === "1") {
+      // Debug aid: echoes the requester's own resolved country, nothing else.
+      res.status(200).json({ ok: true, country });
+      return;
+    }
     try {
       // sendBeacon posts as text/plain, so parse rawBody ourselves.
       const body = JSON.parse(req.rawBody.toString("utf8").slice(0, 2048));
@@ -96,6 +106,7 @@ export const trackEvent = onRequest(
         fields["visits"] = 1;
         fields["pageviews"] = 1;
         fields[`paths.${path}`] = 1;
+        if (country) fields[`countries.${country}`] = 1;
         if (typeof body?.ref === "string" && body.ref) {
           try {
             const host = new URL(body.ref).hostname.toLowerCase();

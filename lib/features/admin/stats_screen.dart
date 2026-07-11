@@ -121,6 +121,14 @@ class _StatsBodyState extends State<_StatsBody> {
               const _SectionTitle('Funnel (30 days)'),
               _FunnelCard(summary: s),
               const SizedBox(height: 28),
+              const _SectionTitle('Top countries'),
+              _TopList(
+                entries: s.topCountries
+                    .map((e) => MapEntry('${_flag(e.key)} ${e.key}', e.value))
+                    .toList(),
+                emptyLabel: 'No visits with a resolved country yet.',
+              ),
+              const SizedBox(height: 28),
               const _SectionTitle('Top referrers'),
               _TopList(entries: s.topReferrers, emptyLabel: 'Direct only so far.'),
               const SizedBox(height: 28),
@@ -176,7 +184,14 @@ class _Summary {
 
   List<MapEntry<String, int>> get topReferrers => _topOf('referrers');
   List<MapEntry<String, int>> get topPaths => _topOf('paths');
+  List<MapEntry<String, int>> get topCountries => _topOf('countries');
 }
+
+/// ISO 3166-1 alpha-2 code → flag emoji (regional indicator pair). Windows
+/// has no flag glyphs and falls back to plain letters — harmless.
+String _flag(String cc) => cc.length == 2
+    ? String.fromCharCodes(cc.codeUnits.map((c) => 0x1F1E6 + (c - 0x41)))
+    : '';
 
 class _Day {
   _Day(this.key, this.data);
