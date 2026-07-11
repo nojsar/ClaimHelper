@@ -29,5 +29,24 @@ export const scheduledCleanupExpiredFiles = onSchedule(
         console.error(`Failed to clean up case ${doc.id}`, err);
       }
     }
+
+    // Data minimization: queued transactional emails contain the buyer's
+    // address and are only needed while the Trigger Email extension delivers
+    // them — purge queue docs older than 30 days.
+    const mailCutoff = Timestamp.fromMillis(
+      now.toMillis() - 30 * 24 * 3600 * 1000,
+    );
+    const staleMail = await db
+      .collection("mail")
+      .where("createdAt", "<=", mailCutoff)
+      .limit(200)
+      .get();
+    for (const doc of staleMail.docs) {
+      try {
+        await doc.ref.delete();
+      } catch (err) {
+        console.error(`Failed to delete mail doc ${doc.id}`, err);
+      }
+    }
   },
 );

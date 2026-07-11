@@ -1,4 +1,5 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { getAuth } from "firebase-admin/auth";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { randomUUID } from "crypto";
@@ -81,6 +82,29 @@ export async function deleteCaseCompletely(
   await bucket.deleteFiles({ prefix: `cases/${caseId}/` });
   await getFirestore().collection("cases").doc(caseId).delete();
 }
+
+/**
+ * deleteAccount
+ * GDPR right-to-erasure: hard-deletes every case (docs + files) owned by the
+ * caller, their profile doc and rate-limit bookkeeping, and finally the
+ * Firebase Auth user itself. Purchase records in `purchases` are retained —
+ * they are accounting/tax records we are legally required to keep
+ * (GDPR art. 17(3)(b)); they hold no uploaded documents.
+ */
+export const deleteAccount = onCall({ invoker: "public" }, async (request) => {
+  const uid = requireUid(request);
+  const db = getFirestore();
+
+  const owned = await db.collection("cases").where("ownerUid", "==", uid).get();
+  for (const doc of owned.docs) {
+    await deleteCaseCompletely(doc.id, uid);
+  }
+
+  await db.collection("users").doc(uid).delete();
+  await db.collection("rateLimits").doc(`preview_${uid}`).delete();
+  await getAuth().deleteUser(uid);
+  return { deleted: true };
+});
 
 /**
  * saveCase — marks a case as saved so cleanup will not remove it.

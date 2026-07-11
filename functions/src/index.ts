@@ -2,7 +2,7 @@ import { initializeApp } from "firebase-admin/app";
 
 initializeApp();
 
-export { createCaseUploadSession, deleteCaseAndFiles, saveCase } from "./cases";
+export { createCaseUploadSession, deleteCaseAndFiles, saveCase, deleteAccount } from "./cases";
 export { extractDenialFromUploadedFile } from "./extraction";
 export { generateFreePreview } from "./preview";
 export { generateAppealPacket, saveGuidedAnswers } from "./packet";

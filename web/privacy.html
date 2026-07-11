@@ -8,9 +8,7 @@
   <meta name="description" content="Privacy Policy for GetMyYes (getmyyes.com): what we collect, how documents are processed, retention, and your rights.">
   <link rel="canonical" href="https://getmyyes.com/privacy.html">
   <link rel="icon" type="image/png" href="favicon.png"/>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="fonts.css">
   <style>
     :root { --bg:#070B14; --ink:#EDF2FB; --dim:#93A2BD; --blue:#60A5FA; --mint:#5EEAD4; --line:rgba(148,163,184,.14); }
     * { box-sizing:border-box; margin:0; padding:0; }
@@ -35,70 +33,82 @@
   <div class="wrap">
     <a class="brand" href="/"><span class="mark">✓</span> GetMyYes</a>
     <h1>Privacy Policy</h1>
-    <p class="updated">Last updated: July 6, 2026</p>
+    <p class="updated">Last updated: July 11, 2026</p>
 
     <p>GetMyYes (getmyyes.com) helps you turn a health-insurance denial into appeal paperwork. The documents you upload are sensitive — this policy explains exactly what we collect, why, where it goes, and how to remove it.</p>
 
     <div class="card">
-      <p><strong>The short version:</strong> your files are processed only to draft your appeal, never to train AI. Unsaved uploads auto-delete after 24 hours. Saved cases stay until you delete them. Payments are handled by Stripe — we never see your card number. You can delete everything, any time, from Settings.</p>
+      <p><strong>The short version:</strong> your files are processed only to draft your appeal, never to train AI. Unsaved uploads auto-delete after 24 hours. Saved cases stay until you delete them. Payments are handled by Stripe — we never see your card number. There are no analytics or advertising trackers. You can delete everything — including your account — any time, from Settings.</p>
     </div>
 
-    <h2>1. What we collect</h2>
-    <table>
-      <tr><th>Data</th><th>When</th><th>Why</th></tr>
-      <tr><td>Documents you upload (denial letters, EOBs, prior-auth denials) and the facts extracted from them — which may include health information</td><td>When you upload them</td><td>To draft your preview and appeal packet</td></tr>
-      <tr><td>Your answers to the guided questions</td><td>When you answer them</td><td>To tailor the appeal to your situation</td></tr>
-      <tr><td>Account email and password (password stored as a hash by Firebase Authentication)</td><td>When you create an account</td><td>Sign-in, saving cases, purchase receipts</td></tr>
-      <tr><td>Purchase records (amount, date, case reference, email; not card numbers)</td><td>When you buy a packet</td><td>Delivering what you paid for, receipts, tax records</td></tr>
-      <tr><td>Basic technical logs (IP, timestamps, errors)</td><td>Automatically</td><td>Security and keeping the Service working</td></tr>
-    </table>
-    <p>We do <strong>not</strong> run analytics on the contents of your documents, and we do not sell your personal information or share it for cross-context behavioral advertising.</p>
+    <h2>1. Who we are (data controller)</h2>
+    <p>GetMyYes, reachable at <a href="mailto:support@getmyyes.com">support@getmyyes.com</a>, operates getmyyes.com and is the data controller responsible for the personal data described in this policy. For any privacy request or question, email us at that address.</p>
 
-    <h2>2. How your documents are processed</h2>
+    <h2>2. What we collect, why, and on what legal basis</h2>
+    <table>
+      <tr><th>Data</th><th>When</th><th>Why</th><th>Legal basis (GDPR)</th></tr>
+      <tr><td>Documents you upload (denial letters, EOBs, prior-auth denials) and the facts extracted from them — which may include health information</td><td>When you upload them</td><td>To draft your preview and appeal packet</td><td>Your explicit consent (art. 9(2)(a)), given via the checkbox before upload; providing the service you asked for (art. 6(1)(b))</td></tr>
+      <tr><td>Your answers to the guided questions</td><td>When you answer them</td><td>To tailor the appeal to your situation</td><td>Explicit consent (art. 9(2)(a)); contract (art. 6(1)(b))</td></tr>
+      <tr><td>Account email and password (password stored as a hash by Firebase Authentication)</td><td>When you create an account</td><td>Sign-in, saving cases, purchase receipts</td><td>Contract (art. 6(1)(b))</td></tr>
+      <tr><td>Purchase records (amount, date, case reference, email; not card numbers)</td><td>When you buy a packet</td><td>Delivering what you paid for, receipts, tax records</td><td>Contract (art. 6(1)(b)); legal obligation — accounting and tax law (art. 6(1)(c))</td></tr>
+      <tr><td>Basic technical logs (IP, timestamps, errors)</td><td>Automatically</td><td>Security and keeping the Service working</td><td>Legitimate interests (art. 6(1)(f)): fraud prevention and service security</td></tr>
+    </table>
+    <p>We do <strong>not</strong> run analytics on the contents of your documents, and we do not sell your personal information or share it for cross-context behavioral advertising. You can withdraw your consent at any time by deleting the case (or your account) in Settings — withdrawal doesn't affect processing that already happened.</p>
+
+    <h2>3. How your documents are processed</h2>
     <ul>
       <li>Files are encrypted in transit (TLS) and at rest (Google Cloud default encryption).</li>
       <li>To draft your documents, the relevant content is sent to <strong>OpenAI's API</strong> with retention disabled for the request ("store: false"). OpenAI API data is <strong>not used to train models</strong>.</li>
       <li><strong>Guest uploads auto-delete after 24 hours.</strong> Saved or purchased cases are kept until you delete them.</li>
       <li>PDF export renders on your device; the exported file itself is not uploaded to us.</li>
+      <li><strong>No solely automated decisions:</strong> AI drafts documents, but nothing with legal effect is decided automatically — you review, edit, and choose whether to send every document, and your insurer decides the appeal.</li>
     </ul>
 
-    <h2>3. Who processes your data</h2>
+    <h2>4. Who processes your data</h2>
     <ul>
       <li><strong>Google Firebase / Google Cloud</strong> — hosting, authentication, database, file storage (United States).</li>
       <li><strong>OpenAI</strong> — AI drafting of your preview and packet, retention disabled.</li>
       <li><strong>Stripe</strong> — payment processing; your card details go directly to Stripe and never touch our servers.</li>
     </ul>
-    <p>These providers act as our processors and may not use your data for their own purposes beyond what their agreements allow.</p>
+    <p>These providers act as our processors under data-processing agreements and may not use your data for their own purposes beyond what those agreements allow.</p>
 
-    <h2>4. HIPAA note</h2>
+    <h2>5. International data transfers</h2>
+    <p>Our servers are in the United States. If you use the Service from the EEA, the UK, or Switzerland, your data is transferred to the U.S. under recognized safeguards: Google, Stripe, and OpenAI are certified under the <strong>EU–U.S. Data Privacy Framework</strong> (and its UK and Swiss extensions), supplemented by Standard Contractual Clauses in their data-processing agreements.</p>
+
+    <h2>6. Cookies &amp; local storage</h2>
+    <p>We use <strong>no advertising or analytics cookies and no third-party trackers</strong> — that's why you don't see a cookie banner. The only browser storage we use is strictly necessary for the Service to work: Firebase Authentication keeps your sign-in session in your browser's local storage/IndexedDB so you stay logged in. Fonts and scripts are served from our own domain, so pages don't send your IP address to third-party CDNs. Stripe sets its own strictly-necessary cookies on Stripe's checkout page when you pay.</p>
+
+    <h2>7. HIPAA note</h2>
     <p>GetMyYes is a consumer self-help tool. We are <strong>not a healthcare provider, health plan, or clearinghouse, and not a HIPAA covered entity or business associate</strong>. HIPAA generally does not cover copies of records you upload yourself. We protect them under this policy and applicable consumer-privacy law instead.</p>
 
-    <h2>5. Emails we send</h2>
+    <h2>8. Emails we send</h2>
     <p>We send transactional email only: purchase confirmations/receipts and messages about your account or cases. We do not send marketing email unless you separately opt in (there is currently no marketing list).</p>
 
-    <h2>6. Retention</h2>
+    <h2>9. Retention</h2>
     <ul>
       <li>Unsaved (guest) uploads: deleted automatically after 24 hours.</li>
       <li>Saved cases and packets: until you delete them or your account.</li>
       <li>Purchase records: kept as long as required for accounting and tax law.</li>
+      <li>Queued transactional emails: purged after 30 days.</li>
       <li>Backups and logs: purged on a rolling basis.</li>
     </ul>
 
-    <h2>7. Your rights & controls</h2>
+    <h2>10. Your rights &amp; controls</h2>
     <ul>
-      <li><strong>Delete:</strong> Settings → "Delete all data" removes every case and uploaded file permanently; you can also delete individual cases.</li>
+      <li><strong>Delete:</strong> Settings → "Delete all data" removes every case and uploaded file permanently; "Delete my account" also erases your account itself. You can also delete individual cases.</li>
       <li><strong>Access / export:</strong> your packet is exportable as a PDF; for a copy of other data, email us.</li>
+      <li><strong>EEA / UK / Swiss rights (GDPR):</strong> you have the right to access, rectify, erase, restrict, or object to the processing of your data, the right to data portability, and the right to withdraw consent at any time. You also have the right to lodge a complaint with the data-protection supervisory authority in your country of residence.</li>
       <li><strong>State privacy rights</strong> (California CCPA/CPRA and similar): you may request access, deletion, or correction, and you won't be discriminated against for exercising rights. We don't sell or share personal information as those laws define it.</li>
-      <li>Contact for any request: <a href="mailto:support@getmyyes.com">support@getmyyes.com</a>. We may need to verify you control the account first.</li>
+      <li>Contact for any request: <a href="mailto:support@getmyyes.com">support@getmyyes.com</a>. We respond within 30 days and may need to verify you control the account first.</li>
     </ul>
 
-    <h2>8. Children</h2>
+    <h2>11. Children</h2>
     <p>The Service is for adults 18+. We do not knowingly collect information from children under 13; if you believe a child has used the Service, contact us and we will delete the data.</p>
 
-    <h2>9. Security</h2>
+    <h2>12. Security</h2>
     <p>Encryption in transit and at rest, uid-scoped storage rules so only your account can access your files, server-side entitlement checks, and secrets kept out of the client. No system is perfectly secure — if a breach affects you, we will notify you as required by law.</p>
 
-    <h2>10. Changes</h2>
+    <h2>13. Changes</h2>
     <p>We'll post any changes here with a new "Last updated" date. Material changes will be highlighted in the app.</p>
 
     <footer>© 2026 GetMyYes · getmyyes.com · <a href="terms.html">Terms of Service</a> · <a href="/">Home</a></footer>

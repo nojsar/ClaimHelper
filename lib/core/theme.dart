@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
+/// Bundled font families (see pubspec.yaml). Fonts ship inside the app so no
+/// request ever goes to Google Fonts at runtime — a GDPR requirement.
+abstract final class AppFonts {
+  static const sans = 'IBMPlexSans';
+  static const serif = 'Fraunces';
+  static const mono = 'IBMPlexMono';
+}
 
 /// THE CASE FILE — the app wears the same paper world as getmyyes.com:
 /// bone paper, warm ink, carmine stamp red, approval green, letterpress type.
@@ -126,13 +133,14 @@ ThemeData buildAppTheme() {
   );
 
   // Landing pairing: Fraunces serif for headings, IBM Plex Sans for UI.
-  final body = GoogleFonts.ibmPlexSansTextTheme().apply(
-    bodyColor: AppColors.textPrimary,
-    displayColor: AppColors.textPrimary,
-  );
+  final body = ThemeData(useMaterial3: true).textTheme.apply(
+        fontFamily: AppFonts.sans,
+        bodyColor: AppColors.textPrimary,
+        displayColor: AppColors.textPrimary,
+      );
   TextStyle serif(TextStyle? base, {FontWeight weight = FontWeight.w600}) =>
-      GoogleFonts.fraunces(
-        textStyle: base,
+      (base ?? const TextStyle()).copyWith(
+        fontFamily: AppFonts.serif,
         fontWeight: weight,
         color: AppColors.textPrimary,
         letterSpacing: -0.4,
@@ -192,7 +200,8 @@ ThemeData buildAppTheme() {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadii.sm),
         ),
-        textStyle: GoogleFonts.ibmPlexMono(
+        textStyle: const TextStyle(
+          fontFamily: AppFonts.mono,
           fontWeight: FontWeight.w600,
           fontSize: 14,
           letterSpacing: 0.8,
@@ -209,7 +218,8 @@ ThemeData buildAppTheme() {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadii.sm),
         ),
-        textStyle: GoogleFonts.ibmPlexMono(
+        textStyle: const TextStyle(
+          fontFamily: AppFonts.mono,
           fontWeight: FontWeight.w600,
           fontSize: 13.5,
           letterSpacing: 0.8,

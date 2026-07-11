@@ -13,9 +13,10 @@ abstract final class AppCopy {
 
   static const consentText =
       'I understand my documents may contain sensitive health and insurance '
-      'information, and I consent to them being processed by an AI service to '
-      'draft my appeal documents. Files are auto-deleted after 24 hours unless '
-      'I save my case.';
+      'information, and I give my explicit consent to them being processed '
+      'by an AI service to draft my appeal documents. Files are auto-deleted '
+      'after 24 hours unless I save my case, and I can withdraw consent at '
+      'any time by deleting my case in Settings.';
 
   static const disclaimer =
       'GetMyYes is a document drafting assistant. It does not provide '

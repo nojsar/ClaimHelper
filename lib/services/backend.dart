@@ -73,6 +73,10 @@ abstract class Backend {
 
   Future<void> deleteCaseAndFiles(String caseId);
 
+  /// GDPR right-to-erasure: deletes every owned case (docs + files), the
+  /// profile doc, and the auth account itself, then signs out locally.
+  Future<void> deleteAccount();
+
   /// Adds more source files to an existing case (e.g. documents the preview
   /// flagged as missing); returns the storage paths of the new files.
   Future<List<String>> addFilesToCase(

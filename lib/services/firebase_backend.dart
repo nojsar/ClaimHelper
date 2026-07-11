@@ -215,6 +215,13 @@ class FirebaseBackend implements Backend {
   }
 
   @override
+  Future<void> deleteAccount() async {
+    await _functions.httpsCallable('deleteAccount').call<Map<String, dynamic>>();
+    // The server already deleted the Auth user; drop the local session too.
+    await _auth.signOut();
+  }
+
+  @override
   Future<List<String>> addFilesToCase(
     String caseId,
     List<PickedUpload> files, {

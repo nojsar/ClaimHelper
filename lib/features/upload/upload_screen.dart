@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants.dart';
 import '../../core/theme.dart';
@@ -408,6 +409,36 @@ class _ConsentBox extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadii.md)),
         title: const Text(AppCopy.consentText,
             style: TextStyle(fontSize: 13, height: 1.4)),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Wrap(
+            spacing: 4,
+            children: [
+              const Text('Details:',
+                  style: TextStyle(
+                      fontSize: 12, color: AppColors.textSecondary)),
+              _legalLink('Privacy Policy', 'https://getmyyes.com/privacy.html'),
+              const Text('·',
+                  style: TextStyle(
+                      fontSize: 12, color: AppColors.textSecondary)),
+              _legalLink('Terms of Service', 'https://getmyyes.com/terms.html'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  static Widget _legalLink(String label, String url) {
+    return GestureDetector(
+      onTap: () => launchUrl(Uri.parse(url)),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 12,
+          color: AppColors.primaryDark,
+          decoration: TextDecoration.underline,
+        ),
       ),
     );
   }

@@ -362,6 +362,15 @@ class MockBackend implements Backend {
     _controllers[caseId]?.add(null);
   }
 
+  @override
+  Future<void> deleteAccount() async {
+    for (final id in _cases.keys.toList()) {
+      _cases.remove(id);
+      _controllers[id]?.add(null);
+    }
+    _email = null;
+  }
+
   void _patch(String caseId, AppealCase Function(AppealCase) update) {
     final current = _cases[caseId];
     if (current == null) return;

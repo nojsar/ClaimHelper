@@ -19,6 +19,53 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _deleting = false;
+  bool _deletingAccount = false;
+
+  Future<void> _deleteAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete your account?'),
+        content: const Text(
+          'This permanently deletes your account, every case, and all '
+          'uploaded files from our servers, and signs you out. Purchase '
+          'receipts are kept only as required by accounting law. This '
+          'cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete my account'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() => _deletingAccount = true);
+    try {
+      await ref.read(backendProvider).deleteAccount();
+      ref.invalidate(myCasesProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Your account and all your data have been '
+                'deleted.')));
+        context.go('/');
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Could not delete your account. Please retry or '
+                'email support@getmyyes.com.')));
+      }
+    } finally {
+      if (mounted) setState(() => _deletingAccount = false);
+    }
+  }
 
   Future<void> _deleteAll() async {
     final confirmed = await showDialog<bool>(
@@ -101,6 +148,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   subtitle: const Text(
                       'Remove every case and uploaded file permanently.'),
                   onTap: _deleting ? null : _deleteAll,
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: _deletingAccount
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.person_off_outlined,
+                          color: AppColors.error),
+                  title: const Text('Delete my account',
+                      style: TextStyle(color: AppColors.error)),
+                  subtitle: const Text(
+                      'Erase your account, cases, and files, and sign out. '
+                      'Cannot be undone.'),
+                  onTap: _deletingAccount ? null : _deleteAccount,
                 ),
               ],
             ),

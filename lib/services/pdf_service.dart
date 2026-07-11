@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -27,15 +28,17 @@ class PdfService {
     // The built-in Helvetica has no Unicode support, and AI-drafted text
     // regularly contains characters outside its codepage (em dashes, curly
     // quotes, §, ≥ …) which makes doc.save() throw and the export "fail".
-    // Load full-Unicode Noto Sans; fall back to built-ins only if the font
-    // fetch fails (e.g. offline), where plain-ASCII packets still export.
+    // Noto Sans ships bundled in the app (assets/fonts/) — no runtime fetch
+    // from Google, so export works offline and sends no visitor data out.
     pw.ThemeData? theme;
     try {
+      Future<pw.Font> load(String file) async =>
+          pw.Font.ttf(await rootBundle.load('assets/fonts/$file'));
       theme = pw.ThemeData.withFont(
-        base: await PdfGoogleFonts.notoSansRegular(),
-        bold: await PdfGoogleFonts.notoSansBold(),
-        italic: await PdfGoogleFonts.notoSansItalic(),
-        boldItalic: await PdfGoogleFonts.notoSansBoldItalic(),
+        base: await load('NotoSans-Regular.ttf'),
+        bold: await load('NotoSans-Bold.ttf'),
+        italic: await load('NotoSans-Italic.ttf'),
+        boldItalic: await load('NotoSans-BoldItalic.ttf'),
       );
     } catch (_) {
       theme = null;

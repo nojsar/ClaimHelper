@@ -39,9 +39,7 @@
   <link rel="icon" type="image/png" href="favicon.png"/>
   <link rel="manifest" href="manifest.json">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="fonts.css">
 
   <!-- Structured data: crawlers read this without executing the app -->
   <script type="application/ld+json">
@@ -1162,10 +1160,10 @@
       }
 
       Promise.all([
-        loadScript('https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js')
-          .then(function () { return loadScript('https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js'); }),
-        loadScript('https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js').catch(function () {}),
-        loadScript('https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js').catch(function () {})
+        loadScript('js/gsap.min.js')
+          .then(function () { return loadScript('js/ScrollTrigger.min.js'); }),
+        loadScript('js/lenis.min.js').catch(function () {}),
+        loadScript('js/three.min.js').catch(function () {})
       ]).then(function () {
         if (!window.gsap || !window.ScrollTrigger) return;
         gsap.registerPlugin(ScrollTrigger);
@@ -1529,7 +1527,7 @@
             gsap.to(topDoc, { y: 0, rotation: 0, duration: 0.5, ease: 'power3.out' });
           });
         }
-      }).catch(function () { /* CDN blocked → static case file still fully readable */ });
+      }).catch(function () { /* scripts blocked → static case file still fully readable */ });
     })();
   </script>
 </body>
