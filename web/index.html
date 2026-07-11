@@ -1161,9 +1161,39 @@
     (function () {
       var booting = false;
 
+      // First-party, cookieless traffic counter. Sends only an event name,
+      // the route, and (on first load) the referrer hostname — no cookies,
+      // no identifiers, no fingerprinting. Aggregated into daily totals
+      // server-side; individual requests are not stored.
+      var TRACK_URL =
+        'https://us-central1-claimhelper-38152.cloudfunctions.net/trackEvent';
+      function track(t, path) {
+        try {
+          if (/^(localhost|127\.|192\.168\.)/.test(location.hostname)) return;
+          var p = path ||
+            (location.hash.indexOf('#/') === 0
+              ? location.hash.slice(1)
+              : location.pathname);
+          var payload = JSON.stringify({
+            t: t,
+            path: p,
+            ref: t === 'visit' ? document.referrer || '' : '',
+          });
+          if (navigator.sendBeacon) {
+            navigator.sendBeacon(TRACK_URL, payload);
+          } else {
+            fetch(TRACK_URL, { method: 'POST', body: payload, keepalive: true })
+              .catch(function () {});
+          }
+        } catch (e) {}
+      }
+      window.__track = track;
+      track('visit');
+
       function bootApp(route) {
         if (booting) return;
         booting = true;
+        track('boot');
         if (route && route !== '/') location.hash = '#' + route;
         var loader = document.getElementById('app-loader');
         if (loader) loader.hidden = false;

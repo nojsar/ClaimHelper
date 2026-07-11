@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "claimhelper-38152"
-  }
+    "default": "claimhelper-38152",
+    "production": "claimhelper-38152"
+  },
+  "targets": {},
+  "etags": {}
 }

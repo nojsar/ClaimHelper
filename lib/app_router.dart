@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'core/theme.dart';
 import 'features/account/account_screen.dart';
+import 'features/admin/stats_screen.dart';
 import 'features/extraction/extraction_review_screen.dart';
 import 'features/guided/guided_questions_screen.dart';
 import 'features/home/landing_screen.dart';
@@ -62,6 +63,8 @@ final appRouter = GoRouter(
     ),
     GoRoute(path: '/account', builder: (_, __) => const AccountScreen()),
     GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
+    // Owner-only traffic dashboard; Firestore rules gate the data itself.
+    GoRoute(path: '/stats', builder: (_, __) => const StatsScreen()),
   ],
   errorBuilder: (_, state) => Scaffold(
     body: Center(child: Text('Page not found: ${state.uri}')),

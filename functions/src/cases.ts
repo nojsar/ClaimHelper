@@ -5,6 +5,7 @@ import { getStorage } from "firebase-admin/storage";
 import { randomUUID } from "crypto";
 import { config } from "./config";
 import { requireUid, requireOwnedCase } from "./util";
+import { bumpDaily } from "./analytics";
 
 /**
  * createCaseUploadSession
@@ -46,6 +47,9 @@ export const createCaseUploadSession = onCall({ invoker: "public" }, async (requ
     stripeSessionId: null,
     consentConfirmedAt: now,
   });
+
+  // Aggregate funnel counter only — nothing about the case or user is logged.
+  await bumpDaily({ "funnel.upload": 1 });
 
   return {
     caseId,

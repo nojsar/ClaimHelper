@@ -41,5 +41,13 @@ service cloud.firestore {
       allow read: if signedIn() && resource.data.uid == request.auth.uid;
       allow write: if false;
     }
+
+    match /analytics_daily/{day} {
+      // Aggregate, cookieless traffic counters written only by Cloud
+      // Functions (Admin SDK). Readable solely by the owner account for the
+      // in-app stats dashboard.
+      allow read: if signedIn() && request.auth.uid == '6ZETq21uHIartXQlCCrZnZiQhb83';
+      allow write: if false;
+    }
   }
 }

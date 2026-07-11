@@ -3,6 +3,7 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import Stripe from "stripe";
 import { config, stripeSecretKey, stripeWebhookSecret } from "./config";
 import { requireUid, requireOwnedCase } from "./util";
+import { bumpDaily } from "./analytics";
 
 function stripeClient(): Stripe {
   const key = stripeSecretKey.value() || process.env.STRIPE_SECRET_KEY;
@@ -118,6 +119,8 @@ export const createCheckoutSession = onCall(
       stripeSessionId: session.id,
       updatedAt: FieldValue.serverTimestamp(),
     });
+    // Aggregate funnel counter only — no case or user data is logged.
+    await bumpDaily({ "funnel.checkout_started": 1 });
     return { checkoutUrl: session.url, sessionId: session.id };
   },
 );
@@ -163,17 +166,17 @@ export const stripeWebhook = onRequest(
         const caseRef = db.collection("cases").doc(caseId);
         const purchaseRef = db.collection("purchases").doc(session.id);
         const mailRef = db.collection("mail").doc();
-        await db.runTransaction(async (tx) => {
+        const applied = await db.runTransaction(async (tx) => {
           const [caseSnap, purchaseSnap] = await Promise.all([
             tx.get(caseRef),
             tx.get(purchaseRef),
           ]);
           // Stripe retries webhooks — the purchase doc keyed by session id
           // makes each session apply exactly once.
-          if (!caseSnap.exists || purchaseSnap.exists) return;
+          if (!caseSnap.exists || purchaseSnap.exists) return false;
 
           if (kind === "packet" || kind === "packet_plus") {
-            if (caseSnap.get("paid") === true) return;
+            if (caseSnap.get("paid") === true) return false;
             tx.update(caseRef, {
               paid: true,
               status: "paid",
@@ -254,7 +257,15 @@ export const stripeWebhook = onRequest(
               createdAt: FieldValue.serverTimestamp(),
             });
           }
+          return true;
         });
+        if (applied) {
+          // Aggregate revenue/funnel counters only — nothing user-identifying.
+          await bumpDaily({
+            "funnel.paid": 1,
+            revenueCents: session.amount_total ?? 0,
+          });
+        }
       }
     }
 

@@ -2,6 +2,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import { openaiApiKey } from "./config";
 import { requireUid, requireOwnedCase } from "./util";
+import { bumpDaily } from "./analytics";
 import { runStructured } from "./openai/client";
 import { previewSchema } from "./openai/schemas";
 import { PREVIEW_SYSTEM_PROMPT, buildPreviewUserPrompt } from "./openai/prompts";
@@ -73,6 +74,8 @@ export const generateFreePreview = onCall(
         status: "preview",
         updatedAt: FieldValue.serverTimestamp(),
       });
+      // Aggregate funnel counter only — no case or user data is logged.
+      await bumpDaily({ "funnel.preview": 1 });
       return { preview };
     } catch (err) {
       if (err instanceof HttpsError) throw err;
