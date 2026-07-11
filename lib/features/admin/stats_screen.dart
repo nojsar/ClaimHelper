@@ -64,10 +64,13 @@ class _StatsBodyState extends State<_StatsBody> {
   }
 
   Future<_Summary> _load() async {
+    // Range on the document id (day keys sort lexicographically) — unlike a
+    // descending orderBy on __name__, this needs no composite index.
+    final cutoff = DateFormat('yyyy-MM-dd')
+        .format(DateTime.now().toUtc().subtract(const Duration(days: 29)));
     final qs = await FirebaseFirestore.instance
         .collection('analytics_daily')
-        .orderBy(FieldPath.documentId, descending: true)
-        .limit(30)
+        .where(FieldPath.documentId, isGreaterThanOrEqualTo: cutoff)
         .get();
     return _Summary.fromDocs(qs.docs);
   }
