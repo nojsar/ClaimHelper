@@ -37,7 +37,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="GetMyYes">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" href="favicon.png">
   <link rel="manifest" href="manifest.json">
 
   <link rel="stylesheet" href="fonts.css">
@@ -112,12 +112,12 @@
       --paper-3: #E2D7BC;
       --ink: #1C160C;
       --ink-soft: #57503F;
-      --ink-faint: #7A7159;
+      --ink-faint: #665E49;
       --red: #B3202A;
       --red-bright: #D92632;
       --green: #14724F;
       --green-bright: #1E9A6B;
-      --gold: #A67C1B;
+      --gold: #73550D;
       --line: rgba(28, 22, 12, 0.16);
       --line-strong: rgba(28, 22, 12, 0.34);
       --max: 1220px;
@@ -134,8 +134,21 @@
       font-optical-sizing: auto;
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
+      overflow-wrap: break-word;
     }
     ::selection { background: var(--red); color: var(--paper); }
+    .skip-link {
+      position: fixed; top: 8px; left: 8px; z-index: 200;
+      padding: 12px 16px; border: 2px solid var(--ink); border-radius: 3px;
+      background: var(--paper); color: var(--ink); font-family: var(--mono);
+      font-weight: 700; transform: translateY(-170%);
+    }
+    .skip-link:focus { transform: translateY(0); }
+    .sr-only {
+      position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+    main:focus { outline: none; }
 
     /* ---------- paper atmosphere ---------- */
     .paper-grain {
@@ -251,9 +264,9 @@
       padding: 15px 26px; transition: all .15s ease; box-shadow: 4px 4px 0 rgba(28,22,12,0.22);
     }
     .btn-paper:hover { background: var(--ink); color: var(--paper); transform: translate(1px,1px); box-shadow: 2px 2px 0 rgba(28,22,12,0.22); }
-    .btn-ink:focus-visible, .btn-paper:focus-visible, .mast-cta:focus-visible,
-    summary:focus-visible, footer a:focus-visible {
-      outline: 2.5px solid var(--red); outline-offset: 3px;
+    :where(a, button, summary):focus-visible {
+      outline: 3px solid #fff; outline-offset: 3px;
+      box-shadow: 0 0 0 6px var(--ink);
     }
 
     /* ============ SCENE I · THE DENIAL (hero) ============ */
@@ -326,10 +339,10 @@
       line-height: 1.85; color: #3E382B;
       transform: rotate(0.8deg);
     }
-    .letter .lh { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+    .letter .lh { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 18px; }
     .letter .lh .co { font-weight: 600; letter-spacing: 1.5px; font-size: 1.05em; }
-    .letter .lh .co small { display: block; font-weight: 400; letter-spacing: 0.5px; color: #837A62; font-size: 0.85em; }
-    .letter .lh .date { color: #837A62; }
+    .letter .lh .co small { display: block; font-weight: 400; letter-spacing: 0.5px; color: var(--ink-faint); font-size: 0.85em; }
+    .letter .lh .date { color: var(--ink-faint); }
     .letter p { margin-bottom: 12px; }
     .letter .re { font-weight: 600; letter-spacing: 0.5px; }
     .letter .hl { position: relative; white-space: nowrap; }
@@ -352,7 +365,7 @@
       .letter { padding-right: 168px; }
       .letter .note { display: block; }
     }
-    .letter .sig { margin-top: 16px; color: #837A62; }
+    .letter .sig { margin-top: 16px; color: var(--ink-faint); }
 
     /* the DENIED imprint (stamped by the 3D stamp) */
     .imprint {
@@ -501,7 +514,7 @@
       border-bottom: 1.5px solid var(--ink); padding-bottom: 10px; margin-bottom: 14px;
     }
     .doc .dt span:last-child { color: var(--ink-faint); }
-    .doc h4 { font-family: var(--serif); font-weight: 620; font-size: 22px; letter-spacing: -0.02em; margin-bottom: 10px; font-variation-settings: "SOFT" 40; }
+    .doc h3 { font-family: var(--serif); font-weight: 620; font-size: 22px; letter-spacing: -0.02em; margin: 0 0 10px; font-variation-settings: "SOFT" 40; }
     .doc .fake { height: 7px; background: var(--paper-3); margin: 9px 0; border-radius: 1px; }
     .doc .fake.w60 { width: 60%; } .doc .fake.w85 { width: 85%; } .doc .fake.w72 { width: 72%; }
     .doc .clip {
@@ -564,7 +577,7 @@
     .reckoning { padding: clamp(100px, 14vh, 180px) 0; background:
       linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 20%, var(--paper-2) 80%, var(--paper) 100%); }
     .reckoning .head { display: grid; grid-template-columns: 220px 1fr; gap: clamp(24px, 4vw, 60px); margin-bottom: clamp(44px, 6vh, 80px); align-items: start; }
-    .receipts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 420px)); gap: clamp(22px, 3vw, 44px); justify-content: center; }
+    .receipts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 420px)); gap: clamp(22px, 3vw, 44px); justify-content: center; }
     .receipt {
       background: #FDFAF1; border: 1px solid var(--line-strong);
       padding: 30px 28px 26px; position: relative; font-family: var(--mono);
@@ -693,6 +706,7 @@
     .free-guides a {
       color: var(--paper); font-family: var(--mono); font-size: 11px;
       text-decoration: none; border-bottom: 1px solid rgba(243,237,223,0.35);
+      display: inline-flex; align-items: center; min-height: 44px;
     }
     .free-guides a:hover { color: var(--green-bright); border-color: var(--green-bright); }
 
@@ -768,6 +782,7 @@
       100% { transform: scale(1.7); opacity: 0; }
     }
     #app-loader p { margin-top: 26px; color: var(--ink-faint); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; animation: loaderpulse 1.6s ease-in-out infinite; }
+    #app-loader p a { color: var(--ink); text-transform: none; }
     @keyframes loaderpulse { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
 
     /* ---------- responsive ---------- */
@@ -792,6 +807,9 @@
       .actuary .cell:last-child { border-bottom: 0; }
       #case-page { display: none; }
       .letter .note { display: none; }
+      .doc-list li, .ledger-table .lt-row { flex-wrap: wrap; }
+      .verdict .approved-wrap { display: block; }
+      .verdict h2 { font-size: clamp(48px, 12vw, 190px); }
     }
     @media (max-width: 400px) {
       /* tiny screens: let the highlighted phrases wrap; hide the circles
@@ -800,11 +818,21 @@
       .letter .hl .circ { display: none; }
     }
     @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
       .ticker .track, .scroll-cue .pen, #app-loader .tl, #app-loader .stampring, #app-loader .ripple, #app-loader p { animation: none; }
       #app-loader .tl { transform: scaleX(1); }
       #app-loader .stampring { transform: rotate(-14deg) scale(1); opacity: 0.9; }
       .imprint { opacity: 0.92; }
       #stamp3d { display: none; }
+    }
+    @media (forced-colors: active) {
+      :where(a, button, summary):focus-visible { outline-color: Highlight; box-shadow: none; }
+      .btn-ink, .btn-paper, .mast-cta, .receipt, .index-card, .ledger-table { border: 1px solid CanvasText; }
     }
   </style>
   <noscript>
@@ -834,28 +862,30 @@
   </svg>
 
   <div id="landing">
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     <div class="paper-grain" aria-hidden="true"></div>
     <div class="paper-vignette" aria-hidden="true"></div>
-    <div class="progress-rail"><div id="scrollbar"></div></div>
+    <div class="progress-rail" aria-hidden="true"><div id="scrollbar"></div></div>
     <div id="case-page" aria-hidden="true">Case file · p. <b id="pg">1</b>/7</div>
 
-    <nav class="masthead">
+    <nav class="masthead" aria-label="Primary">
       <div class="brand"><span class="tick stamped">✓ YES</span> GetMyYes <small>EST. 2026</small></div>
-      <button class="mast-cta" data-boot="/account">My cases →</button>
+      <button type="button" class="mast-cta" data-boot="/account">My cases →</button>
     </nav>
 
+    <main id="main-content" tabindex="-1">
     <!-- ============ SCENE I · THE DENIAL ============ -->
     <section class="scene hero" id="s1">
       <div class="wrap hero-grid">
         <div class="hero-copy">
-          <div class="casefile-no">Case №&nbsp;2026-088213&nbsp;·&nbsp;in re: you&nbsp;v.&nbsp;your&nbsp;insurer</div>
+          <div class="casefile-no">Case № 2026-088213 · in re: you v. your insurer</div>
           <h1 class="display">
             <span class="w">The</span> <span class="w">insurer</span> <span class="w">stamped</span> <em class="no w">NO.</em>
             <span class="swap">We draft the <b>comeback.</b></span>
           </h1>
           <p class="lede">Upload the denial letter. GetMyYes reads the fine print, builds your strongest arguments, and hands you a complete, ready-to-send appeal packet — in about fifteen minutes.</p>
           <div class="cta-row">
-            <button class="btn-ink" data-boot="/upload">Open my case — free</button>
+            <button type="button" class="btn-ink" data-boot="/upload">Open my case — free</button>
             <span class="cta-note">Free preview · $39 full packet<br>No subscription. Ever.</span>
           </div>
         </div>
@@ -867,17 +897,17 @@
               <div class="co">MERIDIAN HEALTH<small>Pharmacy benefits administration</small></div>
               <div class="date">JUNE 18, 2026</div>
             </div>
-            <p class="re">RE: PRIOR AUTHORIZATION — <span class="hl" id="hl1">DETERMINATION: DENIED<svg class="circ" viewBox="0 0 200 40" preserveAspectRatio="none"><path id="circ1" d="M14,20 C30,2 170,0 188,16 C196,30 160,39 90,38 C40,37 8,32 14,18"/></svg></span></p>
-            <p>Dear Member, after review of the documentation received, coverage for the requested medication has been denied. The plan requires <span class="hl" id="hl2">trial and failure of two formulary alternatives<svg class="circ" viewBox="0 0 200 40" preserveAspectRatio="none"><path id="circ2" d="M10,22 C40,4 168,2 190,18 C194,32 150,40 80,38 C30,36 6,30 12,20"/></svg></span> before this agent may be authorized (step-therapy protocol §4.2).</p>
-            <p>You have the right to appeal this determination. Appeals must be filed <span class="hl" id="hl3">within 60 days of this notice<svg class="circ" viewBox="0 0 200 40" preserveAspectRatio="none"><path id="circ3" d="M12,20 C34,3 166,1 189,15 C197,29 158,39 86,38 C36,37 6,31 13,19"/></svg></span> with supporting clinical documentation from your prescriber.</p>
+            <p class="re">RE: PRIOR AUTHORIZATION — <span class="hl" id="hl1">DETERMINATION: DENIED<svg class="circ" viewBox="0 0 200 40" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path id="circ1" d="M14,20 C30,2 170,0 188,16 C196,30 160,39 90,38 C40,37 8,32 14,18"/></svg></span></p>
+            <p>Dear Member, after review of the documentation received, coverage for the requested medication has been denied. The plan requires <span class="hl" id="hl2">trial and failure of two formulary alternatives<svg class="circ" viewBox="0 0 200 40" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path id="circ2" d="M10,22 C40,4 168,2 190,18 C194,32 150,40 80,38 C30,36 6,30 12,20"/></svg></span> before this agent may be authorized (step-therapy protocol §4.2).</p>
+            <p>You have the right to appeal this determination. Appeals must be filed <span class="hl" id="hl3">within 60 days of this notice<svg class="circ" viewBox="0 0 200 40" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path id="circ3" d="M12,20 C34,3 166,1 189,15 C197,29 158,39 86,38 C36,37 6,31 13,19"/></svg></span> with supporting clinical documentation from your prescriber.</p>
             <p class="sig">Sincerely,<br>Utilization Review Committee</p>
 
             <span class="note" id="note1" style="top:16%;">← appealable. they must cite plan language — and we cite it back.</span>
             <span class="note" id="note2" style="top:46%;">← “fail first.” your history may already satisfy this. we ask.</span>
             <span class="note" id="note3" style="top:73%;">← the clock. your packet tracks it so you never miss it.</span>
           </div>
-          <div class="imprint stamped" id="imprint">DENIED</div>
-          <svg class="splat" id="splat1" viewBox="0 0 100 100" style="right:4%; top:26%; width:52px; height:52px;">
+          <div class="imprint stamped" id="imprint" aria-hidden="true">DENIED</div>
+          <svg class="splat" id="splat1" viewBox="0 0 100 100" style="right:4%; top:26%; width:52px; height:52px;" aria-hidden="true" focusable="false">
             <path d="M50 18c6 8 16 2 20 10s-6 12 0 20-14 8-12 18-14 4-20 10-12-8-22-6-4-14-12-18 8-12 4-20 12-6 16-14 18-8 26 0z"/>
           </svg>
           <div id="stamp3d" aria-hidden="true"></div>
@@ -898,7 +928,7 @@
     <section class="scene odds" id="s2">
       <div class="wrap odds-grid">
         <div>
-          <div class="scene-roman">II</div>
+          <div class="scene-roman" aria-hidden="true">II</div>
           <div class="scene-kicker">The odds</div>
         </div>
         <div>
@@ -934,7 +964,7 @@
       <div class="wrap">
         <div class="head">
           <div>
-            <div class="scene-roman">III</div>
+            <div class="scene-roman" aria-hidden="true">III</div>
             <div class="scene-kicker">The method</div>
           </div>
           <div>
@@ -978,7 +1008,7 @@
       <div class="wrap">
         <div class="head">
           <div>
-            <div class="scene-roman">IV</div>
+            <div class="scene-roman" aria-hidden="true">IV</div>
             <div class="scene-kicker">The packet</div>
           </div>
           <div>
@@ -990,27 +1020,27 @@
             <div class="doc" data-fan="0">
               <span class="clip"></span>
               <div class="dt"><span>Deadline tracker</span><span>07 / 07</span></div>
-              <h4>Every date that matters</h4>
+              <h3>Every date that matters</h3>
               <div class="fake w85"></div><div class="fake w72"></div><div class="fake w60"></div>
             </div>
             <div class="doc" data-fan="1">
               <div class="dt"><span>Call script</span><span>05 / 07</span></div>
-              <h4>Word-for-word phone lines</h4>
+              <h3>Word-for-word phone lines</h3>
               <div class="fake w72"></div><div class="fake w85"></div><div class="fake w60"></div>
             </div>
             <div class="doc" data-fan="2">
               <div class="dt"><span>Doctor letter request</span><span>04 / 07</span></div>
-              <h4>What to hand your prescriber</h4>
+              <h3>What to hand your prescriber</h3>
               <div class="fake w60"></div><div class="fake w85"></div><div class="fake w72"></div>
             </div>
             <div class="doc" data-fan="3">
               <div class="dt"><span>Evidence checklist</span><span>03 / 07</span></div>
-              <h4>Exactly what to attach</h4>
+              <h3>Exactly what to attach</h3>
               <div class="fake w85"></div><div class="fake w60"></div><div class="fake w72"></div>
             </div>
             <div class="doc" data-fan="4">
               <div class="dt"><span>Appeal letter</span><span>02 / 07</span></div>
-              <h4>Their words, cited back</h4>
+              <h3>Their words, cited back</h3>
               <div class="fake w72"></div><div class="fake w60"></div><div class="fake w85"></div>
               <div class="fake w72"></div><div class="fake w60"></div>
             </div>
@@ -1034,7 +1064,7 @@
     <section class="scene longgame" id="s5">
       <div class="wrap ledger">
         <div class="ledger-copy">
-          <div class="scene-roman" style="font-size:clamp(60px,7vw,110px)">V</div>
+          <div class="scene-roman" style="font-size:clamp(60px,7vw,110px)" aria-hidden="true">V</div>
           <div class="scene-kicker" style="margin-bottom:22px">The long game</div>
           <h2 class="headline">They reply.<br><em>You reply harder.</em></h2>
           <p class="lede" style="margin-top:24px">An appeal is rarely one letter. When the insurer answers — or ignores you — report what happened and GetMyYes drafts the next move: a second-level appeal, an external-review request, or a status demand.</p>
@@ -1063,7 +1093,7 @@
       <div class="wrap">
         <div class="head">
           <div>
-            <div class="scene-roman">VI</div>
+            <div class="scene-roman" aria-hidden="true">VI</div>
             <div class="scene-kicker">The reckoning</div>
           </div>
           <div>
@@ -1083,11 +1113,11 @@
               <li><span>Likely appeal path</span><span>incl.</span></li>
               <li><span>Missing-info checklist</span><span>incl.</span></li>
             </ul>
-            <button class="btn-paper" data-boot="/upload">Get my free preview</button>
+            <button type="button" class="btn-paper" data-boot="/upload">Get my free preview</button>
             <div class="barcode" aria-hidden="true"></div>
           </div>
           <div class="receipt paid">
-            <div class="r-stamp stamped">WORTH IT</div>
+            <div class="r-stamp stamped" aria-hidden="true">WORTH IT</div>
             <div class="r-head">
               <div class="r-title">Receipt · The full packet</div>
               <div class="price">$39</div>
@@ -1100,7 +1130,7 @@
               <li><span>Never used to train AI</span><span>promise</span></li>
               <li><span>14-day accuracy guarantee</span><span>refund</span></li>
             </ul>
-            <button class="btn-ink" data-boot="/upload">Start my appeal</button>
+            <button type="button" class="btn-ink" data-boot="/upload">Start my appeal</button>
             <div class="barcode" aria-hidden="true"></div>
           </div>
         </div>
@@ -1111,9 +1141,9 @@
     <section class="scene verdict" id="s7">
       <div class="wrap">
         <div class="vk">Scene VII · The verdict</div>
-        <h2><span class="approved-wrap"><span class="approved-stamp stamped" id="approved">APPROVED</span>Get your <span class="yes-word">YES.</span></span></h2>
+        <h2><span class="approved-wrap"><span class="approved-stamp stamped" id="approved" aria-hidden="true">APPROVED</span>Get your <span class="yes-word">YES.</span></span></h2>
         <p class="sub">The first look is free — see what your denial actually says, what's at stake, and whether the fight is worth it. Then decide.</p>
-        <button class="btn-ink" data-boot="/upload">Open my case — free</button>
+        <button type="button" class="btn-ink" data-boot="/upload">Open my case — free</button>
 
         <div class="faq">
           <span class="file-tab faq-tab">Questions · answered</span>
@@ -1153,10 +1183,14 @@
             <a href="/appeals/appeal-letter-template">Free letter template</a>
             <a href="/appeals/prior-authorization-denied">Prior authorization</a>
             <a href="/appeals/not-medically-necessary">Medical necessity</a>
+            <a href="/codes/">Denial codes decoded</a>
+            <a href="/tools/appeal-deadline-calculator">Deadline calculator</a>
+            <a href="/insurer-denial-rates">Denial rates data</a>
           </nav>
         </aside>
       </div>
     </section>
+    </main>
 
     <footer class="colophon">
       <div class="cols">
@@ -1168,6 +1202,7 @@
           <a href="terms.html">Terms of Service</a> &nbsp;·&nbsp;
           <a href="privacy.html">Privacy Policy</a> &nbsp;·&nbsp;
           <a href="/appeals/">Free Appeal Guides</a> &nbsp;·&nbsp;
+          <a href="/accessibility">Accessibility</a> &nbsp;·&nbsp;
           <a href="mailto:support@getmyyes.com">support@getmyyes.com</a>
         </div>
       </div>
@@ -1176,9 +1211,9 @@
   </div>
 
 
-  <div id="app-loader" hidden>
+  <div id="app-loader" role="status" aria-live="polite" aria-atomic="true" tabindex="-1" hidden>
     <div class="box">
-      <div class="desk">
+      <div class="desk" aria-hidden="true">
         <div class="sheet">
           <div class="tl"></div>
           <div class="tl"></div>
@@ -1186,10 +1221,10 @@
           <div class="tl"></div>
           <div class="tl"></div>
         </div>
-        <div class="ripple" aria-hidden="true"></div>
+        <div class="ripple"></div>
         <div class="stampring">Filing</div>
       </div>
-      <p>Opening your secure workspace</p>
+      <p id="app-loader-status">Opening your secure workspace</p>
     </div>
   </div>
 
@@ -1234,10 +1269,17 @@
         track('boot');
         if (route && route !== '/') location.hash = '#' + route;
         var loader = document.getElementById('app-loader');
-        if (loader) loader.hidden = false;
+        var landing = document.getElementById('landing');
+        if (landing) {
+          landing.setAttribute('inert', '');
+          landing.setAttribute('aria-busy', 'true');
+        }
+        if (loader) {
+          loader.hidden = false;
+          loader.focus();
+        }
         window.addEventListener('flutter-first-frame', function () {
-          var l = document.getElementById('landing');
-          if (l) l.remove();
+          if (landing) landing.remove();
           if (loader) loader.remove();
           document.body.style.overflow = '';
         });
@@ -1246,6 +1288,19 @@
         var s = document.createElement('script');
         s.src = 'flutter_bootstrap.js';
         s.async = true;
+        s.onerror = function () {
+          booting = false;
+          document.documentElement.classList.remove('app-mode');
+          if (landing) {
+            landing.removeAttribute('inert');
+            landing.removeAttribute('aria-busy');
+          }
+          if (loader) {
+            loader.setAttribute('role', 'alert');
+            var status = document.getElementById('app-loader-status');
+            if (status) status.innerHTML = 'We could not open the secure workspace. <a href="/">Return to the homepage</a> or email <a href="mailto:support@getmyyes.com">support@getmyyes.com</a>.';
+          }
+        };
         document.body.appendChild(s);
       }
       window.__bootApp = bootApp;

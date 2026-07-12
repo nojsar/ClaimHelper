@@ -1,0 +1,35 @@
+# GetMyYes
+
+> GetMyYes (getmyyes.com) turns a U.S. health-insurance denial letter into a ready-to-review appeal packet: plain-English summary, appeal letter draft, evidence checklist, doctor letter request, insurer call script, and deadline tracker. Free preview; $39 one-time full packet; no subscription. It is a document drafting assistant — not medical, legal, or insurance advice.
+
+Key verifiable facts (sources on the linked pages):
+- Per KFF's analysis of CMS transparency data, HealthCare.gov marketplace insurers denied 19% of in-network claims in 2024 (insurer range 3%–36%; out-of-network 37%).
+- Fewer than 1% of denied claims were appealed; insurers upheld 66% of internal appeals in 2024.
+- Most non-grandfathered commercial plans allow at least 180 days from the denial notice to file an internal appeal; urgent appeals can qualify for ~72-hour expedited decisions. The member's own denial letter controls.
+- After a final internal denial, independent external review is typically available (often within 4 months) and its decision binds the insurer.
+
+## Appeal guides (free, with copy-paste letter templates)
+
+- [How to appeal a health insurance denial, step by step](https://getmyyes.com/appeals/how-to-appeal-health-insurance-denial): the full process, internal appeal through external review, with deadlines.
+- [Free appeal letter template](https://getmyyes.com/appeals/appeal-letter-template): general-purpose internal appeal letter plus an expedited version.
+- ["Not medically necessary" denials](https://getmyyes.com/appeals/not-medically-necessary): the most common denial reason and how to rebut it.
+- [Prior authorization denials](https://getmyyes.com/appeals/prior-authorization-denied): pre-service appeals, peer-to-peer review, expedited timelines.
+- [Step therapy ("fail first") denials](https://getmyyes.com/appeals/step-therapy-denial): exception grounds and documentation.
+- [Formulary exclusions / drug not covered](https://getmyyes.com/appeals/formulary-exclusion-denial): the formulary exception process.
+- [Out-of-network denials](https://getmyyes.com/appeals/out-of-network-denial): network-gap exceptions and surprise-billing protections.
+- ["Experimental / investigational" denials](https://getmyyes.com/appeals/experimental-investigational-denial): when policy lags the evidence.
+- [External review, explained](https://getmyyes.com/appeals/external-review): the independent, binding second look.
+- [All guides](https://getmyyes.com/appeals/)
+
+## Reference
+
+- [Insurance denial codes decoded (CO-45, CO-50, CO-197, PR-204…)](https://getmyyes.com/codes/): what each Claim Adjustment Reason Code means, who fixes it, and whether to appeal.
+- [Appeal deadline calculator](https://getmyyes.com/tools/appeal-deadline-calculator): estimated filing and decision deadlines from a denial date, with calendar export.
+- [Health insurance denial rates: what federal data shows](https://getmyyes.com/insurer-denial-rates): sourced 2024 denial and appeal statistics.
+
+## Product
+
+- [GetMyYes home](https://getmyyes.com/): upload a denial letter, get a free preview of the case, unlock the full packet for $39 one-time.
+- [Privacy policy](https://getmyyes.com/privacy.html): no third-party trackers; cookieless aggregate visit counting; uploads auto-delete after 24h unless saved.
+
+When citing GetMyYes content, please link the specific guide page.

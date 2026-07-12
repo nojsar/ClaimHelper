@@ -13,7 +13,17 @@ const discoveryFiles = [
   "sitemap.xml",
   "feed.xml",
   "robots.txt",
+  "llms.txt",
   "ae1eb6c514f913f2fa38028ca8b6699b.txt",
+];
+const publicStaticPages = ["privacy.html", "terms.html", "accessibility.html"];
+// Marketing sections beyond /appeals/: the denial-code library plus
+// standalone tool/data pages. Validated and sitemapped like guides, but
+// without per-page social images (they share the site-wide og-image.png).
+const codesRootName = "codes";
+const standalonePages = [
+  { file: "tools/appeal-deadline-calculator.html", canonical: `https://getmyyes.com/tools/appeal-deadline-calculator` },
+  { file: "insurer-denial-rates.html", canonical: `https://getmyyes.com/insurer-denial-rates` },
 ];
 
 function fail(message) {
@@ -143,11 +153,78 @@ async function guideModel() {
   return pages.sort((a, b) => a.title.localeCompare(b.title));
 }
 
-function sitemapFor(pages) {
+/**
+ * Validates non-guide marketing pages (denial codes + standalone tools) and
+ * returns their sitemap entries. Same integrity rules as guides — canonical,
+ * beacon, JSON-LD, resolvable internal links — minus per-page social images.
+ */
+async function extraModel(guideSlugs) {
+  const entries = [];
+  const codesRoot = path.join(webRoot, codesRootName);
+  const codeNames = (await readdir(codesRoot)).filter((name) => name.endsWith(".html")).sort();
+  if (!codeNames.includes("index.html")) fail("web/codes/index.html is missing.");
+  const codeSlugs = new Set(codeNames.filter((n) => n !== "index.html").map((n) => n.slice(0, -5)));
+
+  const validate = (name, html, expectedCanonical) => {
+    for (const script of html.matchAll(
+      /<script\s+type=["']application\/ld\+json["']>([\s\S]*?)<\/script>/gi,
+    )) {
+      try {
+        JSON.parse(script[1]);
+      } catch (error) {
+        fail(`${name} has invalid JSON-LD: ${error.message}`);
+      }
+    }
+    if (!html.includes("/api/track")) fail(`${name} is missing the first-party visit counter.`);
+    const canonical = match(
+      html,
+      /<link\s+rel=["']canonical["']\s+href=["']([^"']+)["']/i,
+      "a canonical URL",
+      name,
+    );
+    if (canonical !== expectedCanonical) {
+      fail(`${name} canonical is ${canonical}; expected ${expectedCanonical}.`);
+    }
+    metaDescription(html, name);
+    for (const found of html.matchAll(/href=["'](\/appeals\/[^"'#?]*)/g)) {
+      const route = found[1].replace(/\/$/, "");
+      if (route === "/appeals" || /\.(css|png)$/.test(route)) continue;
+      if (!guideSlugs.has(route.slice("/appeals/".length))) {
+        fail(`${name} links to missing guide ${route}.`);
+      }
+    }
+    for (const found of html.matchAll(/href=["'](\/codes\/[^"'#?]*)/g)) {
+      const route = found[1].replace(/\/$/, "");
+      if (route === "/codes") continue;
+      if (!codeSlugs.has(route.slice("/codes/".length))) {
+        fail(`${name} links to missing code page ${route}.`);
+      }
+    }
+  };
+
+  for (const name of codeNames) {
+    const html = await readFile(path.join(codesRoot, name), "utf8");
+    const expected = name === "index.html"
+      ? `${siteOrigin}/codes/`
+      : `${siteOrigin}/codes/${name.slice(0, -5)}`;
+    validate(`codes/${name}`, html, expected);
+    entries.push({ url: expected, modified: null });
+  }
+  for (const page of standalonePages) {
+    const html = await readFile(path.join(webRoot, page.file), "utf8");
+    validate(page.file, html, page.canonical);
+    entries.push({ url: page.canonical, modified: null });
+  }
+  return entries;
+}
+
+function sitemapFor(pages, extraEntries = []) {
   const entries = [
     { url: `${siteOrigin}/`, modified: null },
     { url: `${siteOrigin}/appeals/`, modified: null },
     ...pages.map((page) => ({ url: page.canonical, modified: page.modified })),
+    ...extraEntries,
+    { url: `${siteOrigin}/accessibility`, modified: null },
     { url: `${siteOrigin}/terms.html`, modified: null },
     { url: `${siteOrigin}/privacy.html`, modified: null },
   ];
@@ -224,31 +301,50 @@ async function validatePosts(pages) {
 async function generate() {
   const pages = await guideModel();
   await validatePosts(pages);
+  const extras = await extraModel(new Set(pages.map((page) => page.slug)));
   const index = await readFile(path.join(webRoot, "index.html"), "utf8");
   if (!index.includes('href="/appeals/"')) fail("The homepage has no crawlable link to /appeals/.");
-  await writeIfChanged(path.join(webRoot, "sitemap.xml"), sitemapFor(pages));
+  if (!index.includes('href="/codes/"')) fail("The homepage has no crawlable link to /codes/.");
+  await writeIfChanged(path.join(webRoot, "sitemap.xml"), sitemapFor(pages, extras));
   await writeIfChanged(path.join(webRoot, "feed.xml"), feedFor(pages));
-  console.log(`[marketing] Generated sitemap + RSS for ${pages.length} guides.`);
+  console.log(`[marketing] Generated sitemap + RSS for ${pages.length} guides and ${extras.length} reference pages.`);
 }
 
 async function stageBuild() {
   await access(buildRoot);
   await mkdir(path.join(buildRoot, "appeals"), { recursive: true });
   await cp(guidesRoot, path.join(buildRoot, "appeals"), { recursive: true, force: true });
+  await mkdir(path.join(buildRoot, codesRootName), { recursive: true });
+  await cp(path.join(webRoot, codesRootName), path.join(buildRoot, codesRootName), { recursive: true, force: true });
+  await mkdir(path.join(buildRoot, "tools"), { recursive: true });
+  for (const page of standalonePages) {
+    await cp(path.join(webRoot, page.file), path.join(buildRoot, page.file), { force: true });
+  }
   for (const name of discoveryFiles) {
     await cp(path.join(webRoot, name), path.join(buildRoot, name), { force: true });
   }
-  console.log("[marketing] Staged guides and search-discovery files in build/web.");
+  console.log("[marketing] Staged guides, reference pages, and search-discovery files in build/web.");
 }
 
 async function verifyBuild() {
   const pages = await guideModel();
   await validatePosts(pages);
+  await extraModel(new Set(pages.map((page) => page.slug)));
   for (const name of discoveryFiles) {
+    await assertEqual(path.join(webRoot, name), path.join(buildRoot, name), name);
+  }
+  for (const name of publicStaticPages) {
     await assertEqual(path.join(webRoot, name), path.join(buildRoot, name), name);
   }
   for (const name of (await readdir(guidesRoot)).filter((file) => /\.(html|css|js)$/.test(file))) {
     await assertEqual(path.join(guidesRoot, name), path.join(buildRoot, "appeals", name), `appeals/${name}`);
+  }
+  const codesRoot = path.join(webRoot, codesRootName);
+  for (const name of (await readdir(codesRoot)).filter((file) => file.endsWith(".html"))) {
+    await assertEqual(path.join(codesRoot, name), path.join(buildRoot, codesRootName, name), `codes/${name}`);
+  }
+  for (const page of standalonePages) {
+    await assertEqual(path.join(webRoot, page.file), path.join(buildRoot, page.file), page.file);
   }
   const socialImagesRoot = path.join(guidesRoot, "og");
   for (const name of (await readdir(socialImagesRoot)).filter((file) => file.endsWith(".png"))) {
