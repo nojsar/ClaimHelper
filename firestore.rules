@@ -56,5 +56,19 @@ service cloud.firestore {
       allow read: if signedIn() && request.auth.uid == '6ZETq21uHIartXQlCCrZnZiQhb83';
       allow write: if false;
     }
+
+    match /analytics_customer_daily/{day} {
+      // Clean customer-only counters. Cloud Functions refuse every write that
+      // originates from the owner account, and the dashboard reads only this
+      // collection. The legacy analytics_daily collection remains an archive.
+      allow read: if signedIn() && request.auth.uid == '6ZETq21uHIartXQlCCrZnZiQhb83';
+      allow write: if false;
+    }
+
+    match /analytics_customer_segment_daily/{segment} {
+      // Customer-only country, referrer, campaign, and page aggregates.
+      allow read: if signedIn() && request.auth.uid == '6ZETq21uHIartXQlCCrZnZiQhb83';
+      allow write: if false;
+    }
   }
 }

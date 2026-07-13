@@ -3,7 +3,7 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import Stripe from "stripe";
 import { ADMIN_UID, config, stripeSecretKey, stripeWebhookSecret } from "./config";
 import { requireUid, requireOwnedCase } from "./util";
-import { bumpDaily } from "./analytics";
+import { bumpUserDaily, isAdminAnalyticsUid } from "./analytics";
 
 function stripeClient(): Stripe {
   const key = stripeSecretKey.value() || process.env.STRIPE_SECRET_KEY;
@@ -150,7 +150,7 @@ export const createCheckoutSession = onCall(
       updatedAt: FieldValue.serverTimestamp(),
     });
     // Aggregate funnel counter only — no case or user data is logged.
-    await bumpDaily({ "funnel.checkout_started": 1 });
+    await bumpUserDaily(uid, { "funnel.checkout_started": 1 });
     return { checkoutUrl: session.url, sessionId: session.id };
   },
 );
@@ -289,9 +289,11 @@ export const stripeWebhook = onRequest(
           }
           return true;
         });
-        if (applied) {
+        if (applied && !isAdminAnalyticsUid(uid)) {
           // Aggregate revenue/funnel counters only — nothing user-identifying.
-          await bumpDaily({
+          // The explicit guard protects legacy/admin Stripe sessions; the
+          // centralized writer independently refuses the owner uid as well.
+          await bumpUserDaily(uid, {
             "funnel.paid": 1,
             revenueCents: session.amount_total ?? 0,
           });

@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -27,6 +28,30 @@ Future<void> main() async {
   }
 
   if (kIsWeb) {
+    // Hold the initial visit/boot/pageview in the shared web tracker until
+    // Firebase restores the signed-in user. Owner traffic is dropped locally
+    // before any beacon and a verified endpoint installs an HttpOnly backup
+    // exclusion cookie. Token refreshes renew that cookie without ever adding
+    // the token or uid to analytics data.
+    if (!kUseMocks && Firebase.apps.isNotEmpty) {
+      FirebaseAuth.instance.idTokenChanges().listen((user) async {
+        if (user?.uid != kAdminUid) {
+          resolveAnalyticsAuth();
+          return;
+        }
+        // Fail closed immediately while the token is being refreshed.
+        excludeAdminAnalytics(null);
+        try {
+          excludeAdminAnalytics(await user!.getIdToken());
+        } catch (_) {
+          // Local suppression remains active even if token retrieval is offline.
+        }
+      });
+    } else {
+      // Demo mode or a failed Firebase bootstrap must not delay normal traffic.
+      resolveAnalyticsAuth();
+    }
+
     // Cookieless pageview counter (see services/analytics.dart). The initial
     // page load was already counted as a `visit` by index.html, so seed the
     // dedupe with the boot route and only report subsequent changes.

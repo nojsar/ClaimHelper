@@ -9,8 +9,8 @@ import '../../widgets/app_scaffold.dart';
 import 'analytics_summary.dart';
 
 /// Private traffic dashboard, fed by the first-party cookieless counters in
-/// `analytics_daily`. Reachable at /#/stats; invisible to normal users and
-/// unreadable by them (rules gate reads to the owner account).
+/// `analytics_customer_daily`. Reachable at /#/stats; invisible to normal
+/// users and unreadable by them (rules gate reads to the owner account).
 class StatsScreen extends StatelessWidget {
   const StatsScreen({super.key});
 
@@ -78,7 +78,7 @@ class _StatsBodyState extends State<_StatsBody> {
     final cutoff = DateFormat('yyyy-MM-dd')
         .format(DateTime.now().toUtc().subtract(const Duration(days: 29)));
     final qs = await FirebaseFirestore.instance
-        .collection('analytics_daily')
+        .collection('analytics_customer_daily')
         .where(FieldPath.documentId, isGreaterThanOrEqualTo: cutoff)
         .get();
     return AnalyticsSummary.fromDocuments(
@@ -93,8 +93,8 @@ class _StatsBodyState extends State<_StatsBody> {
       (index) => DateFormat('yyyy-MM-dd')
           .format(today.subtract(Duration(days: 29 - index))),
     );
-    final collection =
-        FirebaseFirestore.instance.collection('analytics_segment_daily');
+    final collection = FirebaseFirestore.instance
+        .collection('analytics_customer_segment_daily');
     final snapshots = await Future.wait(
       days.map((day) => collection.doc(filter.documentId(day)).get()),
     );
@@ -166,7 +166,9 @@ class _StatsBodyState extends State<_StatsBody> {
                       style: Theme.of(context).textTheme.headlineSmall),
                   const SizedBox(height: 4),
                   const Text(
-                    'First-party counters — cookieless, aggregate-only.',
+                    'Customer-only counters — cookieless, aggregate-only. '
+                    'Owner activity is excluded; legacy totals are not mixed '
+                    'in.',
                     style: TextStyle(color: AppColors.textMuted, fontSize: 13),
                   ),
                   const SizedBox(height: 8),

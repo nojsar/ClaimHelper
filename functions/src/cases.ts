@@ -3,9 +3,9 @@ import { getAuth } from "firebase-admin/auth";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { randomUUID } from "crypto";
-import { ADMIN_UID, config } from "./config";
+import { config } from "./config";
 import { requireUid, requireOwnedCase } from "./util";
-import { bumpDaily } from "./analytics";
+import { bumpUserDaily } from "./analytics";
 
 /**
  * createCaseUploadSession
@@ -49,8 +49,8 @@ export const createCaseUploadSession = onCall({ invoker: "public" }, async (requ
   });
 
   // Aggregate funnel counter only — nothing about the case or user is logged.
-  // The owner account is excluded so admin testing never skews the stats.
-  if (uid !== ADMIN_UID) await bumpDaily({ "funnel.upload": 1 });
+  // The centralized writer refuses owner events.
+  await bumpUserDaily(uid, { "funnel.upload": 1 });
 
   return {
     caseId,

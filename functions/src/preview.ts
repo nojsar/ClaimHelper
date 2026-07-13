@@ -1,8 +1,8 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
-import { ADMIN_UID, openaiApiKey } from "./config";
+import { openaiApiKey } from "./config";
 import { requireUid, requireOwnedCase } from "./util";
-import { bumpDaily } from "./analytics";
+import { bumpUserDaily } from "./analytics";
 import { runStructured } from "./openai/client";
 import { previewSchema } from "./openai/schemas";
 import { PREVIEW_SYSTEM_PROMPT, buildPreviewUserPrompt } from "./openai/prompts";
@@ -75,8 +75,8 @@ export const generateFreePreview = onCall(
         updatedAt: FieldValue.serverTimestamp(),
       });
       // Aggregate funnel counter only — no case or user data is logged.
-      // The owner account is excluded so admin testing never skews the stats.
-      if (uid !== ADMIN_UID) await bumpDaily({ "funnel.preview": 1 });
+      // The centralized writer refuses owner events.
+      await bumpUserDaily(uid, { "funnel.preview": 1 });
       return { preview };
     } catch (err) {
       if (err instanceof HttpsError) throw err;

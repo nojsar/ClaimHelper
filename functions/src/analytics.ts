@@ -1,22 +1,112 @@
 import { onRequest } from "firebase-functions/v2/https";
+import { getAuth } from "firebase-admin/auth";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
+
+import { ADMIN_UID } from "./config";
 
 /**
  * First-party, cookieless traffic analytics.
  *
  * Design constraints (GDPR posture of the site — no consent banner):
- *  - NO cookies, NO localStorage, NO fingerprinting, NO per-visitor records.
+ *  - NO visitor analytics cookies, localStorage, fingerprinting, or per-visitor
+ *    records. The owner may receive a signed, HttpOnly exclusion cookie and
+ *    use a local browser kill switch whose sole purpose is to prevent owner
+ *    traffic from entering these counters.
  *  - Nothing user-identifying is stored: only aggregate daily counters in
- *    `analytics_daily/{YYYY-MM-DD}` (UTC) and aggregate, single-dimension
- *    slices in `analytics_segment_daily`. IPs and user agents are not kept.
+ *    `analytics_customer_daily/{YYYY-MM-DD}` (UTC) and aggregate,
+ *    single-dimension slices in `analytics_customer_segment_daily`. IPs and
+ *    user agents are not kept. Legacy analytics collections are preserved but
+ *    never written by this module.
  *  - Funnel steps (upload/preview/checkout/paid) are counted server-side in
- *    the existing functions via bumpDaily() — tamper-proof and zero extra
+ *    the existing functions via bumpUserDaily() — tamper-proof and zero extra
  *    client requests. The client only reports visit/boot/pageview.
  */
+
+export const ANALYTICS_DAILY_COLLECTION = "analytics_customer_daily";
+export const ANALYTICS_SEGMENT_DAILY_COLLECTION =
+  "analytics_customer_segment_daily";
+
+// Firebase Hosting forwards only the specially named __session cookie to
+// rewritten Functions. It remains host-only because the response never sets a
+// Domain attribute.
+export const ADMIN_ANALYTICS_COOKIE = "__session";
+const ADMIN_ANALYTICS_SESSION_MS = 14 * 24 * 60 * 60 * 1000;
+const ADMIN_ANALYTICS_SESSION_SECONDS = Math.floor(
+  ADMIN_ANALYTICS_SESSION_MS / 1000,
+);
 
 /** UTC day key, e.g. "2026-07-11". */
 function dayKey(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+/** One source of truth for owner exclusion across every analytics writer. */
+export function isAdminAnalyticsUid(
+  uid: string | null | undefined,
+): boolean {
+  return uid === ADMIN_UID;
+}
+
+/**
+ * The private dashboard is not customer traffic. Suppress it even on a fresh
+ * browser before Firebase Auth has had time to establish the exclusion cookie.
+ */
+export function isExcludedAnalyticsPath(raw: unknown): boolean {
+  if (typeof raw !== "string") return false;
+  let path = raw.trim();
+  try {
+    const url = new URL(path);
+    path = url.hash.startsWith("#/") ? url.hash.slice(1) : url.pathname;
+  } catch {
+    // Route values are normally relative paths, which URL intentionally rejects.
+  }
+  const hashRoute = path.indexOf("#/");
+  if (hashRoute >= 0) path = path.slice(hashRoute + 1);
+  path = path.replace(/[?&#].*$/, "");
+  if (path.length > 1) path = path.replace(/\/+$/, "");
+  return path === "/stats" || path.startsWith("/stats/");
+}
+
+/** Read one cookie without trusting any client-provided exclusion flag. */
+export function cookieValue(
+  header: string | string[] | undefined,
+  name: string,
+): string | null {
+  const joined = Array.isArray(header) ? header.join(";") : header;
+  if (!joined) return null;
+  for (const part of joined.split(";")) {
+    const separator = part.indexOf("=");
+    if (separator < 0 || part.slice(0, separator).trim() !== name) continue;
+    const encoded = part.slice(separator + 1).trim();
+    try {
+      return decodeURIComponent(encoded);
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+/** Parse the Firebase ID token used to establish the signed exclusion cookie. */
+export function bearerToken(
+  header: string | string[] | undefined,
+): string | null {
+  const value = Array.isArray(header) ? header[0] : header;
+  if (!value) return null;
+  const match = /^Bearer\s+([^\s]+)$/i.exec(value.trim());
+  return match?.[1] ?? null;
+}
+
+/** Build the only analytics-related cookie ever issued by this service. */
+export function adminAnalyticsCookieHeader(sessionCookie: string): string {
+  return [
+    `${ADMIN_ANALYTICS_COOKIE}=${encodeURIComponent(sessionCookie)}`,
+    `Max-Age=${ADMIN_ANALYTICS_SESSION_SECONDS}`,
+    "Path=/",
+    "HttpOnly",
+    "Secure",
+    "SameSite=Strict",
+  ].join("; ");
 }
 
 type SegmentType = "country" | "referrer" | "campaign" | "path";
@@ -95,23 +185,27 @@ function keyify(raw: unknown, max = 64): string | null {
 }
 
 /**
- * Increment counters on today's aggregate doc. Fire-and-forget safe: never
- * throws, so analytics can never break a payment or generation flow.
+ * Increment authenticated customer counters on today's clean aggregate doc.
+ * The uid is mandatory at every call site so new product events cannot forget
+ * owner exclusion. Fire-and-forget safe: never throws, so analytics can never
+ * break a payment or generation flow.
  */
-export async function bumpDaily(
+export async function bumpUserDaily(
+  uid: string | null | undefined,
   fields: Record<string, number>,
 ): Promise<void> {
+  if (isAdminAnalyticsUid(uid)) return;
   try {
     const update: Record<string, unknown> = {
       updatedAt: FieldValue.serverTimestamp(),
       ...incrementUpdate(fields),
     };
     await getFirestore()
-      .collection("analytics_daily")
+      .collection(ANALYTICS_DAILY_COLLECTION)
       .doc(dayKey())
       .set(update, { merge: true });
   } catch (err) {
-    console.warn("analytics bumpDaily failed (ignored):", err);
+    console.warn("analytics bumpUserDaily failed (ignored):", err);
   }
 }
 
@@ -131,7 +225,7 @@ async function bumpTrafficDaily(
     const updatedAt = FieldValue.serverTimestamp();
 
     batch.set(
-      firestore.collection("analytics_daily").doc(day),
+      firestore.collection(ANALYTICS_DAILY_COLLECTION).doc(day),
       { updatedAt, ...incrementUpdate(fields) },
       { merge: true },
     );
@@ -144,7 +238,7 @@ async function bumpTrafficDaily(
     for (const segment of unique.values()) {
       const id = analyticsSegmentDocumentId(day, segment.type, segment.key);
       batch.set(
-        firestore.collection("analytics_segment_daily").doc(id),
+        firestore.collection(ANALYTICS_SEGMENT_DAILY_COLLECTION).doc(id),
         {
           day,
           type: segment.type,
@@ -190,6 +284,71 @@ function campaignFromRequest(req: {
   }
 }
 
+async function hasSignedAdminExclusion(req: {
+  headers: { cookie?: string | string[] };
+}): Promise<boolean> {
+  const sessionCookie = cookieValue(
+    req.headers.cookie,
+    ADMIN_ANALYTICS_COOKIE,
+  );
+  if (!sessionCookie) return false;
+  try {
+    const decoded = await getAuth().verifySessionCookie(sessionCookie);
+    return isAdminAnalyticsUid(decoded.uid);
+  } catch {
+    // A missing, malformed, expired, or forged cookie must never suppress a
+    // real customer's event.
+    return false;
+  }
+}
+
+/**
+ * Exchanges the signed-in owner's Firebase ID token for a signed, HttpOnly
+ * session cookie. Hosting exposes this as POST /api/admin-analytics-exclusion.
+ * Normal users cannot mint the cookie, and trackEvent never trusts a plain
+ * client-side opt-out flag.
+ */
+export const setAdminAnalyticsExclusion = onRequest(
+  { invoker: "public", cors: true },
+  async (req, res) => {
+    res.setHeader("Cache-Control", "no-store");
+    if (req.method !== "POST") {
+      res.setHeader("Allow", "POST");
+      res.status(405).send("");
+      return;
+    }
+
+    const idToken = bearerToken(req.headers.authorization);
+    if (!idToken) {
+      res.status(401).send("");
+      return;
+    }
+
+    let uid: string;
+    try {
+      uid = (await getAuth().verifyIdToken(idToken, true)).uid;
+    } catch {
+      res.status(401).send("");
+      return;
+    }
+    if (!isAdminAnalyticsUid(uid)) {
+      res.status(403).send("");
+      return;
+    }
+
+    try {
+      const sessionCookie = await getAuth().createSessionCookie(idToken, {
+        expiresIn: ADMIN_ANALYTICS_SESSION_MS,
+      });
+      res.setHeader("Set-Cookie", adminAnalyticsCookieHeader(sessionCookie));
+      res.status(204).send("");
+    } catch (err) {
+      console.error("Could not establish admin analytics exclusion:", err);
+      res.status(500).send("");
+    }
+  },
+);
+
 /**
  * trackEvent
  * Public HTTP endpoint the web client pings with navigator.sendBeacon.
@@ -217,6 +376,18 @@ export const trackEvent = onRequest(
       // sendBeacon posts as text/plain, so parse rawBody ourselves.
       const body = JSON.parse(req.rawBody.toString("utf8").slice(0, 2048));
       const t = body?.t as string;
+      if (t !== "visit" && t !== "boot" && t !== "pageview") {
+        res.status(204).send("");
+        return;
+      }
+      if (isExcludedAnalyticsPath(body?.path)) {
+        res.status(204).send("");
+        return;
+      }
+      if (await hasSignedAdminExclusion(req)) {
+        res.status(204).send("");
+        return;
+      }
       const path = keyify(body?.path) ?? "/";
 
       const fields: Record<string, number> = {};

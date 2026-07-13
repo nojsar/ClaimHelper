@@ -10,6 +10,7 @@ const buildRoot = path.join(projectRoot, "build", "web");
 const siteOrigin = "https://getmyyes.com";
 const mode = process.argv[2] ?? "generate";
 const discoveryFiles = [
+  "analytics.js",
   "sitemap.xml",
   "feed.xml",
   "robots.txt",
@@ -55,6 +56,15 @@ function metaDescription(html, file) {
   return value;
 }
 
+function requireStaticTracker(html, file) {
+  if (!html.includes('<script src="/analytics.js" data-static></script>')) {
+    fail(`${file} is missing the shared first-party visit counter.`);
+  }
+  if (html.includes("sendBeacon('/api/track'") || html.includes('sendBeacon("/api/track"')) {
+    fail(`${file} still contains a stale inline visit counter.`);
+  }
+}
+
 function xml(value) {
   return value
     .replace(/&/g, "&amp;")
@@ -89,7 +99,7 @@ async function guideModel() {
     }
     const ids = [...html.matchAll(/\sid=["']([^"']+)["']/g)].map((found) => found[1]);
     if (new Set(ids).size !== ids.length) fail(`${name} contains duplicate HTML ids.`);
-    if (!html.includes("/api/track")) fail(`${name} is missing the first-party visit counter.`);
+    requireStaticTracker(html, name);
 
     const socialSlug = name === "index.html" ? "index" : name.slice(0, -5);
     const expectedSocialImage = `${siteOrigin}/appeals/og/${socialSlug}.png`;
@@ -175,7 +185,7 @@ async function extraModel(guideSlugs) {
         fail(`${name} has invalid JSON-LD: ${error.message}`);
       }
     }
-    if (!html.includes("/api/track")) fail(`${name} is missing the first-party visit counter.`);
+    requireStaticTracker(html, name);
     const canonical = match(
       html,
       /<link\s+rel=["']canonical["']\s+href=["']([^"']+)["']/i,
@@ -303,6 +313,9 @@ async function generate() {
   await validatePosts(pages);
   const extras = await extraModel(new Set(pages.map((page) => page.slug)));
   const index = await readFile(path.join(webRoot, "index.html"), "utf8");
+  if (!index.includes('<script src="/analytics.js"></script>')) {
+    fail("The homepage is missing the auth-gated first-party visit counter.");
+  }
   if (!index.includes('href="/appeals/"')) fail("The homepage has no crawlable link to /appeals/.");
   if (!index.includes('href="/codes/"')) fail("The homepage has no crawlable link to /codes/.");
   await writeIfChanged(path.join(webRoot, "sitemap.xml"), sitemapFor(pages, extras));

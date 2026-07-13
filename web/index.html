@@ -71,6 +71,7 @@
   <link rel="manifest" href="manifest.json">
 
   <link rel="stylesheet" href="fonts.css">
+  <script src="/analytics.js"></script>
 
   <!-- Structured data: crawlers read this without executing the app -->
   <script type="application/ld+json">
@@ -1268,44 +1269,12 @@
     (function () {
       var booting = false;
 
-      // First-party, cookieless traffic counter. Sends only an event name,
-      // the route, and (on first load) the referrer hostname — no cookies,
-      // no identifiers, no fingerprinting. Aggregated into daily totals
-      // server-side; individual requests are not stored.
-      // Same-origin Hosting rewrite to the trackEvent function. Routing
-      // through Hosting (instead of cloudfunctions.net) lets the server see
-      // the x-country-code header for aggregate per-country counts.
-      var TRACK_URL = '/api/track';
-      // Memory-only attribution for this page lifecycle. It is sent only into
-      // aggregate segment counters and is never stored as an individual visit.
-      var INITIAL_REFERRER = document.referrer || '';
-      function track(t, path) {
-        try {
-          if (/^(localhost|127\.|192\.168\.)/.test(location.hostname)) return;
-          var p = path ||
-            (location.hash.indexOf('#/') === 0
-              ? location.hash.slice(1)
-              : location.pathname);
-          var payload = JSON.stringify({
-            t: t,
-            path: p,
-            ref: INITIAL_REFERRER,
-          });
-          if (navigator.sendBeacon) {
-            navigator.sendBeacon(TRACK_URL, payload);
-          } else {
-            fetch(TRACK_URL, { method: 'POST', body: payload, keepalive: true })
-              .catch(function () {});
-          }
-        } catch (e) {}
-      }
-      window.__track = track;
-      track('visit');
-
       function bootApp(route) {
         if (booting) return;
         booting = true;
-        track('boot', route || undefined);
+        if (typeof window.__track === 'function') {
+          window.__track('boot', route || undefined);
+        }
         if (route && route !== '/') location.hash = '#' + route;
         var loader = document.getElementById('app-loader');
         var landing = document.getElementById('landing');

@@ -26,12 +26,7 @@
     "isPartOf": { "@type": "WebSite", "name": "GetMyYes", "url": "https://getmyyes.com/" }
   }
   </script>
-  <script>
-  (function(){try{if(/^(localhost|127\.|192\.168\.)/.test(location.hostname))return;
-  var p=JSON.stringify({t:'visit',path:location.pathname,ref:document.referrer||''});
-  if(navigator.sendBeacon)navigator.sendBeacon('/api/track',p);
-  else fetch('/api/track',{method:'POST',body:p,keepalive:true}).catch(function(){});}catch(e){}})();
-  </script>
+  <script src="/analytics.js" data-static></script>
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>

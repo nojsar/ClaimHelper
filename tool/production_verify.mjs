@@ -24,7 +24,7 @@ const pages = [
   },
   { route: "/insurer-denial-rates", file: "insurer-denial-rates.html" },
 ];
-const bundles = ["main.dart.js", "flutter_bootstrap.js"];
+const bundles = ["main.dart.js", "flutter_bootstrap.js", "analytics.js"];
 const retries = Number(process.env.PRODUCTION_VERIFY_RETRIES ?? 6);
 const retryDelayMs = Number(process.env.PRODUCTION_VERIFY_DELAY_MS ?? 2000);
 
@@ -68,13 +68,15 @@ function checkHtml(url, html) {
   }
 }
 
-async function fetchOnce(route) {
+async function fetchOnce(route, { allowErrorStatus = false } = {}) {
   const url = `${origin}${route}`;
   const response = await fetch(url, {
     headers: { "cache-control": "no-cache" },
     redirect: "follow",
   });
-  if (!response.ok) fail(`${url} returned HTTP ${response.status}.`);
+  if (!response.ok && !allowErrorStatus) {
+    fail(`${url} returned HTTP ${response.status}.`);
+  }
   if (new URL(response.url).origin !== new URL(origin).origin) {
     fail(`${url} unexpectedly redirected to ${response.url}.`);
   }
@@ -122,7 +124,7 @@ async function verifyEndpoint(route, expectedStatus) {
   let lastError;
   for (let attempt = 1; attempt <= retries; attempt += 1) {
     try {
-      const { response } = await fetchOnce(route);
+      const { response } = await fetchOnce(route, { allowErrorStatus: true });
       if (response.status !== expectedStatus) {
         fail(`${response.url} returned HTTP ${response.status}; expected ${expectedStatus}.`);
       }
@@ -145,7 +147,10 @@ for (const file of bundles) {
 // GET is deliberately a no-op in trackEvent, so this proves the Hosting
 // rewrite and deployed function are live without modifying analytics data.
 await verifyEndpoint("/api/track", 204);
+// GET must reach the protected function and be rejected. A 200 would mean the
+// Hosting catch-all served index.html instead of the token exchange endpoint.
+await verifyEndpoint("/api/admin-analytics-exclusion", 405);
 
 console.log(
-  `[production] Verified ${pages.length} public pages, ${bundles.length} app bundles, and the analytics rewrite at ${origin}.`,
+  `[production] Verified ${pages.length} public pages, ${bundles.length} app bundles, and both analytics rewrites at ${origin}.`,
 );

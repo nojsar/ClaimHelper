@@ -54,12 +54,7 @@ function shell({ title, description, canonical, h1, crumb, body }) {
   <meta property="og:description" content="${esc(description)}">
   <meta property="og:url" content="${canonical}">
   <meta property="og:image" content="${siteOrigin}/og-image.png">
-  <script>
-  (function(){try{if(/^(localhost|127\\.|192\\.168\\.)/.test(location.hostname))return;
-  var p=JSON.stringify({t:'visit',path:location.pathname,ref:document.referrer||''});
-  if(navigator.sendBeacon)navigator.sendBeacon('/api/track',p);
-  else fetch('/api/track',{method:'POST',body:p,keepalive:true}).catch(function(){});}catch(e){}})();
-  </script>
+  <script src="/analytics.js" data-static></script>
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -189,9 +184,9 @@ function hubPage() {
         </ul>
       </div>
 
-      <div class="table-wrap" style="overflow-x:auto">
+      <section class="table-wrap" aria-labelledby="codes-table-caption" tabindex="0">
       <table>
-        <caption>Claim adjustment reason codes: meaning and whether to appeal</caption>
+        <caption id="codes-table-caption">Claim adjustment reason codes: meaning and whether to appeal</caption>
         <thead>
           <tr><th scope="col">Code</th><th scope="col">What it means</th><th scope="col">Appeal?</th></tr>
         </thead>
@@ -199,7 +194,7 @@ function hubPage() {
 ${rows}
         </tbody>
       </table>
-      </div>
+      </section>
 
       <p>Don’t see your code? The letter must still explain the denial in words and state your appeal rights — start with <a href="/appeals/how-to-appeal-health-insurance-denial">the step-by-step appeal guide</a>.</p>
 

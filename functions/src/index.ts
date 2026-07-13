@@ -10,4 +10,4 @@ export { generateFollowUp } from "./followup";
 export { createCheckoutSession, stripeWebhook } from "./payments";
 export { saveReminderEmail } from "./reminders";
 export { scheduledCleanupExpiredFiles } from "./cleanup";
-export { trackEvent } from "./analytics";
+export { setAdminAnalyticsExclusion, trackEvent } from "./analytics";

@@ -40,6 +40,7 @@ const checks = [
   ["npm", ["ci", "--prefix", "functions"]],
   ["npm", ["--prefix", "functions", "run", "build"]],
   ["npm", ["--prefix", "functions", "test"]],
+  ["node", ["tool/analytics_tracker_test.mjs"]],
   ["node", ["tool/marketing_build.mjs"]],
   ["node", ["tool/accessibility_check.mjs", "web"]],
   ["npx", ["--yes", "html-validate@10.10.0", "web/**/*.html"]],

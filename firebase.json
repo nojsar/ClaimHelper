@@ -24,6 +24,10 @@
         "function": "trackEvent"
       },
       {
+        "source": "/api/admin-analytics-exclusion",
+        "function": "setAdminAnalyticsExclusion"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
@@ -66,6 +70,12 @@
         "source": "/main.dart.js",
         "headers": [
           { "key": "Cache-Control", "value": "no-cache" }
+        ]
+      },
+      {
+        "source": "/analytics.js",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
         ]
       },
       {

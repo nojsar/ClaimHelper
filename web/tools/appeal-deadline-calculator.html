@@ -40,12 +40,7 @@
     ]
   }
   </script>
-  <script>
-  (function(){try{if(/^(localhost|127\.|192\.168\.)/.test(location.hostname))return;
-  var p=JSON.stringify({t:'visit',path:location.pathname,ref:document.referrer||''});
-  if(navigator.sendBeacon)navigator.sendBeacon('/api/track',p);
-  else fetch('/api/track',{method:'POST',body:p,keepalive:true}).catch(function(){});}catch(e){}})();
-  </script>
+  <script src="/analytics.js" data-static></script>
   <style>
     .calc { border: 1.5px solid var(--border-strong); border-radius: 16px; background: var(--letter); padding: 24px; margin: 24px 0; box-shadow: 0 12px 30px -8px rgba(60,46,18,.15); }
     .calc .row { margin-bottom: 16px; }
