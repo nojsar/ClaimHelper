@@ -19,10 +19,12 @@ const discoveryFiles = [
 ];
 const publicStaticPages = ["privacy.html", "terms.html", "accessibility.html"];
 const publicStaticAssets = [...publicStaticPages, "legal.css"];
-// Marketing sections beyond /appeals/: the denial-code library plus
-// standalone tool/data pages. Validated and sitemapped like guides, but
-// without per-page social images (they share the site-wide og-image.png).
+// Marketing sections beyond /appeals/: the denial-code library, the
+// insurer-specific appeal library, plus standalone tool/data pages.
+// Validated and sitemapped like guides, but without per-page social images
+// (they share the site-wide og-image.png).
 const codesRootName = "codes";
+const insurersRootName = "insurers";
 const standalonePages = [
   { file: "tools/appeal-deadline-calculator.html", canonical: `https://getmyyes.com/tools/appeal-deadline-calculator` },
   { file: "insurer-denial-rates.html", canonical: `https://getmyyes.com/insurer-denial-rates` },
@@ -175,6 +177,10 @@ async function extraModel(guideSlugs) {
   const codeNames = (await readdir(codesRoot)).filter((name) => name.endsWith(".html")).sort();
   if (!codeNames.includes("index.html")) fail("web/codes/index.html is missing.");
   const codeSlugs = new Set(codeNames.filter((n) => n !== "index.html").map((n) => n.slice(0, -5)));
+  const insurersRoot = path.join(webRoot, insurersRootName);
+  const insurerNames = (await readdir(insurersRoot)).filter((name) => name.endsWith(".html")).sort();
+  if (!insurerNames.includes("index.html")) fail("web/insurers/index.html is missing.");
+  const insurerSlugs = new Set(insurerNames.filter((n) => n !== "index.html").map((n) => n.slice(0, -5)));
 
   const validate = (name, html, expectedCanonical) => {
     for (const script of html.matchAll(
@@ -211,6 +217,13 @@ async function extraModel(guideSlugs) {
         fail(`${name} links to missing code page ${route}.`);
       }
     }
+    for (const found of html.matchAll(/href=["'](\/insurers\/[^"'#?]*)/g)) {
+      const route = found[1].replace(/\/$/, "");
+      if (route === "/insurers") continue;
+      if (!insurerSlugs.has(route.slice("/insurers/".length))) {
+        fail(`${name} links to missing insurer page ${route}.`);
+      }
+    }
   };
 
   for (const name of codeNames) {
@@ -219,6 +232,14 @@ async function extraModel(guideSlugs) {
       ? `${siteOrigin}/codes/`
       : `${siteOrigin}/codes/${name.slice(0, -5)}`;
     validate(`codes/${name}`, html, expected);
+    entries.push({ url: expected, modified: null });
+  }
+  for (const name of insurerNames) {
+    const html = await readFile(path.join(insurersRoot, name), "utf8");
+    const expected = name === "index.html"
+      ? `${siteOrigin}/insurers/`
+      : `${siteOrigin}/insurers/${name.slice(0, -5)}`;
+    validate(`insurers/${name}`, html, expected);
     entries.push({ url: expected, modified: null });
   }
   for (const page of standalonePages) {
@@ -319,6 +340,7 @@ async function generate() {
   }
   if (!index.includes('href="/appeals/"')) fail("The homepage has no crawlable link to /appeals/.");
   if (!index.includes('href="/codes/"')) fail("The homepage has no crawlable link to /codes/.");
+  if (!index.includes('href="/insurers/"')) fail("The homepage has no crawlable link to /insurers/.");
   for (const name of publicStaticPages) {
     requireStaticTracker(await readFile(path.join(webRoot, name), "utf8"), name);
   }
@@ -333,6 +355,8 @@ async function stageBuild() {
   await cp(guidesRoot, path.join(buildRoot, "appeals"), { recursive: true, force: true });
   await mkdir(path.join(buildRoot, codesRootName), { recursive: true });
   await cp(path.join(webRoot, codesRootName), path.join(buildRoot, codesRootName), { recursive: true, force: true });
+  await mkdir(path.join(buildRoot, insurersRootName), { recursive: true });
+  await cp(path.join(webRoot, insurersRootName), path.join(buildRoot, insurersRootName), { recursive: true, force: true });
   await mkdir(path.join(buildRoot, "tools"), { recursive: true });
   for (const page of standalonePages) {
     await cp(path.join(webRoot, page.file), path.join(buildRoot, page.file), { force: true });
@@ -362,6 +386,10 @@ async function verifyBuild() {
   const codesRoot = path.join(webRoot, codesRootName);
   for (const name of (await readdir(codesRoot)).filter((file) => file.endsWith(".html"))) {
     await assertEqual(path.join(codesRoot, name), path.join(buildRoot, codesRootName, name), `codes/${name}`);
+  }
+  const insurersRoot = path.join(webRoot, insurersRootName);
+  for (const name of (await readdir(insurersRoot)).filter((file) => file.endsWith(".html"))) {
+    await assertEqual(path.join(insurersRoot, name), path.join(buildRoot, insurersRootName, name), `insurers/${name}`);
   }
   for (const page of standalonePages) {
     await assertEqual(path.join(webRoot, page.file), path.join(buildRoot, page.file), page.file);
