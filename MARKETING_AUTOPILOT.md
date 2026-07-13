@@ -7,7 +7,7 @@ This is intentionally a small, durable acquisition system—not a mass-content o
 - Every deploy validates every appeal-guide link, generates `sitemap.xml` and `feed.xml`, and refuses to deploy if the crawlable guide copy in `build/web` is missing or stale.
 - Search engines can discover the guide hub from the homepage and every guide from the sitemap.
 - After a successful deploy, the script submits all sitemap URLs to IndexNow so participating search engines can recrawl changes. Google still uses the sitemap and Search Console.
-- GitHub Actions can publish one useful evergreen guide to Bluesky each Monday, Wednesday, and Friday. It rotates the queue, adds campaign tags and a branded link card, and refuses to post twice within 36 hours.
+- GitHub Actions can publish one useful evergreen guide each Monday, Wednesday, and Friday to every network whose secrets are configured: Bluesky, Mastodon, X, Threads, LinkedIn, Facebook, and Instagram. Each network is offset through the queue so they post different guides on the same day, every post carries campaign tags, and a network with missing secrets is skipped with a log line instead of failing the run (`tool/post_all.mjs`).
 - The private owner dashboard at `https://getmyyes.com/#/stats` reports visits, funnel conversion, top pages/referrers/countries, revenue, and campaign traffic without analytics cookies.
 
 ## One-time setup: search
@@ -21,13 +21,66 @@ A sitemap is a discovery hint, not a ranking guarantee. The internal links and g
 
 ## One-time setup: scheduled social posts
 
-1. Create a GetMyYes Bluesky account and complete its profile. Do not automate replies, follows, DMs, or unsolicited mentions.
+General rules for every network:
+
+- Only ever use each platform's **official write API** — never browser automation. Posting cadence stays at 3/week per network, far under every rate limit.
+- Automate **posting only**. Do not automate replies, follows, likes, DMs, or unsolicited mentions anywhere.
+- Reddit and TikTok are deliberately **not** automated: their cultures and policies punish it. Participate there manually or not at all.
+- All secrets go in the GitHub repository under **Settings → Secrets and variables → Actions**. A network activates on the next scheduled run once its secrets exist; removing its secrets deactivates it.
+- After adding a network, open **Actions → Marketing autopilot → Run workflow** with **dry run** enabled to check the previews, then once with dry run disabled to verify a real post.
+
+### Bluesky (live)
+
+1. Create a GetMyYes Bluesky account and complete its profile.
 2. In Bluesky, create an **App Password** under **Settings → Privacy and security → App passwords**.
-3. In the GitHub repository, open **Settings → Secrets and variables → Actions** and add:
-   - `BLUESKY_HANDLE` — for example `getmyyes.com` or `getmyyes.bsky.social`
-   - `BLUESKY_APP_PASSWORD` — the app password, not the main account password
-4. Open **Actions → Marketing autopilot → Run workflow** and leave **dry run** enabled. Check the preview in the job log.
-5. Run it once with **dry run disabled**. Scheduled runs will then continue without intervention.
+3. Secrets: `BLUESKY_HANDLE` (e.g. `getmyyes.bsky.social`), `BLUESKY_APP_PASSWORD` (the app password, not the account password).
+
+### Mastodon
+
+1. Create a GetMyYes account on an instance (e.g. `https://mastodon.social`) and complete its profile.
+2. **Preferences → Development → New application**: name it "GetMyYes autopilot", untick everything except the `write:statuses` scope, save, and copy **Your access token**.
+3. Secrets: `MASTODON_SERVER` (e.g. `https://mastodon.social`), `MASTODON_ACCESS_TOKEN`.
+
+### X (Twitter)
+
+The free API tier (~500 posts/month, 17/day) comfortably covers this cadence.
+
+1. Sign in at [developer.x.com](https://developer.x.com) with the GetMyYes X account and sign up for the **Free** tier.
+2. In the project's app: **Settings → User authentication settings → Set up** — App permissions **Read and write**, type **Web App, Automated App or Bot**, callback/website URL `https://getmyyes.com`.
+3. **Keys and tokens**: copy the **API Key and Secret**; then generate the **Access Token and Secret** (it must say *Read and Write* — regenerate it if you changed permissions after creating it).
+4. Secrets: `X_API_KEY`, `X_API_KEY_SECRET`, `X_ACCESS_TOKEN`, `X_ACCESS_TOKEN_SECRET`.
+
+### Threads
+
+1. At [developers.facebook.com](https://developers.facebook.com) create an app with the **Access the Threads API** use case.
+2. In the use-case settings add the GetMyYes Threads account as a **Threads Tester**, then accept the invite in the Threads app (**Settings → Account → Website permissions → Invites**).
+3. Generate a token with `threads_basic` + `threads_content_publish`, then exchange it for a **long-lived** token: `GET https://graph.threads.net/access_token?grant_type=th_exchange_token&client_secret=<app-secret>&access_token=<short-token>`.
+4. Secrets: `THREADS_ACCESS_TOKEN` (optional `THREADS_USER_ID`; fetched automatically when absent).
+5. The token lasts **60 days**. Refresh before then with `GET https://graph.threads.net/refresh_access_token?grant_type=th_refresh_token&access_token=<current>` and update the secret.
+
+### LinkedIn (Company Page)
+
+1. Create a **LinkedIn Company Page** for GetMyYes (organization posting is the supported automation path; personal profiles are not).
+2. At [developer.linkedin.com](https://developer.linkedin.com) create an app tied to that page and **verify** it from the page admin.
+3. Under **Products**, request the **Community Management API** (grants `w_organization_social`; approval can take days).
+4. Once approved, use the app's **OAuth token tools** to generate a member token with `w_organization_social` while signed in as a page admin.
+5. `LINKEDIN_ORG_ID` is the numeric id in the page admin URL (`linkedin.com/company/<id>/admin`).
+6. Secrets: `LINKEDIN_ACCESS_TOKEN` (60-day expiry — regenerate from the token tools), `LINKEDIN_ORG_ID`.
+
+### Facebook Page
+
+1. Reuse the Meta developer app; in the **Graph API Explorer** request a user token with `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`.
+2. Exchange it for a long-lived token, then call `GET /me/accounts` — copy the Page's `id` and its `access_token` (page tokens derived from a long-lived user token do not expire).
+3. Secrets: `FACEBOOK_PAGE_ID`, `FACEBOOK_PAGE_TOKEN`.
+4. **Visibility caveat:** while the app is in Development mode, API posts publish but are visible only to app users. Public posts require the app to be **Live** with `pages_manage_posts` passed through App Review (a short screencast of the posting flow).
+
+### Instagram
+
+1. Convert the GetMyYes Instagram account to a **Professional** account.
+2. Create (or extend) a Meta app with the **Instagram API with Instagram Login** use case and connect the account as a tester.
+3. Generate a long-lived token with `instagram_business_basic` + `instagram_business_content_publish`; note the IG user id.
+4. Secrets: `INSTAGRAM_USER_ID`, `INSTAGRAM_ACCESS_TOKEN` (60 days — refresh via `GET https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token=<current>`).
+5. Instagram posts are the guide's branded card image with the link written in plain text (links are not clickable on IG); guides without a generated card are skipped.
 
 Edit `marketing/posts.json` to change the approved evergreen queue. The automation never invents health or insurance claims at runtime; it only rotates copy reviewed in the repository.
 

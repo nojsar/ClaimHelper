@@ -141,7 +141,10 @@ if (dryRun) {
 }
 
 if (!identifier || !password) {
-  throw new Error("BLUESKY_HANDLE and BLUESKY_APP_PASSWORD are required.");
+  // Align with the other tool/post_*.mjs posters: a missing network skips
+  // (visibly, in the post_all.mjs summary) instead of failing the whole run.
+  console.log("[marketing] bluesky: not configured (missing BLUESKY_HANDLE/BLUESKY_APP_PASSWORD); skipping.");
+  process.exit(0);
 }
 
 const session = await jsonRequest(`${service}/xrpc/com.atproto.server.createSession`, {
