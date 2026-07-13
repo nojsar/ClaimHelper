@@ -64,12 +64,26 @@ function oauthHeader(method, url) {
 }
 
 const post = postForDay(OFFSET);
-const result = await jsonRequest(ENDPOINT, {
-  method: "POST",
-  headers: {
-    Authorization: oauthHeader("POST", ENDPOINT),
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({ text: compose(post) }),
-});
+let result;
+try {
+  result = await jsonRequest(ENDPOINT, {
+    method: "POST",
+    headers: {
+      Authorization: oauthHeader("POST", ENDPOINT),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ text: compose(post) }),
+  });
+} catch (error) {
+  // X's pay-per-use tier returns 402 CreditsDepleted at zero balance. That's
+  // a billing state, not a code failure — surface it as a workflow warning
+  // instead of failing the whole run every slot until the account is topped
+  // up (or the X secrets are removed to stop trying).
+  if (error.message.includes("CreditsDepleted")) {
+    console.log(`::warning title=X credits depleted::${error.message}`);
+    console.log("[marketing] x: no API credits — top up in the X dev console (Billing → Credits) or remove the X_* secrets.");
+    process.exit(0);
+  }
+  throw error;
+}
 console.log(`[marketing] x: published ${post.id}: tweet ${result.data?.id}`);
