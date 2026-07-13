@@ -39,9 +39,10 @@ function rfc3986(value) {
   );
 }
 
-// With a JSON request body, only the oauth_* parameters enter the signature.
-function oauthHeader(method, url) {
-  const params = {
+// Signature covers oauth_* params plus any query params (a JSON body is
+// excluded per OAuth 1.0a); only oauth_* fields go into the header itself.
+function oauthHeader(method, url, query = {}) {
+  const oauth = {
     oauth_consumer_key: process.env.X_API_KEY,
     oauth_nonce: crypto.randomBytes(16).toString("hex"),
     oauth_signature_method: "HMAC-SHA1",
@@ -49,21 +50,49 @@ function oauthHeader(method, url) {
     oauth_token: process.env.X_ACCESS_TOKEN,
     oauth_version: "1.0",
   };
-  const paramString = Object.keys(params)
+  const paramString = Object.entries({ ...oauth, ...query })
+    .map(([key, value]) => `${rfc3986(key)}=${rfc3986(value)}`)
     .sort()
-    .map((key) => `${rfc3986(key)}=${rfc3986(params[key])}`)
     .join("&");
   const base = [method, rfc3986(url), rfc3986(paramString)].join("&");
   const signingKey = `${rfc3986(process.env.X_API_KEY_SECRET)}&${rfc3986(process.env.X_ACCESS_TOKEN_SECRET)}`;
-  params.oauth_signature = crypto.createHmac("sha1", signingKey).update(base).digest("base64");
-  const header = Object.keys(params)
+  oauth.oauth_signature = crypto.createHmac("sha1", signingKey).update(base).digest("base64");
+  const header = Object.keys(oauth)
     .sort()
-    .map((key) => `${rfc3986(key)}="${rfc3986(params[key])}"`)
+    .map((key) => `${rfc3986(key)}="${rfc3986(oauth[key])}"`)
     .join(", ");
   return `OAuth ${header}`;
 }
 
+async function apiGet(url, query = {}) {
+  const full = new URL(url);
+  for (const [key, value] of Object.entries(query)) full.searchParams.set(key, value);
+  return jsonRequest(full, { headers: { Authorization: oauthHeader("GET", url, query) } });
+}
+
 const post = postForDay(OFFSET);
+
+// Read-before-write: the pay-per-use API happily accepts duplicate content,
+// so a same-day re-run must detect today's post itself. Two GET requests
+// (fractions of a cent) against posting twice is an easy trade.
+const me = await apiGet("https://api.x.com/2/users/me");
+const timeline = await apiGet(`https://api.x.com/2/users/${me.data.id}/tweets`, {
+  max_results: "5",
+  "tweet.fields": "created_at",
+});
+const marker = post.text.slice(0, 60);
+const today = new Date().toISOString().slice(0, 10);
+// Same text AND same day: the rotation legitimately repeats a guide every
+// nine days (~4 posting slots), so matching text alone would false-positive.
+if (
+  (timeline.data || []).some(
+    (tweet) => tweet.text?.includes(marker) && tweet.created_at?.slice(0, 10) === today,
+  )
+) {
+  console.log("[marketing] x: today's post already exists; skipping safely.");
+  process.exit(0);
+}
+
 let result;
 try {
   result = await jsonRequest(ENDPOINT, {

@@ -33,10 +33,12 @@ const auth = { Authorization: `Bearer ${process.env.MASTODON_ACCESS_TOKEN}` };
 // skip cleanly: replaying an Idempotency-Key works only while the server
 // still caches it — mastodon.social 500s on older replays. Check our own
 // recent statuses for today's campaign post instead of relying on that.
-const me = await jsonRequest(`${server}/api/v1/accounts/verify_credentials`, { headers: auth });
+// Uses the PUBLIC endpoints (our posts are public) so the access token can
+// stay write-only.
+const handle = process.env.MASTODON_HANDLE || "getmyyes";
+const me = await jsonRequest(`${server}/api/v1/accounts/lookup?acct=${encodeURIComponent(handle)}`);
 const recent = await jsonRequest(
   `${server}/api/v1/accounts/${me.id}/statuses?limit=10&exclude_replies=true&exclude_reblogs=true`,
-  { headers: auth },
 );
 const today = new Date().toISOString().slice(0, 10);
 if (recent.some((s) => (s.created_at || "").slice(0, 10) === today && s.content?.includes("GetMyYesGuide"))) {
