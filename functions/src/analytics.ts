@@ -7,7 +7,8 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
  * Design constraints (GDPR posture of the site — no consent banner):
  *  - NO cookies, NO localStorage, NO fingerprinting, NO per-visitor records.
  *  - Nothing user-identifying is stored: only aggregate daily counters in
- *    `analytics_daily/{YYYY-MM-DD}` (UTC). IPs and user agents are not kept.
+ *    `analytics_daily/{YYYY-MM-DD}` (UTC) and aggregate, single-dimension
+ *    slices in `analytics_segment_daily`. IPs and user agents are not kept.
  *  - Funnel steps (upload/preview/checkout/paid) are counted server-side in
  *    the existing functions via bumpDaily() — tamper-proof and zero extra
  *    client requests. The client only reports visit/boot/pageview.
@@ -16,6 +17,65 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 /** UTC day key, e.g. "2026-07-11". */
 function dayKey(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+type SegmentType = "country" | "referrer" | "campaign" | "path";
+
+interface AnalyticsSegment {
+  type: SegmentType;
+  key: string;
+}
+
+/**
+ * Stable, URL-safe ids prevent a segment key from becoming a Firestore path.
+ * The plain key also lives in the document, so clients never need to decode it.
+ */
+export function analyticsSegmentDocumentId(
+  day: string,
+  type: SegmentType,
+  key: string,
+): string {
+  return `${day}__${type}__${Buffer.from(key, "utf8").toString("base64url")}`;
+}
+
+/** Funnel and revenue are not segmentable without visitor/session tracking. */
+const SEGMENTABLE_FIELD_ROOTS = new Set([
+  "visits",
+  "pageviews",
+  "boots",
+  "countries",
+  "referrers",
+  "campaigns",
+  "paths",
+]);
+
+export function filterSegmentableFields(
+  fields: Record<string, number>,
+): Record<string, number> {
+  return Object.fromEntries(
+    Object.entries(fields).filter(([path]) =>
+      SEGMENTABLE_FIELD_ROOTS.has(path.split(".", 1)[0]),
+    ),
+  );
+}
+
+/** Convert dotted counter names into nested maps with increment sentinels. */
+function incrementUpdate(
+  fields: Record<string, number>,
+): Record<string, unknown> {
+  const update = Object.create(null) as Record<string, unknown>;
+  for (const [path, n] of Object.entries(fields)) {
+    const segs = path.split(".");
+    let node = update;
+    for (let i = 0; i < segs.length - 1; i++) {
+      if (!Object.prototype.hasOwnProperty.call(node, segs[i])) {
+        node[segs[i]] = Object.create(null) as Record<string, unknown>;
+      }
+      node = node[segs[i]] as Record<string, unknown>;
+    }
+    node[segs[segs.length - 1]] = FieldValue.increment(n);
+  }
+  return update;
 }
 
 /**
@@ -44,22 +104,61 @@ export async function bumpDaily(
   try {
     const update: Record<string, unknown> = {
       updatedAt: FieldValue.serverTimestamp(),
+      ...incrementUpdate(fields),
     };
-    for (const [path, n] of Object.entries(fields)) {
-      // Dotted names ("funnel.paid") become nested maps for set-merge.
-      const segs = path.split(".");
-      let node = update;
-      for (let i = 0; i < segs.length - 1; i++) {
-        node = (node[segs[i]] as Record<string, unknown>) ??= {};
-      }
-      node[segs[segs.length - 1]] = FieldValue.increment(n);
-    }
     await getFirestore()
       .collection("analytics_daily")
       .doc(dayKey())
       .set(update, { merge: true });
   } catch (err) {
     console.warn("analytics bumpDaily failed (ignored):", err);
+  }
+}
+
+/**
+ * Atomically write a traffic event to the overall daily aggregate and to one
+ * document for every dimension present on this request. Each destination is
+ * still an aggregate shared by all matching traffic, never a visitor record.
+ */
+async function bumpTrafficDaily(
+  fields: Record<string, number>,
+  segments: AnalyticsSegment[],
+): Promise<void> {
+  try {
+    const firestore = getFirestore();
+    const batch = firestore.batch();
+    const day = dayKey();
+    const updatedAt = FieldValue.serverTimestamp();
+
+    batch.set(
+      firestore.collection("analytics_daily").doc(day),
+      { updatedAt, ...incrementUpdate(fields) },
+      { merge: true },
+    );
+
+    const segmentFields = filterSegmentableFields(fields);
+    const unique = new Map<string, AnalyticsSegment>();
+    for (const segment of segments) {
+      unique.set(`${segment.type}\u0000${segment.key}`, segment);
+    }
+    for (const segment of unique.values()) {
+      const id = analyticsSegmentDocumentId(day, segment.type, segment.key);
+      batch.set(
+        firestore.collection("analytics_segment_daily").doc(id),
+        {
+          day,
+          type: segment.type,
+          key: segment.key,
+          updatedAt,
+          ...incrementUpdate(segmentFields),
+        },
+        { merge: true },
+      );
+    }
+
+    await batch.commit();
+  } catch (err) {
+    console.warn("analytics bumpTrafficDaily failed (ignored):", err);
   }
 }
 
@@ -121,24 +220,30 @@ export const trackEvent = onRequest(
       const path = keyify(body?.path) ?? "/";
 
       const fields: Record<string, number> = {};
+      const segments: AnalyticsSegment[] = [{ type: "path", key: path }];
+      if (country) segments.push({ type: "country", key: country });
+      const campaign = campaignFromRequest(req);
+      if (campaign) segments.push({ type: "campaign", key: campaign });
+      let referrer: string | null = null;
+      if (typeof body?.ref === "string" && body.ref) {
+        try {
+          const host = new URL(body.ref).hostname.toLowerCase();
+          if (!SELF_HOSTS.has(host)) referrer = keyify(host);
+        } catch {
+          /* unparseable referrer — skip */
+        }
+      }
+      if (referrer) segments.push({ type: "referrer", key: referrer });
+
       if (t === "visit") {
         fields["visits"] = 1;
         fields["pageviews"] = 1;
         fields[`paths.${path}`] = 1;
         if (country) fields[`countries.${country}`] = 1;
-        const campaign = campaignFromRequest(req);
-        if (campaign) fields[`campaigns.${campaign}`] = 1;
-        if (typeof body?.ref === "string" && body.ref) {
-          try {
-            const host = new URL(body.ref).hostname.toLowerCase();
-            if (!SELF_HOSTS.has(host)) {
-              const key = keyify(host);
-              if (key) fields[`referrers.${key}`] = 1;
-            }
-          } catch {
-            /* unparseable referrer — skip */
-          }
+        if (campaign) {
+          fields[`campaigns.${campaign}`] = 1;
         }
+        if (referrer) fields[`referrers.${referrer}`] = 1;
       } else if (t === "boot") {
         fields["boots"] = 1;
       } else if (t === "pageview") {
@@ -146,7 +251,9 @@ export const trackEvent = onRequest(
         fields[`paths.${path}`] = 1;
       }
 
-      if (Object.keys(fields).length > 0) await bumpDaily(fields);
+      if (Object.keys(fields).length > 0) {
+        await bumpTrafficDaily(fields, segments);
+      }
     } catch {
       /* malformed payload — drop silently */
     }

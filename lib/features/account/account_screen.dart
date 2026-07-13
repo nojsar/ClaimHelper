@@ -25,15 +25,24 @@ class AccountScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.all(24),
           children: [
-            if (auth.isAnonymous) _AccountPrompt() else _AccountCard(email: auth.email),
+            if (auth.isAnonymous)
+              _AccountPrompt()
+            else
+              _AccountCard(email: auth.email),
             const SizedBox(height: 20),
             const Text('Saved & recent cases',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
             const SizedBox(height: 12),
             casesAsync.when(
-              loading: () => const Padding(
-                padding: EdgeInsets.all(24),
-                child: Center(child: CircularProgressIndicator()),
+              loading: () => Padding(
+                padding: const EdgeInsets.all(24),
+                child: Center(
+                  child: Semantics(
+                    liveRegion: true,
+                    label: 'Loading your saved cases',
+                    child: const CircularProgressIndicator(),
+                  ),
+                ),
               ),
               error: (e, _) => ErrorRetry(
                 message: 'Could not load your cases.',
@@ -42,7 +51,9 @@ class AccountScreen extends ConsumerWidget {
               data: (cases) => cases.isEmpty
                   ? _EmptyCases()
                   : Column(
-                      children: [for (final c in cases) _CaseTile(appealCase: c)],
+                      children: [
+                        for (final c in cases) _CaseTile(appealCase: c)
+                      ],
                     ),
             ),
           ],
@@ -85,8 +96,9 @@ class _AccountPromptState extends ConsumerState<_AccountPrompt> {
       }
       ref.invalidate(myCasesProvider);
     } catch (_) {
-      setState(() => _error = 'Could not ${_signInMode ? 'sign in' : 'create account'}. '
-          'Check your details and try again.');
+      setState(() =>
+          _error = 'Could not ${_signInMode ? 'sign in' : 'create account'}. '
+              'Check your details and try again.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -101,7 +113,8 @@ class _AccountPromptState extends ConsumerState<_AccountPrompt> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(_signInMode ? 'Sign in' : 'Create an account to save cases',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
             const SizedBox(height: 4),
             const Text(
               'You can browse and generate a preview without an account. Save '
@@ -112,6 +125,7 @@ class _AccountPromptState extends ConsumerState<_AccountPrompt> {
             TextField(
               controller: _email,
               keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.next,
               decoration: const InputDecoration(labelText: 'Email'),
             ),
             const SizedBox(height: 10),
@@ -122,10 +136,20 @@ class _AccountPromptState extends ConsumerState<_AccountPrompt> {
             ),
             if (_error != null) ...[
               const SizedBox(height: 8),
-              Text(_error!, style: const TextStyle(color: AppColors.error)),
+              Semantics(
+                liveRegion: true,
+                label: 'Error: ${_error!}',
+                child: ExcludeSemantics(
+                  child: Text(_error!,
+                      style: const TextStyle(color: AppColors.error)),
+                ),
+              ),
             ],
             const SizedBox(height: 16),
-            Row(
+            Wrap(
+              spacing: 12,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 FilledButton(
                   onPressed: _busy ? null : _submit,
@@ -133,12 +157,10 @@ class _AccountPromptState extends ConsumerState<_AccountPrompt> {
                       ? 'Please wait…'
                       : (_signInMode ? 'Sign in' : 'Create account')),
                 ),
-                const SizedBox(width: 12),
                 TextButton(
                   onPressed: () => setState(() => _signInMode = !_signInMode),
-                  child: Text(_signInMode
-                      ? 'Need an account?'
-                      : 'Already have one?'),
+                  child: Text(
+                      _signInMode ? 'Need an account?' : 'Already have one?'),
                 ),
               ],
             ),
@@ -190,7 +212,9 @@ class _CaseTile extends StatelessWidget {
     return Card(
       child: ListTile(
         leading: Icon(
-          appealCase.paid ? Icons.workspace_premium : Icons.description_outlined,
+          appealCase.paid
+              ? Icons.workspace_premium
+              : Icons.description_outlined,
           color: appealCase.paid ? AppColors.accent : AppColors.primary,
         ),
         title: Text(ex?.deniedItem ?? 'Denial case',
@@ -214,7 +238,8 @@ class _EmptyCases extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 32),
       child: Column(
         children: [
-          const Icon(Icons.folder_open, size: 40, color: AppColors.textSecondary),
+          const Icon(Icons.folder_open,
+              size: 40, color: AppColors.textSecondary),
           const SizedBox(height: 12),
           const Text('No cases yet',
               style: TextStyle(color: AppColors.textSecondary)),

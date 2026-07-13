@@ -29,7 +29,13 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
   final FileDrop _fileDrop = FileDrop();
 
   static const _allowedExt = [
-    'pdf', 'jpg', 'jpeg', 'png', 'heic', 'heif', 'webp'
+    'pdf',
+    'jpg',
+    'jpeg',
+    'png',
+    'heic',
+    'heif',
+    'webp'
   ];
 
   @override
@@ -69,7 +75,8 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
   void _addAll(Iterable<PickedUpload> incoming) {
     setState(() {
       for (final f in incoming) {
-        if (_files.any((e) => e.name == f.name && e.bytes.length == f.bytes.length)) {
+        if (_files
+            .any((e) => e.name == f.name && e.bytes.length == f.bytes.length)) {
           continue;
         }
         _files.add(f);
@@ -80,7 +87,8 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
   void _rejectedSnack() {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Skipped unsupported file. Use PDF, JPG, PNG, or HEIC.')));
+        content:
+            Text('Skipped unsupported file. Use PDF, JPG, PNG, or HEIC.')));
   }
 
   Future<void> _pickFiles() async {
@@ -94,7 +102,8 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
     _addAll([
       for (final f in result.files)
         if (f.bytes != null)
-          PickedUpload(name: f.name, bytes: f.bytes!, mimeType: _mimeFor(f.name)),
+          PickedUpload(
+              name: f.name, bytes: f.bytes!, mimeType: _mimeFor(f.name)),
     ]);
   }
 
@@ -122,7 +131,8 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
     if (shot == null) return;
     final bytes = await shot.readAsBytes();
     _addAll([
-      PickedUpload(name: shot.name, bytes: bytes, mimeType: _mimeFor(shot.name)),
+      PickedUpload(
+          name: shot.name, bytes: bytes, mimeType: _mimeFor(shot.name)),
     ]);
   }
 
@@ -159,7 +169,9 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Add your documents',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800,
+                style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
                     letterSpacing: -0.5)),
             const SizedBox(height: 8),
             const Text(
@@ -171,12 +183,20 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
 
             // Drop zone — click to browse anywhere; on web you can also drag &
             // drop files onto the page (handled natively by FileDrop).
-            MouseRegion(
-              cursor: _busy ? MouseCursor.defer : SystemMouseCursors.click,
-              onEnter: (_) => setState(() => _hovering = true),
-              onExit: (_) => setState(() => _hovering = false),
-              child: GestureDetector(
+            Semantics(
+              button: true,
+              enabled: !_busy,
+              label: _files.isEmpty
+                  ? 'Choose denial documents'
+                  : 'Add more denial documents',
+              hint: 'Accepts PDF, JPG, PNG, or HEIC files',
+              excludeSemantics: true,
+              onTap: _busy ? null : _pickFiles,
+              child: InkWell(
                 onTap: _busy ? null : _pickFiles,
+                onHover: (value) => setState(() => _hovering = value),
+                onFocusChange: (value) => setState(() => _hovering = value),
+                borderRadius: BorderRadius.circular(AppRadii.lg),
                 child: _DropZone(
                   dragging: _dragging,
                   hovering: _hovering,
@@ -189,9 +209,16 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Text('${_files.length} file${_files.length == 1 ? '' : 's'} added',
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w700, fontSize: 14)),
+                  Semantics(
+                    liveRegion: true,
+                    label:
+                        '${_files.length} file${_files.length == 1 ? '' : 's'} added',
+                    excludeSemantics: true,
+                    child: Text(
+                        '${_files.length} file${_files.length == 1 ? '' : 's'} added',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w700, fontSize: 14)),
+                  ),
                   const Spacer(),
                   TextButton.icon(
                     onPressed: _busy ? null : () => setState(_files.clear),
@@ -217,7 +244,8 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
                 OutlinedButton.icon(
                   onPressed: _busy ? null : _pickFiles,
                   icon: const Icon(Icons.attach_file, size: 18),
-                  label: Text(_files.isEmpty ? 'Choose files' : 'Add more files'),
+                  label:
+                      Text(_files.isEmpty ? 'Choose files' : 'Add more files'),
                 ),
                 if (showCamera)
                   OutlinedButton.icon(
@@ -231,9 +259,8 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
             const SizedBox(height: 20),
             _ConsentBox(
               value: _consent,
-              onChanged: _busy
-                  ? null
-                  : (v) => setState(() => _consent = v ?? false),
+              onChanged:
+                  _busy ? null : (v) => setState(() => _consent = v ?? false),
             ),
             const SizedBox(height: 20),
             SizedBox(
@@ -269,17 +296,23 @@ class _DropZone extends StatelessWidget {
   Widget build(BuildContext context) {
     final active = dragging || hovering;
     final browseHint = kIsWeb ? 'or click to browse' : 'or tap to browse';
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 160),
+      duration:
+          reduceMotion ? Duration.zero : const Duration(milliseconds: 160),
       curve: Curves.easeOut,
       width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: dragging ? 52 : 44, horizontal: 20),
+      padding:
+          EdgeInsets.symmetric(vertical: dragging ? 52 : 44, horizontal: 20),
       decoration: BoxDecoration(
         gradient: dragging ? null : AppGradients.heroWash,
         color: dragging ? AppColors.primaryTint : null,
         borderRadius: BorderRadius.circular(AppRadii.lg),
         border: Border.all(
-          color: active ? AppColors.primary : AppColors.primary.withValues(alpha: 0.22),
+          color: active
+              ? AppColors.primary
+              : AppColors.primary.withValues(alpha: 0.22),
           width: dragging ? 2 : 1.4,
         ),
         boxShadow: active ? AppShadows.soft : null,
@@ -288,7 +321,9 @@ class _DropZone extends StatelessWidget {
         children: [
           AnimatedScale(
             scale: dragging ? 1.12 : 1.0,
-            duration: const Duration(milliseconds: 160),
+            duration: reduceMotion
+                ? Duration.zero
+                : const Duration(milliseconds: 160),
             child: Container(
               width: 60,
               height: 60,
@@ -303,8 +338,12 @@ class _DropZone extends StatelessWidget {
                       spreadRadius: -4),
                 ],
               ),
-              child: Icon(dragging ? Icons.file_download_rounded : Icons.cloud_upload_rounded,
-                  size: 30, color: Colors.white),
+              child: Icon(
+                  dragging
+                      ? Icons.file_download_rounded
+                      : Icons.cloud_upload_rounded,
+                  size: 30,
+                  color: Colors.white),
             ),
           ),
           const SizedBox(height: 14),
@@ -318,7 +357,8 @@ class _DropZone extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text('$browseHint · PDF, JPG, PNG, or HEIC',
-              style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+              style: const TextStyle(
+                  fontSize: 13, color: AppColors.textSecondary)),
         ],
       ),
     );
@@ -365,7 +405,8 @@ class _FileRow extends StatelessWidget {
                 Text(file.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 14)),
                 Text('${(file.bytes.length / 1024).toStringAsFixed(0)} KB',
                     style: const TextStyle(
                         fontSize: 12, color: AppColors.textMuted)),
@@ -379,7 +420,7 @@ class _FileRow extends StatelessWidget {
               icon: const Icon(Icons.close_rounded, size: 18),
               color: AppColors.textMuted,
               onPressed: onRemove,
-              tooltip: 'Remove',
+              tooltip: 'Remove ${file.name}',
             ),
         ],
       ),
@@ -394,12 +435,13 @@ class _ConsentBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceAlt,
+    return Material(
+      color: AppColors.surfaceAlt,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadii.md),
-        border: Border.all(color: AppColors.border),
+        side: const BorderSide(color: AppColors.border),
       ),
+      clipBehavior: Clip.antiAlias,
       child: CheckboxListTile(
         value: value,
         onChanged: onChanged,
@@ -415,12 +457,12 @@ class _ConsentBox extends StatelessWidget {
             spacing: 4,
             children: [
               const Text('Details:',
-                  style: TextStyle(
-                      fontSize: 12, color: AppColors.textSecondary)),
+                  style:
+                      TextStyle(fontSize: 12, color: AppColors.textSecondary)),
               _legalLink('Privacy Policy', 'https://getmyyes.com/privacy.html'),
               const Text('·',
-                  style: TextStyle(
-                      fontSize: 12, color: AppColors.textSecondary)),
+                  style:
+                      TextStyle(fontSize: 12, color: AppColors.textSecondary)),
               _legalLink('Terms of Service', 'https://getmyyes.com/terms.html'),
             ],
           ),
@@ -430,14 +472,27 @@ class _ConsentBox extends StatelessWidget {
   }
 
   static Widget _legalLink(String label, String url) {
-    return GestureDetector(
+    return Semantics(
+      link: true,
+      label: label,
+      excludeSemantics: true,
       onTap: () => launchUrl(Uri.parse(url)),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 12,
-          color: AppColors.primaryDark,
-          decoration: TextDecoration.underline,
+      child: InkWell(
+        onTap: () => launchUrl(Uri.parse(url)),
+        borderRadius: BorderRadius.circular(4),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.primaryDark,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ),
         ),
       ),
     );

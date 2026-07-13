@@ -19,7 +19,9 @@ abstract final class AppColors {
 
   // Approval green (success / progress)
   static const accent = Color(0xFF14724F);
-  static const accentBright = Color(0xFF1E9A6B);
+  // Light enough to retain the brighter accent character, but dark enough to
+  // meet WCAG AA for normal text on [accentTint] (4.55:1).
+  static const accentBright = Color(0xFF177852);
   static const accentTint = Color(0xFFE4EDE0);
 
   // Paper & ink neutrals
@@ -28,7 +30,8 @@ abstract final class AppColors {
   static const surfaceAlt = Color(0xFFEAE1CC); // deeper cream
   static const textPrimary = Color(0xFF1C160C); // warm ink
   static const textSecondary = Color(0xFF57503F);
-  static const textMuted = Color(0xFF7A7159);
+  // Meets WCAG AA for normal text on both [background] and [surface].
+  static const textMuted = Color(0xFF746A52);
   static const border = Color(0xFFDCD2BA);
   static const borderStrong = Color(0xFFB9AC8F);
 
@@ -161,6 +164,8 @@ ThemeData buildAppTheme() {
     scaffoldBackgroundColor: AppColors.background,
     textTheme: textTheme,
     splashFactory: InkSparkle.splashFactory,
+    materialTapTargetSize: MaterialTapTargetSize.padded,
+    visualDensity: VisualDensity.standard,
   );
 
   return base.copyWith(
@@ -207,6 +212,7 @@ ThemeData buildAppTheme() {
           letterSpacing: 0.8,
         ),
         elevation: 0,
+        minimumSize: const Size(48, 48),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
@@ -224,12 +230,14 @@ ThemeData buildAppTheme() {
           fontSize: 13.5,
           letterSpacing: 0.8,
         ),
+        minimumSize: const Size(48, 48),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: AppColors.primaryDark,
         textStyle: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+        minimumSize: const Size(48, 48),
       ),
     ),
     chipTheme: ChipThemeData(
@@ -250,8 +258,7 @@ ThemeData buildAppTheme() {
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: AppColors.surface,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       floatingLabelStyle: const TextStyle(color: AppColors.primaryDark),
       labelStyle: const TextStyle(color: AppColors.textSecondary),
       hintStyle: const TextStyle(color: AppColors.textMuted),

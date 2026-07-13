@@ -1240,6 +1240,9 @@
       // through Hosting (instead of cloudfunctions.net) lets the server see
       // the x-country-code header for aggregate per-country counts.
       var TRACK_URL = '/api/track';
+      // Memory-only attribution for this page lifecycle. It is sent only into
+      // aggregate segment counters and is never stored as an individual visit.
+      var INITIAL_REFERRER = document.referrer || '';
       function track(t, path) {
         try {
           if (/^(localhost|127\.|192\.168\.)/.test(location.hostname)) return;
@@ -1250,7 +1253,7 @@
           var payload = JSON.stringify({
             t: t,
             path: p,
-            ref: t === 'visit' ? document.referrer || '' : '',
+            ref: INITIAL_REFERRER,
           });
           if (navigator.sendBeacon) {
             navigator.sendBeacon(TRACK_URL, payload);
@@ -1266,7 +1269,7 @@
       function bootApp(route) {
         if (booting) return;
         booting = true;
-        track('boot');
+        track('boot', route || undefined);
         if (route && route !== '/') location.hash = '#' + route;
         var loader = document.getElementById('app-loader');
         var landing = document.getElementById('landing');

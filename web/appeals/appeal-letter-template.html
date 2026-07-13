@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="index, follow, max-image-preview:large">
-  <title>Free Health Insurance Appeal Letter Template (Copy & Paste, 2026) — GetMyYes</title>
+  <title>Free Health Insurance Appeal Letter Template (Copy &amp; Paste, 2026) — GetMyYes</title>
   <meta name="description" content="Free appeal letter template for health insurance denials — copy, paste, and fill in. Includes line-by-line instructions, an urgent/expedited version, and what to attach.">
   <link rel="canonical" href="https://getmyyes.com/appeals/appeal-letter-template">
   <link rel="icon" type="image/png" href="../favicon.png">
@@ -48,10 +48,11 @@
   </script>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <header class="site">
     <div class="bar">
-      <a class="brand" href="/"><span class="mark">✓</span> GetMyYes</a>
-      <nav>
+      <a class="brand" href="/"><span class="mark" aria-hidden="true">✓</span> GetMyYes</a>
+      <nav aria-label="Primary">
         <a class="navlink" href="/appeals/">Appeal guides</a>
         <a class="navlink" href="/privacy.html">Privacy</a>
         <a class="btn-start" href="/#/upload">Start my appeal — free</a>
@@ -60,7 +61,8 @@
   </header>
 
   <div class="wrap">
-    <nav class="crumbs"><a href="/">getmyyes.com</a> / <a href="/appeals/">appeal guides</a> / appeal letter template</nav>
+    <main id="main-content" tabindex="-1">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="/">getmyyes.com</a> / <a href="/appeals/">appeal guides</a> / <span aria-current="page">appeal letter template</span></nav>
     <article>
       <h1>Free appeal letter template for health insurance denials</h1>
       <p class="updated">UPDATED JULY 2026 · COPY &amp; PASTE FREELY · NOT LEGAL OR MEDICAL ADVICE</p>
@@ -69,7 +71,7 @@
 
       <div class="letterblock">
         <div class="lb-bar"><span class="kicker">Template — internal appeal (any denial reason)</span>
-          <button class="copybtn" onclick="copyTpl('tpl',this)">Copy letter</button></div>
+          <button type="button" class="copybtn" data-copy-target="tpl">Copy letter</button></div>
         <div class="letter" id="tpl">[Your full name]
 [Street address, City, State ZIP]
 [Phone] · [Email]
@@ -123,7 +125,7 @@ Sincerely,
       <p>If your situation meets the plan's urgent-care standard because the ordinary appeal timeline could seriously jeopardize life, health, or the ability to regain maximum function, use an expedited opening. Many plans subject to federal claims rules use a deadline of no more than 72 hours, but plan and program rules differ — confirm the timeframe in your notice.</p>
       <div class="letterblock">
         <div class="lb-bar"><span class="kicker">Expedited appeal opening</span>
-          <button class="copybtn" onclick="copyTpl('tpl2',this)">Copy paragraph</button></div>
+          <button type="button" class="copybtn" data-copy-target="tpl2">Copy paragraph</button></div>
         <div class="letter" id="tpl2">I am requesting an EXPEDITED APPEAL of the denial of [service/medication] issued on [date]. My treating physician has determined that the standard appeal timeframe would seriously jeopardize my [life / health / ability to regain maximum function] because [brief clinical reason]. Please apply the expedited timeframe stated in my plan and applicable rules. My physician's supporting statement is enclosed.</div>
       </div>
 
@@ -162,16 +164,15 @@ Sincerely,
         </ul>
       </div>
     </article>
+    <p id="copy-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+    </main>
 
     <footer class="site">
-      <p><a href="/">GetMyYes</a> · <a href="/appeals/">Appeal guides</a> · <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="mailto:support@getmyyes.com">support@getmyyes.com</a></p>
+      <p><a href="/">GetMyYes</a> · <a href="/appeals/">Appeal guides</a> · <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="/accessibility">Accessibility</a> · <a href="mailto:support@getmyyes.com">support@getmyyes.com</a></p>
       <p>© 2026 GetMyYes · U.S. plans only at launch. General information, not medical, legal, or insurance advice. Deadlines vary by plan and state — confirm against your denial letter and plan documents.</p>
     </footer>
   </div>
 
-  <script>
-  function copyTpl(id,btn){var t=document.getElementById(id).innerText;
-  navigator.clipboard.writeText(t).then(function(){btn.textContent='Copied ✓';setTimeout(function(){btn.textContent='Copy letter';},2000);});}
-  </script>
+  <script src="guide.js"></script>
 </body>
 </html>

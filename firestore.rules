@@ -49,5 +49,12 @@ service cloud.firestore {
       allow read: if signedIn() && request.auth.uid == '6ZETq21uHIartXQlCCrZnZiQhb83';
       allow write: if false;
     }
+
+    match /analytics_segment_daily/{segment} {
+      // Aggregate single-dimension traffic slices, written only by Cloud
+      // Functions (Admin SDK). They contain no visitor/session identifiers.
+      allow read: if signedIn() && request.auth.uid == '6ZETq21uHIartXQlCCrZnZiQhb83';
+      allow write: if false;
+    }
   }
 }

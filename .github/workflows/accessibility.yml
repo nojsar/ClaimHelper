@@ -1,0 +1,50 @@
+name: Accessibility checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: accessibility-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  wcag-regressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install Flutter packages
+        run: flutter pub get
+      - name: Analyze Flutter source
+        run: flutter analyze
+      - name: Run Flutter tests
+        run: flutter test
+      - name: Build and test analytics functions
+        run: |
+          npm ci --prefix functions
+          npm --prefix functions run build
+          npm --prefix functions test
+      - name: Validate source accessibility
+        run: |
+          node tool/marketing_build.mjs
+          node tool/accessibility_check.mjs web
+          npx --yes html-validate@10.10.0 "web/**/*.html"
+      - name: Build and validate deploy artifact
+        run: |
+          flutter build web
+          node tool/marketing_build.mjs --stage-build
+          node tool/marketing_build.mjs --verify-build
+          node tool/accessibility_check.mjs build/web

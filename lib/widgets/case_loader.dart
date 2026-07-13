@@ -37,6 +37,7 @@ class _CaseLoaderState extends State<CaseLoader>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   int _messageIndex = 0;
+  bool _reduceMotion = false;
 
   @override
   void initState() {
@@ -45,12 +46,30 @@ class _CaseLoaderState extends State<CaseLoader>
         AnimationController(vsync: this, duration: const Duration(seconds: 3))
           ..addStatusListener((status) {
             if (status == AnimationStatus.completed) {
-              setState(() => _messageIndex =
-                  (_messageIndex + 1) % widget.messages.length);
+              if (_reduceMotion || widget.messages.isEmpty) return;
+              setState(() =>
+                  _messageIndex = (_messageIndex + 1) % widget.messages.length);
               _controller.forward(from: 0);
             }
           })
           ..forward();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    if (reduceMotion == _reduceMotion) return;
+    _reduceMotion = reduceMotion;
+    if (_reduceMotion) {
+      _controller
+        ..stop()
+        ..value = 0;
+      _messageIndex = 0;
+    } else if (!_controller.isAnimating) {
+      _controller.forward(from: 0);
+    }
   }
 
   @override
@@ -61,44 +80,61 @@ class _CaseLoaderState extends State<CaseLoader>
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        RepaintBoundary(
-          child: CustomPaint(
-            size: Size(widget.size, widget.size),
-            painter: _DeskPainter(
-              animation: _controller,
-              progress: widget.progress,
+    final message = widget.messages.isEmpty
+        ? 'Processing your documents'
+        : widget.messages[_messageIndex];
+    final progress = widget.progress?.clamp(0.0, 1.0);
+    final semanticsValue = progress == null
+        ? message
+        : '$message ${(progress * 100).round()} percent';
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      label: 'Document processing status',
+      value: semanticsValue,
+      child: ExcludeSemantics(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RepaintBoundary(
+              child: CustomPaint(
+                size: Size(widget.size, widget.size),
+                painter: _DeskPainter(
+                  animation: _controller,
+                  progress: widget.progress,
+                ),
+              ),
             ),
-          ),
+            const SizedBox(height: 18),
+            AnimatedSwitcher(
+              duration: _reduceMotion
+                  ? Duration.zero
+                  : const Duration(milliseconds: 350),
+              transitionBuilder: (child, anim) => FadeTransition(
+                opacity: anim,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                          begin: const Offset(0, 0.35), end: Offset.zero)
+                      .animate(anim),
+                  child: child,
+                ),
+              ),
+              child: Text(
+                message,
+                key: ValueKey(_messageIndex),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontFamily: AppFonts.mono,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.8,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 18),
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 350),
-          transitionBuilder: (child, anim) => FadeTransition(
-            opacity: anim,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                      begin: const Offset(0, 0.35), end: Offset.zero)
-                  .animate(anim),
-              child: child,
-            ),
-          ),
-          child: Text(
-            widget.messages[_messageIndex],
-            key: ValueKey(_messageIndex),
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontFamily: AppFonts.mono,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.8,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -139,7 +175,9 @@ class _DeskPainter extends CustomPainter {
 
     canvas.restore();
 
-    if (progress != null) _paintProgressRule(canvas, size, progress!.clamp(0, 1));
+    if (progress != null) {
+      _paintProgressRule(canvas, size, progress!.clamp(0, 1));
+    }
   }
 
   void _paintBackSheets(Canvas canvas, Offset center, double w, double h) {
@@ -152,7 +190,8 @@ class _DeskPainter extends CustomPainter {
       canvas.save();
       canvas.translate(center.dx + dx, center.dy + 5);
       canvas.rotate(angle);
-      final r = Rect.fromCenter(center: Offset.zero, width: w * 0.62, height: h * 0.78);
+      final r = Rect.fromCenter(
+          center: Offset.zero, width: w * 0.62, height: h * 0.78);
       canvas.drawRect(r, paint);
       canvas.drawRect(r, border);
       canvas.restore();
@@ -162,8 +201,7 @@ class _DeskPainter extends CustomPainter {
   Rect _paintSheet(Canvas canvas, Offset center, double w, double h) {
     final rect = Rect.fromCenter(
         center: center.translate(0, 2), width: w * 0.64, height: h * 0.80);
-    canvas.drawRect(
-        rect.shift(const Offset(3, 4)),
+    canvas.drawRect(rect.shift(const Offset(3, 4)),
         Paint()..color = AppColors.ink.withValues(alpha: 0.10));
     canvas.drawRect(rect, Paint()..color = AppColors.surface);
     canvas.drawRect(
@@ -218,7 +256,8 @@ class _DeskPainter extends CustomPainter {
     // Blinking caret at the write head (or end of text while waiting).
     final blink = (t * 6) % 1 < 0.55;
     if (blink) {
-      final c = caret ?? Offset(left + usable * 0.34 + usable * 0.30, y - lineGap);
+      final c =
+          caret ?? Offset(left + usable * 0.34 + usable * 0.30, y - lineGap);
       canvas.drawRect(
           Rect.fromCenter(center: c.translate(4, 0), width: 2.4, height: 11),
           Paint()..color = AppColors.primary);
@@ -227,7 +266,8 @@ class _DeskPainter extends CustomPainter {
 
   void _paintString(Canvas canvas, Rect sheet, double t) {
     // Evidence string draws itself pin-to-pin across the sheet's top corner.
-    final drawT = Curves.easeInOut.transform(((t - 0.1) / 0.55).clamp(0.0, 1.0));
+    final drawT =
+        Curves.easeInOut.transform(((t - 0.1) / 0.55).clamp(0.0, 1.0));
     final a = Offset(sheet.left - 14, sheet.top + 8);
     final b = Offset(sheet.right + 12, sheet.top + sheet.height * 0.32);
     final path = Path()
@@ -264,8 +304,8 @@ class _DeskPainter extends CustomPainter {
     final impact = Curves.easeOutBack.transform(slamT);
     final scale = 1.9 - 0.9 * impact;
     final opacity = (slamT * 2).clamp(0.0, 1.0);
-    final centerStamp =
-        Offset(sheet.right - sheet.width * 0.28, sheet.bottom - sheet.height * 0.17);
+    final centerStamp = Offset(
+        sheet.right - sheet.width * 0.28, sheet.bottom - sheet.height * 0.17);
 
     // Ink ripple + splatter appear only after contact.
     final afterT = ((t - 0.86) / 0.14).clamp(0.0, 1.0);
@@ -285,8 +325,8 @@ class _DeskPainter extends CustomPainter {
             centerStamp + Offset(math.cos(angle), math.sin(angle)) * dist,
             (1.6 + rng.nextDouble()) * (1 - afterT * 0.6),
             Paint()
-              ..color = AppColors.primary
-                  .withValues(alpha: 0.55 * (1 - afterT)));
+              ..color =
+                  AppColors.primary.withValues(alpha: 0.55 * (1 - afterT)));
       }
     }
 
@@ -346,6 +386,5 @@ class _DeskPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _DeskPainter old) =>
-      old.progress != progress;
+  bool shouldRepaint(covariant _DeskPainter old) => old.progress != progress;
 }

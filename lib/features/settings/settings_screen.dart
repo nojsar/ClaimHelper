@@ -204,7 +204,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             decoration: BoxDecoration(
               color: AppColors.warningTint,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.warning.withValues(alpha: 0.35)),
+              border:
+                  Border.all(color: AppColors.warning.withValues(alpha: 0.35)),
             ),
             child: const Text(AppCopy.disclaimer,
                 style: TextStyle(fontSize: 13, color: AppColors.warning)),
@@ -220,16 +221,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   leading: const Icon(Icons.description_outlined),
                   title: const Text('Terms of Service'),
                   trailing: const Icon(Icons.open_in_new, size: 18),
-                  onTap: () => launchUrl(
-                      Uri.parse('https://getmyyes.com/terms.html')),
+                  onTap: () =>
+                      launchUrl(Uri.parse('https://getmyyes.com/terms.html')),
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.privacy_tip_outlined),
                   title: const Text('Privacy Policy'),
                   trailing: const Icon(Icons.open_in_new, size: 18),
+                  onTap: () =>
+                      launchUrl(Uri.parse('https://getmyyes.com/privacy.html')),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.accessibility_new_outlined),
+                  title: const Text('Accessibility statement'),
+                  trailing: const Icon(Icons.open_in_new, size: 18),
                   onTap: () => launchUrl(
-                      Uri.parse('https://getmyyes.com/privacy.html')),
+                      Uri.parse('https://getmyyes.com/accessibility')),
                 ),
                 const Divider(height: 1),
                 ListTile(

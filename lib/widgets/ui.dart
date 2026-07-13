@@ -24,8 +24,7 @@ class BrandMark extends StatelessWidget {
           ),
         ],
       ),
-      child: Icon(Icons.check_rounded,
-          color: Colors.white, size: size * 0.62),
+      child: Icon(Icons.check_rounded, color: Colors.white, size: size * 0.62),
     );
   }
 }
@@ -58,7 +57,9 @@ class Wordmark extends StatelessWidget {
 /// Text painted with a gradient — for highlighting a headline keyword.
 class GradientText extends StatelessWidget {
   const GradientText(this.text,
-      {super.key, required this.style, this.gradient = AppGradients.accentText});
+      {super.key,
+      required this.style,
+      this.gradient = AppGradients.accentText});
   final String text;
   final TextStyle style;
   final Gradient gradient;
@@ -91,8 +92,8 @@ class PillBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(
-          horizontal: icon != null ? 12 : 14, vertical: 7),
+      padding:
+          EdgeInsets.symmetric(horizontal: icon != null ? 12 : 14, vertical: 7),
       decoration: BoxDecoration(
         color: background ?? color.withValues(alpha: 0.09),
         borderRadius: BorderRadius.circular(999),
@@ -145,15 +146,18 @@ class SectionHeader extends StatelessWidget {
               color: AppColors.primary,
             )),
         const SizedBox(height: 10),
-        Text(title,
-            textAlign: center ? TextAlign.center : TextAlign.start,
-            style: const TextStyle(
-              fontSize: 30,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.6,
-              height: 1.15,
-              color: AppColors.textPrimary,
-            )),
+        Semantics(
+          header: true,
+          child: Text(title,
+              textAlign: center ? TextAlign.center : TextAlign.start,
+              style: const TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.6,
+                height: 1.15,
+                color: AppColors.textPrimary,
+              )),
+        ),
         if (subtitle != null) ...[
           const SizedBox(height: 12),
           ConstrainedBox(
@@ -193,32 +197,54 @@ class HoverCard extends StatefulWidget {
 
 class _HoverCardState extends State<HoverCard> {
   bool _hover = false;
+  bool _focused = false;
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: widget.onTap != null
-          ? SystemMouseCursors.click
-          : MouseCursor.defer,
-      onEnter: (_) => setState(() => _hover = true),
-      onExit: (_) => setState(() => _hover = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-          transform: Matrix4.translationValues(0, _hover ? -4 : 0, 0),
-          padding: widget.padding,
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(widget.radius),
-            border: Border.all(
-              color: _hover ? AppColors.primary.withValues(alpha: 0.35)
-                  : AppColors.border,
+    final active = _hover || _focused;
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    return FocusableActionDetector(
+      enabled: widget.onTap != null,
+      mouseCursor:
+          widget.onTap != null ? SystemMouseCursors.click : MouseCursor.defer,
+      onShowHoverHighlight: (value) => setState(() => _hover = value),
+      onShowFocusHighlight: (value) => setState(() => _focused = value),
+      actions: widget.onTap == null
+          ? const <Type, Action<Intent>>{}
+          : <Type, Action<Intent>>{
+              ActivateIntent: CallbackAction<ActivateIntent>(
+                onInvoke: (_) {
+                  widget.onTap!();
+                  return null;
+                },
+              ),
+            },
+      child: Semantics(
+        button: widget.onTap != null,
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: reduceMotion
+                ? Duration.zero
+                : const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+            transform: Matrix4.translationValues(
+                0, active && !reduceMotion ? -4 : 0, 0),
+            padding: widget.padding,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(widget.radius),
+              border: Border.all(
+                color: active
+                    ? AppColors.primary.withValues(alpha: 0.75)
+                    : AppColors.border,
+                width: _focused ? 2 : 1,
+              ),
+              boxShadow: active ? AppShadows.lifted : widget.baseShadow,
             ),
-            boxShadow: _hover ? AppShadows.lifted : widget.baseShadow,
+            child: widget.child,
           ),
-          child: widget.child,
         ),
       ),
     );

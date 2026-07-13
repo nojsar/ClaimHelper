@@ -13,7 +13,7 @@
     "serve": "npm run build && firebase emulators:start --only functions",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "test": "node --test lib/test/"
+    "test": "node --test \"lib/test/*.test.js\""
   },
   "dependencies": {
     "firebase-admin": "^13.0.0",

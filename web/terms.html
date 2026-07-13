@@ -7,14 +7,18 @@
   <title>Terms of Service — GetMyYes</title>
   <meta name="description" content="Terms of Service for GetMyYes (getmyyes.com), the AI-assisted health-insurance appeal drafting tool.">
   <link rel="canonical" href="https://getmyyes.com/terms.html">
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" href="favicon.png">
   <link rel="stylesheet" href="fonts.css">
   <style>
     :root { --bg:#070B14; --ink:#EDF2FB; --dim:#93A2BD; --blue:#60A5FA; --mint:#5EEAD4; --line:rgba(148,163,184,.14); }
     * { box-sizing:border-box; margin:0; padding:0; }
+    html { scroll-behavior:smooth; }
     body { background:var(--bg); color:var(--ink); font-family:"Inter",-apple-system,sans-serif; line-height:1.7; -webkit-font-smoothing:antialiased; }
     .wrap { max-width:760px; margin:0 auto; padding:48px 24px 80px; }
     a { color:var(--blue); }
+    a:focus-visible { outline:3px solid var(--mint); outline-offset:4px; border-radius:3px; }
+    .skip-link { position:fixed; top:12px; left:12px; z-index:100; padding:12px 16px; background:var(--ink); color:var(--bg); font-weight:700; transform:translateY(-160%); }
+    .skip-link:focus { transform:translateY(0); }
     .brand { display:flex; align-items:center; gap:10px; font-weight:800; font-size:18px; margin-bottom:40px; text-decoration:none; color:var(--ink); }
     .brand .mark { width:32px; height:32px; border-radius:9px; display:grid; place-items:center; background:linear-gradient(135deg,#2563EB,#3B82F6); color:#fff; }
     h1 { font-size:34px; letter-spacing:-1px; margin-bottom:6px; }
@@ -23,12 +27,20 @@
     p, li { color:#C7D2E5; font-size:15px; margin-bottom:10px; }
     ul { padding-left:22px; margin-bottom:12px; }
     .card { border:1px solid var(--line); border-radius:14px; padding:18px 20px; background:rgba(16,26,48,.55); margin:16px 0; }
+    main:focus { outline:none; }
     footer { border-top:1px solid var(--line); margin-top:56px; padding-top:22px; color:var(--dim); font-size:13px; }
+    @media (prefers-reduced-motion:reduce) {
+      html { scroll-behavior:auto; }
+      *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+    }
+    @media (forced-colors:active) { .brand .mark, .card { border:1px solid CanvasText; } }
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <div class="wrap">
-    <a class="brand" href="/"><span class="mark">✓</span> GetMyYes</a>
+    <header><a class="brand" href="/" aria-label="GetMyYes home"><span class="mark" aria-hidden="true">✓</span> GetMyYes</a></header>
+    <main id="main-content" tabindex="-1">
     <h1>Terms of Service</h1>
     <p class="updated">Last updated: July 11, 2026</p>
 
@@ -46,7 +58,7 @@
     <h2>3. Your account</h2>
     <p>You can explore the Service as a guest; purchases and saved cases require an account. You are responsible for keeping your credentials secure and for activity under your account. Guest (unsaved) uploads are automatically deleted after 24 hours.</p>
 
-    <h2>4. Purchases, pricing & refunds</h2>
+    <h2>4. Purchases, pricing &amp; refunds</h2>
     <ul>
       <li>The free preview shows your denial type, estimated amount at stake, and likely appeal path at no cost.</li>
       <li>The <strong>Full Appeal Packet is a one-time charge of $39 per case</strong> (no subscription). Payment is processed by Stripe; we never see or store your card number.</li>
@@ -58,7 +70,7 @@
     <h2>5. Acceptable use</h2>
     <p>You agree not to: upload documents you have no right to use; use the Service to commit insurance fraud or to misrepresent facts to an insurer; probe, disrupt, or reverse-engineer the Service; use the Service to build a competing dataset; or upload malicious content. We may suspend accounts that violate these Terms.</p>
 
-    <h2>6. Your content & our license</h2>
+    <h2>6. Your content &amp; our license</h2>
     <p>You own the documents you upload and the information in them. You grant us a limited license to process them solely to provide the Service (extraction, drafting, storage, export). Generated documents are yours to use for your own appeal. We do not use your documents or generated packets to train AI models.</p>
 
     <h2>7. Privacy</h2>
@@ -79,10 +91,12 @@
     <h2>12. Changes</h2>
     <p>We may update these Terms as the Service evolves. Material changes will be posted on this page with a new "Last updated" date; continued use after changes means you accept them.</p>
 
-    <h2>13. Governing law & contact</h2>
+    <h2>13. Governing law &amp; contact</h2>
     <p>These Terms are governed by the laws applicable at the operator's principal place of business, without prejudice to any mandatory consumer protections of the place where you live. Questions or disputes: <a href="mailto:support@getmyyes.com">support@getmyyes.com</a> — we'll try to resolve issues informally first.</p>
 
-    <footer>© 2026 GetMyYes · getmyyes.com · <a href="privacy.html">Privacy Policy</a> · <a href="/">Home</a></footer>
+    </main>
+
+    <footer>© 2026 GetMyYes · getmyyes.com · <a href="privacy.html">Privacy Policy</a> · <a href="accessibility.html">Accessibility</a> · <a href="/">Home</a></footer>
   </div>
 </body>
 </html>

@@ -52,8 +52,7 @@ class _Section extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final minH =
-        fillViewport ? MediaQuery.sizeOf(context).height - 66 : 0.0;
+    final minH = fillViewport ? MediaQuery.sizeOf(context).height - 66 : 0.0;
     return Container(
       width: double.infinity,
       constraints: BoxConstraints(minHeight: minH),
@@ -88,29 +87,32 @@ class _Hero extends StatelessWidget {
           icon: Icons.bolt_rounded,
         ),
         const SizedBox(height: 22),
-        Text.rich(
-          TextSpan(
-            style: TextStyle(
-              fontSize: wide ? 52 : 38,
-              fontWeight: FontWeight.w800,
-              height: 1.08,
-              letterSpacing: -1.4,
-              color: AppColors.textPrimary,
-            ),
-            children: [
-              const TextSpan(text: 'Turn a denial letter into a '),
-              TextSpan(
-                text: 'ready-to-send appeal',
-                style: TextStyle(
-                  foreground: Paint()
-                    ..shader = AppGradients.accentText.createShader(
-                        const Rect.fromLTWH(0, 0, 420, 60)),
-                ),
+        Semantics(
+          header: true,
+          child: Text.rich(
+            TextSpan(
+              style: TextStyle(
+                fontSize: wide ? 52 : 38,
+                fontWeight: FontWeight.w800,
+                height: 1.08,
+                letterSpacing: -1.4,
+                color: AppColors.textPrimary,
               ),
-              const TextSpan(text: ' in 15 minutes.'),
-            ],
+              children: [
+                const TextSpan(text: 'Turn a denial letter into a '),
+                TextSpan(
+                  text: 'ready-to-send appeal',
+                  style: TextStyle(
+                    foreground: Paint()
+                      ..shader = AppGradients.accentText
+                          .createShader(const Rect.fromLTWH(0, 0, 420, 60)),
+                  ),
+                ),
+                const TextSpan(text: ' in 15 minutes.'),
+              ],
+            ),
+            textAlign: wide ? TextAlign.start : TextAlign.center,
           ),
-          textAlign: wide ? TextAlign.start : TextAlign.center,
         ),
         const SizedBox(height: 20),
         ConstrainedBox(
@@ -146,9 +148,13 @@ class _Hero extends StatelessWidget {
           runSpacing: 10,
           alignment: wide ? WrapAlignment.start : WrapAlignment.center,
           children: const [
-            _TrustPoint(icon: Icons.lock_outline_rounded, text: 'Private & encrypted'),
-            _TrustPoint(icon: Icons.schedule_rounded, text: 'Auto-deletes in 24h'),
-            _TrustPoint(icon: Icons.description_outlined, text: 'You review before sending'),
+            _TrustPoint(
+                icon: Icons.lock_outline_rounded, text: 'Private & encrypted'),
+            _TrustPoint(
+                icon: Icons.schedule_rounded, text: 'Auto-deletes in 24h'),
+            _TrustPoint(
+                icon: Icons.description_outlined,
+                text: 'You review before sending'),
           ],
         ),
       ],
@@ -364,8 +370,7 @@ class _StatChip extends StatelessWidget {
                 fontSize: 14.5)),
         const SizedBox(width: 6),
         Text(label,
-            style: const TextStyle(
-                color: AppColors.textMuted, fontSize: 14.5)),
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 14.5)),
       ],
     );
   }
@@ -482,18 +487,36 @@ class _WhatsIncluded extends StatelessWidget {
   const _WhatsIncluded();
 
   static const _items = [
-    (Icons.article_outlined, 'Plain-English summary',
-        'Understand exactly why you were denied — in words that make sense.'),
-    (Icons.draw_outlined, 'Appeal letter draft',
-        'A careful, professional letter citing your plan\'s own denial reason.'),
-    (Icons.checklist_rounded, 'Evidence checklist',
-        'Know precisely what to attach and why each item strengthens your case.'),
-    (Icons.medical_information_outlined, 'Doctor letter request',
-        'A ready draft to hand your prescriber for a supporting statement.'),
-    (Icons.call_outlined, 'Insurer call script',
-        'Word-for-word talking points so the phone call is stress-free.'),
-    (Icons.event_available_outlined, 'Deadline tracker',
-        'Every date and task laid out so you never miss your appeal window.'),
+    (
+      Icons.article_outlined,
+      'Plain-English summary',
+      'Understand exactly why you were denied — in words that make sense.'
+    ),
+    (
+      Icons.draw_outlined,
+      'Appeal letter draft',
+      'A careful, professional letter citing your plan\'s own denial reason.'
+    ),
+    (
+      Icons.checklist_rounded,
+      'Evidence checklist',
+      'Know precisely what to attach and why each item strengthens your case.'
+    ),
+    (
+      Icons.medical_information_outlined,
+      'Doctor letter request',
+      'A ready draft to hand your prescriber for a supporting statement.'
+    ),
+    (
+      Icons.call_outlined,
+      'Insurer call script',
+      'Word-for-word talking points so the phone call is stress-free.'
+    ),
+    (
+      Icons.event_available_outlined,
+      'Deadline tracker',
+      'Every date and task laid out so you never miss your appeal window.'
+    ),
   ];
 
   @override
@@ -533,8 +556,7 @@ class _WhatsIncluded extends StatelessWidget {
                           const SizedBox(height: 16),
                           Text(it.$2,
                               style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700)),
+                                  fontSize: 16, fontWeight: FontWeight.w700)),
                           const SizedBox(height: 7),
                           Text(it.$3,
                               style: const TextStyle(
@@ -588,7 +610,8 @@ class _TrustBand extends StatelessWidget {
     final heading = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const PillBadge(label: 'Privacy first', icon: Icons.lock_outline_rounded),
+        const PillBadge(
+            label: 'Privacy first', icon: Icons.lock_outline_rounded),
         const SizedBox(height: 18),
         const Text('Your health data stays yours',
             style: TextStyle(
@@ -768,16 +791,17 @@ class _PriceCard extends StatelessWidget {
                       fontSize: 42,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -1.5,
-                      color: highlighted ? Colors.white : AppColors.textPrimary)),
+                      color:
+                          highlighted ? Colors.white : AppColors.textPrimary)),
               const SizedBox(width: 8),
               Flexible(
                 child: Text(blurb,
-                  maxLines: 2,
-                  style: TextStyle(
-                      fontSize: 13.5,
-                      color: highlighted
-                          ? Colors.white.withValues(alpha: 0.85)
-                          : AppColors.textMuted)),
+                    maxLines: 2,
+                    style: TextStyle(
+                        fontSize: 13.5,
+                        color: highlighted
+                            ? Colors.white.withValues(alpha: 0.85)
+                            : AppColors.textMuted)),
               ),
             ],
           ),
@@ -918,7 +942,8 @@ class _Footer extends StatelessWidget {
                   runSpacing: 8,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Text('© ${DateTime.now().year} GetMyYes · U.S. only at launch',
+                    Text(
+                        '© ${DateTime.now().year} GetMyYes · U.S. only at launch',
                         style: TextStyle(
                             fontSize: 12.5,
                             color: Colors.white.withValues(alpha: 0.55))),

@@ -48,10 +48,11 @@
   </script>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <header class="site">
     <div class="bar">
-      <a class="brand" href="/"><span class="mark">✓</span> GetMyYes</a>
-      <nav>
+      <a class="brand" href="/"><span class="mark" aria-hidden="true">✓</span> GetMyYes</a>
+      <nav aria-label="Primary">
         <a class="navlink" href="/appeals/">Appeal guides</a>
         <a class="navlink" href="/privacy.html">Privacy</a>
         <a class="btn-start" href="/#/upload">Start my appeal — free</a>
@@ -60,7 +61,8 @@
   </header>
 
   <div class="wrap">
-    <nav class="crumbs"><a href="/">getmyyes.com</a> / <a href="/appeals/">appeal guides</a> / out-of-network denial</nav>
+    <main id="main-content" tabindex="-1">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="/">getmyyes.com</a> / <a href="/appeals/">appeal guides</a> / <span aria-current="page">out-of-network denial</span></nav>
     <article>
       <h1>Out-of-network denial: check the rule before paying the bill</h1>
       <p class="updated">UPDATED JULY 2026 · U.S. COMMERCIAL PLANS · NOT LEGAL OR MEDICAL ADVICE</p>
@@ -111,7 +113,7 @@
       <h2>The appeal letter</h2>
       <div class="letterblock">
         <div class="lb-bar"><span class="kicker">Free template — out-of-network claim appeal</span>
-          <button class="copybtn" onclick="copyTpl('tpl',this)">Copy letter</button></div>
+          <button type="button" class="copybtn" data-copy-target="tpl">Copy letter</button></div>
         <div class="letter" id="tpl">[Your name] · Member ID: [ID]
 Claim / Reference #: [number] · Date of service: [date]
 
@@ -174,16 +176,15 @@ Sincerely,
         </ul>
       </div>
     </article>
+    <p id="copy-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+    </main>
 
     <footer class="site">
-      <p><a href="/">GetMyYes</a> · <a href="/appeals/">Appeal guides</a> · <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="mailto:support@getmyyes.com">support@getmyyes.com</a></p>
+      <p><a href="/">GetMyYes</a> · <a href="/appeals/">Appeal guides</a> · <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="/accessibility">Accessibility</a> · <a href="mailto:support@getmyyes.com">support@getmyyes.com</a></p>
       <p>© 2026 GetMyYes · U.S. commercial plans only. GetMyYes is a document drafting assistant. This guide is general information, not medical, legal, or insurance advice; it does not guarantee any outcome. Coverage, protections, and deadlines vary by plan, service, and state — always confirm against your denial notice and plan documents.</p>
     </footer>
   </div>
 
-  <script>
-  function copyTpl(id,btn){var t=document.getElementById(id).innerText;
-  navigator.clipboard.writeText(t).then(function(){btn.textContent='Copied ✓';setTimeout(function(){btn.textContent='Copy letter';},2000);});}
-  </script>
+  <script src="guide.js"></script>
 </body>
 </html>

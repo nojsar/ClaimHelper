@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="index, follow, max-image-preview:large">
-  <title>External Review of a Health Insurance Denial: Steps & Deadlines — GetMyYes</title>
+  <title>External Review of a Health Insurance Denial: Steps &amp; Deadlines — GetMyYes</title>
   <meta name="description" content="How independent external review works after a health insurance denial: eligibility, the four-month filing window, 45-day and 72-hour timelines, and a free request template.">
   <link rel="canonical" href="https://getmyyes.com/appeals/external-review">
   <link rel="icon" type="image/png" href="../favicon.png">
@@ -49,10 +49,11 @@
   </script>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <header class="site">
     <div class="bar">
-      <a class="brand" href="/"><span class="mark">✓</span> GetMyYes</a>
-      <nav>
+      <a class="brand" href="/"><span class="mark" aria-hidden="true">✓</span> GetMyYes</a>
+      <nav aria-label="Primary">
         <a class="navlink" href="/appeals/">Appeal guides</a>
         <a class="navlink" href="/privacy.html">Privacy</a>
         <a class="btn-start" href="/#/upload">Start my appeal — free</a>
@@ -61,7 +62,8 @@
   </header>
 
   <div class="wrap">
-    <nav class="crumbs"><a href="/">getmyyes.com</a> / <a href="/appeals/">appeal guides</a> / external review</nav>
+    <main id="main-content" tabindex="-1">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="/">getmyyes.com</a> / <a href="/appeals/">appeal guides</a> / <span aria-current="page">external review</span></nav>
     <article>
       <h1>External review: an independent look at the denial</h1>
       <p class="updated">UPDATED JULY 2026 · U.S. COMMERCIAL PLANS · NOT LEGAL OR MEDICAL ADVICE</p>
@@ -121,7 +123,7 @@
       <h2>External review request template</h2>
       <div class="letterblock">
         <div class="lb-bar"><span class="kicker">Free template — standard or expedited external review</span>
-          <button class="copybtn" onclick="copyTpl('tpl',this)">Copy request</button></div>
+          <button type="button" class="copybtn" data-copy-target="tpl">Copy request</button></div>
         <div class="letter" id="tpl">[Your name] · Member ID: [ID]
 Claim / Authorization #: [number] · [Date]
 
@@ -187,16 +189,15 @@ Sincerely,
         </ul>
       </div>
     </article>
+    <p id="copy-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+    </main>
 
     <footer class="site">
-      <p><a href="/">GetMyYes</a> · <a href="/appeals/">Appeal guides</a> · <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="mailto:support@getmyyes.com">support@getmyyes.com</a></p>
+      <p><a href="/">GetMyYes</a> · <a href="/appeals/">Appeal guides</a> · <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="/accessibility">Accessibility</a> · <a href="mailto:support@getmyyes.com">support@getmyyes.com</a></p>
       <p>© 2026 GetMyYes · U.S. commercial plans only. GetMyYes is a document drafting assistant. This guide is general information, not medical, legal, or insurance advice; it does not guarantee any outcome. Eligibility, filing routes, and deadlines vary by plan and state and can change — always confirm against the latest official notice, your final denial, and your plan documents.</p>
     </footer>
   </div>
 
-  <script>
-  function copyTpl(id,btn){var t=document.getElementById(id).innerText;
-  navigator.clipboard.writeText(t).then(function(){btn.textContent='Copied ✓';setTimeout(function(){btn.textContent='Copy request';},2000);});}
-  </script>
+  <script src="guide.js"></script>
 </body>
 </html>

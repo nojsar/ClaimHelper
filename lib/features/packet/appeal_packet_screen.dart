@@ -25,9 +25,15 @@ class AppealPacketScreen extends ConsumerWidget {
     final caseAsync = ref.watch(caseStreamProvider(caseId));
 
     return caseAsync.when(
-      loading: () => const AppScaffold(
+      loading: () => AppScaffold(
         title: 'Appeal packet',
-        child: Center(child: CircularProgressIndicator()),
+        child: Center(
+          child: Semantics(
+            liveRegion: true,
+            label: 'Loading your appeal packet',
+            child: CircularProgressIndicator(),
+          ),
+        ),
       ),
       error: (e, _) => AppScaffold(
         title: 'Appeal packet',
@@ -95,10 +101,14 @@ class _GeneratePromptState extends ConsumerState<_GeneratePrompt> {
       title: 'Appeal packet',
       child: Center(
         child: _busy
-            ? const Column(
+            ? Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircularProgressIndicator(),
+                  Semantics(
+                    liveRegion: true,
+                    label: 'Drafting your appeal packet',
+                    child: CircularProgressIndicator(),
+                  ),
                   SizedBox(height: 16),
                   Text('Drafting your appeal packet…'),
                 ],
@@ -107,8 +117,14 @@ class _GeneratePromptState extends ConsumerState<_GeneratePrompt> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (_error != null) ...[
-                    Text(_error!,
-                        style: const TextStyle(color: AppColors.error)),
+                    Semantics(
+                      liveRegion: true,
+                      label: 'Error: ${_error!}',
+                      child: ExcludeSemantics(
+                        child: Text(_error!,
+                            style: const TextStyle(color: AppColors.error)),
+                      ),
+                    ),
                     const SizedBox(height: 12),
                   ],
                   FilledButton.icon(
@@ -137,6 +153,10 @@ class _PacketTabsState extends ConsumerState<_PacketTabs> {
     setState(() => _exporting = true);
     try {
       await ref.read(pdfServiceProvider).exportPacket(widget.appealCase);
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('PDF downloaded.')));
+      }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -150,6 +170,9 @@ class _PacketTabsState extends ConsumerState<_PacketTabs> {
   @override
   Widget build(BuildContext context) {
     final packet = widget.appealCase.packet!;
+    final media = MediaQuery.of(context);
+    final compactActions =
+        media.size.width < 680 || media.textScaler.scale(14) > 20;
     const tabs = [
       Tab(text: 'Summary'),
       Tab(text: 'Appeal Letter'),
@@ -167,20 +190,32 @@ class _PacketTabsState extends ConsumerState<_PacketTabs> {
           title: const Text('Your appeal packet'),
           actions: [
             _SaveCaseButton(appealCase: widget.appealCase),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: FilledButton.icon(
+            if (compactActions)
+              IconButton(
+                tooltip: _exporting ? 'Exporting PDF' : 'Export PDF',
                 onPressed: _exporting ? null : _export,
                 icon: _exporting
                     ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white))
-                    : const Icon(Icons.picture_as_pdf, size: 18),
-                label: const Text('Export PDF'),
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.picture_as_pdf),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: FilledButton.icon(
+                  onPressed: _exporting ? null : _export,
+                  icon: _exporting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
+                      : const Icon(Icons.picture_as_pdf, size: 18),
+                  label: const Text('Export PDF'),
+                ),
               ),
-            ),
           ],
           bottom: const TabBar(isScrollable: true, tabs: tabs),
         ),
@@ -356,9 +391,8 @@ class _FollowUpsTabState extends ConsumerState<_FollowUpsTab> {
 
     setState(() => _busy = true);
     try {
-      await ref
-          .read(backendProvider)
-          .generateFollowUp(widget.appealCase.id, outcome: outcome, notes: notes);
+      await ref.read(backendProvider).generateFollowUp(widget.appealCase.id,
+          outcome: outcome, notes: notes);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text('Your follow-up round is ready below.')));
@@ -410,8 +444,7 @@ class _FollowUpsTabState extends ConsumerState<_FollowUpsTab> {
           children: [
             Expanded(child: _sectionTitle('After you send your appeal')),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: remaining > 0
                     ? AppColors.accentTint
@@ -466,34 +499,31 @@ class _FollowUpsTabState extends ConsumerState<_FollowUpsTab> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text('Out of included rounds',
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w800)),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
                   const SizedBox(height: 6),
                   const Text(
                     'Keep the case moving with one more round, or upgrade '
                     'to Full Case for the whole fight.',
-                    style: TextStyle(
-                        color: AppColors.textSecondary, height: 1.45),
+                    style:
+                        TextStyle(color: AppColors.textSecondary, height: 1.45),
                   ),
                   const SizedBox(height: 14),
                   Row(
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: _busy
-                              ? null
-                              : () => _buy('followup_round'),
-                          child: Text(
-                              'One round — \$${Pricing.followUpRoundUsd}'),
+                          onPressed:
+                              _busy ? null : () => _buy('followup_round'),
+                          child:
+                              Text('One round — \$${Pricing.followUpRoundUsd}'),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: FilledButton(
-                          onPressed:
-                              _busy ? null : () => _buy('full_case'),
-                          child:
-                              Text('Full Case — \$${Pricing.fullCaseUsd}'),
+                          onPressed: _busy ? null : () => _buy('full_case'),
+                          child: Text('Full Case — \$${Pricing.fullCaseUsd}'),
                         ),
                       ),
                     ],
@@ -515,8 +545,7 @@ class _FollowUpsTabState extends ConsumerState<_FollowUpsTab> {
           _sectionTitle('Your follow-up rounds'),
           const SizedBox(height: 8),
           for (var i = c.followUps.length - 1; i >= 0; i--)
-            _FollowUpRoundCard(
-                index: i + 1, round: c.followUps[i]),
+            _FollowUpRoundCard(index: i + 1, round: c.followUps[i]),
         ],
       ],
     );
@@ -580,12 +609,13 @@ class _FollowUpRoundCard extends StatelessWidget {
       child: ExpansionTile(
         shape: const Border(),
         title: Text('Round $index — ${round.outcome}',
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5)),
+            style:
+                const TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5)),
         subtitle: _dateLabel.isEmpty
             ? null
             : Text(_dateLabel,
-                style: const TextStyle(
-                    fontSize: 12, color: AppColors.textMuted)),
+                style:
+                    const TextStyle(fontSize: 12, color: AppColors.textMuted)),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         expandedCrossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -673,8 +703,8 @@ class _SaveCaseButtonState extends ConsumerState<_SaveCaseButton> {
     try {
       await ref.read(backendProvider).saveCase(widget.appealCase.id);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Case saved to your account.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Case saved to your account.')));
       }
     } catch (_) {
       if (mounted) {
@@ -729,7 +759,8 @@ class _SummaryTab extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.warningTint,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.warning.withValues(alpha: 0.35)),
+              border:
+                  Border.all(color: AppColors.warning.withValues(alpha: 0.35)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -827,8 +858,8 @@ class _EvidenceTab extends StatelessWidget {
         for (final e in items)
           Card(
             child: ListTile(
-              leading: Icon(_statusIcon(e.status),
-                  color: _statusColor(e.status)),
+              leading:
+                  Icon(_statusIcon(e.status), color: _statusColor(e.status)),
               title: Text(e.item,
                   style: const TextStyle(fontWeight: FontWeight.w600)),
               subtitle: Text(e.whyNeeded),
@@ -868,8 +899,7 @@ class _DeadlinesTab extends StatelessWidget {
               title: Text(d.task),
               subtitle: Text(d.dueDate ?? 'Confirm date with your insurer'),
               trailing: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: _priColor(d.priority).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(6),
@@ -907,7 +937,10 @@ class _DisclaimerFooter extends StatelessWidget {
   }
 }
 
-Widget _sectionTitle(String text) => Text(
-      text,
-      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+Widget _sectionTitle(String text) => Semantics(
+      header: true,
+      child: Text(
+        text,
+        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+      ),
     );

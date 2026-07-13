@@ -27,8 +27,7 @@ class PurchaseSuccessScreen extends ConsumerStatefulWidget {
       _PurchaseSuccessScreenState();
 }
 
-class _PurchaseSuccessScreenState
-    extends ConsumerState<PurchaseSuccessScreen> {
+class _PurchaseSuccessScreenState extends ConsumerState<PurchaseSuccessScreen> {
   bool _generating = false;
   String? _error;
 
@@ -69,8 +68,7 @@ class _PurchaseSuccessScreenState
         ),
         data: (c) {
           if (c == null) {
-            return const _GenerationTheater(
-                progress: null, stage: 'Loading…');
+            return const _GenerationTheater(progress: null, stage: 'Loading…');
           }
           if (_error != null) {
             return ErrorRetry(
@@ -127,14 +125,34 @@ class _GenerationTheaterState extends State<_GenerationTheater>
   late final AnimationController _pulse;
   VideoPlayerController? _video;
   bool _videoReady = false;
+  bool _videoAttempted = false;
+  bool _reduceMotion = false;
 
   @override
   void initState() {
     super.initState();
     _pulse = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 2200))
-      ..repeat();
-    _initVideo();
+        vsync: this, duration: const Duration(milliseconds: 2200));
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _reduceMotion = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    if (_reduceMotion) {
+      _pulse
+        ..stop()
+        ..value = 0.5;
+      _video?.pause();
+      return;
+    }
+    if (!_pulse.isAnimating) _pulse.repeat();
+    if (_videoReady) {
+      _video?.play();
+    } else if (!_videoAttempted) {
+      _videoAttempted = true;
+      _initVideo();
+    }
   }
 
   /// Ambient AI-assembly clip (Seedance) behind the progress card. Served
@@ -172,124 +190,153 @@ class _GenerationTheaterState extends State<_GenerationTheater>
   @override
   Widget build(BuildContext context) {
     final target = widget.progress;
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
-          child: TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0, end: (target ?? 0).clamp(0.0, 1.0)),
-            duration: const Duration(milliseconds: 900),
-            curve: Curves.easeOutCubic,
-            builder: (context, v, _) {
-              final indeterminate = target == null;
-              return Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x66B3202A),
-                      blurRadius: 46,
-                      offset: Offset(0, 18),
-                      spreadRadius: -18,
+    final progressValue = target == null
+        ? 'In progress'
+        : '${(target.clamp(0.0, 1.0) * 100).round()} percent';
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      label: widget.paymentConfirmed
+          ? 'Payment confirmed. ${widget.stage}'
+          : widget.stage,
+      value: progressValue,
+      hint: 'Keep this tab open. Your packet is saved to your account.',
+      child: ExcludeSemantics(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: (target ?? 0).clamp(0.0, 1.0)),
+                duration: _reduceMotion
+                    ? Duration.zero
+                    : const Duration(milliseconds: 900),
+                curve: Curves.easeOutCubic,
+                builder: (context, v, _) {
+                  final indeterminate = target == null;
+                  return Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x66B3202A),
+                          blurRadius: 46,
+                          offset: Offset(0, 18),
+                          spreadRadius: -18,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: Stack(
-                    children: [
-                      // Ambient Seedance clip of papers assembling; sits under
-                      // a dark scrim so the progress UI stays readable.
-                      if (_videoReady && _video != null)
-                        Positioned.fill(
-                          child: FittedBox(
-                            fit: BoxFit.cover,
-                            clipBehavior: Clip.hardEdge,
-                            child: SizedBox(
-                              width: _video!.value.size.width,
-                              height: _video!.value.size.height,
-                              child: VideoPlayer(_video!),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: Stack(
+                        children: [
+                          // Ambient Seedance clip of papers assembling; sits under
+                          // a dark scrim so the progress UI stays readable.
+                          if (!_reduceMotion && _videoReady && _video != null)
+                            Positioned.fill(
+                              child: FittedBox(
+                                fit: BoxFit.cover,
+                                clipBehavior: Clip.hardEdge,
+                                child: SizedBox(
+                                  width: _video!.value.size.width,
+                                  height: _video!.value.size.height,
+                                  child: VideoPlayer(_video!),
+                                ),
+                              ),
+                            ),
+                          Positioned.fill(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: _videoReady
+                                      ? const [
+                                          Color(0xD91C160C),
+                                          Color(0xC62A2213)
+                                        ]
+                                      : const [
+                                          Color(0xFF1C160C),
+                                          Color(0xFF2A2213)
+                                        ],
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      Positioned.fill(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: _videoReady
-                                  ? const [Color(0xD91C160C), Color(0xC62A2213)]
-                                  : const [Color(0xFF1C160C), Color(0xFF2A2213)],
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(28, 26, 28, 30),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (widget.paymentConfirmed) ...[
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: const [
+                                      Icon(Icons.verified_rounded,
+                                          color: Color(0xFF2FB380), size: 18),
+                                      SizedBox(width: 7),
+                                      Text('Payment confirmed',
+                                          style: TextStyle(
+                                              color: Color(0xFF2FB380),
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w700,
+                                              letterSpacing: 0.3)),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 18),
+                                ],
+                                _PacketAssembly(
+                                  progress: indeterminate ? 0.0 : v,
+                                  pulse: _pulse,
+                                  reduceMotion: _reduceMotion,
+                                ),
+                                const SizedBox(height: 22),
+                                if (!indeterminate)
+                                  Text('${(v * 100).round()}%',
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 34,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: -1)),
+                                const SizedBox(height: 12),
+                                _ProgressBar(
+                                    value: indeterminate ? null : v,
+                                    pulse: _pulse),
+                                const SizedBox(height: 16),
+                                AnimatedSwitcher(
+                                  duration: _reduceMotion
+                                      ? Duration.zero
+                                      : const Duration(milliseconds: 350),
+                                  child: Text(
+                                    widget.stage,
+                                    key: ValueKey(widget.stage),
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 14.5,
+                                        height: 1.45,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                const Text(
+                                  'This usually takes a minute or two — keep this tab '
+                                  'open. Your packet is saved to your account either way.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      color: Colors.white70, fontSize: 12),
+                                ),
+                              ],
                             ),
                           ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(28, 26, 28, 30),
-                        child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (widget.paymentConfirmed) ...[
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(Icons.verified_rounded,
-                              color: Color(0xFF2FB380), size: 18),
-                          SizedBox(width: 7),
-                          Text('Payment confirmed',
-                              style: TextStyle(
-                                  color: Color(0xFF2FB380),
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.3)),
                         ],
                       ),
-                      const SizedBox(height: 18),
-                    ],
-                    _PacketAssembly(
-                        progress: indeterminate ? 0.0 : v, pulse: _pulse),
-                    const SizedBox(height: 22),
-                    if (!indeterminate)
-                      Text('${(v * 100).round()}%',
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 34,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -1)),
-                    const SizedBox(height: 12),
-                    _ProgressBar(
-                        value: indeterminate ? null : v, pulse: _pulse),
-                    const SizedBox(height: 16),
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 350),
-                      child: Text(
-                        widget.stage,
-                        key: ValueKey(widget.stage),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14.5,
-                            height: 1.45,
-                            fontWeight: FontWeight.w600),
-                      ),
                     ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'This usually takes a minute or two — keep this tab '
-                      'open. Your packet is saved to your account either way.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white38, fontSize: 12),
-                    ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
+                  );
+                },
+              ),
+            ),
           ),
         ),
       ),
@@ -299,9 +346,14 @@ class _GenerationTheaterState extends State<_GenerationTheater>
 
 /// Sheets of the appeal packet assembling into a neat stack as progress rises.
 class _PacketAssembly extends StatelessWidget {
-  const _PacketAssembly({required this.progress, required this.pulse});
+  const _PacketAssembly({
+    required this.progress,
+    required this.pulse,
+    required this.reduceMotion,
+  });
   final double progress;
   final Animation<double> pulse;
+  final bool reduceMotion;
 
   static const _sheetCount = 6;
 
@@ -356,7 +408,9 @@ class _PacketAssembly extends StatelessWidget {
               // Done badge.
               AnimatedScale(
                 scale: progress >= 1 ? 1 : 0,
-                duration: const Duration(milliseconds: 450),
+                duration: reduceMotion
+                    ? Duration.zero
+                    : const Duration(milliseconds: 450),
                 curve: Curves.easeOutBack,
                 child: Container(
                   width: 54,
@@ -387,12 +441,14 @@ class _PacketAssembly extends StatelessWidget {
     final startTop = 20.0 + (i * 37) % 90;
     final angle = (i - _sheetCount / 2) * 0.028;
     return AnimatedPositioned(
-      duration: const Duration(milliseconds: 550),
+      duration:
+          reduceMotion ? Duration.zero : const Duration(milliseconds: 550),
       curve: Curves.easeOutCubic,
       left: visible ? restLeft : startLeft,
       top: visible ? restTop : startTop,
       child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 400),
+        duration:
+            reduceMotion ? Duration.zero : const Duration(milliseconds: 400),
         opacity: visible ? 1 : 0,
         child: Transform.rotate(
           angle: angle,

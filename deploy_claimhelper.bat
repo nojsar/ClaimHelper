@@ -29,6 +29,8 @@ echo.
 echo [3/6] Generating and validating marketing assets...
 call node tool\marketing_build.mjs
 if errorlevel 1 goto :fail
+call node tool\accessibility_check.mjs web
+if errorlevel 1 goto :fail
 
 echo.
 echo [4/6] Building the web app...

@@ -104,7 +104,7 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
   @override
   Widget build(BuildContext context) {
     final viewInsets = MediaQuery.of(context).viewInsets.bottom;
-    return Padding(
+    return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + viewInsets),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -126,7 +126,9 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
           const SizedBox(height: 6),
           Text(widget.reason,
               style: const TextStyle(
-                  fontSize: 13.5, color: AppColors.textSecondary, height: 1.45)),
+                  fontSize: 13.5,
+                  color: AppColors.textSecondary,
+                  height: 1.45)),
           if (_signInMode) ...[
             const SizedBox(height: 8),
             Container(
@@ -147,6 +149,7 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
           TextField(
             controller: _email,
             keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
             autofillHints: const [AutofillHints.email],
             decoration: const InputDecoration(labelText: 'Email'),
           ),
@@ -156,13 +159,20 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
             obscureText: true,
             autofillHints: const [AutofillHints.newPassword],
             onSubmitted: (_) => _busy ? null : _submit(),
-            decoration: const InputDecoration(
-                labelText: 'Password (6+ characters)'),
+            decoration:
+                const InputDecoration(labelText: 'Password (6+ characters)'),
           ),
           if (_error != null) ...[
             const SizedBox(height: 10),
-            Text(_error!,
-                style: const TextStyle(color: AppColors.error, fontSize: 13)),
+            Semantics(
+              liveRegion: true,
+              label: 'Error: ${_error!}',
+              child: ExcludeSemantics(
+                child: Text(_error!,
+                    style:
+                        const TextStyle(color: AppColors.error, fontSize: 13)),
+              ),
+            ),
           ],
           const SizedBox(height: 18),
           SizedBox(

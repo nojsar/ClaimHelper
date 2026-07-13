@@ -12,7 +12,10 @@
   },
   "hosting": {
     "public": "build/web",
-    "predeploy": ["node tool/marketing_build.mjs --verify-build"],
+    "predeploy": [
+      "node tool/marketing_build.mjs --verify-build",
+      "node tool/accessibility_check.mjs build/web"
+    ],
     "cleanUrls": true,
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [

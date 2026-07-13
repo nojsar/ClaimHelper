@@ -7,14 +7,18 @@
   <title>Privacy Policy — GetMyYes</title>
   <meta name="description" content="Privacy Policy for GetMyYes (getmyyes.com): what we collect, how documents are processed, retention, and your rights.">
   <link rel="canonical" href="https://getmyyes.com/privacy.html">
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" href="favicon.png">
   <link rel="stylesheet" href="fonts.css">
   <style>
     :root { --bg:#070B14; --ink:#EDF2FB; --dim:#93A2BD; --blue:#60A5FA; --mint:#5EEAD4; --line:rgba(148,163,184,.14); }
     * { box-sizing:border-box; margin:0; padding:0; }
+    html { scroll-behavior:smooth; }
     body { background:var(--bg); color:var(--ink); font-family:"Inter",-apple-system,sans-serif; line-height:1.7; -webkit-font-smoothing:antialiased; }
     .wrap { max-width:760px; margin:0 auto; padding:48px 24px 80px; }
     a { color:var(--blue); }
+    a:focus-visible, .table-wrap:focus-visible { outline:3px solid var(--mint); outline-offset:4px; border-radius:3px; }
+    .skip-link { position:fixed; top:12px; left:12px; z-index:100; padding:12px 16px; background:var(--ink); color:var(--bg); font-weight:700; transform:translateY(-160%); }
+    .skip-link:focus { transform:translateY(0); }
     .brand { display:flex; align-items:center; gap:10px; font-weight:800; font-size:18px; margin-bottom:40px; text-decoration:none; color:var(--ink); }
     .brand .mark { width:32px; height:32px; border-radius:9px; display:grid; place-items:center; background:linear-gradient(135deg,#2563EB,#3B82F6); color:#fff; }
     h1 { font-size:34px; letter-spacing:-1px; margin-bottom:6px; }
@@ -23,17 +27,27 @@
     p, li { color:#C7D2E5; font-size:15px; margin-bottom:10px; }
     ul { padding-left:22px; margin-bottom:12px; }
     .card { border:1px solid var(--line); border-radius:14px; padding:18px 20px; background:rgba(16,26,48,.55); margin:16px 0; }
-    table { width:100%; border-collapse:collapse; margin:14px 0; font-size:14px; }
+    main:focus { outline:none; }
+    .table-wrap { overflow-x:auto; margin:14px 0; }
+    table { width:100%; min-width:650px; border-collapse:collapse; font-size:14px; }
+    caption { text-align:left; color:var(--ink); font-weight:700; padding:0 0 10px; }
     th, td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); color:#C7D2E5; vertical-align:top; }
     th { color:var(--ink); font-size:13px; }
     footer { border-top:1px solid var(--line); margin-top:56px; padding-top:22px; color:var(--dim); font-size:13px; }
+    @media (prefers-reduced-motion:reduce) {
+      html { scroll-behavior:auto; }
+      *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+    }
+    @media (forced-colors:active) { .brand .mark, .card { border:1px solid CanvasText; } }
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <div class="wrap">
-    <a class="brand" href="/"><span class="mark">✓</span> GetMyYes</a>
+    <header><a class="brand" href="/" aria-label="GetMyYes home"><span class="mark" aria-hidden="true">✓</span> GetMyYes</a></header>
+    <main id="main-content" tabindex="-1">
     <h1>Privacy Policy</h1>
-    <p class="updated">Last updated: July 11, 2026</p>
+    <p class="updated">Last updated: July 13, 2026</p>
 
     <p>GetMyYes (getmyyes.com) helps you turn a health-insurance denial into appeal paperwork. The documents you upload are sensitive — this policy explains exactly what we collect, why, where it goes, and how to remove it.</p>
 
@@ -44,16 +58,21 @@
     <h2>1. Who we are (data controller)</h2>
     <p>GetMyYes, reachable at <a href="mailto:support@getmyyes.com">support@getmyyes.com</a>, operates getmyyes.com and is the data controller responsible for the personal data described in this policy. For any privacy request or question, email us at that address.</p>
 
-    <h2>2. What we collect, why, and on what legal basis</h2>
+    <h2 id="data-we-collect">2. What we collect, why, and on what legal basis</h2>
+    <section class="table-wrap" aria-labelledby="data-we-collect" tabindex="0">
     <table>
-      <tr><th>Data</th><th>When</th><th>Why</th><th>Legal basis (GDPR)</th></tr>
+      <caption>Personal data processing summary</caption>
+      <thead><tr><th scope="col">Data</th><th scope="col">When</th><th scope="col">Why</th><th scope="col">Legal basis (GDPR)</th></tr></thead>
+      <tbody>
       <tr><td>Documents you upload (denial letters, EOBs, prior-auth denials) and the facts extracted from them — which may include health information</td><td>When you upload them</td><td>To draft your preview and appeal packet</td><td>Your explicit consent (art. 9(2)(a)), given via the checkbox before upload; providing the service you asked for (art. 6(1)(b))</td></tr>
       <tr><td>Your answers to the guided questions</td><td>When you answer them</td><td>To tailor the appeal to your situation</td><td>Explicit consent (art. 9(2)(a)); contract (art. 6(1)(b))</td></tr>
       <tr><td>Account email and password (password stored as a hash by Firebase Authentication)</td><td>When you create an account</td><td>Sign-in, saving cases, purchase receipts</td><td>Contract (art. 6(1)(b))</td></tr>
       <tr><td>Purchase records (amount, date, case reference, email; not card numbers)</td><td>When you buy a packet</td><td>Delivering what you paid for, receipts, tax records</td><td>Contract (art. 6(1)(b)); legal obligation — accounting and tax law (art. 6(1)(c))</td></tr>
       <tr><td>Reminder email address (if you opt in to deadline reminders on a case)</td><td>When you ask for reminders</td><td>Sending your case recap and appeal-deadline reminders</td><td>Consent (art. 6(1)(a)) — withdraw any time by deleting the case or emailing us</td></tr>
       <tr><td>Basic technical logs (IP, timestamps, errors)</td><td>Automatically</td><td>Security and keeping the Service working</td><td>Legitimate interests (art. 6(1)(f)): fraud prevention and service security</td></tr>
+      </tbody>
     </table>
+    </section>
     <p>We do <strong>not</strong> run analytics on the contents of your documents, and we do not sell your personal information or share it for cross-context behavioral advertising. You can withdraw your consent at any time by deleting the case (or your account) in Settings — withdrawal doesn't affect processing that already happened.</p>
 
     <h2>3. How your documents are processed</h2>
@@ -78,7 +97,7 @@
 
     <h2>6. Cookies, local storage &amp; visit counting</h2>
     <p>We use <strong>no advertising or analytics cookies and no third-party trackers</strong> — that's why you don't see a cookie banner. The only browser storage we use is strictly necessary for the Service to work: Firebase Authentication keeps your sign-in session in your browser's local storage/IndexedDB so you stay logged in. Fonts and scripts are served from our own domain, so pages don't send your IP address to third-party CDNs. Stripe sets its own strictly-necessary cookies on Stripe's checkout page when you pay.</p>
-    <p><strong>First-party visit counting:</strong> to understand how many people use the site, our own server keeps <em>aggregate daily totals</em> — visits, pages viewed, which site referred you (e.g. "came from a search engine"), which tagged campaign sent the visit, and which country visits come from (derived in the moment from the network address, which itself is not stored). Campaign labels are ordinary `utm_source`, `utm_medium`, and `utm_campaign` values in the page link, aggregated into a daily count. This works without cookies, without device fingerprinting, and without any per-visitor identifier: we can see "42 visits on Tuesday, 30 from Germany", never "you visited on Tuesday". Because nothing is stored about you as an individual, this does not require consent (and there is still no cookie banner). It never involves the contents of your documents.</p>
+    <p><strong>First-party visit counting:</strong> to understand how many people use the site, our own server keeps <em>aggregate daily totals</em> — visits, pages viewed, which site referred you (e.g. "came from a search engine"), which tagged campaign sent the visit, and which country visits come from (derived in the moment from the network address, which itself is not stored). Campaign labels are ordinary <code>utm_source</code>, <code>utm_medium</code>, and <code>utm_campaign</code> values in the page link, aggregated into a daily count. The dashboard can compare these aggregate totals by one category at a time — for example, all page views versus page views from France — but it cannot identify or follow a person. This works without cookies, without device fingerprinting, and without any per-visitor identifier: we can see "42 visits on Tuesday, 30 from Germany", never "you visited on Tuesday". Because nothing is stored about you as an individual, this does not require consent (and there is still no cookie banner). It never involves the contents of your documents.</p>
 
     <h2>7. HIPAA note</h2>
     <p>GetMyYes is a consumer self-help tool. We are <strong>not a healthcare provider, health plan, or clearinghouse, and not a HIPAA covered entity or business associate</strong>. HIPAA generally does not cover copies of records you upload yourself. We protect them under this policy and applicable consumer-privacy law instead.</p>
@@ -113,7 +132,9 @@
     <h2>13. Changes</h2>
     <p>We'll post any changes here with a new "Last updated" date. Material changes will be highlighted in the app.</p>
 
-    <footer>© 2026 GetMyYes · getmyyes.com · <a href="terms.html">Terms of Service</a> · <a href="/">Home</a></footer>
+    </main>
+
+    <footer>© 2026 GetMyYes · getmyyes.com · <a href="terms.html">Terms of Service</a> · <a href="accessibility.html">Accessibility</a> · <a href="/">Home</a></footer>
   </div>
 </body>
 </html>

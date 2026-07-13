@@ -32,13 +32,17 @@ class AppScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final wide = MediaQuery.sizeOf(context).width > 640;
-    return Scaffold(
+    final media = MediaQuery.of(context);
+    final wide = media.size.width > 640 && media.textScaler.scale(14.5) <= 20;
+    final compactBrand =
+        media.size.width < 600 && media.textScaler.scale(19) > 28;
+    const headerHeight = 72.0;
+    final scaffold = Scaffold(
       backgroundColor: backgroundColor,
       extendBodyBehindAppBar: true,
       appBar: showChrome
           ? PreferredSize(
-              preferredSize: const Size.fromHeight(66),
+              preferredSize: const Size.fromHeight(headerHeight),
               child: ClipRect(
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
@@ -56,19 +60,43 @@ class AppScaffold extends StatelessWidget {
                           constraints: const BoxConstraints(maxWidth: 1120),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 12),
+                                horizontal: 20, vertical: 8),
                             child: Row(
                               children: [
-                                InkWell(
+                                Semantics(
+                                  button: true,
+                                  label: 'GetMyYes home',
+                                  excludeSemantics: true,
                                   onTap: () => context.go('/'),
-                                  borderRadius: BorderRadius.circular(10),
-                                  child: const Padding(
-                                    padding: EdgeInsets.all(2),
-                                    child: Wordmark(markSize: 30, fontSize: 19),
+                                  child: InkWell(
+                                    onTap: () => context.go('/'),
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                        minWidth: 48,
+                                        minHeight: 48,
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(2),
+                                        child: compactBrand
+                                            ? BrandMark(size: 30)
+                                            : Wordmark(
+                                                markSize: 30, fontSize: 19),
+                                      ),
+                                    ),
                                   ),
                                 ),
                                 const Spacer(),
-                                ...(actions ?? _defaultActions(context, wide)),
+                                Semantics(
+                                  container: true,
+                                  label: 'Primary navigation',
+                                  explicitChildNodes: true,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: actions ??
+                                        _defaultActions(context, wide),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -86,12 +114,20 @@ class AppScaffold extends StatelessWidget {
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: maxWidth),
             child: Padding(
-              padding: EdgeInsets.only(top: showChrome ? 66 : 0),
+              padding: EdgeInsets.only(top: showChrome ? headerHeight : 0),
               child: _BodyEntrance(child: child),
             ),
           ),
         ),
       ),
+    );
+    if (title == null) return scaffold;
+    return Semantics(
+      scopesRoute: true,
+      namesRoute: true,
+      label: title,
+      explicitChildNodes: true,
+      child: scaffold,
     );
   }
 
@@ -183,6 +219,7 @@ class _BodyEntrance extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) return child;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
       duration: const Duration(milliseconds: 420),
@@ -240,29 +277,34 @@ class ErrorRetry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const IconTile(
-              icon: Icons.error_outline_rounded,
-              color: AppColors.error,
-              size: 54,
-            ),
-            const SizedBox(height: 16),
-            Text(message,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                    fontSize: 15, color: AppColors.textSecondary)),
-            const SizedBox(height: 18),
-            FilledButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Try again'),
-            ),
-          ],
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      label: 'Error',
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const IconTile(
+                icon: Icons.error_outline_rounded,
+                color: AppColors.error,
+                size: 54,
+              ),
+              const SizedBox(height: 16),
+              Text(message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      fontSize: 15, color: AppColors.textSecondary)),
+              const SizedBox(height: 18),
+              FilledButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Try again'),
+              ),
+            ],
+          ),
         ),
       ),
     );

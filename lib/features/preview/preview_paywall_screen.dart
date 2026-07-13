@@ -30,8 +30,7 @@ class PreviewPaywallScreen extends ConsumerStatefulWidget {
       _PreviewPaywallScreenState();
 }
 
-class _PreviewPaywallScreenState
-    extends ConsumerState<PreviewPaywallScreen> {
+class _PreviewPaywallScreenState extends ConsumerState<PreviewPaywallScreen> {
   FreePreview? _preview;
   DenialExtraction? _extraction;
   bool _loading = true;
@@ -146,8 +145,8 @@ class _PreviewPaywallScreenState
     );
     if (result == null) return;
     setState(() {
-      _extraFiles.addAll(result.files.where((f) => f.bytes != null).map(
-          (f) => PickedUpload(
+      _extraFiles.addAll(result.files.where((f) => f.bytes != null).map((f) =>
+          PickedUpload(
               name: f.name, bytes: f.bytes!, mimeType: _mimeFor(f.name))));
     });
   }
@@ -156,8 +155,7 @@ class _PreviewPaywallScreenState
     final details = _detailsCtrl.text.trim();
     if (details.isEmpty && _extraFiles.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content:
-              Text('Add some details or attach a document first.')));
+          content: Text('Add some details or attach a document first.')));
       return;
     }
     setState(() => _updating = true);
@@ -182,8 +180,7 @@ class _PreviewPaywallScreenState
       if (ex == null) {
         throw StateError('missing extraction');
       }
-      final preview =
-          await backend.generateFreePreview(widget.caseId, ex);
+      final preview = await backend.generateFreePreview(widget.caseId, ex);
       if (!mounted) return;
       setState(() {
         _preview = preview;
@@ -249,9 +246,7 @@ class _PreviewPaywallScreenState
     }
     setState(() => _savingReminder = true);
     try {
-      await ref
-          .read(backendProvider)
-          .saveReminderEmail(widget.caseId, email);
+      await ref.read(backendProvider).saveReminderEmail(widget.caseId, email);
       if (mounted) setState(() => _reminderSaved = true);
     } catch (_) {
       if (mounted) {
@@ -386,8 +381,7 @@ class _DeadlineBanner extends StatelessWidget {
               '$label Filing on time keeps every appeal level open.',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color:
-                    urgent ? AppColors.primaryDark : AppColors.textPrimary,
+                color: urgent ? AppColors.primaryDark : AppColors.textPrimary,
               ),
             ),
           ),
@@ -413,8 +407,8 @@ class _PreviewCard extends StatelessWidget {
               children: [
                 if (preview.amountAtStake != null)
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: AppColors.accentTint,
                       borderRadius: BorderRadius.circular(8),
@@ -479,13 +473,12 @@ class _LetterTeaserCard extends StatelessWidget {
           children: [
             Row(
               children: const [
-                Icon(Icons.history_edu_outlined,
-                    color: AppColors.primaryDark),
+                Icon(Icons.history_edu_outlined, color: AppColors.primaryDark),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text('Your appeal letter is already started',
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w800)),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
                 ),
               ],
             ),
@@ -515,8 +508,7 @@ class _LetterTeaserCard extends StatelessWidget {
                       // rest of the letter.
                       ClipRect(
                         child: ImageFiltered(
-                          imageFilter:
-                              ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                          imageFilter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -643,8 +635,8 @@ class _MissingPiecesCard extends StatelessWidget {
                 children: [
                   for (final f in files)
                     Chip(
-                      label: Text(f.name,
-                          style: const TextStyle(fontSize: 12.5)),
+                      label:
+                          Text(f.name, style: const TextStyle(fontSize: 12.5)),
                       onDeleted: updating ? null : () => onRemoveFile(f),
                     ),
                 ],
@@ -854,77 +846,91 @@ class _TierOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    return Semantics(
+      container: true,
+      button: true,
+      selected: selected,
+      enabled: onTap != null,
+      label: '$title, \$$price',
+      value: selected ? 'Selected' : 'Not selected',
+      hint: caption,
+      excludeSemantics: true,
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppRadii.md),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.primaryTint : AppColors.surface,
-          borderRadius: BorderRadius.circular(AppRadii.md),
-          border: Border.all(
-            color: selected ? AppColors.primaryDark : AppColors.borderStrong,
-            width: selected ? 1.6 : 0.8,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadii.md),
+        child: AnimatedContainer(
+          duration:
+              reduceMotion ? Duration.zero : const Duration(milliseconds: 180),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.primaryTint : AppColors.surface,
+            borderRadius: BorderRadius.circular(AppRadii.md),
+            border: Border.all(
+              color: selected ? AppColors.primaryDark : AppColors.borderStrong,
+              width: selected ? 1.6 : 0.8,
+            ),
           ),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              selected
-                  ? Icons.radio_button_checked
-                  : Icons.radio_button_unchecked,
-              size: 20,
-              color:
-                  selected ? AppColors.primaryDark : AppColors.textSecondary,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(title,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w800, fontSize: 15)),
-                      ),
-                      if (badge != null)
-                        Container(
-                          margin: const EdgeInsets.only(right: 8),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 7, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: AppColors.accent,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(badge!,
-                              style: const TextStyle(
-                                  fontFamily: AppFonts.mono,
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.8,
-                                  color: Colors.white)),
-                        ),
-                      Text('\$$price',
-                          style: const TextStyle(
-                              fontSize: 19,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.primaryDark)),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(caption,
-                      style: const TextStyle(
-                          fontSize: 12.5,
-                          height: 1.45,
-                          color: AppColors.textSecondary)),
-                ],
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                selected
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+                size: 20,
+                color:
+                    selected ? AppColors.primaryDark : AppColors.textSecondary,
               ),
-            ),
-          ],
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(title,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w800, fontSize: 15)),
+                        ),
+                        if (badge != null)
+                          Container(
+                            margin: const EdgeInsets.only(right: 8),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 7, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: AppColors.accent,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(badge!,
+                                style: const TextStyle(
+                                    fontFamily: AppFonts.mono,
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.8,
+                                    color: Colors.white)),
+                          ),
+                        Text('\$$price',
+                            style: const TextStyle(
+                                fontSize: 19,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.primaryDark)),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(caption,
+                        style: const TextStyle(
+                            fontSize: 12.5,
+                            height: 1.45,
+                            color: AppColors.textSecondary)),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -983,8 +989,8 @@ class _ReminderCard extends StatelessWidget {
                 SizedBox(width: 8),
                 Expanded(
                   child: Text('Deciding later? Don\'t lose the deadline.',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w800, fontSize: 15)),
+                      style:
+                          TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
                 ),
               ],
             ),

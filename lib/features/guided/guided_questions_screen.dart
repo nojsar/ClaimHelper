@@ -20,8 +20,7 @@ class GuidedQuestionsScreen extends ConsumerStatefulWidget {
       _GuidedQuestionsScreenState();
 }
 
-class _GuidedQuestionsScreenState
-    extends ConsumerState<GuidedQuestionsScreen> {
+class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
   late GuidedAnswers _a;
   final _urgencyCtrl = TextEditingController();
   final _contactCtrl = TextEditingController();
@@ -83,7 +82,6 @@ class _GuidedQuestionsScreenState
               style: TextStyle(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 20),
-
             _Q('Who is this denial for?'),
             _ChipGroup<PatientRelation>(
               options: PatientRelation.values,
@@ -91,7 +89,6 @@ class _GuidedQuestionsScreenState
               label: (v) => v.label,
               onSelect: (v) => _set(_a.copyWith(relation: v)),
             ),
-
             _Q('What state do you live in?'),
             DropdownButtonFormField<String>(
               initialValue: _a.usState,
@@ -102,7 +99,6 @@ class _GuidedQuestionsScreenState
               ],
               onChanged: (v) => _set(_a.copyWith(usState: v)),
             ),
-
             _Q('What kind of insurance is this?'),
             _ChipGroup<InsuranceType>(
               options: InsuranceType.values,
@@ -110,7 +106,6 @@ class _GuidedQuestionsScreenState
               label: (v) => v.label,
               onSelect: (v) => _set(_a.copyWith(insuranceType: v)),
             ),
-
             _Q('What outcome do you want?'),
             _ChipGroup<DesiredOutcome>(
               options: DesiredOutcome.values,
@@ -118,7 +113,6 @@ class _GuidedQuestionsScreenState
               label: (v) => v.label,
               onSelect: (v) => _set(_a.copyWith(desiredOutcome: v)),
             ),
-
             _Q('Is a delay urgent or harmful to health, function, or recovery?'),
             _YesNo(
               value: _a.isUrgent,
@@ -135,7 +129,6 @@ class _GuidedQuestionsScreenState
                   ),
                 ),
               ),
-
             _Q('Have you tried required alternatives?'),
             const Text(
               'For medication denials, list drugs or treatments already tried, '
@@ -147,7 +140,6 @@ class _GuidedQuestionsScreenState
               items: _a.triedAlternatives,
               onChanged: (list) => _set(_a.copyWith(triedAlternatives: list)),
             ),
-
             _Q('Which supporting documents do you have?'),
             _MultiChipGroup<SupportingDocument>(
               options: SupportingDocument.values,
@@ -159,7 +151,6 @@ class _GuidedQuestionsScreenState
                 _set(_a.copyWith(documentsOnHand: next));
               },
             ),
-
             _Q('Have you already called the insurer or provider?'),
             _YesNo(
               value: _a.contactedInsurer,
@@ -172,11 +163,11 @@ class _GuidedQuestionsScreenState
                   controller: _contactCtrl,
                   maxLines: 3,
                   decoration: const InputDecoration(
-                    labelText: 'Call dates, who you spoke with, reference numbers',
+                    labelText:
+                        'Call dates, who you spoke with, reference numbers',
                   ),
                 ),
               ),
-
             if (problems.isNotEmpty) ...[
               const SizedBox(height: 16),
               _ProblemList(problems: problems),
@@ -204,8 +195,12 @@ class _Q extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.only(top: 22, bottom: 10),
-        child: Text(text,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+        child: Semantics(
+          header: true,
+          child: Text(text,
+              style:
+                  const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+        ),
       );
 }
 
@@ -311,58 +306,73 @@ class _AlternativesEditor extends StatelessWidget {
         for (var i = 0; i < items.length; i++)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: TextFormField(
-                    initialValue: items[i].name,
-                    decoration: const InputDecoration(
-                        labelText: 'Drug / treatment', isDense: true),
-                    onChanged: (v) {
-                      final next = [...items];
-                      next[i] = TriedAlternative(name: v, outcome: items[i].outcome);
-                      onChanged(next);
-                    },
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  flex: 2,
-                  child: DropdownButtonFormField<String>(
-                    initialValue: items[i].outcome,
-                    isDense: true,
-                    decoration: const InputDecoration(isDense: true),
-                    items: [
-                      for (final e in _outcomes.entries)
-                        DropdownMenuItem(
-                            value: e.key,
-                            child: Text(e.value,
-                                style: const TextStyle(fontSize: 12))),
-                    ],
-                    onChanged: (v) {
-                      final next = [...items];
-                      next[i] =
-                          TriedAlternative(name: items[i].name, outcome: v ?? 'other');
-                      onChanged(next);
-                    },
-                  ),
-                ),
-                IconButton(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final name = TextFormField(
+                  initialValue: items[i].name,
+                  decoration: const InputDecoration(
+                      labelText: 'Drug or treatment', isDense: true),
+                  onChanged: (v) {
+                    final next = [...items];
+                    next[i] =
+                        TriedAlternative(name: v, outcome: items[i].outcome);
+                    onChanged(next);
+                  },
+                );
+                final outcome = DropdownButtonFormField<String>(
+                  initialValue: items[i].outcome,
+                  isExpanded: true,
+                  isDense: true,
+                  decoration:
+                      const InputDecoration(labelText: 'Result', isDense: true),
+                  items: [
+                    for (final e in _outcomes.entries)
+                      DropdownMenuItem(value: e.key, child: Text(e.value)),
+                  ],
+                  onChanged: (v) {
+                    final next = [...items];
+                    next[i] = TriedAlternative(
+                        name: items[i].name, outcome: v ?? 'other');
+                    onChanged(next);
+                  },
+                );
+                final remove = IconButton(
+                  tooltip: items[i].name.trim().isEmpty
+                      ? 'Remove alternative ${i + 1}'
+                      : 'Remove ${items[i].name}',
                   icon: const Icon(Icons.remove_circle_outline),
                   onPressed: () {
                     final next = [...items]..removeAt(i);
                     onChanged(next);
                   },
-                ),
-              ],
+                );
+                if (constraints.maxWidth < 520) {
+                  return Column(
+                    children: [
+                      name,
+                      const SizedBox(height: 8),
+                      Row(children: [Expanded(child: outcome), remove]),
+                    ],
+                  );
+                }
+                return Row(
+                  children: [
+                    Expanded(flex: 3, child: name),
+                    const SizedBox(width: 8),
+                    Expanded(flex: 2, child: outcome),
+                    remove,
+                  ],
+                );
+              },
             ),
           ),
         Align(
           alignment: Alignment.centerLeft,
           child: TextButton.icon(
-            onPressed: () => onChanged(
-                [...items, const TriedAlternative(name: '', outcome: 'failed')]),
+            onPressed: () => onChanged([
+              ...items,
+              const TriedAlternative(name: '', outcome: 'failed')
+            ]),
             icon: const Icon(Icons.add),
             label: const Text('Add an alternative'),
           ),
@@ -378,33 +388,39 @@ class _ProblemList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.errorTint,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (final p in problems)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.error_outline,
-                      size: 16, color: AppColors.error),
-                  const SizedBox(width: 8),
-                  Expanded(
-                      child: Text(p,
-                          style: const TextStyle(
-                              fontSize: 13, color: AppColors.error))),
-                ],
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      label: 'Please fix ${problems.length} form '
+          '${problems.length == 1 ? 'error' : 'errors'}',
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.errorTint,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final p in problems)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.error_outline,
+                        size: 16, color: AppColors.error),
+                    const SizedBox(width: 8),
+                    Expanded(
+                        child: Text(p,
+                            style: const TextStyle(
+                                fontSize: 13, color: AppColors.error))),
+                  ],
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

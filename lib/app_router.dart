@@ -90,10 +90,14 @@ class _ExitToLandingState extends State<_ExitToLanding> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       backgroundColor: AppColors.background,
       body: Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
+        child: Semantics(
+          liveRegion: true,
+          label: 'Returning to the GetMyYes home page',
+          child: const CircularProgressIndicator(color: AppColors.primary),
+        ),
       ),
     );
   }
