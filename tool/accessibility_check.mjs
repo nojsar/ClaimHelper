@@ -255,6 +255,8 @@ for (const file of files) {
     checkContrastToken(file, css, "green", "paper");
     checkContrastToken(file, css, "green-on-dark", "panel-dark");
   } else if (path.basename(file) === "index.html") {
+    must(file, /gsap\.from\(['"]\.doc-list li['"],\s*\{\s*y\s*:/i.test(html), "document-list entrance must use a vertical transform to avoid horizontal overflow.");
+    must(file, /gsap\.from\(['"]\.receipt \.r-stamp['"],\s*\{\s*y\s*:/i.test(html), "receipt-stamp entrance must use a vertical transform to avoid horizontal overflow.");
     checkContrastToken(file, css, "ink-faint", "paper");
     checkContrastToken(file, css, "red", "paper");
     checkContrastToken(file, css, "green-bright", "ink");
