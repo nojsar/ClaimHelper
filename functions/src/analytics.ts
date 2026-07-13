@@ -311,6 +311,17 @@ async function hasSignedAdminExclusion(req: {
 export const setAdminAnalyticsExclusion = onRequest(
   { invoker: "public", cors: true },
   async (req, res) => {
+    // Firebase Hosting does not consistently append configured Hosting
+    // headers to non-2xx responses from a rewritten Function, so protect this
+    // endpoint at the source as well.
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Frame-Options", "SAMEORIGIN");
+    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+    res.setHeader("Permissions-Policy", "geolocation=(), microphone=()");
+    res.setHeader(
+      "Strict-Transport-Security",
+      "max-age=31536000; includeSubDomains",
+    );
     res.setHeader("Cache-Control", "no-store");
     if (req.method !== "POST") {
       res.setHeader("Allow", "POST");
