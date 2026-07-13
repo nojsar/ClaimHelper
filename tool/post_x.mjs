@@ -84,6 +84,12 @@ try {
     console.log("[marketing] x: no API credits — top up in the X dev console (Billing → Credits) or remove the X_* secrets.");
     process.exit(0);
   }
+  // Same-day re-runs compose identical text, which X rejects as a duplicate.
+  // That means today's post already exists — a safe skip, not a failure.
+  if (/duplicate/i.test(error.message)) {
+    console.log("[marketing] x: today's post already exists (duplicate rejected); skipping safely.");
+    process.exit(0);
+  }
   throw error;
 }
 console.log(`[marketing] x: published ${post.id}: tweet ${result.data?.id}`);

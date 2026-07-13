@@ -27,11 +27,27 @@ if (!configured("mastodon", ["MASTODON_SERVER", "MASTODON_ACCESS_TOKEN"])) proce
 
 const server = process.env.MASTODON_SERVER.replace(/\/$/, "");
 const post = postForDay(OFFSET);
+const auth = { Authorization: `Bearer ${process.env.MASTODON_ACCESS_TOKEN}` };
+
+// Same-day re-runs (manual dispatch after a partial failure, late cron) must
+// skip cleanly: replaying an Idempotency-Key works only while the server
+// still caches it — mastodon.social 500s on older replays. Check our own
+// recent statuses for today's campaign post instead of relying on that.
+const me = await jsonRequest(`${server}/api/v1/accounts/verify_credentials`, { headers: auth });
+const recent = await jsonRequest(
+  `${server}/api/v1/accounts/${me.id}/statuses?limit=10&exclude_replies=true&exclude_reblogs=true`,
+  { headers: auth },
+);
+const today = new Date().toISOString().slice(0, 10);
+if (recent.some((s) => (s.created_at || "").slice(0, 10) === today && s.content?.includes("GetMyYesGuide"))) {
+  console.log("[marketing] mastodon: today's campaign post already exists; skipping safely.");
+  process.exit(0);
+}
 
 const result = await jsonRequest(`${server}/api/v1/statuses`, {
   method: "POST",
   headers: {
-    Authorization: `Bearer ${process.env.MASTODON_ACCESS_TOKEN}`,
+    ...auth,
     "Content-Type": "application/json",
     // One post per guide per day even if the workflow retries.
     "Idempotency-Key": `getmyyes-${post.id}-${new Date().toISOString().slice(0, 10)}`,
