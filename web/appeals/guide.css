@@ -21,7 +21,8 @@ html { scroll-behavior: smooth; }
 body {
   background: var(--paper);
   color: var(--ink);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  /* System body text avoids a late font swap that moved the key-facts panel. */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   line-height: 1.75;
   -webkit-font-smoothing: antialiased;
   overflow-wrap: break-word;

@@ -34,24 +34,29 @@ const appealLabels = { yes: "Yes — commonly appealed", sometimes: "Sometimes �
 const fixLabels = { provider: "The provider’s billing office", patient: "You (the member)", both: "You and the billing office together" };
 
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const truncate = (value, max) => value.length <= max
+  ? value
+  : `${value.slice(0, max - 1).replace(/\s+\S*$/, "")}…`;
 
 function shell({ title, description, canonical, h1, crumb, body }) {
+  const pageTitle = truncate(title, 65);
+  const pageDescription = truncate(description, 165);
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="index, follow, max-image-preview:large">
-  <title>${esc(title)}</title>
-  <meta name="description" content="${esc(description)}">
+  <title>${esc(pageTitle)}</title>
+  <meta name="description" content="${esc(pageDescription)}">
   <link rel="canonical" href="${canonical}">
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="stylesheet" href="/fonts.css">
   <link rel="stylesheet" href="/appeals/guide.css">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="GetMyYes">
-  <meta property="og:title" content="${esc(title)}">
-  <meta property="og:description" content="${esc(description)}">
+  <meta property="og:title" content="${esc(pageTitle)}">
+  <meta property="og:description" content="${esc(pageDescription)}">
   <meta property="og:url" content="${canonical}">
   <meta property="og:image" content="${siteOrigin}/og-image.png">
   <script src="/analytics.js" data-static></script>
@@ -80,7 +85,7 @@ ${body}
     </main>
 
     <footer class="site">
-      <p><a href="/">GetMyYes</a> · <a href="/appeals/">Appeal guides</a> · <a href="/codes/">Denial codes</a> · <a href="/tools/appeal-deadline-calculator">Deadline calculator</a> · <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a></p>
+      <p><a href="/">GetMyYes</a> · <a href="/appeals/">Appeal guides</a> · <a href="/codes/">Denial codes</a> · <a href="/tools/appeal-deadline-calculator">Deadline calculator</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/editorial-policy">Editorial policy</a></p>
       <p>© 2026 GetMyYes · U.S. plans only at launch. General information, not medical, legal, or insurance advice. Codes arrive with plan-specific remark codes — always confirm against your own notice and plan documents.</p>
     </footer>
   </div>
@@ -151,8 +156,8 @@ ${fallbackRelated.map((c) => `          <li><a href="/codes/${c.slug}">${esc(c.c
         </ul>
       </div>`;
   return shell({
-    title: `${entry.code} Denial Code: ${entry.name} — Meaning & How to Respond`,
-    description: `${entry.code} means: ${entry.name.toLowerCase()}. What it means on your EOB, who fixes it, whether to appeal, and the exact next steps.`,
+    title: `${entry.code} Denial Code: ${entry.name} | GetMyYes`,
+    description: `${entry.code}: ${entry.name}. Learn what it means on an EOB, who normally fixes it, whether an appeal may help, and the next steps.`,
     canonical: `${siteOrigin}/codes/${entry.slug}`,
     h1: `${esc(entry.code)}: ${esc(entry.name)}`,
     crumb: entry.code,
@@ -206,8 +211,8 @@ ${rows}
         <p class="sub">FREE PREVIEW · $39 FULL PACKET · NO SUBSCRIPTION. EVER.</p>
       </div>`;
   return shell({
-    title: "Insurance Denial Codes Explained (CO-45, CO-50, PR-204…) — GetMyYes",
-    description: "Every common insurance denial code (CARC) in plain English: what CO-50, CO-45, CO-197, PR-204 and more mean on your EOB, who fixes each one, and when to appeal.",
+    title: "Insurance Denial Codes Explained | GetMyYes",
+    description: "Common CARC insurance denial codes in plain English: what they mean on your EOB, who normally fixes each one, and when an appeal may help.",
     canonical: `${siteOrigin}/codes/`,
     h1: "Insurance denial codes, decoded",
     crumb: "",

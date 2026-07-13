@@ -1,11 +1,16 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getAuth } from "firebase-admin/auth";
-import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
+import {
+  DocumentSnapshot,
+  getFirestore,
+  FieldValue,
+  Timestamp,
+} from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { randomUUID } from "crypto";
 import { config } from "./config";
 import { requireUid, requireOwnedCase } from "./util";
-import { bumpUserDaily } from "./analytics";
+import { recordFirstCaseAnalyticsEvent } from "./analytics";
 
 /**
  * createCaseUploadSession
@@ -29,8 +34,10 @@ export const createCaseUploadSession = onCall({ invoker: "public" }, async (requ
     now.toMillis() + config.tempFileTtlHours * 3600 * 1000,
   );
 
-  await getFirestore().collection("cases").doc(caseId).set({
+  const caseRef = getFirestore().collection("cases").doc(caseId);
+  await caseRef.set({
     ownerUid: uid,
+    storageOwnerUids: [uid],
     guestSessionId: request.auth?.token.firebase.sign_in_provider === "anonymous" ? uid : null,
     status: "uploaded",
     createdAt: now,
@@ -50,7 +57,7 @@ export const createCaseUploadSession = onCall({ invoker: "public" }, async (requ
 
   // Aggregate funnel counter only — nothing about the case or user is logged.
   // The centralized writer refuses owner events.
-  await bumpUserDaily(uid, { "funnel.upload": 1 });
+  await recordFirstCaseAnalyticsEvent(uid, caseRef, "uploaded");
 
   return {
     caseId,
@@ -70,17 +77,34 @@ export const createCaseUploadSession = onCall({ invoker: "public" }, async (requ
 export const deleteCaseAndFiles = onCall({ invoker: "public" }, async (request) => {
   const uid = requireUid(request);
   const snap = await requireOwnedCase(request.data?.caseId, uid);
-  await deleteCaseCompletely(snap.id, uid);
+  await deleteCaseCompletely(snap.id, caseStorageOwnerUids(snap));
   return { deleted: true };
 });
 
+/** Includes historic uid-scoped prefixes left by a secure account transfer. */
+export function caseStorageOwnerUids(snap: DocumentSnapshot): string[] {
+  const stored = (snap.get("storageOwnerUids") as unknown[] | undefined) ?? [];
+  const candidates = [
+    ...stored,
+    snap.get("ownerUid"),
+    snap.get("guestSessionId"),
+  ];
+  return [...new Set(candidates.filter(
+    (value): value is string => typeof value === "string" && value.length > 0,
+  ))];
+}
+
 export async function deleteCaseCompletely(
   caseId: string,
-  ownerUid?: string,
+  ownerUids?: string | string[],
 ): Promise<void> {
   const bucket = getStorage().bucket();
-  if (ownerUid) {
-    await bucket.deleteFiles({ prefix: `tempCases/${ownerUid}/${caseId}/` });
+  const scopedOwners = typeof ownerUids === "string" ? [ownerUids] : ownerUids ?? [];
+  for (const ownerUid of new Set(scopedOwners)) {
+    await bucket.deleteFiles({
+      prefix: `tempCases/${ownerUid}/${caseId}/`,
+      force: true,
+    });
   }
   // Legacy (pre uid-scoping) path — harmless if nothing matches.
   await bucket.deleteFiles({ prefix: `tempCases/${caseId}/` });
@@ -111,7 +135,7 @@ export const deleteAccount = onCall({ invoker: "public" }, async (request) => {
 
   const owned = await db.collection("cases").where("ownerUid", "==", uid).get();
   for (const doc of owned.docs) {
-    await deleteCaseCompletely(doc.id, uid);
+    await deleteCaseCompletely(doc.id, caseStorageOwnerUids(doc));
   }
 
   await db.collection("users").doc(uid).delete();

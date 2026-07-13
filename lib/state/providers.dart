@@ -64,6 +64,17 @@ class AuthController extends StateNotifier<AuthSnapshot> {
     _refresh();
   }
 
+  Future<void> signInAndClaimCase(
+      String email, String password, String caseId) async {
+    await _backend.signInWithEmailAndClaimCase(email, password, caseId);
+    _refresh();
+  }
+
+  Future<void> claimGuestCase(String caseId) async {
+    await _backend.claimGuestCase(caseId);
+    _refresh();
+  }
+
   Future<void> signOut() async {
     await _backend.signOut();
     await _backend.ensureSignedIn();

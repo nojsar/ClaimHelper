@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -21,34 +23,122 @@ class GuidedQuestionsScreen extends ConsumerStatefulWidget {
 }
 
 class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
-  late GuidedAnswers _a;
+  GuidedAnswers _a = const GuidedAnswers();
+  PreviewQuestionPlan? _plan;
+  late final IntakeController _controller;
   final _urgencyCtrl = TextEditingController();
   final _contactCtrl = TextEditingController();
+  Timer? _saveDebounce;
   bool _showErrors = false;
+  bool _initialized = false;
+  bool _saving = false;
+  bool _saved = false;
+  String? _loadError;
+  String? _saveError;
 
   @override
   void initState() {
     super.initState();
-    _a = ref.read(intakeControllerProvider).guidedAnswers;
+    _controller = ref.read(intakeControllerProvider.notifier);
+    final intake = ref.read(intakeControllerProvider);
+    if (intake.caseId == widget.caseId && intake.extraction != null) {
+      _initialize(intake);
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _restore());
+    }
+  }
+
+  void _initialize(IntakeState intake) {
+    final extraction = intake.extraction;
+    if (extraction == null) return;
+    _a = intake.guidedAnswers;
+    _plan = PreviewQuestionPlan.fromExtraction(extraction);
     _urgencyCtrl.text = _a.urgencyNote ?? '';
     _contactCtrl.text = _a.contactNotes ?? '';
+    _initialized = true;
+  }
+
+  Future<void> _restore() async {
+    if (mounted) setState(() => _loadError = null);
+    try {
+      await _controller.restoreCase(widget.caseId);
+      final intake = ref.read(intakeControllerProvider);
+      if (intake.extraction == null) {
+        throw StateError('Extraction is not ready.');
+      }
+      if (!mounted) return;
+      setState(() => _initialize(intake));
+    } catch (_) {
+      if (mounted) {
+        setState(() => _loadError =
+            'We could not restore your saved answers. Please retry.');
+      }
+    }
   }
 
   @override
   void dispose() {
+    _saveDebounce?.cancel();
+    if (_initialized) {
+      _controller.updateGuidedAnswers(_collected);
+      unawaited(_controller.persistGuidedAnswers());
+    }
     _urgencyCtrl.dispose();
     _contactCtrl.dispose();
     super.dispose();
   }
 
-  void _set(GuidedAnswers next) => setState(() => _a = next);
+  GuidedAnswers get _collected => _a.copyWith(
+        urgencyNote: _urgencyCtrl.text.trim(),
+        contactNotes: _contactCtrl.text.trim(),
+      );
+
+  void _set(GuidedAnswers next) {
+    setState(() {
+      _a = next;
+      _saved = false;
+      _saveError = null;
+    });
+    _scheduleAutosave();
+  }
+
+  void _scheduleAutosave() {
+    _controller.updateGuidedAnswers(_collected);
+    _saveDebounce?.cancel();
+    _saveDebounce =
+        Timer(const Duration(milliseconds: 650), () => unawaited(_saveNow()));
+  }
+
+  Future<void> _saveNow() async {
+    _saveDebounce?.cancel();
+    _controller.updateGuidedAnswers(_collected);
+    if (mounted) {
+      setState(() {
+        _saving = true;
+        _saveError = null;
+      });
+    }
+    try {
+      await _controller.persistGuidedAnswers();
+      if (mounted) {
+        setState(() {
+          _saving = false;
+          _saved = true;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _saving = false;
+          _saveError = 'Answers are saved locally; reconnect to sync them.';
+        });
+      }
+    }
+  }
 
   Future<void> _continue() async {
-    final collected = _a.copyWith(
-      urgencyNote: _urgencyCtrl.text.trim(),
-      contactNotes: _contactCtrl.text.trim(),
-    );
-    final problems = collected.validate();
+    final collected = _collected;
+    final problems = _plan!.validate(collected);
     if (problems.isNotEmpty) {
       setState(() {
         _a = collected;
@@ -56,19 +146,24 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
       });
       return;
     }
-    final ctrl = ref.read(intakeControllerProvider.notifier);
-    ctrl.updateGuidedAnswers(collected);
-    await ctrl.persistGuidedAnswers();
+    _controller.updateGuidedAnswers(collected);
+    await _saveNow();
     if (mounted) context.go('/case/${widget.caseId}/preview');
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentAnswers = _a.copyWith(
-      urgencyNote: _urgencyCtrl.text.trim(),
-      contactNotes: _contactCtrl.text.trim(),
-    );
-    final problems = _showErrors ? currentAnswers.validate() : const <String>[];
+    if (!_initialized || _plan == null) {
+      return AppScaffold(
+        title: 'A few questions',
+        child: _loadError == null
+            ? const Center(child: CircularProgressIndicator())
+            : ErrorRetry(message: _loadError!, onRetry: _restore),
+      );
+    }
+
+    final plan = _plan!;
+    final problems = _showErrors ? plan.validate(_collected) : const <String>[];
 
     return AppScaffold(
       title: 'A few questions',
@@ -84,19 +179,37 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
             ),
             const SizedBox(height: 6),
             const Text(
-              'These answers make your appeal specific to your situation. '
-              'We never invent facts — only what you tell us is used.',
+              'We only ask what the document could not tell us and what '
+              'materially improves your preview. Optional packet details can '
+              'be added below.',
               style: TextStyle(color: AppColors.textSecondary),
             ),
-            const SizedBox(height: 20),
-            _Q('Who is this denial for?'),
-            _ChipGroup<PatientRelation>(
-              groupLabel: 'Who is this denial for?',
-              options: PatientRelation.values,
-              selected: _a.relation,
-              label: (v) => v.label,
-              onSelect: (v) => _set(_a.copyWith(relation: v)),
+            const SizedBox(height: 8),
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                _saving
+                    ? 'Saving…'
+                    : (_saveError ?? (_saved ? 'Answers saved' : '')),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: _saveError == null
+                      ? AppColors.textMuted
+                      : AppColors.warning,
+                ),
+              ),
             ),
+            const SizedBox(height: 20),
+            if (plan.askRelation) ...[
+              _Q('Who is this denial for?'),
+              _ChipGroup<PatientRelation>(
+                groupLabel: 'Who is this denial for?',
+                options: PatientRelation.values,
+                selected: _a.relation,
+                label: (v) => v.label,
+                onSelect: (v) => _set(_a.copyWith(relation: v)),
+              ),
+            ],
             _Q('What state do you live in?'),
             DropdownButtonFormField<String>(
               initialValue: _a.usState,
@@ -112,14 +225,16 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
               ],
               onChanged: (v) => _set(_a.copyWith(usState: v)),
             ),
-            _Q('What kind of insurance is this?'),
-            _ChipGroup<InsuranceType>(
-              groupLabel: 'Insurance type',
-              options: InsuranceType.values,
-              selected: _a.insuranceType,
-              label: (v) => v.label,
-              onSelect: (v) => _set(_a.copyWith(insuranceType: v)),
-            ),
+            if (plan.askInsuranceType) ...[
+              _Q('What kind of insurance is this?'),
+              _ChipGroup<InsuranceType>(
+                groupLabel: 'Insurance type',
+                options: InsuranceType.values,
+                selected: _a.insuranceType,
+                label: (v) => v.label,
+                onSelect: (v) => _set(_a.copyWith(insuranceType: v)),
+              ),
+            ],
             _Q('What outcome do you want?'),
             _ChipGroup<DesiredOutcome>(
               groupLabel: 'Desired outcome',
@@ -128,13 +243,15 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
               label: (v) => v.label,
               onSelect: (v) => _set(_a.copyWith(desiredOutcome: v)),
             ),
-            _Q('Is a delay urgent or harmful to health, function, or recovery?'),
-            _YesNo(
-              groupLabel: 'Whether a delay is urgent or harmful',
-              value: _a.isUrgent,
-              onChanged: (v) => _set(_a.copyWith(isUrgent: v)),
-            ),
-            if (_a.isUrgent == true)
+            if (plan.askUrgency) ...[
+              _Q('Is a delay urgent or harmful to health, function, or recovery?'),
+              _YesNo(
+                groupLabel: 'Whether a delay is urgent or harmful',
+                value: _a.isUrgent,
+                onChanged: (v) => _set(_a.copyWith(isUrgent: v)),
+              ),
+            ],
+            if (plan.askUrgency && _a.isUrgent == true)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: TextField(
@@ -142,6 +259,7 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
                   maxLines: 2,
                   onChanged: (_) {
                     if (_showErrors) setState(() {});
+                    _scheduleAutosave();
                   },
                   decoration: InputDecoration(
                     labelText: 'Briefly, why is a delay harmful?',
@@ -151,53 +269,81 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
                   ),
                 ),
               ),
-            _Q('Have you tried required alternatives?'),
-            const Text(
-              'For medication denials, list drugs or treatments already tried, '
-              'failed, contraindicated, or not tolerated.',
-              style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 8),
-            _AlternativesEditor(
-              items: _a.triedAlternatives,
-              onChanged: (list) => _set(_a.copyWith(triedAlternatives: list)),
-            ),
-            _Q('Which supporting documents do you have?'),
-            _MultiChipGroup<SupportingDocument>(
-              groupLabel: 'Supporting documents on hand',
-              options: SupportingDocument.values,
-              selected: _a.documentsOnHand,
-              label: (v) => v.label,
-              onToggle: (v) {
-                final next = {..._a.documentsOnHand};
-                next.contains(v) ? next.remove(v) : next.add(v);
-                _set(_a.copyWith(documentsOnHand: next));
-              },
-            ),
-            _Q('Have you already called the insurer or provider?'),
-            _YesNo(
-              groupLabel: 'Whether you contacted the insurer or provider',
-              value: _a.contactedInsurer,
-              onChanged: (v) => _set(_a.copyWith(contactedInsurer: v)),
-            ),
-            if (_a.contactedInsurer == true)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: TextField(
-                  controller: _contactCtrl,
-                  maxLines: 3,
-                  onChanged: (_) {
-                    if (_showErrors) setState(() {});
-                  },
-                  decoration: InputDecoration(
-                    labelText:
-                        'Call dates, who you spoke with, reference numbers',
-                    errorText: _showErrors && _contactCtrl.text.trim().isEmpty
-                        ? 'Add call dates or reference numbers.'
-                        : null,
-                  ),
-                ),
+            if (plan.askAlternatives) ...[
+              _Q('Have you tried required alternatives?'),
+              const Text(
+                'If applicable, add drugs or treatments that failed, were not '
+                'tolerated, or were not safe for you. Leave this blank if none.',
+                style:
+                    TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
               ),
+              const SizedBox(height: 8),
+              _AlternativesEditor(
+                items: _a.triedAlternatives,
+                onChanged: (list) => _set(_a.copyWith(triedAlternatives: list)),
+              ),
+            ],
+            const SizedBox(height: 12),
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              title: const Text('Add more packet detail (optional)',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+              subtitle: const Text(
+                  'Documents and insurer-call notes can strengthen the full packet.'),
+              children: [
+                if (!plan.askRelation) ...[
+                  _Q('Who is this denial for?'),
+                  _ChipGroup<PatientRelation>(
+                    groupLabel: 'Who is this denial for?',
+                    options: PatientRelation.values,
+                    selected: _a.relation,
+                    label: (v) => v.label,
+                    onSelect: (v) => _set(_a.copyWith(relation: v)),
+                  ),
+                ],
+                if (!plan.askInsuranceType) ...[
+                  _Q('What kind of insurance is this?'),
+                  _ChipGroup<InsuranceType>(
+                    groupLabel: 'Insurance type',
+                    options: InsuranceType.values,
+                    selected: _a.insuranceType,
+                    label: (v) => v.label,
+                    onSelect: (v) => _set(_a.copyWith(insuranceType: v)),
+                  ),
+                ],
+                _Q('Which supporting documents do you have?'),
+                _MultiChipGroup<SupportingDocument>(
+                  groupLabel: 'Supporting documents on hand',
+                  options: SupportingDocument.values,
+                  selected: _a.documentsOnHand,
+                  label: (v) => v.label,
+                  onToggle: (v) {
+                    final next = {..._a.documentsOnHand};
+                    next.contains(v) ? next.remove(v) : next.add(v);
+                    _set(_a.copyWith(documentsOnHand: next));
+                  },
+                ),
+                _Q('Have you already called the insurer or provider?'),
+                _YesNo(
+                  groupLabel: 'Whether you contacted the insurer or provider',
+                  value: _a.contactedInsurer,
+                  onChanged: (v) => _set(_a.copyWith(contactedInsurer: v)),
+                ),
+                if (_a.contactedInsurer == true)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8, bottom: 12),
+                    child: TextField(
+                      controller: _contactCtrl,
+                      maxLines: 3,
+                      onChanged: (_) => _scheduleAutosave(),
+                      decoration: const InputDecoration(
+                        labelText:
+                            'Call dates, who you spoke with, reference numbers',
+                      ),
+                    ),
+                  ),
+              ],
+            ),
             if (problems.isNotEmpty) ...[
               const SizedBox(height: 16),
               _ProblemList(problems: problems),

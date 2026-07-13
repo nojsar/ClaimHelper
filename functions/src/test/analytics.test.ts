@@ -8,14 +8,19 @@ import {
   UNIQUE_VISITOR_REGISTER_COUNT,
   UNIQUE_VISITOR_SKETCH_VERSION,
   adminAnalyticsCookieHeader,
+  appReadyBucket,
   analyticsSegmentDocumentId,
   bearerToken,
+  caseAnalyticsCounterFields,
+  caseAnalyticsErrorEvent,
+  caseOutcomeAnalyticsCounterFields,
   clientNetworkAddress,
   cookieValue,
   estimateUniqueVisitors,
   filterSegmentableFields,
   isAdminAnalyticsUid,
   isExcludedAnalyticsPath,
+  modelAnalyticsErrorCategory,
   normalizeUniqueVisitorRegisters,
   prepareUniqueVisitorSketchUpdate,
   updateUniqueVisitorRegisters,
@@ -101,6 +106,20 @@ test("analytics segment ids are deterministic and URL-safe", () => {
   );
 });
 
+test("app-ready timings collapse into fixed non-identifying buckets", () => {
+  assert.equal(appReadyBucket(0), "under_1s");
+  assert.equal(appReadyBucket(999), "under_1s");
+  assert.equal(appReadyBucket(1000), "1_to_2s");
+  assert.equal(appReadyBucket(2500), "2_to_4s");
+  assert.equal(appReadyBucket(4000), "4_to_8s");
+  assert.equal(appReadyBucket(8000), "over_8s");
+  assert.equal(appReadyBucket(120000), "over_8s");
+  assert.equal(appReadyBucket(-1), null);
+  assert.equal(appReadyBucket(120001), null);
+  assert.equal(appReadyBucket("1000"), null);
+  assert.equal(appReadyBucket(Number.NaN), null);
+});
+
 test("segmented analytics reject funnel and revenue attribution", () => {
   assert.deepEqual(
     filterSegmentableFields({
@@ -124,6 +143,103 @@ test("segmented analytics reject funnel and revenue attribution", () => {
       "paths./appeals": 1,
     },
   );
+});
+
+test("case product events map only to fixed aggregate counter paths", () => {
+  assert.deepEqual(caseAnalyticsCounterFields("uploaded"), {
+    "funnel.upload": 1,
+  });
+  assert.deepEqual(caseAnalyticsCounterFields("extraction_started"), {
+    "product.extraction.started": 1,
+  });
+  assert.deepEqual(caseAnalyticsCounterFields("preview_completed"), {
+    "product.preview.completed": 1,
+    "funnel.preview": 1,
+  });
+  assert.deepEqual(caseAnalyticsCounterFields("submitted"), {
+    "product.case.submitted": 1,
+  });
+  assert.deepEqual(caseAnalyticsCounterFields("checkout_started"), {
+    "funnel.checkout_started": 1,
+  });
+  assert.deepEqual(caseAnalyticsCounterFields("paid"), {
+    "funnel.paid": 1,
+  });
+
+  for (const invalid of [
+    null,
+    "",
+    "pending",
+    "product.arbitrary",
+    "submitted.user@example.com",
+  ]) {
+    assert.equal(caseAnalyticsCounterFields(invalid), null);
+  }
+});
+
+test("product error events are bounded by stage and category", () => {
+  const stages = ["extraction", "preview", "packet"] as const;
+  const categories = [
+    "validation",
+    "rate_limit",
+    "missing_prerequisite",
+    "model_failure",
+  ] as const;
+
+  for (const stage of stages) {
+    for (const category of categories) {
+      const event = caseAnalyticsErrorEvent(stage, category);
+      assert.equal(event, `${stage}_error_${category}`);
+      const fields = caseAnalyticsCounterFields(event);
+      assert.deepEqual(fields, {
+        [`product.${stage}.errors.${category}`]: 1,
+      });
+    }
+  }
+
+  assert.equal(
+    caseAnalyticsErrorEvent(
+      "unknown" as typeof stages[number],
+      "validation",
+    ),
+    null,
+  );
+});
+
+test("only a fixed final outcome category can reach aggregate analytics", () => {
+  for (const outcome of [
+    "approved",
+    "partially_approved",
+    "denied",
+    "withdrawn",
+  ]) {
+    assert.deepEqual(caseOutcomeAnalyticsCounterFields(outcome), {
+      [`product.outcomes.${outcome}`]: 1,
+    });
+  }
+  assert.equal(caseOutcomeAnalyticsCounterFields("pending"), null);
+  assert.equal(caseOutcomeAnalyticsCounterFields("approved.user-123"), null);
+  assert.equal(caseOutcomeAnalyticsCounterFields({ outcome: "denied" }), null);
+});
+
+test("model exceptions collapse to bounded categories without raw messages", () => {
+  assert.equal(modelAnalyticsErrorCategory({ status: 429 }), "rate_limit");
+  assert.equal(
+    modelAnalyticsErrorCategory({ code: "rate_limit_exceeded" }),
+    "rate_limit",
+  );
+  assert.equal(
+    modelAnalyticsErrorCategory({ code: "resource-exhausted" }),
+    "rate_limit",
+  );
+  assert.equal(
+    modelAnalyticsErrorCategory({
+      status: 500,
+      message: "patient name, denial notes, or any raw provider error",
+    }),
+    "model_failure",
+  );
+  assert.equal(modelAnalyticsErrorCategory("raw error text"), "model_failure");
 });
 
 test("network address parser selects the GCLB-appended client slot", () => {

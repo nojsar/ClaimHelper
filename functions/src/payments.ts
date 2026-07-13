@@ -3,7 +3,11 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import Stripe from "stripe";
 import { ADMIN_UID, config, stripeSecretKey, stripeWebhookSecret } from "./config";
 import { requireUid, requireOwnedCase } from "./util";
-import { bumpUserDaily, isAdminAnalyticsUid } from "./analytics";
+import {
+  bumpUserDaily,
+  isAdminAnalyticsUid,
+  recordFirstCaseAnalyticsEvent,
+} from "./analytics";
 
 function stripeClient(): Stripe {
   const key = stripeSecretKey.value() || process.env.STRIPE_SECRET_KEY;
@@ -149,8 +153,14 @@ export const createCheckoutSession = onCall(
       stripeSessionId: session.id,
       updatedAt: FieldValue.serverTimestamp(),
     });
-    // Aggregate funnel counter only — no case or user data is logged.
-    await bumpUserDaily(uid, { "funnel.checkout_started": 1 });
+    // Follow-up purchases are revenue, not new-customer funnel entries.
+    if (isInitialPurchase) {
+      await recordFirstCaseAnalyticsEvent(
+        uid,
+        snap.ref,
+        "checkout_started",
+      );
+    }
     return { checkoutUrl: session.url, sessionId: session.id };
   },
 );
@@ -289,12 +299,15 @@ export const stripeWebhook = onRequest(
           }
           return true;
         });
+        if (applied && (kind === "packet" || kind === "packet_plus")) {
+          await recordFirstCaseAnalyticsEvent(uid, caseRef, "paid");
+        }
         if (applied && !isAdminAnalyticsUid(uid)) {
-          // Aggregate revenue/funnel counters only — nothing user-identifying.
+          // Aggregate revenue only — nothing user-identifying. Initial paid
+          // funnel state is recorded once per case immediately above.
           // The explicit guard protects legacy/admin Stripe sessions; the
           // centralized writer independently refuses the owner uid as well.
           await bumpUserDaily(uid, {
-            "funnel.paid": 1,
             revenueCents: session.amount_total ?? 0,
           });
         }

@@ -1,3 +1,4 @@
+import 'case_tracker.dart';
 import 'extraction.dart';
 import 'follow_up.dart';
 import 'guided_answers.dart';
@@ -5,6 +6,7 @@ import 'packet.dart';
 
 enum CaseStatus {
   uploaded('uploaded'),
+  extracting('extracting'),
   extracted('extracted'),
   preview('preview'),
   paid('paid'),
@@ -41,6 +43,7 @@ class AppealCase {
     this.followUps = const [],
     this.followUpCredits,
     this.fullCase = false,
+    this.caseTracker,
   });
 
   final String id;
@@ -70,6 +73,7 @@ class AppealCase {
   final List<FollowUpRound> followUps;
   final int? followUpCredits;
   final bool fullCase;
+  final CaseTracker? caseTracker;
 
   int get remainingFollowUps => paid ? (followUpCredits ?? 2) : 0;
 
@@ -87,10 +91,12 @@ class AppealCase {
           .whereType<String>()
           .toList(),
       extraction: json['extraction'] is Map<String, dynamic>
-          ? DenialExtraction.fromJson(json['extraction'] as Map<String, dynamic>)
+          ? DenialExtraction.fromJson(
+              json['extraction'] as Map<String, dynamic>)
           : null,
       guidedAnswers: json['guidedAnswers'] is Map<String, dynamic>
-          ? GuidedAnswers.fromJson(json['guidedAnswers'] as Map<String, dynamic>)
+          ? GuidedAnswers.fromJson(
+              json['guidedAnswers'] as Map<String, dynamic>)
           : null,
       preview: json['preview'] is Map<String, dynamic>
           ? FreePreview.fromJson(json['preview'] as Map<String, dynamic>)
@@ -112,6 +118,10 @@ class AppealCase {
           .toList(),
       followUpCredits: (json['followUpCredits'] as num?)?.toInt(),
       fullCase: json['fullCase'] as bool? ?? false,
+      caseTracker: json['caseTracker'] is Map
+          ? CaseTracker.fromJson(
+              Map<String, dynamic>.from(json['caseTracker'] as Map))
+          : null,
     );
   }
 
@@ -143,6 +153,7 @@ class AppealCase {
     List<FollowUpRound>? followUps,
     int? followUpCredits,
     bool? fullCase,
+    CaseTracker? caseTracker,
   }) {
     return AppealCase(
       id: id,
@@ -163,6 +174,7 @@ class AppealCase {
       followUps: followUps ?? this.followUps,
       followUpCredits: followUpCredits ?? this.followUpCredits,
       fullCase: fullCase ?? this.fullCase,
+      caseTracker: caseTracker ?? this.caseTracker,
     );
   }
 }

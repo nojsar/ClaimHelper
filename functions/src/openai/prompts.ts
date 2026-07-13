@@ -32,12 +32,16 @@ Rules:
 
 export function buildPreviewUserPrompt(
   extractionJson: string,
+  guidedAnswersJson?: string | null,
   userAdditions?: string | null,
 ): string {
+  const guided = guidedAnswersJson?.trim()
+    ? `\n\nAnswers supplied directly by the user (use only where relevant):\n\n${guidedAnswersJson}`
+    : "";
   const additions = userAdditions?.trim()
     ? `\n\nAdditional details supplied directly by the user (treat as user-provided facts):\n\n${userAdditions}`
     : "";
-  return `Here is the structured extraction from the user's denial document(s):\n\n${extractionJson}${additions}\n\nWrite the free preview: a plain-English denial summary, the amount at stake if known, the likely appeal path, missing info, the recommended packet type, and the opening 2-3 sentences of the appeal letter itself (personalized with the insurer's name and denial reason, citing their own language back where available).`;
+  return `Here is the structured extraction from the user's denial document(s):\n\n${extractionJson}${guided}${additions}\n\nWrite the free preview: a plain-English denial summary, the amount at stake if known, the likely appeal path, missing info, the recommended packet type, and the opening 2-3 sentences of the appeal letter itself (personalized with the insurer's name and denial reason, citing their own language back where available).`;
 }
 
 export function buildPacketUserPrompt(

@@ -91,7 +91,7 @@
     flush();
   }
 
-  function track(type, path) {
+  function track(type, path, measurement) {
     var route = currentPath(path);
     // The private dashboard is never acquisition/product traffic. Suppress it
     // synchronously, even before Firebase Auth has restored the owner session.
@@ -101,6 +101,10 @@
       path: route,
       ref: initialReferrer
     };
+    if (type === 'app_ready' && typeof measurement === 'number' &&
+        Number.isFinite(measurement)) {
+      event.ms = Math.round(measurement);
+    }
     if (!authResolved) {
       if (pending.length < MAX_QUEUED_EVENTS) pending.push(event);
       return;

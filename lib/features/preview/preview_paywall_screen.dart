@@ -202,20 +202,18 @@ class _PreviewPaywallScreenState extends ConsumerState<PreviewPaywallScreen> {
   }
 
   Future<void> _purchase() async {
-    // A purchase must belong to a real account: otherwise the paid packet
-    // lives on an unrecoverable anonymous session. Linking keeps the same
-    // uid, so this case stays owned by the user.
-    if (ref.read(authProvider).isAnonymous) {
-      final ok = await ensureAccount(
-        context,
-        ref,
-        title: 'Create your account first',
-        reason: 'Your paid appeal packet is stored on your account so you can '
-            'come back to it from any device. This takes 20 seconds, then '
-            'checkout continues.',
-      );
-      if (!ok || !mounted) return;
-    }
+    // A purchase must belong to a recoverable account. ensureAccount also
+    // completes an interrupted guest-case transfer after a browser reload.
+    final ok = await ensureAccount(
+      context,
+      ref,
+      caseId: widget.caseId,
+      title: 'Create your account first',
+      reason: 'Your paid appeal packet is stored on your account so you can '
+          'come back to it from any device. This takes 20 seconds, then '
+          'checkout continues.',
+    );
+    if (!ok || !mounted) return;
     setState(() => _purchasing = true);
     try {
       final backend = ref.read(backendProvider);
@@ -835,7 +833,69 @@ class _PaywallCard extends StatelessWidget {
               'One-time payment · no subscription.',
               style: TextStyle(fontSize: 12.5, color: AppColors.textMuted),
             ),
+            const SizedBox(height: 6),
+            const Text(
+              'Secure Stripe checkout - GetMyYes never sees or stores your card number.',
+              style: TextStyle(fontSize: 12.5, color: AppColors.textMuted),
+            ),
+            const SizedBox(height: 4),
+            const Wrap(
+              spacing: 10,
+              runSpacing: 0,
+              children: [
+                _PricingLink(
+                  label: 'Guarantee details',
+                  url: 'https://getmyyes.com/terms#accuracy-guarantee',
+                ),
+                _PricingLink(
+                  label: 'Terms of Service',
+                  url: 'https://getmyyes.com/terms',
+                ),
+                _PricingLink(
+                  label: 'Federal-data source',
+                  url: 'https://getmyyes.com/insurer-denial-rates',
+                ),
+              ],
+            ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PricingLink extends StatelessWidget {
+  const _PricingLink({required this.label, required this.url});
+
+  final String label;
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    void open() => launchUrl(Uri.parse(url), webOnlyWindowName: '_blank');
+
+    return Semantics(
+      link: true,
+      label: label,
+      excludeSemantics: true,
+      onTap: open,
+      child: InkWell(
+        onTap: open,
+        borderRadius: BorderRadius.circular(4),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 48, minHeight: 44),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.primaryDark,
+                fontWeight: FontWeight.w600,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ),
         ),
       ),
     );

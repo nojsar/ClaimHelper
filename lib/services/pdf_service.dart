@@ -47,8 +47,8 @@ class PdfService {
     pw.Widget heading(String text) => pw.Padding(
           padding: const pw.EdgeInsets.only(top: 16, bottom: 6),
           child: pw.Text(text,
-              style: pw.TextStyle(
-                  fontSize: 15, fontWeight: pw.FontWeight.bold)),
+              style:
+                  pw.TextStyle(fontSize: 15, fontWeight: pw.FontWeight.bold)),
         );
 
     pw.Widget body(String text) => pw.Padding(
@@ -74,10 +74,11 @@ class PdfService {
         ),
         build: (context) => [
           pw.Text('Appeal Packet',
-              style: pw.TextStyle(
-                  fontSize: 24, fontWeight: pw.FontWeight.bold)),
+              style:
+                  pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
           pw.Text('Prepared $dateStr',
-              style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+              style:
+                  const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
           if (ex != null) ...[
             pw.SizedBox(height: 4),
             pw.Text(
@@ -86,13 +87,10 @@ class PdfService {
             ),
           ],
           pw.Divider(),
-
           heading('Plain-English summary'),
           body(packet.plainEnglishSummary),
-
           heading('Appeal strategy'),
           body(packet.appealStrategy),
-
           heading('Appeal letter'),
           pw.Container(
             width: double.infinity,
@@ -104,10 +102,8 @@ class PdfService {
             child: pw.Text(packet.appealLetter,
                 style: const pw.TextStyle(fontSize: 11)),
           ),
-
           heading('Doctor letter request'),
           body(packet.doctorLetterRequest),
-
           heading('Evidence checklist'),
           pw.Table(
             border: pw.TableBorder.all(color: PdfColors.grey400),
@@ -123,10 +119,8 @@ class PdfService {
               ),
             ],
           ),
-
           heading('Insurer call script'),
           body(packet.insurerCallScript),
-
           heading('Deadlines'),
           pw.Table(
             border: pw.TableBorder.all(color: PdfColors.grey400),
@@ -138,16 +132,15 @@ class PdfService {
             children: [
               _row(['Task', 'Due date', 'Priority'], header: true),
               ...packet.deadlineChecklist.map(
-                (d) => _row([d.task, d.dueDate ?? 'Confirm with insurer', d.priority]),
+                (d) => _row(
+                    [d.task, d.dueDate ?? 'Confirm with insurer', d.priority]),
               ),
             ],
           ),
-
           if (packet.warnings.isNotEmpty) ...[
             heading('Important warnings'),
             ...packet.warnings.map((w) => pw.Bullet(text: w)),
           ],
-
           pw.SizedBox(height: 16),
           pw.Container(
             padding: const pw.EdgeInsets.all(10),
@@ -163,9 +156,8 @@ class PdfService {
   }
 
   pw.TableRow _row(List<String> cells, {bool header = false}) => pw.TableRow(
-        decoration: header
-            ? const pw.BoxDecoration(color: PdfColors.grey300)
-            : null,
+        decoration:
+            header ? const pw.BoxDecoration(color: PdfColors.grey300) : null,
         children: cells
             .map((c) => pw.Padding(
                   padding: const pw.EdgeInsets.all(6),

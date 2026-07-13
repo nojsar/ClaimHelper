@@ -24,14 +24,41 @@ class _ExtractionReviewScreenState
   late DenialExtraction _ex;
   final _controllers = <String, TextEditingController>{};
   bool _initialized = false;
+  String? _loadError;
 
   @override
   void initState() {
     super.initState();
-    final current = ref.read(intakeControllerProvider).extraction;
+    final intake = ref.read(intakeControllerProvider);
+    final current = intake.caseId == widget.caseId ? intake.extraction : null;
     if (current != null) {
       _ex = current;
       _initialized = true;
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _restore());
+    }
+  }
+
+  Future<void> _restore() async {
+    if (mounted) setState(() => _loadError = null);
+    try {
+      await ref
+          .read(intakeControllerProvider.notifier)
+          .restoreCase(widget.caseId);
+      final restored = ref.read(intakeControllerProvider).extraction;
+      if (restored == null) {
+        throw StateError('The document has not finished processing.');
+      }
+      if (!mounted) return;
+      setState(() {
+        _ex = restored;
+        _initialized = true;
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() => _loadError =
+            'We could not restore the extracted details. Please retry.');
+      }
     }
   }
 
@@ -84,15 +111,32 @@ class _ExtractionReviewScreenState
   @override
   Widget build(BuildContext context) {
     if (!_initialized) {
-      // Deep-linked without intake state (e.g. page refresh): send to upload.
       return AppScaffold(
         title: 'Review',
-        child: ErrorRetry(
-          message: 'We lost your document session. Please upload again.',
-          onRetry: () => context.go('/upload'),
-        ),
+        child: _loadError == null
+            ? const Center(child: CircularProgressIndicator())
+            : ErrorRetry(message: _loadError!, onRetry: _restore),
       );
     }
+
+    final primaryKeys = <String>{
+      'insurerName',
+      'deniedItem',
+      'appealDeadline',
+      'denialReasonText',
+      if (_ex.denialCategory == DenialCategory.priorAuthorization)
+        'priorAuthNumber'
+      else
+        'claimNumber',
+      if ({
+        DenialCategory.medication,
+        DenialCategory.stepTherapy,
+        DenialCategory.formularyExclusion,
+      }.contains(_ex.denialCategory))
+        'prescriberName'
+      else
+        'providerName',
+    };
 
     return AppScaffold(
       title: 'Review extracted facts',
@@ -108,8 +152,9 @@ class _ExtractionReviewScreenState
             ),
             const SizedBox(height: 6),
             const Text(
-              'We pulled these from your document. Fix anything that\'s wrong — '
-              'blank means we couldn\'t find it. Your edits shape the appeal.',
+              'We pulled out the details that shape your preview. Check these '
+              'essentials; everything else is available below if you want to '
+              'review it.',
               style: TextStyle(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 20),
@@ -121,25 +166,49 @@ class _ExtractionReviewScreenState
             ),
             const SizedBox(height: 16),
             _field('Insurance company', 'insurerName', _ex.insurerName),
-            _field('Plan type (if known)', 'planName', _ex.planName),
-            _field('Member / patient name', 'patientName', _ex.patientName),
-            _field('Claim number', 'claimNumber', _ex.claimNumber),
-            _field('Prior-auth number', 'priorAuthNumber', _ex.priorAuthNumber),
+            if (primaryKeys.contains('claimNumber'))
+              _field('Claim number', 'claimNumber', _ex.claimNumber),
+            if (primaryKeys.contains('priorAuthNumber'))
+              _field(
+                  'Prior-auth number', 'priorAuthNumber', _ex.priorAuthNumber),
             _field('Service / drug denied', 'deniedItem', _ex.deniedItem),
-            _field('Provider', 'providerName', _ex.providerName),
-            _field('Prescriber', 'prescriberName', _ex.prescriberName),
-            _field('Date received / denial date', 'denialDate', _ex.denialDate,
-                hint: 'YYYY-MM-DD'),
+            if (primaryKeys.contains('providerName'))
+              _field('Provider', 'providerName', _ex.providerName),
+            if (primaryKeys.contains('prescriberName'))
+              _field('Prescriber', 'prescriberName', _ex.prescriberName),
             _field('Appeal deadline', 'appealDeadline', _ex.appealDeadline,
                 hint: 'YYYY-MM-DD if stated'),
-            _field('Amount billed', 'amountBilled',
-                _ex.amountBilled?.toStringAsFixed(2),
-                keyboard: TextInputType.number, prefix: '\$'),
-            _field('Your responsibility', 'patientResponsibility',
-                _ex.patientResponsibility?.toStringAsFixed(2),
-                keyboard: TextInputType.number, prefix: '\$'),
             _field('Denial reason', 'denialReasonText', _ex.denialReasonText,
                 maxLines: 4),
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              title: const Text('Review more extracted details (optional)',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+              subtitle: const Text(
+                  'Patient, plan, dates, and amounts are saved for the packet.'),
+              children: [
+                _field('Plan type (if known)', 'planName', _ex.planName),
+                _field('Member / patient name', 'patientName', _ex.patientName),
+                if (!primaryKeys.contains('claimNumber'))
+                  _field('Claim number', 'claimNumber', _ex.claimNumber),
+                if (!primaryKeys.contains('priorAuthNumber'))
+                  _field('Prior-auth number', 'priorAuthNumber',
+                      _ex.priorAuthNumber),
+                if (!primaryKeys.contains('providerName'))
+                  _field('Provider', 'providerName', _ex.providerName),
+                if (!primaryKeys.contains('prescriberName'))
+                  _field('Prescriber', 'prescriberName', _ex.prescriberName),
+                _field(
+                    'Date received / denial date', 'denialDate', _ex.denialDate,
+                    hint: 'YYYY-MM-DD'),
+                _field('Amount billed', 'amountBilled',
+                    _ex.amountBilled?.toStringAsFixed(2),
+                    keyboard: TextInputType.number, prefix: '\$'),
+                _field('Your responsibility', 'patientResponsibility',
+                    _ex.patientResponsibility?.toStringAsFixed(2),
+                    keyboard: TextInputType.number, prefix: '\$'),
+              ],
+            ),
             if (_ex.sourceSnippets.isNotEmpty) ...[
               const SizedBox(height: 8),
               _SnippetsPanel(snippets: _ex.sourceSnippets),
@@ -169,6 +238,11 @@ class _ExtractionReviewScreenState
     TextInputType? keyboard,
     String? prefix,
   }) {
+    final needsAttention = (value == null || value.trim().isEmpty) ||
+        _ex.missingFields
+            .any((missing) => missing.toLowerCase() == key.toLowerCase()) ||
+        !_ex.sourceSnippets
+            .any((snippet) => snippet.field.toLowerCase() == key.toLowerCase());
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: TextField(
@@ -176,9 +250,12 @@ class _ExtractionReviewScreenState
         maxLines: maxLines,
         keyboardType: keyboard,
         decoration: InputDecoration(
-          labelText: label,
+          labelText: needsAttention ? '$label — please check' : label,
           hintText: hint ?? 'Unknown',
           prefixText: prefix,
+          helperText: needsAttention
+              ? 'Missing or not clearly supported by the uploaded document.'
+              : null,
         ),
       ),
     );

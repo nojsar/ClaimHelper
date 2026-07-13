@@ -12,11 +12,10 @@ abstract final class AppCopy {
       'GetMyYes drafts the appeal paperwork — you review and send it.';
 
   static const consentText =
-      'I understand my documents may contain sensitive health and insurance '
-      'information, and I give my explicit consent to them being processed '
-      'by an AI service to draft my appeal documents. Files are auto-deleted '
-      'after 24 hours unless I save my case, and I can withdraw consent at '
-      'any time by deleting my case in Settings.';
+      'I give explicit consent for GetMyYes and its AI service to process the '
+      'health and insurance information in these files only to draft my appeal. '
+      'Unsaved files are deleted after 24 hours; I can withdraw consent by '
+      'deleting my case.';
 
   static const disclaimer =
       'GetMyYes is a document drafting assistant. It does not provide '
@@ -39,11 +38,57 @@ abstract final class AppCopy {
 
 abstract final class UsStates {
   static const all = [
-    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA', 'HI',
-    'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN',
-    'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH',
-    'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA',
-    'WV', 'WI', 'WY',
+    'AL',
+    'AK',
+    'AZ',
+    'AR',
+    'CA',
+    'CO',
+    'CT',
+    'DE',
+    'DC',
+    'FL',
+    'GA',
+    'HI',
+    'ID',
+    'IL',
+    'IN',
+    'IA',
+    'KS',
+    'KY',
+    'LA',
+    'ME',
+    'MD',
+    'MA',
+    'MI',
+    'MN',
+    'MS',
+    'MO',
+    'MT',
+    'NE',
+    'NV',
+    'NH',
+    'NJ',
+    'NM',
+    'NY',
+    'NC',
+    'ND',
+    'OH',
+    'OK',
+    'OR',
+    'PA',
+    'RI',
+    'SC',
+    'SD',
+    'TN',
+    'TX',
+    'UT',
+    'VT',
+    'VA',
+    'WA',
+    'WV',
+    'WI',
+    'WY',
   ];
 }
 

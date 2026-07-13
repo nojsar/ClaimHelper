@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -9,14 +10,34 @@ import '../state/providers.dart';
 ///
 /// Anonymous sessions are linked to the new email/password credential, which
 /// keeps the same uid — so the current case (and anything already paid on it)
-/// stays owned by the user. Returns true once the user is non-anonymous.
+/// stays owned by the user. Existing-account sign-in uses a short-lived,
+/// server-authorized ownership transfer instead of abandoning the guest case.
+/// Returns true once the user is non-anonymous and owns [caseId].
 Future<bool> ensureAccount(
   BuildContext context,
   WidgetRef ref, {
+  required String caseId,
   required String title,
   required String reason,
 }) async {
-  if (!ref.read(authProvider).isAnonymous) return true;
+  if (!ref.read(authProvider).isAnonymous) {
+    try {
+      // Usually this is an inexpensive already-owned check. It also repairs a
+      // prepared claim after a network interruption or browser reload.
+      await ref.read(authProvider.notifier).claimGuestCase(caseId);
+      ref.invalidate(caseStreamProvider(caseId));
+      ref.invalidate(myCasesProvider);
+      return true;
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              'Could not attach this case to your account. Please try again.'),
+        ));
+      }
+      return false;
+    }
+  }
   await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
@@ -24,13 +45,22 @@ Future<bool> ensureAccount(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
     ),
-    builder: (_) => _AccountSheet(title: title, reason: reason),
+    builder: (_) => _AccountSheet(caseId: caseId, title: title, reason: reason),
   );
-  return !ref.read(authProvider).isAnonymous;
+  final ready = !ref.read(authProvider).isAnonymous;
+  if (ready) {
+    // Firestore listeners opened under the anonymous token can terminate when
+    // ownership changes; recreate them with the destination account token.
+    ref.invalidate(caseStreamProvider(caseId));
+    ref.invalidate(myCasesProvider);
+  }
+  return ready;
 }
 
 class _AccountSheet extends ConsumerStatefulWidget {
-  const _AccountSheet({required this.title, required this.reason});
+  const _AccountSheet(
+      {required this.caseId, required this.title, required this.reason});
+  final String caseId;
   final String title;
   final String reason;
 
@@ -71,6 +101,20 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
           return 'Too many attempts — please wait a moment and try again.';
       }
     }
+    if (e is FirebaseFunctionsException) {
+      switch (e.code) {
+        case 'deadline-exceeded':
+          return 'The secure transfer expired. Please sign in again.';
+        case 'permission-denied':
+        case 'failed-precondition':
+          return 'We could not attach this guest case to that account. '
+              'Please try again.';
+        case 'unavailable':
+        case 'internal':
+          return 'You are signed in, but the case transfer was interrupted. '
+              'Try again to finish it safely.';
+      }
+    }
     return 'Something went wrong. Please try again.';
   }
 
@@ -89,7 +133,7 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
     try {
       final auth = ref.read(authProvider.notifier);
       if (_signInMode) {
-        await auth.signIn(email, password);
+        await auth.signInAndClaimCase(email, password, widget.caseId);
       } else {
         await auth.createAccount(email, password);
       }
@@ -138,9 +182,8 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
-                'Heads up: signing in to a different account moves you off '
-                'this guest session. To keep the case you\'re working on, '
-                'create a new account instead.',
+                'This case and its uploaded documents will be securely moved '
+                'from the guest session to the account you sign in to.',
                 style: TextStyle(fontSize: 12.5, color: AppColors.warning),
               ),
             ),

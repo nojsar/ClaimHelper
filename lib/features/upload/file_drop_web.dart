@@ -18,7 +18,8 @@ class FileDrop {
   JSFunction? _leave;
   JSFunction? _drop;
 
-  void attach({required OnFilesDropped onFiles, required OnDragChanged onDrag}) {
+  void attach(
+      {required OnFilesDropped onFiles, required OnDragChanged onDrag}) {
     _onFiles = onFiles;
     _onDrag = onDrag;
 

@@ -4,6 +4,7 @@ import 'package:claimhelper/core/theme.dart';
 import 'package:claimhelper/features/guided/guided_questions_screen.dart';
 import 'package:claimhelper/features/preview/purchase_success_screen.dart';
 import 'package:claimhelper/features/upload/upload_screen.dart';
+import 'package:claimhelper/models/appeal_case.dart';
 import 'package:claimhelper/services/mock_backend.dart';
 import 'package:claimhelper/state/providers.dart';
 import 'package:claimhelper/widgets/app_scaffold.dart';
@@ -177,7 +178,7 @@ void main() {
         ),
       ),
     ));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
     expect(
@@ -199,6 +200,14 @@ void main() {
           .isHeader,
       isTrue,
     );
+    expect(find.text('Take a photo'), findsOneWidget);
+    expect(find.textContaining('20 MB each, 45 MB total'), findsOneWidget);
+    expect(find.textContaining('No card is required'), findsOneWidget);
+    expect(
+        find.text('I consent to secure document processing'), findsOneWidget);
+    final primaryAction = tester.getRect(find.text('Read my document'));
+    expect(primaryAction.bottom, lessThanOrEqualTo(900));
+    expect(primaryAction.top, greaterThanOrEqualTo(0));
     semantics.dispose();
   });
 
@@ -211,7 +220,7 @@ void main() {
     final semantics = tester.ensureSemantics();
 
     await tester.pumpWidget(ProviderScope(
-      overrides: [backendProvider.overrideWithValue(MockBackend())],
+      overrides: [backendProvider.overrideWithValue(_GuidedA11yBackend())],
       child: MaterialApp(
         theme: buildAppTheme(),
         home: const MediaQuery(
@@ -223,11 +232,20 @@ void main() {
         ),
       ),
     ));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
-    expect(find.bySemanticsLabel('Who is this denial for?'), findsWidgets);
     expect(find.bySemanticsLabel('Desired outcome'), findsOneWidget);
+    // The relationship question is optional when extraction already identified
+    // the patient. Expand the optional section and verify its group label still
+    // survives 200% text sizing.
+    final optionalDetails = find.text('Add more packet detail (optional)');
+    expect(optionalDetails, findsOneWidget);
+    await tester.ensureVisible(optionalDetails);
+    await tester.pumpAndSettle();
+    await tester.tap(optionalDetails);
+    await tester.pumpAndSettle();
+    expect(find.bySemanticsLabel('Who is this denial for?'), findsWidgets);
     semantics.dispose();
   });
 
@@ -256,6 +274,21 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.textContaining('Loading'), findsWidgets);
   });
+}
+
+class _GuidedA11yBackend extends MockBackend {
+  @override
+  Future<AppealCase?> getCase(String caseId) async => AppealCase.fromJson(
+        caseId,
+        const {
+          'status': 'extracted',
+          'extraction': {
+            'documentType': 'denial_letter',
+            'denialCategory': 'unknown',
+            'patientName': 'Jordan Sample',
+          },
+        },
+      );
 }
 
 double _contrast(Color foreground, Color background) {

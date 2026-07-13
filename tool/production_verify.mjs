@@ -14,8 +14,8 @@ const artifactRoot = artifactFlag >= 0
 const pages = [
   { route: "/", file: "index.html" },
   { route: "/accessibility", file: "accessibility.html" },
-  { route: "/privacy.html", file: "privacy.html" },
-  { route: "/terms.html", file: "terms.html" },
+  { route: "/privacy", file: "privacy.html" },
+  { route: "/terms", file: "terms.html" },
   { route: "/appeals/", file: "appeals/index.html" },
   { route: "/codes/", file: "codes/index.html" },
   {
@@ -23,6 +23,8 @@ const pages = [
     file: "tools/appeal-deadline-calculator.html",
   },
   { route: "/insurer-denial-rates", file: "insurer-denial-rates.html" },
+  { route: "/sample-packet", file: "sample-packet.html" },
+  { route: "/editorial-policy", file: "editorial-policy.html" },
 ];
 const bundles = [
   "main.dart.js",
@@ -107,6 +109,11 @@ async function verifyResource(route, file, checkDocument) {
     try {
       const { response, bytes } = await fetchOnce(route);
       if (checkDocument) {
+        checkHeader(
+          response,
+          "content-security-policy-report-only",
+          (value) => value.includes("default-src 'self'") && value.includes("object-src 'none'"),
+        );
         const type = response.headers.get("content-type") ?? "";
         if (!type.toLowerCase().includes("text/html")) {
           fail(`${response.url} has unexpected content type ${type || "missing"}.`);
@@ -156,6 +163,7 @@ await verifyEndpoint("/api/track", 204);
 // GET must reach the protected function and be rejected. A 200 would mean the
 // Hosting catch-all served index.html instead of the token exchange endpoint.
 await verifyEndpoint("/api/admin-analytics-exclusion", 405);
+await verifyEndpoint("/__getmyyes_missing_page__", 404);
 
 console.log(
   `[production] Verified ${pages.length} public pages, ${bundles.length} app bundles, and both analytics rewrites at ${origin}.`,

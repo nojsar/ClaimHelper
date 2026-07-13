@@ -15,8 +15,10 @@ service cloud.firestore {
     function touchesServerOnlyFields() {
       return request.resource.data.diff(resource.data).affectedKeys().hasAny([
         'paid', 'pricePaid', 'stripeSessionId', 'packet', 'preview',
-        'ownerUid', 'createdAt', 'consentConfirmedAt',
-        'followUps', 'followUpCredits', 'fullCase', 'generation'
+        'ownerUid', 'storageOwnerUids', 'guestSessionId',
+        'ownershipTransferredAt', 'createdAt', 'consentConfirmedAt',
+        'followUps', 'followUpCredits', 'fullCase', 'generation',
+        'caseTracker', 'analyticsMilestones'
       ]);
     }
 
@@ -40,6 +42,13 @@ service cloud.firestore {
       // Written exclusively by the Stripe webhook (Admin SDK).
       allow read: if signedIn() && resource.data.uid == request.auth.uid;
       allow write: if false;
+    }
+
+    match /guestCaseClaims/{caseId} {
+      // Short-lived, server-issued ownership-transfer authorizations. Neither
+      // the anonymous source identity nor the destination account can inspect
+      // or alter them directly; both phases go through callable functions.
+      allow read, write: if false;
     }
 
     match /analytics_daily/{day} {

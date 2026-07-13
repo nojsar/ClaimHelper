@@ -70,6 +70,7 @@ export const config = {
 /** Case lifecycle states mirrored in the Flutter app's CaseStatus enum. */
 export type CaseStatus =
   | "uploaded"
+  | "extracting"
   | "extracted"
   | "preview"
   | "paid"

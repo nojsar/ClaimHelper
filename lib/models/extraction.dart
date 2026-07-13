@@ -103,7 +103,8 @@ class DenialExtraction {
   factory DenialExtraction.fromJson(Map<String, dynamic> json) {
     return DenialExtraction(
       documentType: DocumentType.fromWire(json['documentType'] as String?),
-      denialCategory: DenialCategory.fromWire(json['denialCategory'] as String?),
+      denialCategory:
+          DenialCategory.fromWire(json['denialCategory'] as String?),
       insurerName: json['insurerName'] as String?,
       planName: json['planName'] as String?,
       patientName: json['patientName'] as String?,

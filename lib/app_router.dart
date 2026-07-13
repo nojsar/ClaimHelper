@@ -36,6 +36,10 @@ final appRouter = GoRouter(
       builder: (_, __) => const ProcessingScreen(),
     ),
     GoRoute(
+      path: '/case/:caseId/processing',
+      builder: (_, s) => ProcessingScreen(caseId: s.pathParameters['caseId']!),
+    ),
+    GoRoute(
       path: '/case/:caseId/review',
       builder: (_, s) =>
           ExtractionReviewScreen(caseId: s.pathParameters['caseId']!),

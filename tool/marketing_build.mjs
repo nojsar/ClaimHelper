@@ -17,7 +17,7 @@ const discoveryFiles = [
   "llms.txt",
   "ae1eb6c514f913f2fa38028ca8b6699b.txt",
 ];
-const publicStaticPages = ["privacy.html", "terms.html", "accessibility.html"];
+const publicStaticPages = ["privacy.html", "terms.html", "accessibility.html", "404.html"];
 const publicStaticAssets = [...publicStaticPages, "legal.css"];
 // Marketing sections beyond /appeals/: the denial-code library, the
 // insurer-specific appeal library, plus standalone tool/data pages.
@@ -28,6 +28,8 @@ const insurersRootName = "insurers";
 const standalonePages = [
   { file: "tools/appeal-deadline-calculator.html", canonical: `https://getmyyes.com/tools/appeal-deadline-calculator` },
   { file: "insurer-denial-rates.html", canonical: `https://getmyyes.com/insurer-denial-rates` },
+  { file: "sample-packet.html", canonical: `https://getmyyes.com/sample-packet` },
+  { file: "editorial-policy.html", canonical: `https://getmyyes.com/editorial-policy` },
 ];
 
 function fail(message) {
@@ -57,6 +59,18 @@ function metaDescription(html, file) {
   const value = tag?.match(/\bcontent=(["'])([\s\S]*?)\1/i)?.[2]?.trim();
   if (!value) fail(`${file} is missing a meta description.`);
   return value;
+}
+
+function validateSearchMetadata(html, file) {
+  const title = decodeHtml(match(html, /<title>([\s\S]*?)<\/title>/i, "a title", file));
+  const description = decodeHtml(metaDescription(html, file));
+  if (title.length > 65) {
+    fail(`${file} title is ${title.length} characters; keep it at 65 or fewer.`);
+  }
+  if (description.length > 170) {
+    fail(`${file} meta description is ${description.length} characters; keep it at 170 or fewer.`);
+  }
+  return { title, description };
 }
 
 function requireStaticTracker(html, file) {
@@ -103,6 +117,7 @@ async function guideModel() {
     const ids = [...html.matchAll(/\sid=["']([^"']+)["']/g)].map((found) => found[1]);
     if (new Set(ids).size !== ids.length) fail(`${name} contains duplicate HTML ids.`);
     requireStaticTracker(html, name);
+    validateSearchMetadata(html, name);
 
     const socialSlug = name === "index.html" ? "index" : name.slice(0, -5);
     const expectedSocialImage = `${siteOrigin}/appeals/og/${socialSlug}.png`;
@@ -193,6 +208,7 @@ async function extraModel(guideSlugs) {
       }
     }
     requireStaticTracker(html, name);
+    validateSearchMetadata(html, name);
     const canonical = match(
       html,
       /<link\s+rel=["']canonical["']\s+href=["']([^"']+)["']/i,
@@ -232,7 +248,10 @@ async function extraModel(guideSlugs) {
       ? `${siteOrigin}/codes/`
       : `${siteOrigin}/codes/${name.slice(0, -5)}`;
     validate(`codes/${name}`, html, expected);
-    entries.push({ url: expected, modified: null });
+    entries.push({
+      url: expected,
+      modified: html.match(/"dateModified"\s*:\s*"(\d{4}-\d{2}-\d{2})"/)?.[1] ?? null,
+    });
   }
   for (const name of insurerNames) {
     const html = await readFile(path.join(insurersRoot, name), "utf8");
@@ -240,12 +259,18 @@ async function extraModel(guideSlugs) {
       ? `${siteOrigin}/insurers/`
       : `${siteOrigin}/insurers/${name.slice(0, -5)}`;
     validate(`insurers/${name}`, html, expected);
-    entries.push({ url: expected, modified: null });
+    entries.push({
+      url: expected,
+      modified: html.match(/"dateModified"\s*:\s*"(\d{4}-\d{2}-\d{2})"/)?.[1] ?? null,
+    });
   }
   for (const page of standalonePages) {
     const html = await readFile(path.join(webRoot, page.file), "utf8");
     validate(page.file, html, page.canonical);
-    entries.push({ url: page.canonical, modified: null });
+    entries.push({
+      url: page.canonical,
+      modified: html.match(/"dateModified"\s*:\s*"(\d{4}-\d{2}-\d{2})"/)?.[1] ?? null,
+    });
   }
   return entries;
 }
@@ -257,8 +282,8 @@ function sitemapFor(pages, extraEntries = []) {
     ...pages.map((page) => ({ url: page.canonical, modified: page.modified })),
     ...extraEntries,
     { url: `${siteOrigin}/accessibility`, modified: null },
-    { url: `${siteOrigin}/terms.html`, modified: null },
-    { url: `${siteOrigin}/privacy.html`, modified: null },
+    { url: `${siteOrigin}/terms`, modified: null },
+    { url: `${siteOrigin}/privacy`, modified: null },
   ];
   const body = entries.map(({ url, modified }) => [
     "  <url>",
@@ -335,6 +360,7 @@ async function generate() {
   await validatePosts(pages);
   const extras = await extraModel(new Set(pages.map((page) => page.slug)));
   const index = await readFile(path.join(webRoot, "index.html"), "utf8");
+  validateSearchMetadata(index, "index.html");
   if (!index.includes('<script src="/analytics.js"></script>')) {
     fail("The homepage is missing the auth-gated first-party visit counter.");
   }
@@ -342,7 +368,21 @@ async function generate() {
   if (!index.includes('href="/codes/"')) fail("The homepage has no crawlable link to /codes/.");
   if (!index.includes('href="/insurers/"')) fail("The homepage has no crawlable link to /insurers/.");
   for (const name of publicStaticPages) {
-    requireStaticTracker(await readFile(path.join(webRoot, name), "utf8"), name);
+    const html = await readFile(path.join(webRoot, name), "utf8");
+    requireStaticTracker(html, name);
+    validateSearchMetadata(html, name);
+  }
+  const privacy = await readFile(path.join(webRoot, "privacy.html"), "utf8");
+  const terms = await readFile(path.join(webRoot, "terms.html"), "utf8");
+  if (!privacy.includes('rel="canonical" href="https://getmyyes.com/privacy"')) {
+    fail("privacy.html must canonicalize to the clean /privacy URL.");
+  }
+  if (!terms.includes('rel="canonical" href="https://getmyyes.com/terms"')) {
+    fail("terms.html must canonicalize to the clean /terms URL.");
+  }
+  const notFound = await readFile(path.join(webRoot, "404.html"), "utf8");
+  if (!/<meta\s+name=["']robots["']\s+content=["'][^"']*noindex/i.test(notFound)) {
+    fail("404.html must be noindex.");
   }
   await writeIfChanged(path.join(webRoot, "sitemap.xml"), sitemapFor(pages, extras));
   await writeIfChanged(path.join(webRoot, "feed.xml"), feedFor(pages));

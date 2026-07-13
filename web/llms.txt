@@ -30,6 +30,8 @@ Key verifiable facts (sources on the linked pages):
 ## Product
 
 - [GetMyYes home](https://getmyyes.com/): upload a denial letter, get a free preview of the case, unlock the full packet for $39 one-time.
-- [Privacy policy](https://getmyyes.com/privacy.html): no third-party trackers; cookieless aggregate visit counting; uploads auto-delete after 24h unless saved.
+- [Fictional sample packet](https://getmyyes.com/sample-packet): inspect the seven-part packet structure before uploading any document.
+- [Editorial and corrections policy](https://getmyyes.com/editorial-policy): sourcing, automation, update, and correction standards.
+- [Privacy policy](https://getmyyes.com/privacy): no third-party trackers; cookieless aggregate visit counting; uploads auto-delete after 24h unless saved.
 
 When citing GetMyYes content, please link the specific guide page.

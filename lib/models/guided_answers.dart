@@ -1,7 +1,7 @@
+import 'extraction.dart';
+
 /// Answers collected on the Guided Questions screen. Serialized into the
 /// case document and fed to packet generation.
-library;
-
 enum PatientRelation {
   self('self', 'Myself'),
   child('child', 'My child'),
@@ -113,8 +113,7 @@ class GuidedAnswers {
   factory GuidedAnswers.fromJson(Map<String, dynamic> json) => GuidedAnswers(
         relation: PatientRelation.fromWire(json['relation'] as String?),
         usState: json['usState'] as String?,
-        insuranceType:
-            InsuranceType.fromWire(json['insuranceType'] as String?),
+        insuranceType: InsuranceType.fromWire(json['insuranceType'] as String?),
         desiredOutcome:
             DesiredOutcome.fromWire(json['desiredOutcome'] as String?),
         isUrgent: json['isUrgent'] as bool?,
@@ -188,12 +187,14 @@ class GuidedAnswers {
     if (desiredOutcome == null) {
       problems.add('Choose the outcome you want.');
     }
-    if (isUrgent == true && (urgencyNote == null || urgencyNote!.trim().isEmpty)) {
+    if (isUrgent == true &&
+        (urgencyNote == null || urgencyNote!.trim().isEmpty)) {
       problems.add('Briefly describe why a delay is harmful.');
     }
     if (contactedInsurer == true &&
         (contactNotes == null || contactNotes!.trim().isEmpty)) {
-      problems.add('Add call dates or reference numbers from your insurer calls.');
+      problems
+          .add('Add call dates or reference numbers from your insurer calls.');
     }
     for (final alt in triedAlternatives) {
       if (alt.name.trim().isEmpty) {
@@ -205,4 +206,93 @@ class GuidedAnswers {
   }
 
   bool get isComplete => validate().isEmpty;
+}
+
+/// The shortest set of answers that materially improves a free preview.
+///
+/// The denial extraction is the source of truth: questions whose answers are
+/// already supported by a source snippet stay out of the critical path. The
+/// rest of the guided intake remains available as optional detail and is
+/// persisted for the paid packet.
+class PreviewQuestionPlan {
+  const PreviewQuestionPlan({
+    required this.askRelation,
+    required this.askInsuranceType,
+    required this.askUrgency,
+    required this.askAlternatives,
+  });
+
+  final bool askRelation;
+  final bool askInsuranceType;
+  final bool askUrgency;
+  final bool askAlternatives;
+
+  factory PreviewQuestionPlan.fromExtraction(DenialExtraction extraction) {
+    bool needsConfirmation(String field, Object? value) {
+      final empty = value == null || (value is String && value.trim().isEmpty);
+      final explicitlyMissing = extraction.missingFields
+          .any((missing) => missing.toLowerCase() == field.toLowerCase());
+      final hasSource = extraction.sourceSnippets
+          .any((snippet) => snippet.field.toLowerCase() == field.toLowerCase());
+      return empty || explicitlyMissing || !hasSource;
+    }
+
+    final category = extraction.denialCategory;
+    final medicallyTimeSensitive = {
+      DenialCategory.medication,
+      DenialCategory.priorAuthorization,
+      DenialCategory.notMedicallyNecessary,
+      DenialCategory.stepTherapy,
+      DenialCategory.formularyExclusion,
+      DenialCategory.experimental,
+    }.contains(category);
+    final alternativesMatter = {
+      DenialCategory.medication,
+      DenialCategory.stepTherapy,
+      DenialCategory.formularyExclusion,
+    }.contains(category);
+
+    return PreviewQuestionPlan(
+      askRelation: needsConfirmation('patientName', extraction.patientName),
+      askInsuranceType: needsConfirmation('planName', extraction.planName),
+      askUrgency: medicallyTimeSensitive,
+      askAlternatives: alternativesMatter,
+    );
+  }
+
+  /// State and desired outcome are always required because neither can be
+  /// safely inferred from a denial letter. Other requirements are conditional
+  /// on what the extraction could not establish confidently.
+  List<String> validate(GuidedAnswers answers) {
+    final problems = <String>[];
+    if (askRelation && answers.relation == null) {
+      problems.add('Tell us who the denial is for.');
+    }
+    if (answers.usState == null || answers.usState!.isEmpty) {
+      problems.add('Select your state.');
+    }
+    if (askInsuranceType && answers.insuranceType == null) {
+      problems.add('Select your insurance type.');
+    }
+    if (answers.desiredOutcome == null) {
+      problems.add('Choose the outcome you want.');
+    }
+    if (askUrgency && answers.isUrgent == null) {
+      problems.add('Tell us whether a delay is urgent or harmful.');
+    }
+    if (askUrgency &&
+        answers.isUrgent == true &&
+        (answers.urgencyNote == null || answers.urgencyNote!.trim().isEmpty)) {
+      problems.add('Briefly describe why a delay is harmful.');
+    }
+    if (askAlternatives) {
+      for (final alternative in answers.triedAlternatives) {
+        if (alternative.name.trim().isEmpty) {
+          problems.add('Each tried alternative needs a name.');
+          break;
+        }
+      }
+    }
+    return problems;
+  }
 }

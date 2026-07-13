@@ -25,24 +25,29 @@ const guideTitles = {
 };
 
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const truncate = (value, max) => value.length <= max
+  ? value
+  : `${value.slice(0, max - 1).replace(/\s+\S*$/, "")}…`;
 
 function shell({ title, description, canonical, h1, crumb, body }) {
+  const pageTitle = truncate(title, 65);
+  const pageDescription = truncate(description, 165);
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="index, follow, max-image-preview:large">
-  <title>${esc(title)}</title>
-  <meta name="description" content="${esc(description)}">
+  <title>${esc(pageTitle)}</title>
+  <meta name="description" content="${esc(pageDescription)}">
   <link rel="canonical" href="${canonical}">
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="stylesheet" href="/fonts.css">
   <link rel="stylesheet" href="/appeals/guide.css">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="GetMyYes">
-  <meta property="og:title" content="${esc(title)}">
-  <meta property="og:description" content="${esc(description)}">
+  <meta property="og:title" content="${esc(pageTitle)}">
+  <meta property="og:description" content="${esc(pageDescription)}">
   <meta property="og:url" content="${canonical}">
   <meta property="og:image" content="${siteOrigin}/og-image.png">
   <script src="/analytics.js" data-static></script>
@@ -71,7 +76,7 @@ ${body}
     </main>
 
     <footer class="site">
-      <p><a href="/">GetMyYes</a> · <a href="/appeals/">Appeal guides</a> · <a href="/codes/">Denial codes</a> · <a href="/insurers/">By insurer</a> · <a href="/tools/appeal-deadline-calculator">Deadline calculator</a> · <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a></p>
+      <p><a href="/">GetMyYes</a> · <a href="/appeals/">Appeal guides</a> · <a href="/codes/">Denial codes</a> · <a href="/insurers/">By insurer</a> · <a href="/tools/appeal-deadline-calculator">Deadline calculator</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/editorial-policy">Editorial policy</a></p>
       <p>© 2026 GetMyYes · U.S. plans only at launch. General information, not medical, legal, or insurance advice. Insurer processes vary by plan and state — the appeal-rights section of your own denial letter is authoritative.</p>
     </footer>
   </div>
@@ -90,7 +95,8 @@ function federalBlock(name) {
         <li><strong>Urgent case?</strong> Ask for an <em>expedited appeal</em> — a decision in roughly 72 hours when a physician confirms that waiting endangers your health.</li>
         <li><strong>After the final internal denial:</strong> you can request independent <a href="/appeals/external-review">external review</a> — generally within about 4 months, per your letter.</li>
         <li><strong>Employer self-funded plan?</strong> ERISA rules apply: state programs and regulators generally don't, and external review runs through the federal process. Your letter or HR can confirm the funding type.</li>
-      </ul>`;
+      </ul>
+      <p><strong>Federal sources:</strong> <a href="https://www.healthcare.gov/appeal-insurance-company-decision/internal-appeals/" rel="noopener">HealthCare.gov internal appeals</a> and <a href="https://www.healthcare.gov/appeal-insurance-company-decision/external-review/" rel="noopener">HealthCare.gov external review</a>. Your denial notice and plan documents control when they differ.</p>`;
 }
 
 function insurerPage(entry) {
@@ -163,15 +169,15 @@ ${entry.faq.map((f) => `      <h3>${esc(f.q)}</h3>\n      <p>${esc(f.a)}</p>`).j
       <div class="related">
         <div class="kicker">Other insurers</div>
         <ul>
-${related.map((i) => `          <li><a href="/insurers/${i.slug}">How to appeal a ${esc(i.name)} denial</a></li>`).join("\n")}
+${related.map((i) => `          <li><a href="/insurers/${i.slug}">How to appeal a denial from ${esc(i.name)}</a></li>`).join("\n")}
           <li><a href="/insurers/">All insurers</a></li>
         </ul>
       </div>`;
   return shell({
-    title: `How to Appeal a ${entry.name} Denial — Deadlines & Next Steps`,
-    description: `Appealing a ${entry.name} health insurance denial: where to file, the deadlines that apply, what to include, and how external review works. Plain English, free letter template.`,
+    title: `Appeal a ${entry.name} Denial | GetMyYes`,
+    description: `How to appeal a denial from ${entry.name}: where to file, what to include, the deadlines that may apply, and external-review next steps.`,
     canonical: `${siteOrigin}/insurers/${entry.slug}`,
-    h1: `How to appeal a ${esc(entry.name)} denial`,
+    h1: `How to appeal a denial from ${esc(entry.name)}`,
     crumb: entry.short,
     body,
   });
@@ -221,8 +227,8 @@ ${rows}
         <p class="sub">FREE PREVIEW · $39 FULL PACKET · NO SUBSCRIPTION. EVER.</p>
       </div>`;
   return shell({
-    title: "How to Appeal a Health Insurance Denial, by Insurer — GetMyYes",
-    description: "Insurer-specific appeal guides: UnitedHealthcare, Aetna, Cigna, Blue Cross Blue Shield, Anthem, Humana, Kaiser Permanente, Ambetter, Molina, and Oscar — deadlines, portals, and next steps.",
+    title: "Appeal a Denial by Insurer | GetMyYes",
+    description: "Appeal guides for major U.S. health insurers, covering where to file, what to include, deadlines, portals, and external-review next steps.",
     canonical: `${siteOrigin}/insurers/`,
     h1: "Appeal a denial — by insurer",
     crumb: "",

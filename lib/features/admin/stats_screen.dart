@@ -273,6 +273,36 @@ class _StatsBodyState extends State<_StatsBody> {
                     filterLabel: filter?.label,
                   ),
                   const SizedBox(height: 28),
+                  const _SectionTitle('Product reliability and outcomes'),
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 10),
+                    child: Text(
+                      'Each workflow transition and final outcome is counted '
+                      'at most once per case. Error categories are bounded; '
+                      'case text and health information never enter analytics.',
+                      style: TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  _ProductHealthCard(summary: overall),
+                  const SizedBox(height: 28),
+                  const _SectionTitle('App click-to-ready time'),
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 10),
+                    child: Text(
+                      'Measured from opening the secure workspace to its '
+                      'first rendered frame. Only fixed timing buckets are '
+                      'stored; exact timings and pages are discarded.',
+                      style: TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  _AppReadinessCard(summary: overall),
+                  const SizedBox(height: 28),
                   const _SectionTitle('Estimated unique visitors by country'),
                   const Padding(
                     padding: EdgeInsets.only(bottom: 10),
@@ -746,9 +776,12 @@ class _FunnelCard extends StatelessWidget {
       ('Visits', summary.total('visits')),
       ('Opened app', summary.total('boots')),
       ('Uploaded denial', summary.funnel('upload')),
+      ('Extracted facts', summary.pathTotal('product.extraction.completed')),
       ('Saw preview', summary.funnel('preview')),
       ('Started checkout', summary.funnel('checkout_started')),
       ('Paid', summary.funnel('paid')),
+      ('Packet ready', summary.pathTotal('product.packet.completed')),
+      ('Submitted appeal', summary.pathTotal('product.case.submitted')),
     ];
     final top = steps.first.$2;
     return Container(
@@ -772,6 +805,205 @@ class _FunnelCard extends StatelessWidget {
                   : steps[i].$2 / steps[i - 1].$2,
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ProductHealthCard extends StatelessWidget {
+  const _ProductHealthCard({required this.summary});
+
+  final AnalyticsSummary summary;
+
+  static const _errorCategories = [
+    'validation',
+    'rate_limit',
+    'missing_prerequisite',
+    'model_failure',
+  ];
+
+  int _errors(String stage) => summary.pathsTotal(
+        _errorCategories.map((category) => 'product.$stage.errors.$category'),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final stages = <(String, String)>[
+      ('Extraction', 'extraction'),
+      ('Preview', 'preview'),
+      ('Packet', 'packet'),
+    ];
+    final outcomes = <(String, String)>[
+      ('Approved', 'approved'),
+      ('Partially approved', 'partially_approved'),
+      ('Denied', 'denied'),
+      ('Withdrawn', 'withdrawn'),
+    ];
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var index = 0; index < stages.length; index++) ...[
+            if (index > 0) const Divider(height: 24),
+            Semantics(
+              label:
+                  '${stages[index].$1}: ${summary.pathTotal('product.${stages[index].$2}.started')} started, ${summary.pathTotal('product.${stages[index].$2}.completed')} completed, ${_errors(stages[index].$2)} errors',
+              excludeSemantics: true,
+              child: Wrap(
+                spacing: 18,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 112,
+                    child: Text(stages[index].$1,
+                        style: const TextStyle(fontWeight: FontWeight.w700)),
+                  ),
+                  _MiniMetric(
+                    label: 'Started',
+                    value: summary
+                        .pathTotal('product.${stages[index].$2}.started'),
+                  ),
+                  _MiniMetric(
+                    label: 'Completed',
+                    value: summary
+                        .pathTotal('product.${stages[index].$2}.completed'),
+                  ),
+                  _MiniMetric(
+                    label: 'Errors',
+                    value: _errors(stages[index].$2),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const Divider(height: 28),
+          const Text('Recorded final outcomes',
+              style: TextStyle(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 18,
+            runSpacing: 10,
+            children: [
+              for (final outcome in outcomes)
+                _MiniMetric(
+                  label: outcome.$1,
+                  value: summary.pathTotal('product.outcomes.${outcome.$2}'),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniMetric extends StatelessWidget {
+  const _MiniMetric({required this.label, required this.value});
+
+  final String label;
+  final int value;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        label: '$label: $value',
+        excludeSemantics: true,
+        child: Text(
+          '$label $value',
+          style: const TextStyle(color: AppColors.textSecondary),
+        ),
+      );
+}
+
+class _AppReadinessCard extends StatelessWidget {
+  const _AppReadinessCard({required this.summary});
+
+  final AnalyticsSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final buckets = <(String, String)>[
+      ('Under 1 second', 'under_1s'),
+      ('1–2 seconds', '1_to_2s'),
+      ('2–4 seconds', '2_to_4s'),
+      ('4–8 seconds', '4_to_8s'),
+      ('Over 8 seconds', 'over_8s'),
+    ];
+    final values = [
+      for (final bucket in buckets)
+        summary.pathTotal('performance.app_ready.${bucket.$2}'),
+    ];
+    final total = values.fold(0, (runningTotal, value) => runningTotal + value);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: total == 0
+          ? const Text(
+              'No app-ready measurements recorded yet.',
+              style: TextStyle(color: AppColors.textMuted),
+            )
+          : Column(
+              children: [
+                for (var index = 0; index < buckets.length; index++) ...[
+                  if (index > 0) const SizedBox(height: 12),
+                  _TimingBucket(
+                    label: buckets[index].$1,
+                    value: values[index],
+                    total: total,
+                  ),
+                ],
+              ],
+            ),
+    );
+  }
+}
+
+class _TimingBucket extends StatelessWidget {
+  const _TimingBucket({
+    required this.label,
+    required this.value,
+    required this.total,
+  });
+
+  final String label;
+  final int value;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    final fraction = total == 0 ? 0.0 : value / total;
+    final percent = (fraction * 100).toStringAsFixed(1);
+    return Semantics(
+      label: '$label: $value app opens, $percent percent',
+      excludeSemantics: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(child: Text(label)),
+              Text('$value · $percent%',
+                  style: const TextStyle(color: AppColors.textSecondary)),
+            ],
+          ),
+          const SizedBox(height: 5),
+          LinearProgressIndicator(
+            value: fraction.clamp(0, 1),
+            minHeight: 10,
+            backgroundColor: AppColors.surfaceAlt,
+            color: AppColors.primary,
+          ),
         ],
       ),
     );

@@ -73,6 +73,15 @@ class AnalyticsDay {
 
   int count(String field) => ((data[field] ?? 0) as num).toInt();
 
+  int pathCount(String path) {
+    Object? value = data;
+    for (final segment in path.split('.')) {
+      if (value is! Map || !value.containsKey(segment)) return 0;
+      value = value[segment];
+    }
+    return value is num ? value.toInt() : 0;
+  }
+
   int funnelCount(String step) =>
       (((data['funnel'] as Map<String, dynamic>?)?[step] ?? 0) as num).toInt();
 }
@@ -208,6 +217,16 @@ class AnalyticsSummary {
 
   int funnel(String step) =>
       days.fold(0, (total, day) => total + day.funnelCount(step));
+
+  int pathTotal(String path) =>
+      days.fold(0, (total, day) => total + day.pathCount(path));
+
+  int pathWeek(String path) => days
+      .skip(days.length - 7)
+      .fold(0, (total, day) => total + day.pathCount(path));
+
+  int pathsTotal(Iterable<String> paths) =>
+      paths.fold(0, (total, path) => total + pathTotal(path));
 
   int get totalRevenueCents => total('revenueCents');
   int get weekRevenueCents => week('revenueCents');

@@ -5,6 +5,11 @@ import { requireUid, requireOwnedCase } from "./util";
 import { runStructured } from "./openai/client";
 import { packetSchema } from "./openai/schemas";
 import { PACKET_SYSTEM_PROMPT, buildPacketUserPrompt } from "./openai/prompts";
+import {
+  modelAnalyticsErrorCategory,
+  recordFirstCaseAnalyticsError,
+  recordFirstCaseAnalyticsEvent,
+} from "./analytics";
 
 /**
  * generateAppealPacket
@@ -19,6 +24,12 @@ export const generateAppealPacket = onCall(
     const snap = await requireOwnedCase(request.data?.caseId, uid);
 
     if (snap.get("paid") !== true) {
+      await recordFirstCaseAnalyticsError(
+        uid,
+        snap.ref,
+        "packet",
+        "missing_prerequisite",
+      );
       throw new HttpsError(
         "permission-denied",
         "The full appeal packet is available after purchase.",
@@ -26,14 +37,23 @@ export const generateAppealPacket = onCall(
     }
     const extraction = snap.get("extraction");
     if (!extraction) {
+      await recordFirstCaseAnalyticsError(
+        uid,
+        snap.ref,
+        "packet",
+        "missing_prerequisite",
+      );
       throw new HttpsError("failed-precondition", "Extraction missing for this case.");
     }
     const guidedAnswers = snap.get("guidedAnswers") ?? {};
+
+    await recordFirstCaseAnalyticsEvent(uid, snap.ref, "packet_started");
 
     // Idempotent: if a packet already exists, return it instead of paying
     // for another generation (e.g. user refreshed the success page).
     const existing = snap.get("packet");
     if (existing && request.data?.regenerate !== true) {
+      await recordFirstCaseAnalyticsEvent(uid, snap.ref, "packet_completed");
       return { packet: existing };
     }
 
@@ -73,6 +93,7 @@ export const generateAppealPacket = onCall(
       }
     }, 6000);
 
+    let modelReturned = false;
     try {
       const packet = await runStructured<Record<string, unknown>>({
         systemPrompt: PACKET_SYSTEM_PROMPT,
@@ -89,6 +110,7 @@ export const generateAppealPacket = onCall(
         schemaName: "appeal_packet",
         schema: packetSchema as unknown as Record<string, unknown>,
       });
+      modelReturned = true;
 
       clearInterval(ticker);
       await lastWrite;
@@ -103,10 +125,19 @@ export const generateAppealPacket = onCall(
         },
         updatedAt: FieldValue.serverTimestamp(),
       });
+      await recordFirstCaseAnalyticsEvent(uid, snap.ref, "packet_completed");
       return { packet };
     } catch (err) {
       clearInterval(ticker);
       await lastWrite;
+      if (!modelReturned) {
+        await recordFirstCaseAnalyticsError(
+          uid,
+          snap.ref,
+          "packet",
+          modelAnalyticsErrorCategory(err),
+        );
+      }
       await snap.ref.update({
         status: "error",
         generation: null,
@@ -134,9 +165,16 @@ export const saveGuidedAnswers = onCall(async (request) => {
   if (typeof answers !== "object" || answers === null || Array.isArray(answers)) {
     throw new HttpsError("invalid-argument", "guidedAnswers must be an object.");
   }
-  await snap.ref.update({
+  const update: Record<string, unknown> = {
     guidedAnswers: answers,
     updatedAt: FieldValue.serverTimestamp(),
-  });
+  };
+  // A return visit to the questions screen must not keep showing a preview
+  // generated from older answers. Paid cases keep their completed artifacts.
+  if (snap.get("paid") !== true) {
+    update.preview = null;
+    update.status = "extracted";
+  }
+  await snap.ref.update(update);
   return { saved: true };
 });

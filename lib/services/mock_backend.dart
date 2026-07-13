@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../models/appeal_case.dart';
+import '../models/case_tracker.dart';
 import '../models/extraction.dart';
 import '../models/follow_up.dart';
 import '../models/guided_answers.dart';
@@ -35,6 +36,15 @@ class MockBackend implements Backend {
   Future<void> signInWithEmail(String email, String password) async {
     _email = email;
   }
+
+  @override
+  Future<void> signInWithEmailAndClaimCase(
+      String email, String password, String caseId) async {
+    _email = email;
+  }
+
+  @override
+  Future<void> claimGuestCase(String caseId) async {}
 
   @override
   Future<void> signOut() async {
@@ -76,6 +86,10 @@ class MockBackend implements Backend {
   @override
   Future<DenialExtraction> extractDenial(
       String caseId, List<String> filePaths) async {
+    _patch(
+        caseId,
+        (c) => c.copyWith(
+            sourceFilePaths: filePaths, status: CaseStatus.extracting));
     await Future<void>.delayed(const Duration(seconds: 2));
     const extraction = DenialExtraction(
       documentType: DocumentType.priorAuthorization,
@@ -153,7 +167,7 @@ class MockBackend implements Backend {
       letterOpening:
           'Dear ${current.insurerName ?? 'Appeals Department'}: I am writing '
           'to appeal your denial of ${current.deniedItem ?? 'the requested '
-          'medication'}, issued under your step-therapy protocol §4.2. Your '
+              'medication'}, issued under your step-therapy protocol §4.2. Your '
           'own letter states coverage requires "trial and failure of two '
           'formulary alternatives" — my treatment history, documented below, '
           'already satisfies that requirement.',
@@ -369,6 +383,13 @@ class MockBackend implements Backend {
   @override
   Future<void> saveCase(String caseId) async {
     _patch(caseId, (c) => c.copyWith(saved: true));
+  }
+
+  @override
+  Future<bool> updateCaseTracker(String caseId, CaseTracker tracker) async {
+    _patch(caseId, (c) => c.copyWith(caseTracker: tracker));
+    return tracker.responseReminderEnabled &&
+        tracker.expectedResponseDate != null;
   }
 
   @override

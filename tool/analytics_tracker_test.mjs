@@ -96,6 +96,19 @@ test("Flutter landing queues traffic until auth resolves", () => {
   assert.equal(result.beacons.length, 2);
 });
 
+test("app readiness keeps only a rounded timing for server-side bucketing", () => {
+  const result = trackerHarness();
+  result.context.__track("app_ready", "/upload", 1234.4);
+  result.context.__resolveAnalyticsAuth();
+
+  assert.deepEqual(eventOf(result.beacons[1]), {
+    t: "app_ready",
+    path: "/upload",
+    ref: "https://search.example/results",
+    ms: 1234,
+  });
+});
+
 test("persisted owner opt-out suppresses all traffic", () => {
   const result = trackerHarness({ storedOptOut: true, staticMode: true });
   result.context.__track("pageview", "/appeals/step-therapy-denial");

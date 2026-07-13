@@ -1,4 +1,5 @@
 import 'package:claimhelper/models/guided_answers.dart';
+import 'package:claimhelper/models/extraction.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -28,8 +29,8 @@ void main() {
 
     test('urgent without an explanation is invalid', () {
       final a = complete().copyWith(isUrgent: true, urgencyNote: '   ');
-      expect(a.validate(),
-          contains('Briefly describe why a delay is harmful.'));
+      expect(
+          a.validate(), contains('Briefly describe why a delay is harmful.'));
     });
 
     test('urgent with an explanation is valid', () {
@@ -45,7 +46,9 @@ void main() {
 
     test('a tried alternative with an empty name is invalid', () {
       final a = complete().copyWith(
-        triedAlternatives: const [TriedAlternative(name: '', outcome: 'failed')],
+        triedAlternatives: const [
+          TriedAlternative(name: '', outcome: 'failed')
+        ],
       );
       expect(a.validate().any((p) => p.contains('needs a name')), isTrue);
     });
@@ -63,9 +66,77 @@ void main() {
       final restored = GuidedAnswers.fromJson(a.toJson());
       expect(restored.relation, PatientRelation.self);
       expect(restored.insuranceType, InsuranceType.employer);
-      expect(restored.documentsOnHand, contains(SupportingDocument.doctorLetter));
+      expect(
+          restored.documentsOnHand, contains(SupportingDocument.doctorLetter));
       expect(restored.triedAlternatives.single.name, 'Metformin');
       expect(restored.triedAlternatives.single.outcome, 'not_tolerated');
+    });
+  });
+
+  group('PreviewQuestionPlan', () {
+    DenialExtraction extraction({
+      DenialCategory category = DenialCategory.duplicateClaim,
+      String? patientName = 'Jordan Sample',
+      String? planName = 'Employer PPO',
+      List<String> missingFields = const [],
+      List<SourceSnippet> snippets = const [
+        SourceSnippet(field: 'patientName', snippet: 'Jordan Sample'),
+        SourceSnippet(field: 'planName', snippet: 'Employer PPO'),
+      ],
+    }) =>
+        DenialExtraction(
+          documentType: DocumentType.denialLetter,
+          denialCategory: category,
+          patientName: patientName,
+          planName: planName,
+          missingFields: missingFields,
+          sourceSnippets: snippets,
+        );
+
+    test('requires only state and desired outcome for supported facts', () {
+      final plan = PreviewQuestionPlan.fromExtraction(extraction());
+      expect(plan.askRelation, isFalse);
+      expect(plan.askInsuranceType, isFalse);
+      expect(plan.askUrgency, isFalse);
+      expect(plan.askAlternatives, isFalse);
+
+      const answers = GuidedAnswers(
+        usState: 'CA',
+        desiredOutcome: DesiredOutcome.payBill,
+      );
+      expect(plan.validate(answers), isEmpty);
+    });
+
+    test('asks for missing or unsupported facts and relevant urgency', () {
+      final plan = PreviewQuestionPlan.fromExtraction(extraction(
+        category: DenialCategory.stepTherapy,
+        patientName: null,
+        planName: null,
+        missingFields: const ['patientName', 'planName'],
+        snippets: const [],
+      ));
+      expect(plan.askRelation, isTrue);
+      expect(plan.askInsuranceType, isTrue);
+      expect(plan.askUrgency, isTrue);
+      expect(plan.askAlternatives, isTrue);
+
+      final problems = plan.validate(const GuidedAnswers());
+      expect(problems, contains('Tell us who the denial is for.'));
+      expect(problems, contains('Select your insurance type.'));
+      expect(
+          problems, contains('Tell us whether a delay is urgent or harmful.'));
+    });
+
+    test('urgent preview answer requires the user supplied reason', () {
+      final plan = PreviewQuestionPlan.fromExtraction(
+          extraction(category: DenialCategory.priorAuthorization));
+      const answers = GuidedAnswers(
+        usState: 'NY',
+        desiredOutcome: DesiredOutcome.approveTreatment,
+        isUrgent: true,
+      );
+      expect(plan.validate(answers),
+          contains('Briefly describe why a delay is harmful.'));
     });
   });
 }

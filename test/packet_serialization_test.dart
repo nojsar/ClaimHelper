@@ -18,7 +18,8 @@ void main() {
       ],
       insurerCallScript: 'Hi, my name is...',
       deadlineChecklist: [
-        DeadlineItem(task: 'File appeal', dueDate: '2026-08-17', priority: 'high'),
+        DeadlineItem(
+            task: 'File appeal', dueDate: '2026-08-17', priority: 'high'),
         DeadlineItem(task: 'Call insurer', dueDate: null, priority: 'medium'),
       ],
       warnings: ['Confirm your deadline.'],
@@ -26,9 +27,8 @@ void main() {
     );
 
     test('round-trips through JSON', () {
-      final restored =
-          AppealPacket.fromJson(jsonDecode(jsonEncode(packet.toJson()))
-              as Map<String, dynamic>);
+      final restored = AppealPacket.fromJson(
+          jsonDecode(jsonEncode(packet.toJson())) as Map<String, dynamic>);
       expect(restored.plainEnglishSummary, 'Summary');
       expect(restored.appealLetter, 'Dear Appeals,');
       expect(restored.evidenceChecklist.single.status, 'missing');

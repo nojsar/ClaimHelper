@@ -68,7 +68,8 @@ class EvidenceItem {
 }
 
 class DeadlineItem {
-  const DeadlineItem({required this.task, this.dueDate, required this.priority});
+  const DeadlineItem(
+      {required this.task, this.dueDate, required this.priority});
 
   final String task;
   final String? dueDate;
@@ -134,11 +135,9 @@ class AppealPacket {
         'appealStrategy': appealStrategy,
         'appealLetter': appealLetter,
         'doctorLetterRequest': doctorLetterRequest,
-        'evidenceChecklist':
-            evidenceChecklist.map((e) => e.toJson()).toList(),
+        'evidenceChecklist': evidenceChecklist.map((e) => e.toJson()).toList(),
         'insurerCallScript': insurerCallScript,
-        'deadlineChecklist':
-            deadlineChecklist.map((d) => d.toJson()).toList(),
+        'deadlineChecklist': deadlineChecklist.map((d) => d.toJson()).toList(),
         'warnings': warnings,
         'disclaimer': disclaimer,
       };

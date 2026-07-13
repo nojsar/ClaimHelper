@@ -14,6 +14,7 @@ import '../../state/providers.dart';
 import '../../widgets/account_gate.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/ui.dart';
+import 'case_tracker_panel.dart';
 
 /// The paid deliverable. Tabs: Summary, Appeal Letter, Evidence, Doctor
 /// Request, Call Script, Deadlines, plus a PDF export action. Entitlement is
@@ -204,6 +205,7 @@ class _PacketTabsState extends ConsumerState<_PacketTabs> {
       Tab(text: 'Doctor Request'),
       Tab(text: 'Call Script'),
       Tab(text: 'Deadlines'),
+      Tab(text: 'Case tracker'),
       Tab(text: 'Follow-ups'),
     ];
 
@@ -303,6 +305,7 @@ class _PacketTabsState extends ConsumerState<_PacketTabs> {
                       copyable: true,
                     ),
                     _DeadlinesTab(items: packet.deadlineChecklist),
+                    CaseTrackerPanel(appealCase: widget.appealCase),
                     _FollowUpsTab(appealCase: widget.appealCase),
                   ],
                 ),
@@ -748,16 +751,15 @@ class _SaveCaseButtonState extends ConsumerState<_SaveCaseButton> {
   bool _busy = false;
 
   Future<void> _save() async {
-    if (ref.read(authProvider).isAnonymous) {
-      final ok = await ensureAccount(
-        context,
-        ref,
-        title: 'Create an account to save',
-        reason: 'Saving keeps this case and its documents on your account. '
-            'Without it, unsaved files auto-delete after 24 hours.',
-      );
-      if (!ok || !mounted) return;
-    }
+    final ok = await ensureAccount(
+      context,
+      ref,
+      caseId: widget.appealCase.id,
+      title: 'Create an account to save',
+      reason: 'Saving keeps this case and its documents on your account. '
+          'Without it, unsaved files auto-delete after 24 hours.',
+    );
+    if (!ok || !mounted) return;
     setState(() => _busy = true);
     try {
       await ref.read(backendProvider).saveCase(widget.appealCase.id);

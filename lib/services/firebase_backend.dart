@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import '../models/appeal_case.dart';
+import '../models/case_tracker.dart';
 import '../models/extraction.dart';
 import '../models/follow_up.dart';
 import '../models/guided_answers.dart';
@@ -68,6 +69,39 @@ class FirebaseBackend implements Backend {
       _auth.signInWithEmailAndPassword(email: email, password: password);
 
   @override
+  Future<void> signInWithEmailAndClaimCase(
+      String email, String password, String caseId) async {
+    final current = _auth.currentUser;
+    if (current != null && current.isAnonymous) {
+      // This callable proves the current guest owns the case and authorizes
+      // only the exact email about to authenticate. It must run before
+      // signInWithEmailAndPassword replaces the anonymous Firebase identity.
+      await _functions
+          .httpsCallable('prepareGuestCaseClaim')
+          .call<Map<String, dynamic>>({
+        'caseId': caseId,
+        'targetEmail': email,
+      });
+    }
+
+    final signedInEmail = _auth.currentUser?.email?.trim().toLowerCase();
+    if (_auth.currentUser == null ||
+        _auth.currentUser!.isAnonymous ||
+        signedInEmail != email.trim().toLowerCase()) {
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
+    }
+    await claimGuestCase(caseId);
+  }
+
+  @override
+  Future<void> claimGuestCase(String caseId) async {
+    await _functions
+        .httpsCallable('claimPreparedGuestCase',
+            options: HttpsCallableOptions(timeout: const Duration(minutes: 2)))
+        .call<Map<String, dynamic>>({'caseId': caseId});
+  }
+
+  @override
   Future<void> signOut() => _auth.signOut();
 
   @override
@@ -90,8 +124,7 @@ class FirebaseBackend implements Backend {
     void Function(double progress)? onProgress,
   }) async {
     final paths = <String>[];
-    final totalBytes =
-        files.fold<int>(0, (acc, f) => acc + f.bytes.length);
+    final totalBytes = files.fold<int>(0, (acc, f) => acc + f.bytes.length);
     var sentBytes = 0;
 
     for (final file in files) {
@@ -121,15 +154,13 @@ class FirebaseBackend implements Backend {
     final result = await _functions
         .httpsCallable('extractDenialFromUploadedFile',
             options: HttpsCallableOptions(timeout: const Duration(minutes: 5)))
-        .call<Map<String, dynamic>>(
-            {'caseId': caseId, 'filePaths': filePaths});
+        .call<Map<String, dynamic>>({'caseId': caseId, 'filePaths': filePaths});
     return DenialExtraction.fromJson(
         Map<String, dynamic>.from(result.data['extraction'] as Map));
   }
 
   @override
-  Future<void> saveExtractionEdits(
-      String caseId, DenialExtraction extraction) {
+  Future<void> saveExtractionEdits(String caseId, DenialExtraction extraction) {
     return _db.collection('cases').doc(caseId).update({
       'extraction': extraction.toJson(),
       'updatedAt': FieldValue.serverTimestamp(),
@@ -138,7 +169,9 @@ class FirebaseBackend implements Backend {
 
   @override
   Future<void> saveGuidedAnswers(String caseId, GuidedAnswers answers) async {
-    await _functions.httpsCallable('saveGuidedAnswers').call<Map<String, dynamic>>({
+    await _functions
+        .httpsCallable('saveGuidedAnswers')
+        .call<Map<String, dynamic>>({
       'caseId': caseId,
       'guidedAnswers': answers.toJson(),
     });
@@ -203,9 +236,7 @@ class FirebaseBackend implements Backend {
         .orderBy('updatedAt', descending: true)
         .limit(50)
         .get();
-    return query.docs
-        .map((d) => AppealCase.fromJson(d.id, d.data()))
-        .toList();
+    return query.docs.map((d) => AppealCase.fromJson(d.id, d.data())).toList();
   }
 
   @override
@@ -213,6 +244,17 @@ class FirebaseBackend implements Backend {
     await _functions
         .httpsCallable('saveCase')
         .call<Map<String, dynamic>>({'caseId': caseId});
+  }
+
+  @override
+  Future<bool> updateCaseTracker(String caseId, CaseTracker tracker) async {
+    final result = await _functions
+        .httpsCallable('updateCaseTracker')
+        .call<Map<String, dynamic>>({
+      'caseId': caseId,
+      'caseTracker': tracker.toJson(),
+    });
+    return result.data['reminderScheduled'] as bool? ?? false;
   }
 
   @override
@@ -224,7 +266,9 @@ class FirebaseBackend implements Backend {
 
   @override
   Future<void> deleteAccount() async {
-    await _functions.httpsCallable('deleteAccount').call<Map<String, dynamic>>();
+    await _functions
+        .httpsCallable('deleteAccount')
+        .call<Map<String, dynamic>>();
     // The server already deleted the Auth user; drop the local session too.
     await _auth.signOut();
   }

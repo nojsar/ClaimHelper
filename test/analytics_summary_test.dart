@@ -31,6 +31,12 @@ void main() {
             'pageviews': 8,
             'revenueCents': 500,
             'funnel': {'paid': 2},
+            'product': {
+              'packet': {
+                'completed': 2,
+                'errors': {'rate_limit': 1},
+              },
+            },
           }),
         ],
         now: DateTime.utc(2026, 7, 13, 23, 59),
@@ -45,6 +51,16 @@ void main() {
       expect(summary.totalRevenueCents, 850);
       expect(summary.weekRevenueCents, 750);
       expect(summary.funnel('paid'), 4);
+      expect(summary.pathTotal('product.packet.completed'), 2);
+      expect(summary.pathWeek('product.packet.completed'), 2);
+      expect(
+        summary.pathsTotal(const [
+          'product.packet.completed',
+          'product.packet.errors.rate_limit',
+        ]),
+        3,
+      );
+      expect(summary.pathTotal('product.missing.value'), 0);
       expect(summary.days.where((day) => day.wasRecorded), hasLength(4));
     });
   });

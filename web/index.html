@@ -37,8 +37,8 @@
   <meta name="theme-color" content="#F3EDDF">
   <meta name="robots" content="index, follow, max-image-preview:large">
 
-  <title>GetMyYes — Turn a health-insurance denial into a ready-to-send appeal</title>
-  <meta name="description" content="GetMyYes turns a denied medication, prior-authorization, or 'not medically necessary' letter into a ready-to-review appeal packet in 15 minutes — appeal letter, evidence checklist, doctor request, call script, and PDF. U.S. only. Not legal or medical advice.">
+  <title>Health Insurance Appeal Packet Builder | GetMyYes</title>
+  <meta name="description" content="Turn a U.S. health-insurance denial into a ready-to-review appeal packet: letter, evidence checklist, doctor request, call script, deadline tracker, and PDF.">
   <meta name="keywords" content="health insurance appeal, denied medication appeal, prior authorization denial, not medically necessary appeal, step therapy exception, formulary exception, insurance denial letter, appeal packet">
   <link rel="canonical" href="https://getmyyes.com/">
   <link rel="alternate" type="application/rss+xml" title="GetMyYes Appeal Guides" href="/feed.xml">
@@ -990,7 +990,7 @@
                 <div class="cap">documents, tailored &amp; ready to send</div>
               </div>
             </div>
-            <div class="foot">Source: published appeal-rate and overturn-rate studies of U.S. marketplace plans (KFF) · your outcome is never guaranteed</div>
+            <div class="foot">Source: <a href="/insurer-denial-rates">2024 CMS marketplace data and methodology</a> · <a href="https://www.kff.org/patient-consumer-protections/claims-denials-and-appeals-in-aca-marketplace-plans-in-2024/" rel="noopener">KFF analysis</a> · your outcome is never guaranteed</div>
           </div>
         </div>
       </div>
@@ -1165,9 +1165,10 @@
               <li><span>2 follow-up rounds</span><span>incl.</span></li>
               <li><span>Saved to your account</span><span>incl.</span></li>
               <li><span>Never used to train AI</span><span>promise</span></li>
-              <li><span>14-day accuracy guarantee</span><span>refund</span></li>
+              <li><span><a href="/terms#accuracy-guarantee">14-day accuracy guarantee</a></span><span>refund</span></li>
             </ul>
             <button type="button" class="btn-ink" data-boot="/upload">Start my appeal</button>
+            <p class="sub"><a href="/sample-packet">Inspect a fictional, redacted sample packet first</a></p>
             <div class="barcode" aria-hidden="true"></div>
           </div>
         </div>
@@ -1237,8 +1238,9 @@
           Case files set in Fraunces &amp; IBM Plex Mono.
         </div>
         <div>
-          <a href="terms.html">Terms of Service</a> &nbsp;·&nbsp;
-          <a href="privacy.html">Privacy Policy</a> &nbsp;·&nbsp;
+          <a href="/terms">Terms of Service</a> &nbsp;·&nbsp;
+          <a href="/privacy">Privacy Policy</a> &nbsp;·&nbsp;
+          <a href="/editorial-policy">Editorial Policy</a> &nbsp;·&nbsp;
           <a href="/appeals/">Free Appeal Guides</a> &nbsp;·&nbsp;
           <a href="/accessibility">Accessibility</a> &nbsp;·&nbsp;
           <a href="mailto:support@getmyyes.com">support@getmyyes.com</a>
@@ -1273,6 +1275,9 @@
       function bootApp(route) {
         if (booting) return;
         booting = true;
+        var bootStartedAt = window.performance && performance.now
+          ? performance.now()
+          : Date.now();
         if (typeof window.__track === 'function') {
           window.__track('boot', route || undefined);
         }
@@ -1288,6 +1293,12 @@
           loader.focus();
         }
         window.addEventListener('flutter-first-frame', function () {
+          var readyAt = window.performance && performance.now
+            ? performance.now()
+            : Date.now();
+          if (typeof window.__track === 'function') {
+            window.__track('app_ready', route || undefined, readyAt - bootStartedAt);
+          }
           if (landing) landing.remove();
           if (loader) loader.remove();
           document.body.style.overflow = '';
@@ -1315,6 +1326,25 @@
       window.__bootApp = bootApp;
 
       document.querySelectorAll('[data-boot]').forEach(function (el) {
+        function prewarmApp() {
+          var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+          if (connection && (connection.saveData || /(^|-)2g$/.test(connection.effectiveType || ''))) return;
+          if (document.querySelector('link[data-app-prewarm]')) return;
+          var bootstrap = document.createElement('link');
+          bootstrap.rel = 'preload';
+          bootstrap.as = 'script';
+          bootstrap.href = 'flutter_bootstrap.js';
+          bootstrap.dataset.appPrewarm = 'true';
+          document.head.appendChild(bootstrap);
+          var app = document.createElement('link');
+          app.rel = 'prefetch';
+          app.as = 'script';
+          app.href = 'main.dart.js';
+          app.dataset.appPrewarm = 'true';
+          document.head.appendChild(app);
+        }
+        el.addEventListener('pointerenter', prewarmApp, { once: true, passive: true });
+        el.addEventListener('focus', prewarmApp, { once: true });
         el.addEventListener('click', function () {
           bootApp(el.getAttribute('data-boot'));
         });
@@ -1361,8 +1391,7 @@
       Promise.all([
         loadScript('js/gsap.min.js')
           .then(function () { return loadScript('js/ScrollTrigger.min.js'); }),
-        loadScript('js/lenis.min.js').catch(function () {}),
-        loadScript('js/three.min.js').catch(function () {})
+        loadScript('js/lenis.min.js').catch(function () {})
       ]).then(function () {
         if (!window.gsap || !window.ScrollTrigger) return;
         gsap.registerPlugin(ScrollTrigger);
@@ -1515,10 +1544,21 @@
             .fromTo('#landing', { x: 0 }, { x: 6, duration: 0.05, repeat: 5, yoyo: true, ease: 'none', clearProps: 'transform' }, stampGroup ? 0.36 : 0);
         }
 
-        var built = buildStamp();
-        // The slam happens shortly after arrival — the moment the visitor
-        // understands the whole product.
-        gsap.delayedCall(built ? 1.15 : 0.9, slam);
+        function loadStampWhenIdle() {
+          loadScript('js/three.min.js')
+            .then(function () {
+              var built = buildStamp();
+              gsap.delayedCall(built ? 0.25 : 0, slam);
+            })
+            .catch(function () { gsap.delayedCall(0, slam); });
+        }
+        // The 3D flourish is non-essential. Let readable content and the core
+        // motion system become interactive before downloading Three.js.
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(loadStampWhenIdle, { timeout: 1400 });
+        } else {
+          setTimeout(loadStampWhenIdle, 700);
+        }
 
         /* ---------- hero letter annotations draw on scroll ---------- */
         document.querySelectorAll('.letter .circ path').forEach(function (p, i) {

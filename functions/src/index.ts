@@ -3,6 +3,8 @@ import { initializeApp } from "firebase-admin/app";
 initializeApp();
 
 export { createCaseUploadSession, deleteCaseAndFiles, saveCase, deleteAccount } from "./cases";
+export { prepareGuestCaseClaim, claimPreparedGuestCase } from "./case_claims";
+export { updateCaseTracker } from "./case_tracker";
 export { extractDenialFromUploadedFile } from "./extraction";
 export { generateFreePreview } from "./preview";
 export { generateAppealPacket, saveGuidedAnswers } from "./packet";

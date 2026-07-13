@@ -53,7 +53,8 @@ void main() {
       expect(Entitlement.canPurchase(base(ex: extraction)), isTrue);
     });
     test('not offered once paid', () {
-      expect(Entitlement.canPurchase(base(paid: true, ex: extraction)), isFalse);
+      expect(
+          Entitlement.canPurchase(base(paid: true, ex: extraction)), isFalse);
     });
     test('not offered without an extraction', () {
       expect(Entitlement.canPurchase(base(ex: null)), isFalse);

@@ -1,6 +1,6 @@
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
-import { deleteCaseCompletely } from "./cases";
+import { caseStorageOwnerUids, deleteCaseCompletely } from "./cases";
 import { buildReminderMessage } from "./reminders";
 import { config } from "./config";
 
@@ -24,7 +24,7 @@ export const scheduledCleanupExpiredFiles = onSchedule(
       try {
         await deleteCaseCompletely(
           doc.id,
-          doc.get("ownerUid") as string | undefined,
+          caseStorageOwnerUids(doc),
         );
         console.log(`Cleaned up expired case ${doc.id}`);
       } catch (err) {
@@ -32,9 +32,25 @@ export const scheduledCleanupExpiredFiles = onSchedule(
       }
     }
 
-    // Opted-in deadline reminders: dispatch every reminder that has come due.
-    // A reminder is dropped without sending when its case was paid (nothing
-    // to nudge) or the user withdrew (case deleted / email cleared).
+    // Guest-case ownership authorizations are intentionally short-lived and
+    // contain only an email digest. Consumed claims remain briefly as replay
+    // tombstones, then are removed here as part of data minimization.
+    const expiredClaims = await db
+      .collection("guestCaseClaims")
+      .where("expiresAt", "<=", now)
+      .limit(200)
+      .get();
+    for (const doc of expiredClaims.docs) {
+      try {
+        await doc.ref.delete();
+      } catch (err) {
+        console.error(`Failed to delete guest-case claim ${doc.id}`, err);
+      }
+    }
+
+    // Opted-in reminders: dispatch every reminder that has come due. Preview
+    // nudges stop after purchase; post-submission response reminders instead
+    // verify the tracker is still pending and still names this exact date.
     const due = await db
       .collection("reminders")
       .where("sendAt", "<=", now)
@@ -46,15 +62,60 @@ export const scheduledCleanupExpiredFiles = onSchedule(
           .collection("cases")
           .doc(doc.get("caseId") as string)
           .get();
-        const stillWanted =
+        const kind = doc.get("kind") as string | undefined;
+        const isResponseDue = kind === "case_response_due";
+        const tracker = caseSnap.exists
+          ? caseSnap.get("caseTracker") as
+              | {
+                  expectedResponseDate?: string | null;
+                  responseReminderEnabled?: boolean;
+                  outcome?: string;
+                }
+              | undefined
+          : undefined;
+        const responseReminderWanted =
+          isResponseDue &&
+          caseSnap.exists &&
+          caseSnap.get("ownerUid") === doc.get("ownerUid") &&
+          tracker?.responseReminderEnabled === true &&
+          tracker?.outcome === "pending" &&
+          tracker?.expectedResponseDate === doc.get("expectedResponseDate");
+        const previewReminderWanted =
+          !isResponseDue &&
           caseSnap.exists &&
           caseSnap.get("paid") !== true &&
           (caseSnap.get("reminderEmail") as string | undefined) ===
             (doc.get("email") as string);
-        if (stillWanted) {
+        if (responseReminderWanted) {
+          const caseUrl =
+            `${config.appBaseUrl}/#/case/${doc.get("caseId")}/packet`;
+          await db.collection("mail").add({
+            to: [doc.get("email")],
+            message: {
+              subject: "Time to check your appeal status",
+              text:
+                "You expected an insurer response around today. Check your " +
+                "portal or contact the insurer, save the result in your case " +
+                `tracker, and use a follow-up round if needed.\n\n${caseUrl}\n\n` +
+                "GetMyYes is a document drafting assistant — not medical, " +
+                "legal, or insurance advice. Confirm deadlines directly with " +
+                "your insurer.",
+              html:
+                "<p>You expected an insurer response around today. Check your " +
+                "portal or contact the insurer, then save the result in your " +
+                "case tracker.</p>" +
+                `<p><a href="${caseUrl}" style="background:#1C160C;color:#F3EDDF;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:700">Open case tracker</a></p>` +
+                "<p style=\"color:#64748B;font-size:12px\">GetMyYes is a " +
+                "document drafting assistant — not medical, legal, or " +
+                "insurance advice. Confirm deadlines directly with your " +
+                "insurer.</p>",
+            },
+            createdAt: FieldValue.serverTimestamp(),
+          });
+        } else if (previewReminderWanted) {
           const deadline = (doc.get("deadline") as Timestamp | null)?.toDate() ?? null;
           const insurer = (doc.get("insurer") as string | null) ?? null;
-          const isDeadline = doc.get("kind") === "deadline";
+          const isDeadline = kind === "deadline";
           await db.collection("mail").add({
             to: [doc.get("email")],
             message: buildReminderMessage({

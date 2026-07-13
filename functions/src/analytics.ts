@@ -1,7 +1,11 @@
 import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { getAuth } from "firebase-admin/auth";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import {
+  getFirestore,
+  FieldValue,
+  DocumentReference,
+} from "firebase-admin/firestore";
 import { createHmac } from "node:crypto";
 import { isIP } from "node:net";
 
@@ -20,9 +24,9 @@ import { ADMIN_UID } from "./config";
  *    single-dimension slices in `analytics_customer_segment_daily`. IPs and
  *    user agents are not kept. Legacy analytics collections are preserved but
  *    never written by this module.
- *  - Funnel steps (upload/preview/checkout/paid) are counted server-side in
- *    the existing functions via bumpUserDaily() — tamper-proof and zero extra
- *    client requests. The client only reports visit/boot/pageview.
+ *  - Product/funnel steps are counted server-side. Case generation milestones
+ *    use atomic first-per-case writes; payment/upload counters use the existing
+ *    aggregate writer. The client only reports visit/boot/pageview.
  */
 
 export const ANALYTICS_DAILY_COLLECTION = "analytics_customer_daily";
@@ -348,6 +352,293 @@ export async function bumpUserDaily(
   }
 }
 
+/** Product stages whose first success/failure is useful in aggregate. */
+export type ProductAnalyticsStage = "extraction" | "preview" | "packet";
+
+/**
+ * Intentionally small error taxonomy. Raw exception messages, model output,
+ * validation values, and other case data must never become analytics keys.
+ */
+export type ProductAnalyticsErrorCategory =
+  | "validation"
+  | "rate_limit"
+  | "missing_prerequisite"
+  | "model_failure";
+
+/**
+ * Fixed events accepted by the first-per-case analytics writer. Keeping this
+ * as a closed union prevents callers from constructing arbitrary counter
+ * paths from request data.
+ */
+export type CaseAnalyticsEvent =
+  | "uploaded"
+  | "extraction_started"
+  | "extraction_completed"
+  | "preview_started"
+  | "preview_completed"
+  | "checkout_started"
+  | "paid"
+  | "packet_started"
+  | "packet_completed"
+  | "extraction_error_validation"
+  | "extraction_error_rate_limit"
+  | "extraction_error_missing_prerequisite"
+  | "extraction_error_model_failure"
+  | "preview_error_validation"
+  | "preview_error_rate_limit"
+  | "preview_error_missing_prerequisite"
+  | "preview_error_model_failure"
+  | "packet_error_validation"
+  | "packet_error_rate_limit"
+  | "packet_error_missing_prerequisite"
+  | "packet_error_model_failure"
+  | "submitted";
+
+export type CaseOutcomeAnalyticsCategory =
+  | "approved"
+  | "partially_approved"
+  | "denied"
+  | "withdrawn";
+
+const CASE_ANALYTICS_EVENT_FIELDS: Readonly<
+  Record<CaseAnalyticsEvent, Readonly<Record<string, number>>>
+> = {
+  uploaded: { "funnel.upload": 1 },
+  extraction_started: { "product.extraction.started": 1 },
+  extraction_completed: { "product.extraction.completed": 1 },
+  preview_started: { "product.preview.started": 1 },
+  // Preserve the existing funnel field, but make it first-per-case.
+  preview_completed: {
+    "product.preview.completed": 1,
+    "funnel.preview": 1,
+  },
+  checkout_started: { "funnel.checkout_started": 1 },
+  paid: { "funnel.paid": 1 },
+  packet_started: { "product.packet.started": 1 },
+  packet_completed: { "product.packet.completed": 1 },
+  extraction_error_validation: {
+    "product.extraction.errors.validation": 1,
+  },
+  extraction_error_rate_limit: {
+    "product.extraction.errors.rate_limit": 1,
+  },
+  extraction_error_missing_prerequisite: {
+    "product.extraction.errors.missing_prerequisite": 1,
+  },
+  extraction_error_model_failure: {
+    "product.extraction.errors.model_failure": 1,
+  },
+  preview_error_validation: { "product.preview.errors.validation": 1 },
+  preview_error_rate_limit: { "product.preview.errors.rate_limit": 1 },
+  preview_error_missing_prerequisite: {
+    "product.preview.errors.missing_prerequisite": 1,
+  },
+  preview_error_model_failure: {
+    "product.preview.errors.model_failure": 1,
+  },
+  packet_error_validation: { "product.packet.errors.validation": 1 },
+  packet_error_rate_limit: { "product.packet.errors.rate_limit": 1 },
+  packet_error_missing_prerequisite: {
+    "product.packet.errors.missing_prerequisite": 1,
+  },
+  packet_error_model_failure: {
+    "product.packet.errors.model_failure": 1,
+  },
+  submitted: { "product.case.submitted": 1 },
+};
+
+const CASE_ANALYTICS_ERROR_EVENTS: Readonly<
+  Record<
+    ProductAnalyticsStage,
+    Readonly<Record<ProductAnalyticsErrorCategory, CaseAnalyticsEvent>>
+  >
+> = {
+  extraction: {
+    validation: "extraction_error_validation",
+    rate_limit: "extraction_error_rate_limit",
+    missing_prerequisite: "extraction_error_missing_prerequisite",
+    model_failure: "extraction_error_model_failure",
+  },
+  preview: {
+    validation: "preview_error_validation",
+    rate_limit: "preview_error_rate_limit",
+    missing_prerequisite: "preview_error_missing_prerequisite",
+    model_failure: "preview_error_model_failure",
+  },
+  packet: {
+    validation: "packet_error_validation",
+    rate_limit: "packet_error_rate_limit",
+    missing_prerequisite: "packet_error_missing_prerequisite",
+    model_failure: "packet_error_model_failure",
+  },
+};
+
+const CASE_OUTCOME_FIELDS: Readonly<
+  Record<CaseOutcomeAnalyticsCategory, Readonly<Record<string, number>>>
+> = {
+  approved: { "product.outcomes.approved": 1 },
+  partially_approved: { "product.outcomes.partially_approved": 1 },
+  denied: { "product.outcomes.denied": 1 },
+  withdrawn: { "product.outcomes.withdrawn": 1 },
+};
+
+/** Return a defensive copy of the fixed fields for a known event. */
+export function caseAnalyticsCounterFields(
+  event: unknown,
+): Record<string, number> | null {
+  if (
+    typeof event !== "string" ||
+    !Object.prototype.hasOwnProperty.call(CASE_ANALYTICS_EVENT_FIELDS, event)
+  ) {
+    return null;
+  }
+  return { ...CASE_ANALYTICS_EVENT_FIELDS[event as CaseAnalyticsEvent] };
+}
+
+/** Resolve a stage/category pair without ever deriving a Firestore path. */
+export function caseAnalyticsErrorEvent(
+  stage: ProductAnalyticsStage,
+  category: ProductAnalyticsErrorCategory,
+): CaseAnalyticsEvent | null {
+  const stageEvents = CASE_ANALYTICS_ERROR_EVENTS[stage];
+  return stageEvents?.[category] ?? null;
+}
+
+/** Return fixed aggregate fields for a final outcome; pending is rejected. */
+export function caseOutcomeAnalyticsCounterFields(
+  outcome: unknown,
+): Record<string, number> | null {
+  if (
+    typeof outcome !== "string" ||
+    !Object.prototype.hasOwnProperty.call(CASE_OUTCOME_FIELDS, outcome)
+  ) {
+    return null;
+  }
+  return {
+    ...CASE_OUTCOME_FIELDS[outcome as CaseOutcomeAnalyticsCategory],
+  };
+}
+
+/**
+ * OpenAI errors expose a numeric status/code, but neither field is retained.
+ * The return value remains one of the four bounded aggregate categories.
+ */
+export function modelAnalyticsErrorCategory(
+  error: unknown,
+): ProductAnalyticsErrorCategory {
+  if (typeof error === "object" && error !== null) {
+    const candidate = error as { status?: unknown; code?: unknown };
+    if (
+      candidate.status === 429 ||
+      candidate.code === "rate_limit_exceeded" ||
+      candidate.code === "resource-exhausted"
+    ) {
+      return "rate_limit";
+    }
+  }
+  return "model_failure";
+}
+
+type CaseAnalyticsMilestone = CaseAnalyticsEvent | "outcome_recorded";
+
+/**
+ * Atomically mark a fixed milestone on the existing case and increment only
+ * today's shared customer aggregate. The case stores booleans only: no UID,
+ * dates, notes, model output, or other case data is copied into analytics.
+ */
+async function recordFirstCaseAnalyticsFields(
+  uid: string | null | undefined,
+  caseRef: DocumentReference,
+  milestone: CaseAnalyticsMilestone,
+  fields: Readonly<Record<string, number>>,
+): Promise<boolean> {
+  if (!uid || isAdminAnalyticsUid(uid)) return false;
+
+  try {
+    const firestore = getFirestore();
+    const dailyRef = firestore
+      .collection(ANALYTICS_DAILY_COLLECTION)
+      .doc(dayKey());
+    return await firestore.runTransaction(async (transaction) => {
+      const caseSnapshot = await transaction.get(caseRef);
+      if (!caseSnapshot.exists || caseSnapshot.get("ownerUid") !== uid) {
+        return false;
+      }
+
+      const milestones = caseSnapshot.get("analyticsMilestones");
+      if (
+        typeof milestones === "object" &&
+        milestones !== null &&
+        (milestones as Record<string, unknown>)[milestone] === true
+      ) {
+        return false;
+      }
+
+      transaction.update(caseRef, {
+        [`analyticsMilestones.${milestone}`]: true,
+      });
+      transaction.set(
+        dailyRef,
+        {
+          updatedAt: FieldValue.serverTimestamp(),
+          ...incrementUpdate({ ...fields }),
+        },
+        { merge: true },
+      );
+      return true;
+    });
+  } catch {
+    // Analytics must never break a user flow. Do not log the uid/case/error.
+    console.warn(`case analytics milestone failed (ignored): ${milestone}`);
+    return false;
+  }
+}
+
+/**
+ * Record a fixed event at most once for this case. Safe for retries and
+ * concurrent callable invocations; invalid runtime values are ignored.
+ */
+export async function recordFirstCaseAnalyticsEvent(
+  uid: string | null | undefined,
+  caseRef: DocumentReference,
+  event: CaseAnalyticsEvent,
+): Promise<boolean> {
+  const fields = caseAnalyticsCounterFields(event);
+  if (!fields) return false;
+  return recordFirstCaseAnalyticsFields(uid, caseRef, event, fields);
+}
+
+/** Record one bounded error category at most once per case and stage. */
+export async function recordFirstCaseAnalyticsError(
+  uid: string | null | undefined,
+  caseRef: DocumentReference,
+  stage: ProductAnalyticsStage,
+  category: ProductAnalyticsErrorCategory,
+): Promise<boolean> {
+  const event = caseAnalyticsErrorEvent(stage, category);
+  if (!event) return false;
+  return recordFirstCaseAnalyticsEvent(uid, caseRef, event);
+}
+
+/**
+ * Record only the first non-pending outcome for a case. All final categories
+ * share one marker, so later edits cannot increment a second outcome bucket.
+ */
+export async function recordFirstCaseOutcome(
+  uid: string | null | undefined,
+  caseRef: DocumentReference,
+  outcome: CaseOutcomeAnalyticsCategory,
+): Promise<boolean> {
+  const fields = caseOutcomeAnalyticsCounterFields(outcome);
+  if (!fields) return false;
+  return recordFirstCaseAnalyticsFields(
+    uid,
+    caseRef,
+    "outcome_recorded",
+    fields,
+  );
+}
+
 /**
  * Atomically write a traffic event to the overall daily aggregate and to one
  * document for every dimension present on this request. Each destination is
@@ -487,6 +778,34 @@ async function hasSignedAdminExclusion(req: {
   }
 }
 
+export type AppReadyBucket =
+  | "under_1s"
+  | "1_to_2s"
+  | "2_to_4s"
+  | "4_to_8s"
+  | "over_8s";
+
+/**
+ * Convert an untrusted client timing into one fixed aggregate bucket. The
+ * exact timing and page are never retained, and implausible values are
+ * discarded instead of becoming dynamic analytics keys.
+ */
+export function appReadyBucket(value: unknown): AppReadyBucket | null {
+  if (
+    typeof value !== "number" ||
+    !Number.isFinite(value) ||
+    value < 0 ||
+    value > 120_000
+  ) {
+    return null;
+  }
+  if (value < 1_000) return "under_1s";
+  if (value < 2_000) return "1_to_2s";
+  if (value < 4_000) return "2_to_4s";
+  if (value < 8_000) return "4_to_8s";
+  return "over_8s";
+}
+
 /**
  * Exchanges the signed-in owner's Firebase ID token for a signed, HttpOnly
  * session cookie. Hosting exposes this as POST /api/admin-analytics-exclusion.
@@ -548,7 +867,8 @@ export const setAdminAnalyticsExclusion = onRequest(
 /**
  * trackEvent
  * Public HTTP endpoint the web client pings with navigator.sendBeacon.
- * Accepts {t: "visit"|"boot"|"pageview", path?, ref?}. Anything else is
+ * Accepts {t: "visit"|"boot"|"pageview"|"app_ready", path?, ref?, ms?}.
+ * Exact app timings are collapsed into fixed buckets; anything else is
  * dropped. Responds 204 always — the client never reads the response.
  */
 export const trackEvent = onRequest(
@@ -572,7 +892,12 @@ export const trackEvent = onRequest(
       // sendBeacon posts as text/plain, so parse rawBody ourselves.
       const body = JSON.parse(req.rawBody.toString("utf8").slice(0, 2048));
       const t = body?.t as string;
-      if (t !== "visit" && t !== "boot" && t !== "pageview") {
+      if (
+        t !== "visit" &&
+        t !== "boot" &&
+        t !== "pageview" &&
+        t !== "app_ready"
+      ) {
         res.status(204).send("");
         return;
       }
@@ -585,11 +910,19 @@ export const trackEvent = onRequest(
         return;
       }
       const path = keyify(body?.path) ?? "/";
+      const readyBucket = t === "app_ready" ? appReadyBucket(body?.ms) : null;
+      if (t === "app_ready" && !readyBucket) {
+        res.status(204).send("");
+        return;
+      }
 
       const fields: Record<string, number> = {};
-      const segments: AnalyticsSegment[] = [{ type: "path", key: path }];
-      if (country) segments.push({ type: "country", key: country });
-      const campaign = campaignFromRequest(req);
+      const segments: AnalyticsSegment[] =
+        t === "app_ready" ? [] : [{ type: "path", key: path }];
+      if (country && t !== "app_ready") {
+        segments.push({ type: "country", key: country });
+      }
+      const campaign = t === "app_ready" ? null : campaignFromRequest(req);
       if (campaign) segments.push({ type: "campaign", key: campaign });
       let referrer: string | null = null;
       if (typeof body?.ref === "string" && body.ref) {
@@ -600,7 +933,9 @@ export const trackEvent = onRequest(
           /* unparseable referrer — skip */
         }
       }
-      if (referrer) segments.push({ type: "referrer", key: referrer });
+      if (referrer && t !== "app_ready") {
+        segments.push({ type: "referrer", key: referrer });
+      }
 
       if (t === "visit") {
         fields["visits"] = 1;
@@ -616,6 +951,8 @@ export const trackEvent = onRequest(
       } else if (t === "pageview") {
         fields["pageviews"] = 1;
         fields[`paths.${path}`] = 1;
+      } else if (t === "app_ready" && readyBucket) {
+        fields[`performance.app_ready.${readyBucket}`] = 1;
       }
 
       if (Object.keys(fields).length > 0) {
