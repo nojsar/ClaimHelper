@@ -30,8 +30,11 @@ class AccountScreen extends ConsumerWidget {
             else
               _AccountCard(email: auth.email),
             const SizedBox(height: 20),
-            const Text('Saved & recent cases',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            Semantics(
+              header: true,
+              child: Text('Saved & recent cases',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            ),
             const SizedBox(height: 12),
             casesAsync.when(
               loading: () => Padding(
@@ -83,6 +86,19 @@ class _AccountPromptState extends ConsumerState<_AccountPrompt> {
   }
 
   Future<void> _submit() async {
+    final email = _email.text.trim();
+    final password = _password.text;
+    if (email.isEmpty ||
+        !email.contains('@') ||
+        password.isEmpty ||
+        (!_signInMode && password.length < 6)) {
+      setState(() {
+        _error = _signInMode
+            ? 'Enter a valid email address and password.'
+            : 'Enter a valid email and a password of at least 6 characters.';
+      });
+      return;
+    }
     setState(() {
       _busy = true;
       _error = null;
@@ -90,9 +106,9 @@ class _AccountPromptState extends ConsumerState<_AccountPrompt> {
     try {
       final auth = ref.read(authProvider.notifier);
       if (_signInMode) {
-        await auth.signIn(_email.text.trim(), _password.text);
+        await auth.signIn(email, password);
       } else {
-        await auth.createAccount(_email.text.trim(), _password.text);
+        await auth.createAccount(email, password);
       }
       ref.invalidate(myCasesProvider);
     } catch (_) {
@@ -112,9 +128,13 @@ class _AccountPromptState extends ConsumerState<_AccountPrompt> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(_signInMode ? 'Sign in' : 'Create an account to save cases',
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            Semantics(
+              header: true,
+              child: Text(
+                  _signInMode ? 'Sign in' : 'Create an account to save cases',
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w700)),
+            ),
             const SizedBox(height: 4),
             const Text(
               'You can browse and generate a preview without an account. Save '
@@ -126,13 +146,24 @@ class _AccountPromptState extends ConsumerState<_AccountPrompt> {
               controller: _email,
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.next,
+              autofillHints: const [AutofillHints.email],
               decoration: const InputDecoration(labelText: 'Email'),
             ),
             const SizedBox(height: 10),
             TextField(
               controller: _password,
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'Password'),
+              textInputAction: TextInputAction.done,
+              autofillHints: [
+                _signInMode
+                    ? AutofillHints.password
+                    : AutofillHints.newPassword,
+              ],
+              onSubmitted: (_) => _busy ? null : _submit(),
+              decoration: InputDecoration(
+                labelText:
+                    _signInMode ? 'Password' : 'Password (6+ characters)',
+              ),
             ),
             if (_error != null) ...[
               const SizedBox(height: 8),
@@ -158,7 +189,12 @@ class _AccountPromptState extends ConsumerState<_AccountPrompt> {
                       : (_signInMode ? 'Sign in' : 'Create account')),
                 ),
                 TextButton(
-                  onPressed: () => setState(() => _signInMode = !_signInMode),
+                  onPressed: _busy
+                      ? null
+                      : () => setState(() {
+                            _signInMode = !_signInMode;
+                            _error = null;
+                          }),
                   child: Text(
                       _signInMode ? 'Need an account?' : 'Already have one?'),
                 ),

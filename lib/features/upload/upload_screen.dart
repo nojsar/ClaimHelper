@@ -168,11 +168,14 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Add your documents',
-                style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5)),
+            Semantics(
+              header: true,
+              child: Text('Add your documents',
+                  style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5)),
+            ),
             const SizedBox(height: 8),
             const Text(
               'Upload the denial letter, EOB, or prior-authorization denial. '
@@ -236,25 +239,14 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
                   )),
             ],
 
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: _busy ? null : _pickFiles,
-                  icon: const Icon(Icons.attach_file, size: 18),
-                  label:
-                      Text(_files.isEmpty ? 'Choose files' : 'Add more files'),
-                ),
-                if (showCamera)
-                  OutlinedButton.icon(
-                    onPressed: _busy ? null : _takePhoto,
-                    icon: const Icon(Icons.photo_camera_outlined, size: 18),
-                    label: const Text('Take a photo'),
-                  ),
-              ],
-            ),
+            if (showCamera) ...[
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: _busy ? null : _takePhoto,
+                icon: const Icon(Icons.photo_camera_outlined, size: 18),
+                label: const Text('Take a photo'),
+              ),
+            ],
 
             const SizedBox(height: 20),
             _ConsentBox(

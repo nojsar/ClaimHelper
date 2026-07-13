@@ -278,3 +278,49 @@ class IconTile extends StatelessWidget {
     );
   }
 }
+
+/// Keeps adjacent actions usable when the viewport narrows or text is zoomed.
+/// Buttons share a row when there is room and become full-width stacked
+/// controls otherwise, avoiding clipped labels and horizontal scrolling.
+class ResponsiveActions extends StatelessWidget {
+  const ResponsiveActions({
+    super.key,
+    required this.children,
+    this.breakpoint = 520,
+    this.spacing = 12,
+  });
+
+  final List<Widget> children;
+  final double breakpoint;
+  final double spacing;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final zoomed = MediaQuery.textScalerOf(context).scale(14) > 20;
+        final stack = constraints.maxWidth < breakpoint || zoomed;
+        if (stack) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < children.length; i++) ...[
+                if (i > 0) SizedBox(height: spacing),
+                children[i],
+              ],
+            ],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (var i = 0; i < children.length; i++) ...[
+              if (i > 0) SizedBox(width: spacing),
+              Expanded(child: children[i]),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}

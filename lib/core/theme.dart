@@ -34,6 +34,9 @@ abstract final class AppColors {
   static const textMuted = Color(0xFF746A52);
   static const border = Color(0xFFDCD2BA);
   static const borderStrong = Color(0xFFB9AC8F);
+  // Persistent boundaries for form fields and other interactive controls.
+  // Meets WCAG 1.4.11's 3:1 non-text contrast requirement on paper surfaces.
+  static const controlBorder = textMuted;
 
   // Ink (buttons, footer, dark panels)
   static const ink = Color(0xFF1C160C);
@@ -243,7 +246,7 @@ ThemeData buildAppTheme() {
     chipTheme: ChipThemeData(
       backgroundColor: AppColors.surface,
       selectedColor: AppColors.primaryTint,
-      side: const BorderSide(color: AppColors.borderStrong),
+      side: const BorderSide(color: AppColors.controlBorder),
       labelStyle: textTheme.bodyMedium?.copyWith(
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
@@ -251,7 +254,7 @@ ThemeData buildAppTheme() {
       secondaryLabelStyle: textTheme.bodyMedium,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(999),
-        side: const BorderSide(color: AppColors.borderStrong),
+        side: const BorderSide(color: AppColors.controlBorder),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
     ),
@@ -264,11 +267,11 @@ ThemeData buildAppTheme() {
       hintStyle: const TextStyle(color: AppColors.textMuted),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadii.md),
-        borderSide: const BorderSide(color: AppColors.borderStrong),
+        borderSide: const BorderSide(color: AppColors.controlBorder),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadii.md),
-        borderSide: const BorderSide(color: AppColors.borderStrong),
+        borderSide: const BorderSide(color: AppColors.controlBorder),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadii.md),

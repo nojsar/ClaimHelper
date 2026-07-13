@@ -270,12 +270,14 @@ class _GenerationTheaterState extends State<_GenerationTheater>
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (widget.paymentConfirmed) ...[
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                                  Wrap(
+                                    alignment: WrapAlignment.center,
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    spacing: 7,
                                     children: const [
                                       Icon(Icons.verified_rounded,
                                           color: Color(0xFF2FB380), size: 18),
-                                      SizedBox(width: 7),
                                       Text('Payment confirmed',
                                           style: TextStyle(
                                               color: Color(0xFF2FB380),
@@ -286,10 +288,13 @@ class _GenerationTheaterState extends State<_GenerationTheater>
                                   ),
                                   const SizedBox(height: 18),
                                 ],
-                                _PacketAssembly(
-                                  progress: indeterminate ? 0.0 : v,
-                                  pulse: _pulse,
-                                  reduceMotion: _reduceMotion,
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: _PacketAssembly(
+                                    progress: indeterminate ? 0.0 : v,
+                                    pulse: _pulse,
+                                    reduceMotion: _reduceMotion,
+                                  ),
                                 ),
                                 const SizedBox(height: 22),
                                 if (!indeterminate)

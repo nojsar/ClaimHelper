@@ -16,6 +16,7 @@ import '../../state/providers.dart';
 import '../../widgets/account_gate.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/case_loader.dart';
+import '../../widgets/ui.dart';
 
 /// Free preview + paywall. Generates the preview from the confirmed
 /// extraction, lets the user supply anything the preview flagged as missing
@@ -301,6 +302,14 @@ class _PreviewPaywallScreenState extends ConsumerState<PreviewPaywallScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Semantics(
+              header: true,
+              child: Text(
+                'Your free preview',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+              ),
+            ),
+            const SizedBox(height: 16),
             if (days != null) ...[
               _DeadlineBanner(days: days),
               const SizedBox(height: 16),
@@ -465,6 +474,8 @@ class _LetterTeaserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final teaserBottomPadding =
+        MediaQuery.textScalerOf(context).scale(46).clamp(46.0, 110.0);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -487,7 +498,7 @@ class _LetterTeaserCard extends StatelessWidget {
               children: [
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 46),
+                  padding: EdgeInsets.fromLTRB(18, 18, 18, teaserBottomPadding),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceAlt,
                     borderRadius: BorderRadius.circular(AppRadii.sm),
@@ -555,11 +566,16 @@ class _LetterTeaserCard extends StatelessWidget {
                         Icon(Icons.lock_outline,
                             size: 15, color: AppColors.textSecondary),
                         SizedBox(width: 6),
-                        Text('The full letter is in your packet',
+                        Flexible(
+                          child: Text(
+                            'The full letter is in your packet',
+                            textAlign: TextAlign.center,
                             style: TextStyle(
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.textSecondary)),
+                                color: AppColors.textSecondary),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -623,6 +639,8 @@ class _MissingPiecesCard extends StatelessWidget {
               maxLines: 4,
               minLines: 3,
               decoration: const InputDecoration(
+                labelText: 'Additional case details',
+                alignLabelWithHint: true,
                 hintText: 'e.g. Claim number CLM-123456, date of service '
                     '2026-05-14, I already tried metformin for 3 months…',
               ),
@@ -643,27 +661,24 @@ class _MissingPiecesCard extends StatelessWidget {
               ),
               const SizedBox(height: 12),
             ],
-            Row(
+            ResponsiveActions(
               children: [
                 OutlinedButton.icon(
                   onPressed: updating ? null : onPickFiles,
                   icon: const Icon(Icons.attach_file_rounded, size: 18),
                   label: const Text('Attach documents'),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: updating ? null : onApply,
-                    icon: updating
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white))
-                        : const Icon(Icons.refresh_rounded, size: 18),
-                    label: Text(
-                        updating ? 'Updating preview…' : 'Update my preview'),
-                  ),
+                FilledButton.icon(
+                  onPressed: updating ? null : onApply,
+                  icon: updating
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
+                      : const Icon(Icons.refresh_rounded, size: 18),
+                  label: Text(
+                      updating ? 'Updating preview…' : 'Update my preview'),
                 ),
               ],
             ),
@@ -851,6 +866,7 @@ class _TierOption extends StatelessWidget {
     return Semantics(
       container: true,
       button: true,
+      inMutuallyExclusiveGroup: true,
       selected: selected,
       enabled: onTap != null,
       label: '$title, \$$price',
@@ -869,7 +885,7 @@ class _TierOption extends StatelessWidget {
             color: selected ? AppColors.primaryTint : AppColors.surface,
             borderRadius: BorderRadius.circular(AppRadii.md),
             border: Border.all(
-              color: selected ? AppColors.primaryDark : AppColors.borderStrong,
+              color: selected ? AppColors.primaryDark : AppColors.controlBorder,
               width: selected ? 1.6 : 0.8,
             ),
           ),
@@ -957,21 +973,26 @@ class _ReminderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (saved) {
-      return Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: const [
-              Icon(Icons.mark_email_read_outlined, color: AppColors.accent),
-              SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Reminders on. We emailed you the case link and will nudge '
-                  'you before your deadline. Stop any time by deleting the case.',
-                  style: TextStyle(height: 1.45),
+      return Semantics(
+        container: true,
+        liveRegion: true,
+        label: 'Reminder saved',
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: const [
+                Icon(Icons.mark_email_read_outlined, color: AppColors.accent),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Reminders on. We emailed you the case link and will nudge '
+                    'you before your deadline. Stop any time by deleting the case.',
+                    style: TextStyle(height: 1.45),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       );
@@ -1005,20 +1026,23 @@ class _ReminderCard extends StatelessWidget {
                   color: AppColors.textSecondary, height: 1.45, fontSize: 13),
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: controller,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      hintText: 'you@email.com',
-                      isDense: true,
-                    ),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final stack = constraints.maxWidth < 440 ||
+                    MediaQuery.textScalerOf(context).scale(14) > 20;
+                final field = TextField(
+                  controller: controller,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.done,
+                  autofillHints: const [AutofillHints.email],
+                  onSubmitted: saving ? null : (_) => onSave(),
+                  decoration: const InputDecoration(
+                    labelText: 'Reminder email address',
+                    hintText: 'you@email.com',
+                    isDense: true,
                   ),
-                ),
-                const SizedBox(width: 10),
-                FilledButton(
+                );
+                final button = FilledButton(
                   onPressed: saving ? null : onSave,
                   child: saving
                       ? const SizedBox(
@@ -1027,8 +1051,25 @@ class _ReminderCard extends StatelessWidget {
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: Colors.white))
                       : const Text('Remind me'),
-                ),
-              ],
+                );
+                if (stack) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      field,
+                      const SizedBox(height: 10),
+                      button,
+                    ],
+                  );
+                }
+                return Row(
+                  children: [
+                    Expanded(child: field),
+                    const SizedBox(width: 10),
+                    button,
+                  ],
+                );
+              },
             ),
           ],
         ),

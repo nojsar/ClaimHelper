@@ -14,6 +14,7 @@ class LandingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
+      title: 'Insurance denial appeal assistant',
       maxWidth: double.infinity,
       child: SingleChildScrollView(
         child: Column(

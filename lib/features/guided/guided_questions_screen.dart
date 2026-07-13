@@ -64,7 +64,11 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final problems = _showErrors ? _a.validate() : const <String>[];
+    final currentAnswers = _a.copyWith(
+      urgencyNote: _urgencyCtrl.text.trim(),
+      contactNotes: _contactCtrl.text.trim(),
+    );
+    final problems = _showErrors ? currentAnswers.validate() : const <String>[];
 
     return AppScaffold(
       title: 'A few questions',
@@ -73,8 +77,11 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Tailor your appeal',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+            Semantics(
+              header: true,
+              child: Text('Tailor your appeal',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+            ),
             const SizedBox(height: 6),
             const Text(
               'These answers make your appeal specific to your situation. '
@@ -84,6 +91,7 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
             const SizedBox(height: 20),
             _Q('Who is this denial for?'),
             _ChipGroup<PatientRelation>(
+              groupLabel: 'Who is this denial for?',
               options: PatientRelation.values,
               selected: _a.relation,
               label: (v) => v.label,
@@ -92,7 +100,12 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
             _Q('What state do you live in?'),
             DropdownButtonFormField<String>(
               initialValue: _a.usState,
-              decoration: const InputDecoration(labelText: 'State'),
+              decoration: InputDecoration(
+                labelText: 'State',
+                errorText: _showErrors && _a.usState == null
+                    ? 'Select your state.'
+                    : null,
+              ),
               items: [
                 for (final s in UsStates.all)
                   DropdownMenuItem(value: s, child: Text(s)),
@@ -101,6 +114,7 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
             ),
             _Q('What kind of insurance is this?'),
             _ChipGroup<InsuranceType>(
+              groupLabel: 'Insurance type',
               options: InsuranceType.values,
               selected: _a.insuranceType,
               label: (v) => v.label,
@@ -108,6 +122,7 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
             ),
             _Q('What outcome do you want?'),
             _ChipGroup<DesiredOutcome>(
+              groupLabel: 'Desired outcome',
               options: DesiredOutcome.values,
               selected: _a.desiredOutcome,
               label: (v) => v.label,
@@ -115,6 +130,7 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
             ),
             _Q('Is a delay urgent or harmful to health, function, or recovery?'),
             _YesNo(
+              groupLabel: 'Whether a delay is urgent or harmful',
               value: _a.isUrgent,
               onChanged: (v) => _set(_a.copyWith(isUrgent: v)),
             ),
@@ -124,8 +140,14 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
                 child: TextField(
                   controller: _urgencyCtrl,
                   maxLines: 2,
-                  decoration: const InputDecoration(
+                  onChanged: (_) {
+                    if (_showErrors) setState(() {});
+                  },
+                  decoration: InputDecoration(
                     labelText: 'Briefly, why is a delay harmful?',
+                    errorText: _showErrors && _urgencyCtrl.text.trim().isEmpty
+                        ? 'Describe why a delay is harmful.'
+                        : null,
                   ),
                 ),
               ),
@@ -142,6 +164,7 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
             ),
             _Q('Which supporting documents do you have?'),
             _MultiChipGroup<SupportingDocument>(
+              groupLabel: 'Supporting documents on hand',
               options: SupportingDocument.values,
               selected: _a.documentsOnHand,
               label: (v) => v.label,
@@ -153,6 +176,7 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
             ),
             _Q('Have you already called the insurer or provider?'),
             _YesNo(
+              groupLabel: 'Whether you contacted the insurer or provider',
               value: _a.contactedInsurer,
               onChanged: (v) => _set(_a.copyWith(contactedInsurer: v)),
             ),
@@ -162,9 +186,15 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
                 child: TextField(
                   controller: _contactCtrl,
                   maxLines: 3,
-                  decoration: const InputDecoration(
+                  onChanged: (_) {
+                    if (_showErrors) setState(() {});
+                  },
+                  decoration: InputDecoration(
                     labelText:
                         'Call dates, who you spoke with, reference numbers',
+                    errorText: _showErrors && _contactCtrl.text.trim().isEmpty
+                        ? 'Add call dates or reference numbers.'
+                        : null,
                   ),
                 ),
               ),
@@ -206,11 +236,13 @@ class _Q extends StatelessWidget {
 
 class _ChipGroup<T> extends StatelessWidget {
   const _ChipGroup({
+    required this.groupLabel,
     required this.options,
     required this.selected,
     required this.label,
     required this.onSelect,
   });
+  final String groupLabel;
   final List<T> options;
   final T? selected;
   final String Function(T) label;
@@ -218,28 +250,35 @@ class _ChipGroup<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (final o in options)
-          ChoiceChip(
-            label: Text(label(o)),
-            selected: selected == o,
-            onSelected: (_) => onSelect(o),
-          ),
-      ],
+    return Semantics(
+      container: true,
+      label: groupLabel,
+      explicitChildNodes: true,
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (final o in options)
+            ChoiceChip(
+              label: Text(label(o)),
+              selected: selected == o,
+              onSelected: (_) => onSelect(o),
+            ),
+        ],
+      ),
     );
   }
 }
 
 class _MultiChipGroup<T> extends StatelessWidget {
   const _MultiChipGroup({
+    required this.groupLabel,
     required this.options,
     required this.selected,
     required this.label,
     required this.onToggle,
   });
+  final String groupLabel;
   final List<T> options;
   final Set<T> selected;
   final String Function(T) label;
@@ -247,42 +286,58 @@ class _MultiChipGroup<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (final o in options)
-          FilterChip(
-            label: Text(label(o)),
-            selected: selected.contains(o),
-            onSelected: (_) => onToggle(o),
-          ),
-      ],
+    return Semantics(
+      container: true,
+      label: groupLabel,
+      explicitChildNodes: true,
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (final o in options)
+            FilterChip(
+              label: Text(label(o)),
+              selected: selected.contains(o),
+              onSelected: (_) => onToggle(o),
+            ),
+        ],
+      ),
     );
   }
 }
 
 class _YesNo extends StatelessWidget {
-  const _YesNo({required this.value, required this.onChanged});
+  const _YesNo({
+    required this.groupLabel,
+    required this.value,
+    required this.onChanged,
+  });
+  final String groupLabel;
   final bool? value;
   final ValueChanged<bool> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        ChoiceChip(
-          label: const Text('Yes'),
-          selected: value == true,
-          onSelected: (_) => onChanged(true),
-        ),
-        const SizedBox(width: 8),
-        ChoiceChip(
-          label: const Text('No'),
-          selected: value == false,
-          onSelected: (_) => onChanged(false),
-        ),
-      ],
+    return Semantics(
+      container: true,
+      label: groupLabel,
+      explicitChildNodes: true,
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          ChoiceChip(
+            label: const Text('Yes'),
+            selected: value == true,
+            onSelected: (_) => onChanged(true),
+          ),
+          ChoiceChip(
+            label: const Text('No'),
+            selected: value == false,
+            onSelected: (_) => onChanged(false),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -310,8 +365,9 @@ class _AlternativesEditor extends StatelessWidget {
               builder: (context, constraints) {
                 final name = TextFormField(
                   initialValue: items[i].name,
-                  decoration: const InputDecoration(
-                      labelText: 'Drug or treatment', isDense: true),
+                  decoration: InputDecoration(
+                      labelText: 'Alternative ${i + 1}: drug or treatment',
+                      isDense: true),
                   onChanged: (v) {
                     final next = [...items];
                     next[i] =
@@ -323,8 +379,8 @@ class _AlternativesEditor extends StatelessWidget {
                   initialValue: items[i].outcome,
                   isExpanded: true,
                   isDense: true,
-                  decoration:
-                      const InputDecoration(labelText: 'Result', isDense: true),
+                  decoration: InputDecoration(
+                      labelText: 'Alternative ${i + 1}: result', isDense: true),
                   items: [
                     for (final e in _outcomes.entries)
                       DropdownMenuItem(value: e.key, child: Text(e.value)),

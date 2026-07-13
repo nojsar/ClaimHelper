@@ -35,8 +35,8 @@ class _ExtractionReviewScreenState
     }
   }
 
-  TextEditingController _ctrl(String key, String? value) =>
-      _controllers.putIfAbsent(key, () => TextEditingController(text: value ?? ''));
+  TextEditingController _ctrl(String key, String? value) => _controllers
+      .putIfAbsent(key, () => TextEditingController(text: value ?? ''));
 
   String? _clean(String key) {
     final v = _controllers[key]?.text.trim();
@@ -101,8 +101,11 @@ class _ExtractionReviewScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Check the details',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+            Semantics(
+              header: true,
+              child: Text('Check the details',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+            ),
             const SizedBox(height: 6),
             const Text(
               'We pulled these from your document. Fix anything that\'s wrong — '
@@ -113,8 +116,8 @@ class _ExtractionReviewScreenState
             _CategoryPicker(
               label: 'Denial type',
               value: _ex.denialCategory,
-              onChanged: (v) => setState(
-                  () => _ex = _ex.copyWith(denialCategory: v)),
+              onChanged: (v) =>
+                  setState(() => _ex = _ex.copyWith(denialCategory: v)),
             ),
             const SizedBox(height: 16),
             _field('Insurance company', 'insurerName', _ex.insurerName),

@@ -5,6 +5,7 @@ import '../core/constants.dart';
 import '../models/appeal_case.dart';
 import '../services/backend.dart';
 import '../services/firebase_backend.dart';
+import '../services/accessible_html_service.dart';
 import '../services/mock_backend.dart';
 import '../services/pdf_service.dart';
 
@@ -16,17 +17,19 @@ final backendProvider = Provider<Backend>((ref) {
 });
 
 final pdfServiceProvider = Provider<PdfService>((ref) => PdfService());
+final accessibleHtmlServiceProvider =
+    Provider<AccessibleHtmlService>((ref) => AccessibleHtmlService());
 
 /// Auth state exposed as a simple snapshot the UI can read.
 class AuthSnapshot {
-  const AuthSnapshot({required this.signedIn, required this.isAnonymous, this.email});
+  const AuthSnapshot(
+      {required this.signedIn, required this.isAnonymous, this.email});
   final bool signedIn;
   final bool isAnonymous;
   final String? email;
 }
 
-final authProvider =
-    StateNotifierProvider<AuthController, AuthSnapshot>((ref) {
+final authProvider = StateNotifierProvider<AuthController, AuthSnapshot>((ref) {
   return AuthController(ref.watch(backendProvider));
 });
 

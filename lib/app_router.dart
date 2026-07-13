@@ -15,6 +15,7 @@ import 'features/preview/purchase_success_screen.dart';
 import 'features/processing/processing_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/upload/upload_screen.dart';
+import 'widgets/app_scaffold.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -66,8 +67,37 @@ final appRouter = GoRouter(
     // Owner-only traffic dashboard; Firestore rules gate the data itself.
     GoRoute(path: '/stats', builder: (_, __) => const StatsScreen()),
   ],
-  errorBuilder: (_, state) => Scaffold(
-    body: Center(child: Text('Page not found: ${state.uri}')),
+  errorBuilder: (context, state) => AppScaffold(
+    title: 'Page not found',
+    child: Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Semantics(
+              header: true,
+              child: Text(
+                'Page not found',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'We could not find ${state.uri.path}.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 20),
+            FilledButton(
+              onPressed: () => context.go('/'),
+              child: const Text('Go to home page'),
+            ),
+          ],
+        ),
+      ),
+    ),
   ),
 );
 
@@ -90,13 +120,19 @@ class _ExitToLandingState extends State<_ExitToLanding> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Center(
-        child: Semantics(
-          liveRegion: true,
-          label: 'Returning to the GetMyYes home page',
-          child: const CircularProgressIndicator(color: AppColors.primary),
+    return Title(
+      color: AppColors.primary,
+      title: 'Returning home | GetMyYes',
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: Semantics(
+            scopesRoute: true,
+            namesRoute: true,
+            liveRegion: true,
+            label: 'Returning to the GetMyYes home page',
+            child: const CircularProgressIndicator(color: AppColors.primary),
+          ),
         ),
       ),
     );

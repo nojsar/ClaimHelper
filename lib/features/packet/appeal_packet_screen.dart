@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +13,7 @@ import '../../models/packet.dart';
 import '../../state/providers.dart';
 import '../../widgets/account_gate.dart';
 import '../../widgets/app_scaffold.dart';
+import '../../widgets/ui.dart';
 
 /// The paid deliverable. Tabs: Summary, Appeal Letter, Evidence, Doctor
 /// Request, Call Script, Deadlines, plus a PDF export action. Entitlement is
@@ -147,10 +149,11 @@ class _PacketTabs extends ConsumerStatefulWidget {
 }
 
 class _PacketTabsState extends ConsumerState<_PacketTabs> {
-  bool _exporting = false;
+  bool _exportingPdf = false;
+  bool _exportingHtml = false;
 
   Future<void> _export() async {
-    setState(() => _exporting = true);
+    setState(() => _exportingPdf = true);
     try {
       await ref.read(pdfServiceProvider).exportPacket(widget.appealCase);
       if (mounted) {
@@ -163,7 +166,27 @@ class _PacketTabsState extends ConsumerState<_PacketTabs> {
             content: Text('PDF export failed. Please try again.')));
       }
     } finally {
-      if (mounted) setState(() => _exporting = false);
+      if (mounted) setState(() => _exportingPdf = false);
+    }
+  }
+
+  Future<void> _exportAccessibleHtml() async {
+    setState(() => _exportingHtml = true);
+    try {
+      await ref
+          .read(accessibleHtmlServiceProvider)
+          .exportPacket(widget.appealCase);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Accessible HTML packet downloaded.')));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('HTML export failed. Please try again.')));
+      }
+    } finally {
+      if (mounted) setState(() => _exportingHtml = false);
     }
   }
 
@@ -173,6 +196,7 @@ class _PacketTabsState extends ConsumerState<_PacketTabs> {
     final media = MediaQuery.of(context);
     final compactActions =
         media.size.width < 680 || media.textScaler.scale(14) > 20;
+    final exporting = _exportingPdf || _exportingHtml;
     const tabs = [
       Tab(text: 'Summary'),
       Tab(text: 'Appeal Letter'),
@@ -183,68 +207,105 @@ class _PacketTabsState extends ConsumerState<_PacketTabs> {
       Tab(text: 'Follow-ups'),
     ];
 
-    return DefaultTabController(
-      length: tabs.length,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Your appeal packet'),
-          actions: [
-            _SaveCaseButton(appealCase: widget.appealCase),
-            if (compactActions)
-              IconButton(
-                tooltip: _exporting ? 'Exporting PDF' : 'Export PDF',
-                onPressed: _exporting ? null : _export,
-                icon: _exporting
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.picture_as_pdf),
-              )
-            else
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: FilledButton.icon(
-                  onPressed: _exporting ? null : _export,
-                  icon: _exporting
+    return Title(
+      color: AppColors.primary,
+      title: 'Appeal packet | GetMyYes',
+      child: DefaultTabController(
+        length: tabs.length,
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Your appeal packet'),
+            actions: [
+              _SaveCaseButton(appealCase: widget.appealCase),
+              if (compactActions)
+                PopupMenuButton<String>(
+                  enabled: !exporting,
+                  tooltip: exporting ? 'Downloading packet' : 'Download packet',
+                  icon: exporting
                       ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white))
-                      : const Icon(Icons.picture_as_pdf, size: 18),
-                  label: const Text('Export PDF'),
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.download_outlined),
+                  onSelected: (value) {
+                    if (value == 'html') {
+                      _exportAccessibleHtml();
+                    } else {
+                      _export();
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    if (kIsWeb)
+                      const PopupMenuItem(
+                        value: 'html',
+                        child: Text('Download accessible HTML'),
+                      ),
+                    const PopupMenuItem(
+                      value: 'pdf',
+                      child: Text('Export PDF'),
+                    ),
+                  ],
+                )
+              else ...[
+                if (kIsWeb)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: OutlinedButton.icon(
+                      onPressed: exporting ? null : _exportAccessibleHtml,
+                      icon: _exportingHtml
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Icon(Icons.html_outlined, size: 18),
+                      label: const Text('Accessible HTML'),
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: FilledButton.icon(
+                    onPressed: exporting ? null : _export,
+                    icon: _exportingPdf
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white))
+                        : const Icon(Icons.picture_as_pdf, size: 18),
+                    label: const Text('Export PDF'),
+                  ),
                 ),
-              ),
-          ],
-          bottom: const TabBar(isScrollable: true, tabs: tabs),
-        ),
-        body: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 820),
-              child: TabBarView(
-                children: [
-                  _SummaryTab(packet: packet),
-                  _TextTab(
-                    title: 'Appeal letter',
-                    body: packet.appealLetter,
-                    copyable: true,
-                  ),
-                  _EvidenceTab(items: packet.evidenceChecklist),
-                  _TextTab(
-                    title: 'Doctor letter request',
-                    body: packet.doctorLetterRequest,
-                    copyable: true,
-                  ),
-                  _TextTab(
-                    title: 'Insurer call script',
-                    body: packet.insurerCallScript,
-                    copyable: true,
-                  ),
-                  _DeadlinesTab(items: packet.deadlineChecklist),
-                  _FollowUpsTab(appealCase: widget.appealCase),
-                ],
+              ],
+            ],
+            bottom: const TabBar(isScrollable: true, tabs: tabs),
+          ),
+          body: SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 820),
+                child: TabBarView(
+                  children: [
+                    _SummaryTab(packet: packet),
+                    _TextTab(
+                      title: 'Appeal letter',
+                      body: packet.appealLetter,
+                      copyable: true,
+                    ),
+                    _EvidenceTab(items: packet.evidenceChecklist),
+                    _TextTab(
+                      title: 'Doctor letter request',
+                      body: packet.doctorLetterRequest,
+                      copyable: true,
+                    ),
+                    _TextTab(
+                      title: 'Insurer call script',
+                      body: packet.insurerCallScript,
+                      copyable: true,
+                    ),
+                    _DeadlinesTab(items: packet.deadlineChecklist),
+                    _FollowUpsTab(appealCase: widget.appealCase),
+                  ],
+                ),
               ),
             ),
           ),
@@ -284,6 +345,7 @@ class _FollowUpsTabState extends ConsumerState<_FollowUpsTab> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        scrollable: true,
         title: Text(remaining == 1
             ? 'Your last included round'
             : 'Use a follow-up round?'),
@@ -440,9 +502,12 @@ class _FollowUpsTabState extends ConsumerState<_FollowUpsTab> {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        Row(
+        Wrap(
+          spacing: 12,
+          runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            Expanded(child: _sectionTitle('After you send your appeal')),
+            _sectionTitle('After you send your appeal'),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
@@ -509,22 +574,16 @@ class _FollowUpsTabState extends ConsumerState<_FollowUpsTab> {
                         TextStyle(color: AppColors.textSecondary, height: 1.45),
                   ),
                   const SizedBox(height: 14),
-                  Row(
+                  ResponsiveActions(
                     children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed:
-                              _busy ? null : () => _buy('followup_round'),
-                          child:
-                              Text('One round — \$${Pricing.followUpRoundUsd}'),
-                        ),
+                      OutlinedButton(
+                        onPressed: _busy ? null : () => _buy('followup_round'),
+                        child:
+                            Text('One round — \$${Pricing.followUpRoundUsd}'),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: _busy ? null : () => _buy('full_case'),
-                          child: Text('Full Case — \$${Pricing.fullCaseUsd}'),
-                        ),
+                      FilledButton(
+                        onPressed: _busy ? null : () => _buy('full_case'),
+                        child: Text('Full Case — \$${Pricing.fullCaseUsd}'),
                       ),
                     ],
                   ),

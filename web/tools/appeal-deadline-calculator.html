@@ -55,21 +55,33 @@
       border: 1px solid var(--border-strong); border-radius: 10px; background: #fff; color: var(--ink); min-height: 44px;
     }
     .calc .hint { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+    .calc .field-error {
+      margin: 6px 0 0; color: var(--carmine-dark); font-size: 13px; font-weight: 700;
+    }
     .calc button.go {
       background: var(--carmine); color: #fff; border: 0; padding: 13px 26px; border-radius: 12px;
       font: inherit; font-weight: 800; font-size: 15.5px; cursor: pointer; min-height: 44px;
     }
     .calc button.go:hover { background: #D92632; }
     #results { margin-top: 8px; }
+    #results:empty { margin-top: 0; }
+    .results-heading { margin: 18px 0 2px; font-size: 16px; }
+    .deadlines { margin: 0; }
     .deadline { display: flex; gap: 14px; align-items: baseline; border-bottom: 1px dashed var(--border-strong); padding: 12px 0; }
-    .deadline .date { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 15px; color: var(--carmine-dark); min-width: 130px; }
+    .deadline .date { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 15px; color: var(--carmine-dark); min-width: 130px; overflow-wrap: anywhere; }
     .deadline .what strong { display: block; font-size: 15px; }
+    .deadline .what { margin: 0; }
     .deadline .what span { font-size: 13px; color: var(--ink-soft); }
     button.ics {
       margin-top: 16px; border: 1px solid var(--border-strong); background: var(--letter); color: var(--ink);
       font-family: 'IBM Plex Mono', monospace; font-size: 13px; padding: 11px 18px; border-radius: 10px; cursor: pointer; min-height: 44px;
     }
     button.ics:hover { border-color: var(--green); color: var(--green); }
+    @media (max-width: 560px) {
+      .calc { padding: 18px 14px; }
+      .deadline { display: block; }
+      .deadline .date { display: block; min-width: 0; margin-bottom: 4px; }
+    }
   </style>
 </head>
 <body>
@@ -93,31 +105,32 @@
       <p class="updated">ESTIMATES COMMON FEDERAL TIMEFRAMES · YOUR DENIAL LETTER ALWAYS CONTROLS · NOT LEGAL ADVICE</p>
       <p class="lede">Your denial letter started a clock. Enter the date on the letter and get the <strong>estimated</strong> deadlines that typically apply to commercial plans — then download calendar reminders so nothing slips.</p>
 
-      <div class="calc">
+      <form class="calc" id="deadlineForm" novalidate>
         <div class="row">
           <label for="denialDate">Date on your denial letter</label>
-          <input type="date" id="denialDate" name="denialDate">
+          <input type="date" id="denialDate" name="denialDate" required aria-describedby="denialDateError">
+          <p class="field-error" id="denialDateError" role="alert" hidden></p>
         </div>
         <div class="row">
           <label for="careState">Has the care already happened?</label>
-          <select id="careState" name="careState">
+          <select id="careState" name="careState" aria-describedby="careStateHint">
             <option value="pre">Not yet — coverage was denied before treatment</option>
             <option value="post">Yes — the claim for care I received was denied</option>
           </select>
-          <p class="hint">Pre-service and post-service appeals run on different insurer decision clocks.</p>
+          <p class="hint" id="careStateHint">Pre-service and post-service appeals run on different insurer decision clocks.</p>
         </div>
         <div class="row">
           <label for="urgent">Is waiting a risk to your health?</label>
-          <select id="urgent" name="urgent">
+          <select id="urgent" name="urgent" aria-describedby="urgentHint">
             <option value="no">No / not sure</option>
             <option value="yes">Yes — my doctor would call this urgent</option>
           </select>
-          <p class="hint">Urgent appeals can qualify for an expedited (~72-hour) decision — flag it in your appeal's first line.</p>
+          <p class="hint" id="urgentHint">Urgent appeals can qualify for an expedited (~72-hour) decision — flag it in your appeal's first line.</p>
         </div>
-        <button class="go" id="calcBtn" type="button">Calculate my deadlines</button>
+        <button class="go" id="calcBtn" type="submit">Calculate my deadlines</button>
 
-        <section id="results" aria-live="polite" aria-label="Calculated deadlines"></section>
-      </div>
+        <section id="results" role="status" aria-live="polite" aria-atomic="true" aria-label="Calculated deadlines"></section>
+      </form>
 
       <h2>How these estimates work</h2>
       <ul>
@@ -162,13 +175,23 @@
     var icsDate = function (d) { return '' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()); };
     var current = null;
 
-    function calc() {
-      var input = document.getElementById('denialDate').value;
+    function calc(event) {
+      event.preventDefault();
+      var dateInput = document.getElementById('denialDate');
+      var input = dateInput.value;
       var results = document.getElementById('results');
+      var dateError = document.getElementById('denialDateError');
       if (!input) {
-        results.innerHTML = '<p style="color:var(--carmine-dark);font-weight:600;margin-top:14px">Enter the date on your denial letter first.</p>';
+        dateInput.setAttribute('aria-invalid', 'true');
+        dateError.textContent = 'Enter the date on your denial letter.';
+        dateError.hidden = false;
+        results.replaceChildren();
+        dateInput.focus();
         return;
       }
+      dateInput.removeAttribute('aria-invalid');
+      dateError.textContent = '';
+      dateError.hidden = true;
       var denial = new Date(input + 'T12:00:00');
       var pre = document.getElementById('careState').value === 'pre';
       var urgent = document.getElementById('urgent').value === 'yes';
@@ -180,9 +203,12 @@
       current = { denial: denial, fileBy: fileBy };
 
       results.innerHTML =
-        '<div class="deadline"><span class="date">' + fmt(fileBy) + '</span><span class="what"><strong>Estimated last day to file your internal appeal</strong><span>180 days from the letter — but file MUCH sooner; evidence gathering takes weeks, not days.</span></span></div>' +
-        '<div class="deadline"><span class="date">' + decision + '</span><span class="what"><strong>Insurer’s decision window</strong><span>' + (urgent ? 'Write “I am requesting an EXPEDITED APPEAL” in the first line and attach your doctor’s urgency statement.' : 'Runs from the day the insurer receives your appeal.') + '</span></span></div>' +
-        '<div class="deadline"><span class="date">' + fmt(externalBy) + '</span><span class="what"><strong>Outer estimate for requesting external review</strong><span>Often 4 months after the FINAL internal denial — this estimate assumes the latest possible filing. Your final denial letter will state the real window.</span></span></div>' +
+        '<p class="results-heading"><strong>Your estimated deadlines</strong></p>' +
+        '<dl class="deadlines">' +
+        '<div class="deadline"><dt class="date">' + fmt(fileBy) + '</dt><dd class="what"><strong>Estimated last day to file your internal appeal</strong><span>180 days from the letter — but file MUCH sooner; evidence gathering takes weeks, not days.</span></dd></div>' +
+        '<div class="deadline"><dt class="date">' + decision + '</dt><dd class="what"><strong>Insurer’s decision window</strong><span>' + (urgent ? 'Write “I am requesting an EXPEDITED APPEAL” in the first line and attach your doctor’s urgency statement.' : 'Runs from the day the insurer receives your appeal.') + '</span></dd></div>' +
+        '<div class="deadline"><dt class="date">' + fmt(externalBy) + '</dt><dd class="what"><strong>Outer estimate for requesting external review</strong><span>Often 4 months after the FINAL internal denial — this estimate assumes the latest possible filing. Your final denial letter will state the real window.</span></dd></div>' +
+        '</dl>' +
         '<p class="hint" style="margin-top:12px">Estimates for commercial plans under common federal timeframes. The deadline printed on your letter always controls.</p>' +
         '<button class="ics" id="icsBtn" type="button">Download calendar reminders (.ics)</button>';
       document.getElementById('icsBtn').addEventListener('click', downloadIcs);
@@ -208,12 +234,21 @@
         'END:VCALENDAR'].join('\r\n');
       var blob = new Blob([body], { type: 'text/calendar' });
       var a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
+      var url = URL.createObjectURL(blob);
+      a.href = url;
       a.download = 'appeal-deadlines.ics';
       document.body.appendChild(a); a.click(); a.remove();
+      window.setTimeout(function () { URL.revokeObjectURL(url); }, 0);
     }
 
-    document.getElementById('calcBtn').addEventListener('click', calc);
+    document.getElementById('deadlineForm').addEventListener('submit', calc);
+    document.getElementById('denialDate').addEventListener('input', function (event) {
+      if (!event.target.value) return;
+      event.target.removeAttribute('aria-invalid');
+      var error = document.getElementById('denialDateError');
+      error.textContent = '';
+      error.hidden = true;
+    });
   })();
   </script>
 </body>

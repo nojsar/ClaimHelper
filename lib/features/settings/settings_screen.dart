@@ -120,8 +120,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         padding: const EdgeInsets.all(24),
         children: [
           if (runningInMockMode) _MockBanner(),
-          const Text('Your data',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          _settingsHeading('Your data'),
           const SizedBox(height: 12),
           Card(
             child: Column(
@@ -137,10 +136,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const Divider(height: 1),
                 ListTile(
                   leading: _deleting
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2))
+                      ? Semantics(
+                          liveRegion: true,
+                          label: 'Deleting all data',
+                          child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2)),
+                        )
                       : const Icon(Icons.delete_forever_outlined,
                           color: AppColors.error),
                   title: const Text('Delete all data',
@@ -152,10 +155,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const Divider(height: 1),
                 ListTile(
                   leading: _deletingAccount
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2))
+                      ? Semantics(
+                          liveRegion: true,
+                          label: 'Deleting account',
+                          child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2)),
+                        )
                       : const Icon(Icons.person_off_outlined,
                           color: AppColors.error),
                   title: const Text('Delete my account',
@@ -169,8 +176,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          const Text('Privacy',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          _settingsHeading('Privacy'),
           const SizedBox(height: 12),
           Card(
             child: Padding(
@@ -196,8 +202,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          const Text('Disclaimer',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          _settingsHeading('Disclaimer'),
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(16),
@@ -211,8 +216,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 style: TextStyle(fontSize: 13, color: AppColors.warning)),
           ),
           const SizedBox(height: 24),
-          const Text('Legal',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          _settingsHeading('Legal'),
           const SizedBox(height: 12),
           Card(
             child: Column(
@@ -262,6 +266,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 }
+
+Widget _settingsHeading(String text) => Semantics(
+      header: true,
+      child: Text(text,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+    );
 
 class _MockBanner extends StatelessWidget {
   @override

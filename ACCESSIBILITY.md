@@ -12,6 +12,8 @@ Primary references:
 - W3C, [Web Content Accessibility Guidelines 2.2](https://www.w3.org/TR/WCAG22/)
 - W3C, [Evaluating Web Accessibility](https://www.w3.org/WAI/test-evaluate/)
 - W3C, [WCAG-EM conformance evaluation](https://www.w3.org/WAI/test-evaluate/conformance/)
+- W3C, [PDF3: correct reading and tab order in tagged PDF](https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF3)
+- W3C, [Understanding conforming alternate versions](https://www.w3.org/WAI/WCAG22/Understanding/conformance.html#understanding-conforming-alternate-versions)
 
 ## Release checks
 
@@ -26,6 +28,22 @@ node tool/accessibility_check.mjs web
 npx --yes html-validate@10.10.0 "web/**/*.html"
 ```
 
+For a production release, use the fail-closed release command instead of
+running `firebase deploy` directly:
+
+```powershell
+node tool/deploy_release.mjs
+```
+
+This runs the Flutter and Functions checks, regenerates and validates the
+static content, builds the deploy artifact, deploys every Firebase resource in
+`firebase.json`, and then verifies that production pages and app bundles match
+the tested artifact. Use `node tool/deploy_release.mjs --check-only` when a
+non-deploying release rehearsal is needed. A local pass is not production
+evidence until the post-deploy verification also passes. This command fails
+closed for the automated gates; it does not replace the manual and
+assistive-technology checks below.
+
 Automated checks are only a regression floor. Before claiming conformance for a release, manually test a representative sample and every unique step in the complete process:
 
 - Keyboard only: logical order, visible and unobscured focus, no traps, dialogs enter and return focus.
@@ -38,8 +56,44 @@ Automated checks are only a regression floor. Before claiming conformance for a 
 - Upload progress, processing state, payment result, and other dynamic updates announced without stealing focus.
 - Stripe-hosted checkout and the return/confirmation path.
 - On-screen packet as the accessible equivalent for downloadable PDF content.
+- Send and receive a test message through `support@getmyyes.com` so the
+  documented accommodation channel is operational, not merely published.
 
 Record browser, assistive technology, viewport, tested routes, findings, fixes, reviewer, and date. Include users with disabilities in periodic usability reviews when feasible.
+
+## Current external-format and third-party gates
+
+The downloadable appeal packet is currently generated with the Dart `pdf`
+package. Its output does not expose the tagged document structure required for
+reliable screen-reader reading order, so the PDF is a convenience copy and is
+not represented as a PDF/UA or accessible PDF. The complete on-screen packet
+must remain available as the equivalent accessible format, and support must
+provide the same content in an accessible format on request. Do not claim the
+download itself conforms until a tagged-PDF generator is adopted and the
+result passes PAC/Acrobat checks plus manual screen-reader reading-order tests.
+Reliance on the on-screen version for overall WCAG conformance is valid only if
+that version itself meets Level AA, contains the same current information and
+functionality in the same language, and the PDF can only be reached through a
+page that also exposes the conforming version.
+
+Stripe-hosted Checkout is third-party content in the complete purchase
+process. Test the live Checkout page with keyboard-only navigation, NVDA with
+Chrome and Firefox, and VoiceOver with Safari. Record the Stripe Checkout
+version/date and every payment method exercised. A local Flutter or static HTML
+test cannot clear this gate; unresolved payment blockers require an equivalent
+supported purchase path while Stripe remediates them.
+
+## Release evidence
+
+Keep one record per production release containing:
+
+- Git commit and Firebase release identifier.
+- Output from `tool/deploy_release.mjs` and `tool/production_verify.mjs`.
+- Automated test versions and results.
+- Manual keyboard, screen-reader, resize/reflow, forced-colors, reduced-motion,
+  touch, Stripe Checkout, and on-screen packet results.
+- Known limitations, owner, workaround, severity, and target remediation date.
+- Tester and reviewer names and the test date.
 
 ## Content and component requirements
 

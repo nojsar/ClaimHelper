@@ -157,7 +157,10 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
           TextField(
             controller: _password,
             obscureText: true,
-            autofillHints: const [AutofillHints.newPassword],
+            textInputAction: TextInputAction.done,
+            autofillHints: [
+              _signInMode ? AutofillHints.password : AutofillHints.newPassword,
+            ],
             onSubmitted: (_) => _busy ? null : _submit(),
             decoration:
                 const InputDecoration(labelText: 'Password (6+ characters)'),

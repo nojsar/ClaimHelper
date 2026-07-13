@@ -12,7 +12,7 @@ import 'ui.dart';
 /// Responsive page shell: a translucent sticky top bar with the ClaimHelper
 /// wordmark plus navigation, and a body constrained to a comfortable reading
 /// width on wide screens.
-class AppScaffold extends StatelessWidget {
+class AppScaffold extends StatefulWidget {
   const AppScaffold({
     super.key,
     required this.child,
@@ -31,6 +31,31 @@ class AppScaffold extends StatelessWidget {
   final Color? backgroundColor;
 
   @override
+  State<AppScaffold> createState() => _AppScaffoldState();
+}
+
+class _AppScaffoldState extends State<AppScaffold> {
+  late final FocusNode _mainFocusNode;
+  bool _mainFocused = false;
+  bool _skipFocused = false;
+  final GlobalKey _skipLinkKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    _mainFocusNode = FocusNode(
+      debugLabel: 'Main content',
+      skipTraversal: true,
+    );
+  }
+
+  @override
+  void dispose() {
+    _mainFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
     final wide = media.size.width > 640 && media.textScaler.scale(14.5) <= 20;
@@ -38,9 +63,9 @@ class AppScaffold extends StatelessWidget {
         media.size.width < 600 && media.textScaler.scale(19) > 28;
     const headerHeight = 72.0;
     final scaffold = Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: widget.backgroundColor,
       extendBodyBehindAppBar: true,
-      appBar: showChrome
+      appBar: widget.showChrome
           ? PreferredSize(
               preferredSize: const Size.fromHeight(headerHeight),
               child: ClipRect(
@@ -93,7 +118,7 @@ class AppScaffold extends StatelessWidget {
                                   explicitChildNodes: true,
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
-                                    children: actions ??
+                                    children: widget.actions ??
                                         _defaultActions(context, wide),
                                   ),
                                 ),
@@ -112,22 +137,72 @@ class AppScaffold extends StatelessWidget {
         top: false,
         child: Center(
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: maxWidth),
+            constraints: BoxConstraints(maxWidth: widget.maxWidth),
             child: Padding(
-              padding: EdgeInsets.only(top: showChrome ? headerHeight : 0),
-              child: _BodyEntrance(child: child),
+              padding:
+                  EdgeInsets.only(top: widget.showChrome ? headerHeight : 0),
+              child: Focus(
+                key: const ValueKey('main-content'),
+                focusNode: _mainFocusNode,
+                onFocusChange: (focused) {
+                  if (_mainFocused != focused) {
+                    setState(() => _mainFocused = focused);
+                  }
+                },
+                child: Semantics(
+                  container: true,
+                  explicitChildNodes: true,
+                  focusable: true,
+                  focused: _mainFocused,
+                  label: 'Main content',
+                  child: _BodyEntrance(child: widget.child),
+                ),
+              ),
             ),
           ),
         ),
       ),
     );
-    if (title == null) return scaffold;
-    return Semantics(
-      scopesRoute: true,
-      namesRoute: true,
-      label: title,
-      explicitChildNodes: true,
-      child: scaffold,
+    final skipControl = Positioned(
+      top: 8,
+      left: 8,
+      child: IgnorePointer(
+        ignoring: !_skipFocused,
+        child: Opacity(
+          opacity: _skipFocused ? 1 : 0,
+          alwaysIncludeSemantics: true,
+          child: FocusTraversalOrder(
+            order: const NumericFocusOrder(0),
+            child: _SkipToMainContent(
+              key: _skipLinkKey,
+              onFocusChange: (focused) {
+                if (_skipFocused != focused) {
+                  setState(() => _skipFocused = focused);
+                }
+              },
+              onPressed: () => _mainFocusNode.requestFocus(),
+            ),
+          ),
+        ),
+      ),
+    );
+    final shell = FocusTraversalGroup(
+      policy: OrderedTraversalPolicy(),
+      child: Stack(
+        children: widget.showChrome ? [scaffold, skipControl] : [scaffold],
+      ),
+    );
+    if (widget.title == null) return shell;
+    return Title(
+      color: AppColors.primary,
+      title: '${widget.title} | GetMyYes',
+      child: Semantics(
+        scopesRoute: true,
+        namesRoute: true,
+        label: widget.title,
+        explicitChildNodes: true,
+        child: shell,
+      ),
     );
   }
 
@@ -161,6 +236,48 @@ class AppScaffold extends StatelessWidget {
         ),
       ],
     ];
+  }
+}
+
+/// Keyboard-only bypass control for the repeated site navigation. It remains
+/// visually hidden until focused, then moves focus to the main page region.
+class _SkipToMainContent extends StatefulWidget {
+  const _SkipToMainContent({
+    super.key,
+    required this.onFocusChange,
+    required this.onPressed,
+  });
+
+  final ValueChanged<bool> onFocusChange;
+  final VoidCallback onPressed;
+
+  @override
+  State<_SkipToMainContent> createState() => _SkipToMainContentState();
+}
+
+class _SkipToMainContentState extends State<_SkipToMainContent> {
+  late final FocusNode _focusNode =
+      FocusNode(debugLabel: 'Skip to main content');
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Focus(
+      canRequestFocus: false,
+      skipTraversal: true,
+      onFocusChange: widget.onFocusChange,
+      child: FilledButton(
+        key: const ValueKey('skip-to-main-content'),
+        focusNode: _focusNode,
+        onPressed: widget.onPressed,
+        child: const Text('Skip to main content'),
+      ),
+    );
   }
 }
 

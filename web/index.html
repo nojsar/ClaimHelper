@@ -6,6 +6,34 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script id="preserve-browser-zoom">
+    // Flutter web can inject or mutate a second viewport tag while booting.
+    // Keep browser pinch-zoom and text zoom available on every app route.
+    (function () {
+      var accessibleViewport = 'width=device-width, initial-scale=1.0';
+      var correcting = false;
+
+      function preserveBrowserZoom() {
+        if (correcting) return;
+        correcting = true;
+        document.querySelectorAll('meta[name="viewport"]').forEach(function (viewport) {
+          if (viewport.getAttribute('content') !== accessibleViewport) {
+            viewport.setAttribute('content', accessibleViewport);
+          }
+        });
+        correcting = false;
+      }
+
+      preserveBrowserZoom();
+      new MutationObserver(preserveBrowserZoom).observe(document.documentElement, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+        attributeFilter: ['content', 'name']
+      });
+      window.addEventListener('flutter-first-frame', preserveBrowserZoom);
+    })();
+  </script>
   <meta name="theme-color" content="#F3EDDF">
   <meta name="robots" content="index, follow, max-image-preview:large">
 
@@ -127,6 +155,7 @@
       --mono: "IBM Plex Mono", "Courier New", monospace;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    img, svg, canvas { max-width: 100%; }
     html { scroll-behavior: auto; }
     html.app-mode #landing { display: none; }
     body {
@@ -398,7 +427,7 @@
       font-family: var(--mono); font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
       color: var(--ink-faint); display: flex; flex-direction: column; align-items: center; gap: 8px;
     }
-    .scroll-cue .pen { width: 1px; height: 40px; background: linear-gradient(180deg, var(--red), transparent); animation: cue 1.9s ease-in-out infinite; transform-origin: top; }
+    .scroll-cue .pen { width: 1px; height: 40px; background: linear-gradient(180deg, var(--red), transparent); animation: cue 1.9s ease-in-out 2; transform-origin: top; }
     @keyframes cue { 0%,100% { transform: scaleY(0.35); opacity: .4; } 50% { transform: scaleY(1); opacity: 1; } }
 
     /* ============ TICKER — the wall of no ============ */
@@ -408,13 +437,12 @@
       transform: rotate(-0.6deg) scale(1.02); position: relative; z-index: 3;
     }
     .ticker .track {
-      display: flex; gap: 44px; white-space: nowrap; width: max-content;
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 44px;
+      width: 100%; min-width: 0;
       font-family: var(--mono); font-size: 12.5px; font-weight: 600;
       letter-spacing: 2.5px; text-transform: uppercase; color: var(--red);
-      animation: tick 34s linear infinite;
     }
     .ticker .track span::before { content: "✕ "; color: var(--ink-faint); }
-    @keyframes tick { to { transform: translateX(-50%); } }
 
     /* ============ SCENE II · THE ODDS ============ */
     .odds { padding: clamp(110px, 15vh, 190px) 0 clamp(90px, 12vh, 160px); }
@@ -430,20 +458,20 @@
     .odds .lede { margin-top: 26px; }
     .actuary {
       margin-top: 58px; border: 1.5px solid var(--ink); background: #FBF7EC;
-      box-shadow: 8px 8px 0 var(--paper-3);
+      box-shadow: 8px 8px 0 var(--paper-3); max-width: 100%; min-width: 0; overflow: clip;
     }
     .actuary .row {
       display: grid; grid-template-columns: repeat(4, 1fr);
     }
     .actuary .cell {
       padding: clamp(20px, 3vw, 34px); border-right: 1px solid var(--line-strong);
-      position: relative;
+      position: relative; min-width: 0;
     }
     .actuary .cell:last-child { border-right: 0; }
     .actuary .num {
       font-family: var(--serif); font-weight: 620; letter-spacing: -0.03em;
       font-size: clamp(40px, 5.2vw, 76px); line-height: 1;
-      font-variation-settings: "SOFT" 30;
+      font-variation-settings: "SOFT" 30; max-width: 100%; overflow-wrap: anywhere;
     }
     .actuary .num sup { font-size: 0.45em; font-style: italic; font-weight: 400; }
     .actuary .cap {
@@ -524,11 +552,11 @@
       border: 3.5px solid #9A9482; border-radius: 12px 12px 4px 4px;
       border-bottom: 0; opacity: 0.9;
     }
-    .doc-list { list-style: none; counter-reset: doc; }
+    .doc-list { list-style: none; counter-reset: doc; min-width: 0; max-width: 100%; }
     .doc-list li {
       counter-increment: doc; padding: 17px 4px 16px 0;
       border-bottom: 1px solid var(--line); display: flex; align-items: baseline; gap: 18px;
-      cursor: default;
+      cursor: default; min-width: 0; max-width: 100%;
     }
     .doc-list li::before {
       content: counter(doc, decimal-leading-zero);
@@ -538,7 +566,8 @@
     .doc-list li b {
       font-family: var(--serif); font-weight: 620; font-size: clamp(17px, 1.7vw, 21px);
       letter-spacing: -0.015em; flex: 1; font-variation-settings: "SOFT" 40;
-      transition: font-variation-settings .35s ease, color .2s ease;
+      transition: font-variation-settings .35s ease, color .2s ease; min-width: 0;
+      overflow-wrap: anywhere;
     }
     .doc-list li:hover b { font-variation-settings: "SOFT" 100, "WONK" 1; color: var(--red); font-style: italic; }
     .doc-list li span { font-family: var(--mono); font-size: 10.5px; letter-spacing: 1px; color: var(--ink-faint); text-transform: uppercase; }
@@ -743,7 +772,7 @@
     #app-loader .tl {
       height: 4px; border-radius: 2px; background: rgba(28,22,12,0.5);
       margin: 12px 0 0; transform-origin: left center; transform: scaleX(0);
-      animation: typeline 3s linear infinite;
+      animation: typeline 3s linear 1;
     }
     #app-loader .tl:nth-child(1) { animation-delay: 0.00s; width: 44%; }
     #app-loader .tl:nth-child(2) { animation-delay: 0.35s; width: 88%; }
@@ -764,7 +793,7 @@
       font-size: 8px; font-weight: 600; letter-spacing: 2px; color: var(--red);
       text-transform: uppercase; transform: rotate(-14deg) scale(0);
       box-shadow: inset 0 0 0 3px #FBF7EC, inset 0 0 0 4px var(--red);
-      animation: slam 3s cubic-bezier(0.22, 1.4, 0.36, 1) infinite;
+      animation: slam 3s cubic-bezier(0.22, 1.4, 0.36, 1) 1;
     }
     @keyframes slam {
       0%, 62% { transform: rotate(-14deg) scale(0); opacity: 0; }
@@ -776,14 +805,14 @@
     #app-loader .ripple {
       position: absolute; right: -16px; bottom: -6px; width: 74px; height: 74px;
       border: 1.5px solid var(--red); border-radius: 50%; opacity: 0;
-      animation: ripple 3s ease-out infinite;
+      animation: ripple 3s ease-out 1;
     }
     @keyframes ripple {
       0%, 72% { transform: scale(1); opacity: 0; }
       76% { opacity: 0.55; }
       100% { transform: scale(1.7); opacity: 0; }
     }
-    #app-loader p { margin-top: 26px; color: var(--ink-faint); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; animation: loaderpulse 1.6s ease-in-out infinite; }
+    #app-loader p { margin-top: 26px; color: var(--ink-faint); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; animation: loaderpulse 1.6s ease-in-out 3; }
     #app-loader p a { color: var(--ink); text-transform: none; }
     @keyframes loaderpulse { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
 
@@ -809,7 +838,13 @@
       .actuary .cell:last-child { border-bottom: 0; }
       #case-page { display: none; }
       .letter .note { display: none; }
-      .doc-list li, .ledger-table .lt-row { flex-wrap: wrap; }
+      .doc-list li {
+        display: grid; grid-template-columns: 26px minmax(0, 1fr);
+        align-items: start; gap: 6px 12px;
+      }
+      .doc-list li span { grid-column: 2; min-width: 0; overflow-wrap: anywhere; }
+      .ledger-table .lt-row { flex-wrap: wrap; }
+      .ticker { transform: none; }
       .verdict .approved-wrap { display: block; }
       .verdict h2 { font-size: clamp(48px, 12vw, 190px); }
     }
@@ -922,7 +957,6 @@
     <div class="ticker" aria-hidden="true">
       <div class="track" id="ticker-track">
         <span>Not medically necessary</span><span>Step therapy required</span><span>Prior authorization denied</span><span>Formulary exclusion</span><span>Out of network</span><span>Experimental / investigational</span><span>Missing information</span><span>Benefit excluded</span>
-        <span>Not medically necessary</span><span>Step therapy required</span><span>Prior authorization denied</span><span>Formulary exclusion</span><span>Out of network</span><span>Experimental / investigational</span><span>Missing information</span><span>Benefit excluded</span>
       </div>
     </div>
 
@@ -1018,7 +1052,7 @@
           </div>
         </div>
         <div class="fan-zone">
-          <div class="fan" id="fan">
+          <div class="fan" id="fan" aria-hidden="true">
             <div class="doc" data-fan="0">
               <span class="clip"></span>
               <div class="dt"><span>Deadline tracker</span><span>07 / 07</span></div>
@@ -1483,7 +1517,7 @@
             if (stampReady && stampGroup) {
               stampGroup.position.x += ((2.3 + mouseX * 0.5) - stampGroup.position.x) * 0.04;
               stampGroup.rotation.y += (mouseX * 0.5 - stampGroup.rotation.y) * 0.03;
-              stampGroup.position.y += ((2.9 + Math.sin(performance.now() / 900) * 0.09 + mouseY * -0.25) - stampGroup.position.y) * 0.035;
+              stampGroup.position.y += ((2.9 + mouseY * -0.25) - stampGroup.position.y) * 0.035;
             }
             renderer.render(scene3, cam);
           });
@@ -1542,7 +1576,7 @@
           scrollTrigger: { trigger: '#actuary', start: 'top 85%' }
         });
         gsap.from('.actuary .num', {
-          scale: 1.6, opacity: 0, rotation: -6, stagger: 0.12, duration: 0.5, ease: 'back.out(2)',
+          y: 18, opacity: 0, rotation: -3, stagger: 0.12, duration: 0.5, ease: 'back.out(2)',
           scrollTrigger: { trigger: '#actuary', start: 'top 78%' }
         });
 

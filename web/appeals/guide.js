@@ -8,7 +8,7 @@
     window.requestAnimationFrame(function () { status.textContent = message; });
   }
 
-  function fallbackCopy(text) {
+  function fallbackCopy(text, restoreFocus) {
     return new Promise(function (resolve, reject) {
       var field = document.createElement("textarea");
       field.value = text;
@@ -24,6 +24,13 @@
         reject(error);
       } finally {
         field.remove();
+        if (restoreFocus && typeof restoreFocus.focus === "function") {
+          try {
+            restoreFocus.focus({ preventScroll: true });
+          } catch (_) {
+            restoreFocus.focus();
+          }
+        }
       }
     });
   }
@@ -40,7 +47,7 @@
 
     var copy = navigator.clipboard && window.isSecureContext
       ? navigator.clipboard.writeText(target.innerText)
-      : fallbackCopy(target.innerText);
+      : fallbackCopy(target.innerText, button);
 
     copy.then(function () {
       button.textContent = "Copied";
