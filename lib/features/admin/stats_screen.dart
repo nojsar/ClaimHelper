@@ -75,14 +75,41 @@ class _StatsBodyState extends State<_StatsBody> {
   Future<AnalyticsSummary> _load() async {
     // Range on the document id (day keys sort lexicographically) — unlike a
     // descending orderBy on __name__, this needs no composite index.
-    final cutoff = DateFormat('yyyy-MM-dd')
-        .format(DateTime.now().toUtc().subtract(const Duration(days: 29)));
-    final qs = await FirebaseFirestore.instance
+    final today = DateTime.now().toUtc();
+    final days = List.generate(
+      30,
+      (index) => DateFormat('yyyy-MM-dd')
+          .format(today.subtract(Duration(days: 29 - index))),
+    );
+    final cutoff = days.first;
+    final dailyFuture = FirebaseFirestore.instance
         .collection('analytics_customer_daily')
         .where(FieldPath.documentId, isGreaterThanOrEqualTo: cutoff)
         .get();
+    // Prefix-range reads fetch only country documents (not every path or
+    // referrer segment) and require no composite index.
+    final segmentCollection = FirebaseFirestore.instance
+        .collection('analytics_customer_segment_daily');
+    final countryFuture = Future.wait([
+      for (final day in days)
+        segmentCollection
+            .where(
+              FieldPath.documentId,
+              isGreaterThanOrEqualTo: '${day}__country__',
+            )
+            .where(
+              FieldPath.documentId,
+              isLessThanOrEqualTo: '${day}__country__\uf8ff',
+            )
+            .get(),
+    ]);
+    final qs = await dailyFuture;
+    final countrySnapshots = await countryFuture;
     return AnalyticsSummary.fromDocuments(
       qs.docs.map((doc) => AnalyticsDocument(doc.id, doc.data())),
+      countrySketchDocuments: countrySnapshots
+          .expand((snapshot) => snapshot.docs)
+          .map((doc) => AnalyticsDocument(doc.id, doc.data())),
     );
   }
 
@@ -246,15 +273,34 @@ class _StatsBodyState extends State<_StatsBody> {
                     filterLabel: filter?.label,
                   ),
                   const SizedBox(height: 28),
-                  const _SectionTitle('Top countries'),
+                  const _SectionTitle('Estimated unique visitors by country'),
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 10),
+                    child: Text(
+                      'Repeat visits from the same network are deduplicated '
+                      'across the 30-day range. This is an aggregate estimate, '
+                      'not an exact count of people: shared networks and VPNs '
+                      'can merge or split visitors. It begins with this release; '
+                      'legacy interaction totals are not mixed in. Country '
+                      'estimates stay overall-only when another filter is active.',
+                      style: TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
                   AnalyticsBreakdownList(
                     dimension: AnalyticsDimension.country,
                     entries: overall.topCountries,
-                    filteredEntries: segmentData?.topCountries,
+                    // Cross-filtered unique-country estimates would require
+                    // storing a much more identifying multi-dimensional
+                    // visitor profile. Keep this list aggregate-only.
+                    filteredEntries: null,
                     selectedFilter: filter,
                     labelForKey: (key) => '${_flag(key)} $key',
                     onSelect: _selectFilter,
-                    emptyLabel: 'No visits with a resolved country yet.',
+                    emptyLabel: 'No unique-country estimates recorded yet.',
+                    compareWithActiveFilter: false,
                   ),
                   const SizedBox(height: 28),
                   const _SectionTitle('Top referrers'),
@@ -421,7 +467,10 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.only(bottom: 12),
-        child: Text(text, style: Theme.of(context).textTheme.titleMedium),
+        child: Semantics(
+          header: true,
+          child: Text(text, style: Theme.of(context).textTheme.titleMedium),
+        ),
       );
 }
 
@@ -828,6 +877,7 @@ class AnalyticsBreakdownList extends StatelessWidget {
     required this.onSelect,
     required this.emptyLabel,
     this.labelForKey,
+    this.compareWithActiveFilter = true,
   });
 
   final AnalyticsDimension dimension;
@@ -837,6 +887,7 @@ class AnalyticsBreakdownList extends StatelessWidget {
   final ValueChanged<AnalyticsFilter> onSelect;
   final String emptyLabel;
   final String Function(String key)? labelForKey;
+  final bool compareWithActiveFilter;
 
   @override
   Widget build(BuildContext context) {
@@ -869,7 +920,7 @@ class AnalyticsBreakdownList extends StatelessWidget {
             )
           : Column(
               children: [
-                if (selected != null)
+                if (selected != null && compareWithActiveFilter)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(8, 4, 8, 6),
                     child: Align(
@@ -889,15 +940,17 @@ class AnalyticsBreakdownList extends StatelessWidget {
                     key: ValueKey('${dimension.storageName}:$key'),
                     label: labelForKey?.call(key) ?? key,
                     overall: overall[key] ?? 0,
-                    filtered: _filteredValue(
-                      key,
-                      overall: overall,
-                      filtered: filtered,
-                      filteredLoaded: filteredEntries != null,
-                    ),
+                    filtered: compareWithActiveFilter
+                        ? _filteredValue(
+                            key,
+                            overall: overall,
+                            filtered: filtered,
+                            filteredLoaded: filteredEntries != null,
+                          )
+                        : null,
                     selected: selected?.dimension == dimension &&
                         selected?.key == key,
-                    filterActive: selected != null,
+                    filterActive: selected != null && compareWithActiveFilter,
                     onTap: () => onSelect(AnalyticsFilter(
                       dimension: dimension,
                       key: key,

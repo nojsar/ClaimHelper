@@ -126,6 +126,80 @@ void main() {
     });
   });
 
+  group('aggregate unique-country estimates', () {
+    test('merges daily sketches, deduplicates repeats, and sorts estimates',
+        () {
+      final summary = AnalyticsSummary.fromDocuments(
+        const [
+          AnalyticsDocument('2026-07-12', {
+            'countries': {'FR': 900, 'US': 800},
+          }),
+        ],
+        countrySketchDocuments: [
+          AnalyticsDocument('fr-day-1', {
+            'day': '2026-07-12',
+            'type': 'country',
+            'key': 'FR',
+            'uniqueSketchVersion': UniqueVisitorSketch.version,
+            'uniqueRegisters': _registers({3: 1, 9: 2}),
+          }),
+          AnalyticsDocument('fr-day-2', {
+            'day': '2026-07-13',
+            'type': 'country',
+            'key': 'FR',
+            'uniqueSketchVersion': UniqueVisitorSketch.version,
+            // Index 3 is the same visitor bucket and must not be added again.
+            'uniqueRegisters': _registers({3: 1, 18: 1}),
+          }),
+          AnalyticsDocument('us-day-1', {
+            'day': '2026-07-13',
+            'type': 'country',
+            'key': 'US',
+            'uniqueSketchVersion': UniqueVisitorSketch.version,
+            'uniqueRegisters': _registers({44: 1}),
+          }),
+          AnalyticsDocument('legacy-outside-range', {
+            'day': '2026-06-01',
+            'type': 'country',
+            'key': 'DE',
+            'uniqueSketchVersion': UniqueVisitorSketch.version,
+            'uniqueRegisters': _registers({1: 1}),
+          }),
+          AnalyticsDocument('incompatible-version', {
+            'day': '2026-07-13',
+            'type': 'country',
+            'key': 'DE',
+            'uniqueSketchVersion': UniqueVisitorSketch.version + 1,
+            'uniqueRegisters': _registers({1: 8, 2: 8}),
+          }),
+        ],
+        now: DateTime.utc(2026, 7, 13),
+      );
+
+      expect(
+        summary.topCountries.map((entry) => (entry.key, entry.value)).toList(),
+        const [('FR', 3), ('US', 1)],
+      );
+      // Legacy interaction totals must never be presented as unique visitors.
+      expect(summary.topCountries, isNot(contains(const MapEntry('FR', 900))));
+    });
+
+    test('normalizes malformed registers and merges by maximum', () {
+      final malformed = <Object?>[-3, 2.9, 999, double.nan, 'address'];
+      expect(
+        UniqueVisitorSketch.normalize(malformed).take(5),
+        [0, 2, 64, 0, 0],
+      );
+      final merged = UniqueVisitorSketch.merge([
+        _registers({1: 2, 2: 1}),
+        _registers({1: 1, 2: 4}),
+      ]);
+      expect(merged[1], 2);
+      expect(merged[2], 4);
+      expect(UniqueVisitorSketch.estimate(_registers({1: 1})), 1);
+    });
+  });
+
   group('filtered cross-breakdowns', () {
     test('aggregate every breakdown within the selected segment', () {
       final filtered = AnalyticsSummary.fromDocuments(
@@ -158,7 +232,9 @@ void main() {
       List<(String, int)> pairs(List<MapEntry<String, int>> entries) =>
           entries.map((entry) => (entry.key, entry.value)).toList();
 
-      expect(pairs(filtered.topCountries), const [('FR', 6)]);
+      // Country rows never fall back to interaction counts. Unique-country
+      // sketches are loaded separately by the production dashboard.
+      expect(pairs(filtered.topCountries), isEmpty);
       expect(
         pairs(filtered.topPaths),
         const [('/', 4), ('/appeals', 4)],
@@ -294,6 +370,18 @@ void main() {
       expect(emitted?.label, _franceFilter.label);
     });
 
+    testWidgets('overall-only lists do not imply unsupported comparisons',
+        (tester) async {
+      await tester.pumpWidget(_countryList(
+        selectedFilter: _franceFilter,
+        compareWithActiveFilter: false,
+      ));
+
+      expect(find.text('All | France'), findsNothing);
+      expect(find.text('12'), findsOneWidget);
+      expect(find.text('12 | 12'), findsNothing);
+    });
+
     testWidgets('reflows at 200 percent text on a 320 pixel viewport',
         (tester) async {
       tester.view.physicalSize = const Size(320, 900);
@@ -319,6 +407,12 @@ void main() {
   });
 }
 
+List<int> _registers(Map<int, int> values) {
+  final registers = List<int>.filled(UniqueVisitorSketch.registerCount, 0);
+  values.forEach((index, value) => registers[index] = value);
+  return registers;
+}
+
 const _franceFilter = AnalyticsFilter(
   dimension: AnalyticsDimension.country,
   key: 'FR',
@@ -330,6 +424,7 @@ Widget _countryList({
   List<MapEntry<String, int>>? filteredEntries,
   ValueChanged<AnalyticsFilter>? onSelect,
   TextScaler textScaler = TextScaler.noScaling,
+  bool compareWithActiveFilter = true,
 }) {
   return MaterialApp(
     builder: (context, child) => MediaQuery(
@@ -352,6 +447,7 @@ Widget _countryList({
           'US' => 'United States',
           _ => key,
         },
+        compareWithActiveFilter: compareWithActiveFilter,
       ),
     ),
   );

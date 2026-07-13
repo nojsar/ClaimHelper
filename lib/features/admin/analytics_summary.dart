@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:intl/intl.dart';
 
@@ -76,15 +77,69 @@ class AnalyticsDay {
       (((data['funnel'] as Map<String, dynamic>?)?[step] ?? 0) as num).toInt();
 }
 
+/// Mergeable, aggregate-only HyperLogLog helpers shared by the dashboard and
+/// deterministic tests. The backend stores only these fixed-size registers;
+/// it never stores a network address, digest, or per-visitor record.
+class UniqueVisitorSketch {
+  const UniqueVisitorSketch._();
+
+  /// Must change whenever the backend salt or sketch algorithm changes.
+  static const int version = 1;
+  static const int registerCount = 256;
+
+  static List<int> normalize(Object? raw) {
+    final source = raw is List ? raw : const <Object?>[];
+    return List<int>.generate(registerCount, (index) {
+      final value = index < source.length ? source[index] : null;
+      if (value is! num || !value.isFinite) return 0;
+      return value.floor().clamp(0, 64);
+    }, growable: false);
+  }
+
+  static List<int> merge(Iterable<Object?> sketches) {
+    final merged = List<int>.filled(registerCount, 0);
+    for (final sketch in sketches) {
+      final registers = normalize(sketch);
+      for (var index = 0; index < registerCount; index++) {
+        if (registers[index] > merged[index]) {
+          merged[index] = registers[index];
+        }
+      }
+    }
+    return merged;
+  }
+
+  static int estimate(Object? raw) {
+    final registers = normalize(raw);
+    const m = registerCount;
+    final alpha = 0.7213 / (1 + 1.079 / m);
+    final harmonic = registers.fold<double>(
+      0,
+      (sum, register) => sum + math.pow(2, -register).toDouble(),
+    );
+    final rawEstimate = alpha * m * m / harmonic;
+    final empty = registers.where((register) => register == 0).length;
+    final corrected = rawEstimate <= 2.5 * m && empty > 0
+        ? m * math.log(m / empty)
+        : rawEstimate;
+    return math.max(0, corrected.round());
+  }
+}
+
 /// Thirty-day analytics view model shared by the production screen and tests.
 class AnalyticsSummary {
-  const AnalyticsSummary(this.days);
+  const AnalyticsSummary(this.days, {this.topCountries = const []});
 
   /// Oldest to newest, exactly 30 entries (missing days are zero-filled).
   final List<AnalyticsDay> days;
 
+  /// Rolling-period estimated unique networks per country. This deliberately
+  /// never falls back to the legacy `countries` interaction counters.
+  final List<MapEntry<String, int>> topCountries;
+
   factory AnalyticsSummary.fromDocuments(
     Iterable<AnalyticsDocument> documents, {
+    Iterable<AnalyticsDocument> countrySketchDocuments = const [],
     DateTime? now,
   }) {
     final byKey = {
@@ -100,7 +155,39 @@ class AnalyticsSummary {
         wasRecorded: byKey.containsKey(key),
       );
     });
-    return AnalyticsSummary(days);
+    final includedDays = days.map((day) => day.key).toSet();
+    final sketches = <String, List<Object?>>{};
+    for (final document in countrySketchDocuments) {
+      final data = document.data;
+      if (data['type'] != 'country') continue;
+      final country = data['key'];
+      final day = data['day'];
+      if (country is! String ||
+          !RegExp(r'^[A-Z]{2}$').hasMatch(country) ||
+          day is! String ||
+          !includedDays.contains(day) ||
+          data['uniqueSketchVersion'] != UniqueVisitorSketch.version ||
+          data['uniqueRegisters'] is! List) {
+        continue;
+      }
+      (sketches[country] ??= []).add(data['uniqueRegisters']);
+    }
+    final uniqueCountries = <MapEntry<String, int>>[
+      for (final entry in sketches.entries)
+        MapEntry(
+          entry.key,
+          UniqueVisitorSketch.estimate(
+            UniqueVisitorSketch.merge(entry.value),
+          ),
+        ),
+    ]
+      ..removeWhere((entry) => entry.value <= 0)
+      ..sort((a, b) {
+        final byValue = b.value.compareTo(a.value);
+        return byValue != 0 ? byValue : a.key.compareTo(b.key);
+      });
+    return AnalyticsSummary(days,
+        topCountries: uniqueCountries.take(10).toList());
   }
 
   bool get hasRecordedData => days.any((day) => day.wasRecorded);
@@ -151,5 +238,4 @@ class AnalyticsSummary {
   List<MapEntry<String, int>> get topReferrers => topOf('referrers');
   List<MapEntry<String, int>> get topCampaigns => topOf('campaigns');
   List<MapEntry<String, int>> get topPaths => topOf('paths');
-  List<MapEntry<String, int>> get topCountries => topOf('countries');
 }

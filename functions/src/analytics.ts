@@ -1,6 +1,9 @@
 import { onRequest } from "firebase-functions/v2/https";
+import { defineSecret } from "firebase-functions/params";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { createHmac } from "node:crypto";
+import { isIP } from "node:net";
 
 import { ADMIN_UID } from "./config";
 
@@ -26,6 +29,18 @@ export const ANALYTICS_DAILY_COLLECTION = "analytics_customer_daily";
 export const ANALYTICS_SEGMENT_DAILY_COLLECTION =
   "analytics_customer_segment_daily";
 
+/**
+ * HyperLogLog precision used for aggregate unique-network estimates. 256
+ * registers are small enough for one Firestore document while keeping the
+ * expected standard error near 6.5%. Registers are aggregate state, never a
+ * visitor identifier.
+ */
+const UNIQUE_VISITOR_PRECISION = 8;
+export const UNIQUE_VISITOR_REGISTER_COUNT = 1 << UNIQUE_VISITOR_PRECISION;
+/** Bump whenever the HMAC salt or sketch algorithm is intentionally changed. */
+export const UNIQUE_VISITOR_SKETCH_VERSION = 1;
+export const analyticsUniqueSalt = defineSecret("ANALYTICS_UNIQUE_SALT");
+
 // Firebase Hosting forwards only the specially named __session cookie to
 // rewritten Functions. It remains host-only because the response never sets a
 // Domain attribute.
@@ -38,6 +53,130 @@ const ADMIN_ANALYTICS_SESSION_SECONDS = Math.floor(
 /** UTC day key, e.g. "2026-07-11". */
 function dayKey(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+/**
+ * Select the client slot appended by Google Cloud Load Balancing.
+ *
+ * GCLB appends `client, load-balancer` to any caller-supplied prefix. Selecting
+ * the penultimate raw slot prevents a spoofed prefix from becoming identity
+ * input. Invalid raw slots are never filtered first because doing so could
+ * shift an attacker-controlled value into the trusted position.
+ */
+export function clientNetworkAddress(
+  header: string | string[] | undefined,
+): string | null {
+  const value = Array.isArray(header) ? header.join(",") : header;
+  if (!value) return null;
+  const rawSlots = value.split(",");
+  const trustedSlot = rawSlots.length >= 2
+    ? rawSlots[rawSlots.length - 2]
+    : rawSlots[0];
+  const address = trustedSlot.trim();
+  return isIP(address) !== 0 ? address.toLowerCase() : null;
+}
+
+/** Coerce untrusted Firestore data into a fixed, bounded register array. */
+export function normalizeUniqueVisitorRegisters(raw: unknown): number[] {
+  const source = Array.isArray(raw) ? raw : [];
+  return Array.from({ length: UNIQUE_VISITOR_REGISTER_COUNT }, (_, index) => {
+    const value = source[index];
+    return typeof value === "number" && Number.isFinite(value)
+      ? Math.max(0, Math.min(64, Math.floor(value)))
+      : 0;
+  });
+}
+
+/**
+ * Update an aggregate HyperLogLog sketch for one country/network pair.
+ *
+ * The secret-keyed HMAC-SHA256 digest exists only in this stack frame. Neither
+ * the network address nor its digest is written to Firestore. The day is
+ * deliberately not part of the input: sketches from daily documents must use
+ * identical buckets so they can be merged into a true rolling-period estimate.
+ */
+export function updateUniqueVisitorRegisters(
+  current: unknown,
+  country: string,
+  networkAddress: string,
+  salt: string,
+): number[] {
+  if (salt.length === 0) {
+    throw new Error("Unique visitor aggregation requires a secret salt.");
+  }
+  const registers = normalizeUniqueVisitorRegisters(current);
+  const digest = createHmac("sha256", salt)
+    .update(`${country}|${networkAddress}`)
+    .digest();
+  const registerIndex = digest[0];
+
+  let rank = 1;
+  for (let byteIndex = 1; byteIndex < digest.length; byteIndex++) {
+    const byte = digest[byteIndex];
+    if (byte === 0) {
+      rank += 8;
+      continue;
+    }
+    rank += Math.clz32(byte) - 24;
+    break;
+  }
+  registers[registerIndex] = Math.max(
+    registers[registerIndex],
+    Math.min(64, rank),
+  );
+  return registers;
+}
+
+export interface UniqueVisitorSketchUpdate {
+  registers: number[];
+  changed: boolean;
+  reset: boolean;
+}
+
+/**
+ * Prepare one sketch mutation without touching Firestore. An absent or stale
+ * version starts from empty aggregate state, preventing registers produced by
+ * a previous salt/algorithm from being merged into the current estimate.
+ */
+export function prepareUniqueVisitorSketchUpdate(
+  current: unknown,
+  storedVersion: unknown,
+  country: string,
+  networkAddress: string,
+  salt: string,
+): UniqueVisitorSketchUpdate {
+  const reset = storedVersion !== UNIQUE_VISITOR_SKETCH_VERSION;
+  const before = normalizeUniqueVisitorRegisters(reset ? null : current);
+  const registers = updateUniqueVisitorRegisters(
+    before,
+    country,
+    networkAddress,
+    salt,
+  );
+  return {
+    registers,
+    reset,
+    changed:
+      reset || registers.some((value, index) => value !== before[index]),
+  };
+}
+
+/** Estimate cardinality from a 256-register HyperLogLog sketch. */
+export function estimateUniqueVisitors(raw: unknown): number {
+  const registers = normalizeUniqueVisitorRegisters(raw);
+  const m = UNIQUE_VISITOR_REGISTER_COUNT;
+  const alpha = 0.7213 / (1 + 1.079 / m);
+  const harmonic = registers.reduce(
+    (sum, register) => sum + Math.pow(2, -register),
+    0,
+  );
+  const rawEstimate = (alpha * m * m) / harmonic;
+  const empty = registers.filter((register) => register === 0).length;
+  const corrected =
+    rawEstimate <= 2.5 * m && empty > 0
+      ? m * Math.log(m / empty)
+      : rawEstimate;
+  return Math.max(0, Math.round(corrected));
 }
 
 /** One source of truth for owner exclusion across every analytics writer. */
@@ -256,6 +395,52 @@ async function bumpTrafficDaily(
   }
 }
 
+/**
+ * Update only fixed-size aggregate state in the existing daily country
+ * segment document. A transaction prevents concurrent visits from losing
+ * register maxima. Identity material is never written to Firestore.
+ */
+async function bumpCountryUniqueDaily(
+  country: string,
+  networkAddress: string,
+  salt: string,
+): Promise<void> {
+  try {
+    const firestore = getFirestore();
+    const day = dayKey();
+    const ref = firestore
+      .collection(ANALYTICS_SEGMENT_DAILY_COLLECTION)
+      .doc(analyticsSegmentDocumentId(day, "country", country));
+    await firestore.runTransaction(async (transaction) => {
+      const snapshot = await transaction.get(ref);
+      const data = snapshot.data();
+      const update = prepareUniqueVisitorSketchUpdate(
+        data?.uniqueRegisters,
+        data?.uniqueSketchVersion,
+        country,
+        networkAddress,
+        salt,
+      );
+      if (!update.changed) return;
+      transaction.set(
+        ref,
+        {
+          day,
+          type: "country",
+          key: country,
+          updatedAt: FieldValue.serverTimestamp(),
+          uniqueSketchVersion: UNIQUE_VISITOR_SKETCH_VERSION,
+          uniqueRegisters: update.registers,
+          uniqueVisitors: estimateUniqueVisitors(update.registers),
+        },
+        { merge: true },
+      );
+    });
+  } catch (err) {
+    console.warn("analytics unique-country bump failed (ignored):", err);
+  }
+}
+
 /** Referrer hosts that are ourselves — not interesting as acquisition. */
 const SELF_HOSTS = new Set([
   "getmyyes.com",
@@ -367,7 +552,7 @@ export const setAdminAnalyticsExclusion = onRequest(
  * dropped. Responds 204 always — the client never reads the response.
  */
 export const trackEvent = onRequest(
-  { invoker: "public", cors: true },
+  { invoker: "public", cors: true, secrets: [analyticsUniqueSalt] },
   async (req, res) => {
     if (req.method !== "POST") {
       res.status(204).send("");
@@ -435,6 +620,18 @@ export const trackEvent = onRequest(
 
       if (Object.keys(fields).length > 0) {
         await bumpTrafficDaily(fields, segments);
+        if (t === "visit" && country) {
+          const networkAddress = clientNetworkAddress(
+            req.headers["x-forwarded-for"],
+          );
+          if (networkAddress) {
+            await bumpCountryUniqueDaily(
+              country,
+              networkAddress,
+              analyticsUniqueSalt.value(),
+            );
+          }
+        }
       }
     } catch {
       /* malformed payload — drop silently */

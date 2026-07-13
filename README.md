@@ -188,6 +188,7 @@ npm run build        # tsc typecheck + compile
 firebase functions:secrets:set OPENAI_API_KEY
 firebase functions:secrets:set STRIPE_SECRET_KEY
 firebase functions:secrets:set STRIPE_WEBHOOK_SECRET
+firebase functions:secrets:set ANALYTICS_UNIQUE_SALT
 
 # set plain config (model, price, base url, TTL) as function env
 #   Either via functions/.env (loaded automatically) or the console.
@@ -210,6 +211,12 @@ Deployed functions:
 | `generateAppealPacket` | callable | Paid: drafts the full packet (entitlement enforced server-side). |
 | `deleteCaseAndFiles` | callable | Deletes the Firestore doc + all Storage files. |
 | `scheduledCleanupExpiredFiles` | scheduler | Hourly: deletes expired unsaved cases and their files. |
+| `trackEvent` | HTTP | Writes aggregate traffic counts and secret-keyed unique-country sketches. |
+
+`ANALYTICS_UNIQUE_SALT` must be a randomly generated server-only value. Keep it
+stable while a unique-visitor sketch version is active: rotating it makes old
+and new registers incompatible, so a rotation must also increment the sketch
+version in the Functions and dashboard code and begin a fresh 30-day series.
 
 ---
 

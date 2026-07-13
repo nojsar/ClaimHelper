@@ -9,115 +9,29 @@
   <link rel="canonical" href="https://getmyyes.com/accessibility">
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="stylesheet" href="fonts.css">
-  <style>
-    :root {
-      --bg: #070B14;
-      --ink: #EDF2FB;
-      --body: #CED8E9;
-      --dim: #A9B7CE;
-      --blue: #78B5FF;
-      --line: rgba(203, 213, 225, 0.28);
-      --card: rgba(16, 26, 48, 0.72);
-    }
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--ink);
-      font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: 1rem;
-      line-height: 1.7;
-      -webkit-font-smoothing: antialiased;
-    }
-    a { color: var(--blue); text-underline-offset: 0.18em; }
-    a:hover { text-decoration-thickness: 0.14em; }
-    a:focus-visible {
-      outline: 3px solid #F9C74F;
-      outline-offset: 4px;
-      border-radius: 2px;
-    }
-    .skip-link {
-      position: fixed;
-      top: 0.75rem;
-      left: 0.75rem;
-      z-index: 100;
-      padding: 0.75rem 1rem;
-      background: var(--ink);
-      color: var(--bg);
-      font-weight: 700;
-      transform: translateY(-160%);
-    }
-    .skip-link:focus { transform: translateY(0); }
-    .wrap { width: min(100% - 2rem, 48rem); margin: 0 auto; padding: 3rem 0 5rem; }
-    .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.65rem;
-      min-height: 2.75rem;
-      margin-bottom: 2.5rem;
-      color: var(--ink);
-      font-size: 1.125rem;
-      font-weight: 800;
-      text-decoration: none;
-    }
-    .mark {
-      display: grid;
-      width: 2rem;
-      height: 2rem;
-      place-items: center;
-      border-radius: 0.55rem;
-      background: #2563EB;
-      color: #FFFFFF;
-    }
-    main:focus { outline: none; }
-    h1 { margin: 0 0 0.4rem; font-size: clamp(2rem, 7vw, 2.7rem); line-height: 1.15; }
-    h2 { margin: 2.25rem 0 0.65rem; font-size: 1.3rem; line-height: 1.3; }
-    p, li { color: var(--body); }
-    .updated { margin: 0 0 2rem; color: var(--dim); font-size: 0.9rem; }
-    .commitment {
-      margin: 1.5rem 0;
-      padding: 1.15rem 1.25rem;
-      border: 1px solid var(--line);
-      border-radius: 0.9rem;
-      background: var(--card);
-    }
-    ul { padding-left: 1.4rem; }
-    li { margin-bottom: 0.55rem; }
-    footer {
-      margin-top: 3.5rem;
-      padding-top: 1.4rem;
-      border-top: 1px solid var(--line);
-      color: var(--dim);
-      font-size: 0.9rem;
-    }
-    @media (max-width: 30rem) {
-      .wrap { width: min(100% - 1.25rem, 48rem); padding-top: 2rem; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
-      *, *::before, *::after {
-        scroll-behavior: auto !important;
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-      }
-    }
-    @media (forced-colors: active) {
-      .mark, .commitment { border: 1px solid CanvasText; }
-    }
-  </style>
+  <link rel="stylesheet" href="appeals/guide.css">
+  <link rel="stylesheet" href="legal.css">
 </head>
-<body>
+<body class="legal-page">
   <a class="skip-link" href="#main-content">Skip to main content</a>
-  <div class="wrap">
-    <header>
+  <header class="site">
+    <div class="bar">
       <a class="brand" href="/" aria-label="GetMyYes home"><span class="mark" aria-hidden="true">✓</span> GetMyYes</a>
-    </header>
-
+      <nav aria-label="Primary">
+        <a class="navlink" href="/appeals/">Appeal guides</a>
+        <a class="navlink" href="/privacy.html">Privacy</a>
+        <a class="btn-start" href="/#/upload">Start my appeal — free</a>
+      </nav>
+    </div>
+  </header>
+  <div class="wrap">
     <main id="main-content" tabindex="-1">
-      <h1>Accessibility Statement</h1>
-      <p class="updated">Last reviewed: July 13, 2026</p>
+      <nav class="crumbs" aria-label="Breadcrumb"><a href="/">getmyyes.com</a> / <span aria-current="page">accessibility</span></nav>
+      <article>
+      <header class="legal-heading">
+        <h1>Accessibility Statement</h1>
+        <p class="updated">Last reviewed: July 13, 2026</p>
+      </header>
 
       <div class="commitment">
         <p><strong>Our commitment:</strong> GetMyYes aims to conform to the <a href="https://www.w3.org/TR/WCAG22/">Web Content Accessibility Guidelines (WCAG) 2.2, Level AA</a> across the complete appeal workflow. Accessibility is an ongoing practice, and we welcome reports of barriers.</p>
@@ -144,11 +58,21 @@
 
       <h2>Report an accessibility problem</h2>
       <p>Email <a href="mailto:support@getmyyes.com?subject=Accessibility%20support">support@getmyyes.com</a>. If you are comfortable doing so, include the page or task, what happened, and the browser or assistive technology you were using. We will work with you to provide the information or service through an accessible alternative while we address the problem.</p>
+
+      <aside class="cta legal-cta" aria-labelledby="accessibility-cta-title">
+        <div class="kicker">Need an accessible route?</div>
+        <h2 id="accessibility-cta-title">Start your appeal, or ask us for help.</h2>
+        <p>Use the free preview, or email us if a barrier prevents you from completing any step.</p>
+        <a class="go" href="/#/upload">Start my appeal — free</a>
+        <p class="sub">ACCESSIBILITY SUPPORT · SUPPORT@GETMYYES.COM</p>
+      </aside>
+      </article>
     </main>
 
-    <footer>
-      © 2026 GetMyYes · <a href="terms.html">Terms</a> · <a href="privacy.html">Privacy</a> · <a href="/">Home</a>
+    <footer class="site">
+      <p>© 2026 GetMyYes · <a href="terms.html">Terms</a> · <a href="privacy.html">Privacy</a> · <a href="/">Home</a></p>
     </footer>
   </div>
+  <script src="/analytics.js" data-static></script>
 </body>
 </html>

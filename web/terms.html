@@ -9,40 +9,29 @@
   <link rel="canonical" href="https://getmyyes.com/terms.html">
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="stylesheet" href="fonts.css">
-  <style>
-    :root { --bg:#070B14; --ink:#EDF2FB; --dim:#93A2BD; --blue:#60A5FA; --mint:#5EEAD4; --line:rgba(148,163,184,.14); }
-    * { box-sizing:border-box; margin:0; padding:0; }
-    html { scroll-behavior:smooth; }
-    body { background:var(--bg); color:var(--ink); font-family:"Inter",-apple-system,sans-serif; line-height:1.7; -webkit-font-smoothing:antialiased; }
-    .wrap { max-width:760px; margin:0 auto; padding:48px 24px 80px; }
-    a { color:var(--blue); }
-    a:focus-visible { outline:3px solid var(--mint); outline-offset:4px; border-radius:3px; }
-    .skip-link { position:fixed; top:12px; left:12px; z-index:100; padding:12px 16px; background:var(--ink); color:var(--bg); font-weight:700; transform:translateY(-160%); }
-    .skip-link:focus { transform:translateY(0); }
-    .brand { display:flex; align-items:center; gap:10px; font-weight:800; font-size:18px; margin-bottom:40px; text-decoration:none; color:var(--ink); }
-    .brand .mark { width:32px; height:32px; border-radius:9px; display:grid; place-items:center; background:linear-gradient(135deg,#2563EB,#3B82F6); color:#fff; }
-    h1 { font-size:34px; letter-spacing:-1px; margin-bottom:6px; }
-    .updated { color:var(--dim); font-size:13px; margin-bottom:36px; }
-    h2 { font-size:20px; letter-spacing:-0.3px; margin:34px 0 10px; }
-    p, li { color:#C7D2E5; font-size:15px; margin-bottom:10px; }
-    ul { padding-left:22px; margin-bottom:12px; }
-    .card { border:1px solid var(--line); border-radius:14px; padding:18px 20px; background:rgba(16,26,48,.55); margin:16px 0; }
-    main:focus { outline:none; }
-    footer { border-top:1px solid var(--line); margin-top:56px; padding-top:22px; color:var(--dim); font-size:13px; }
-    @media (prefers-reduced-motion:reduce) {
-      html { scroll-behavior:auto; }
-      *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
-    }
-    @media (forced-colors:active) { .brand .mark, .card { border:1px solid CanvasText; } }
-  </style>
+  <link rel="stylesheet" href="appeals/guide.css">
+  <link rel="stylesheet" href="legal.css">
 </head>
-<body>
+<body class="legal-page">
   <a class="skip-link" href="#main-content">Skip to main content</a>
+  <header class="site">
+    <div class="bar">
+      <a class="brand" href="/" aria-label="GetMyYes home"><span class="mark" aria-hidden="true">✓</span> GetMyYes</a>
+      <nav aria-label="Primary">
+        <a class="navlink" href="/appeals/">Appeal guides</a>
+        <a class="navlink" href="/privacy.html">Privacy</a>
+        <a class="btn-start" href="/#/upload">Start my appeal — free</a>
+      </nav>
+    </div>
+  </header>
   <div class="wrap">
-    <header><a class="brand" href="/" aria-label="GetMyYes home"><span class="mark" aria-hidden="true">✓</span> GetMyYes</a></header>
     <main id="main-content" tabindex="-1">
-    <h1>Terms of Service</h1>
-    <p class="updated">Last updated: July 11, 2026</p>
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="/">getmyyes.com</a> / <span aria-current="page">terms of service</span></nav>
+    <article>
+    <header class="legal-heading">
+      <h1>Terms of Service</h1>
+      <p class="updated">Last updated: July 11, 2026</p>
+    </header>
 
     <p>These Terms of Service ("Terms") govern your use of GetMyYes, available at getmyyes.com (the "Service"). By using the Service you agree to these Terms. If you do not agree, do not use the Service.</p>
 
@@ -94,9 +83,20 @@
     <h2>13. Governing law &amp; contact</h2>
     <p>These Terms are governed by the laws applicable at the operator's principal place of business, without prejudice to any mandatory consumer protections of the place where you live. Questions or disputes: <a href="mailto:support@getmyyes.com">support@getmyyes.com</a> — we'll try to resolve issues informally first.</p>
 
+    <aside class="cta legal-cta" aria-labelledby="terms-cta-title">
+      <div class="kicker">Ready when you are</div>
+      <h2 id="terms-cta-title">Turn your denial letter into an appeal plan.</h2>
+      <p>Upload your letter for a free preview. Review every draft before you decide what to send.</p>
+      <a class="go" href="/#/upload">Start my appeal — free</a>
+      <p class="sub">FREE PREVIEW · $39 FULL PACKET · NO SUBSCRIPTION</p>
+    </aside>
+    </article>
     </main>
 
-    <footer>© 2026 GetMyYes · getmyyes.com · <a href="privacy.html">Privacy Policy</a> · <a href="accessibility.html">Accessibility</a> · <a href="/">Home</a></footer>
+    <footer class="site">
+      <p>© 2026 GetMyYes · getmyyes.com · <a href="privacy.html">Privacy Policy</a> · <a href="accessibility.html">Accessibility</a> · <a href="/">Home</a></p>
+    </footer>
   </div>
+  <script src="/analytics.js" data-static></script>
 </body>
 </html>

@@ -18,6 +18,7 @@ const discoveryFiles = [
   "ae1eb6c514f913f2fa38028ca8b6699b.txt",
 ];
 const publicStaticPages = ["privacy.html", "terms.html", "accessibility.html"];
+const publicStaticAssets = [...publicStaticPages, "legal.css"];
 // Marketing sections beyond /appeals/: the denial-code library plus
 // standalone tool/data pages. Validated and sitemapped like guides, but
 // without per-page social images (they share the site-wide og-image.png).
@@ -318,6 +319,9 @@ async function generate() {
   }
   if (!index.includes('href="/appeals/"')) fail("The homepage has no crawlable link to /appeals/.");
   if (!index.includes('href="/codes/"')) fail("The homepage has no crawlable link to /codes/.");
+  for (const name of publicStaticPages) {
+    requireStaticTracker(await readFile(path.join(webRoot, name), "utf8"), name);
+  }
   await writeIfChanged(path.join(webRoot, "sitemap.xml"), sitemapFor(pages, extras));
   await writeIfChanged(path.join(webRoot, "feed.xml"), feedFor(pages));
   console.log(`[marketing] Generated sitemap + RSS for ${pages.length} guides and ${extras.length} reference pages.`);
@@ -336,6 +340,9 @@ async function stageBuild() {
   for (const name of discoveryFiles) {
     await cp(path.join(webRoot, name), path.join(buildRoot, name), { force: true });
   }
+  for (const name of publicStaticAssets) {
+    await cp(path.join(webRoot, name), path.join(buildRoot, name), { force: true });
+  }
   console.log("[marketing] Staged guides, reference pages, and search-discovery files in build/web.");
 }
 
@@ -346,7 +353,7 @@ async function verifyBuild() {
   for (const name of discoveryFiles) {
     await assertEqual(path.join(webRoot, name), path.join(buildRoot, name), name);
   }
-  for (const name of publicStaticPages) {
+  for (const name of publicStaticAssets) {
     await assertEqual(path.join(webRoot, name), path.join(buildRoot, name), name);
   }
   for (const name of (await readdir(guidesRoot)).filter((file) => /\.(html|css|js)$/.test(file))) {

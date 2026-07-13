@@ -1,0 +1,191 @@
+/* GetMyYes legal pages — the same paper "case file" system used by the site and guides. */
+body.legal-page {
+  background:
+    radial-gradient(circle at 8% 2%, rgba(179, 32, 42, 0.055), transparent 31rem),
+    radial-gradient(circle at 92% 28%, rgba(20, 114, 79, 0.045), transparent 34rem),
+    var(--paper);
+}
+
+body.legal-page::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent 0 31px,
+    rgba(139, 128, 103, 0.035) 31px 32px
+  );
+  content: "";
+  pointer-events: none;
+}
+
+.legal-page .wrap {
+  max-width: 820px;
+}
+
+.legal-page article {
+  padding-bottom: 0;
+}
+
+.legal-page header.site a[aria-current="page"]:not(.btn-start),
+.legal-page footer.site a[aria-current="page"] {
+  color: var(--carmine-dark);
+  font-weight: 800;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.28em;
+}
+
+.legal-page .legal-heading {
+  margin: 10px 0 30px;
+  padding: clamp(24px, 5vw, 40px);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--letter);
+  box-shadow: 10px 10px 0 var(--cream);
+}
+
+.legal-page .legal-heading::before {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--carmine);
+  content: "GETMYYES · PUBLIC RECORD";
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+
+.legal-page .legal-heading h1 {
+  margin-top: 0;
+}
+
+.legal-page .legal-heading .updated {
+  margin-bottom: 0;
+}
+
+.legal-page .lede {
+  font-size: 17px;
+}
+
+.legal-page h2 {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.legal-page .card,
+.legal-page .commitment {
+  margin: 22px 0;
+  padding: 20px 22px;
+  border: 1.5px solid var(--border-strong);
+  border-left: 5px solid var(--carmine);
+  border-radius: 4px;
+  background: var(--letter);
+  box-shadow: 0 8px 24px -8px rgba(60, 46, 18, 0.16);
+}
+
+.legal-page .card p:last-child,
+.legal-page .commitment p:last-child {
+  margin-bottom: 0;
+}
+
+.legal-page code {
+  padding: 0.1em 0.3em;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.88em;
+}
+
+.legal-page .table-wrap {
+  margin: 18px 0 22px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--letter);
+  box-shadow: 0 8px 24px -8px rgba(60, 46, 18, 0.16);
+}
+
+.legal-page table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.legal-page caption {
+  padding: 16px 18px 12px;
+  color: var(--ink);
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 18px;
+  font-weight: 650;
+  text-align: left;
+}
+
+.legal-page th,
+.legal-page td {
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+  color: #2A2213;
+  text-align: left;
+  vertical-align: top;
+}
+
+.legal-page th {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.legal-page tbody tr:nth-child(even) {
+  background: rgba(234, 225, 204, 0.28);
+}
+
+.legal-page .legal-cta {
+  margin-top: 52px;
+}
+
+.legal-page footer.site {
+  margin-top: 42px;
+}
+
+@media (max-width: 560px) {
+  .legal-page .wrap {
+    padding-inline: 16px;
+  }
+
+  .legal-page .legal-heading {
+    padding: 22px 18px;
+    box-shadow: 6px 6px 0 var(--cream);
+  }
+
+  .legal-page .card,
+  .legal-page .commitment {
+    padding: 18px 16px;
+  }
+
+  .legal-page .cta {
+    padding: 24px 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.legal-page::before {
+    background-image: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .legal-page .legal-heading,
+  .legal-page .card,
+  .legal-page .commitment,
+  .legal-page .table-wrap {
+    border: 1px solid CanvasText;
+    box-shadow: none;
+  }
+}

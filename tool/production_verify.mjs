@@ -24,7 +24,13 @@ const pages = [
   },
   { route: "/insurer-denial-rates", file: "insurer-denial-rates.html" },
 ];
-const bundles = ["main.dart.js", "flutter_bootstrap.js", "analytics.js"];
+const bundles = [
+  "main.dart.js",
+  "flutter_bootstrap.js",
+  "analytics.js",
+  "legal.css",
+  "appeals/guide.css",
+];
 const retries = Number(process.env.PRODUCTION_VERIFY_RETRIES ?? 6);
 const retryDelayMs = Number(process.env.PRODUCTION_VERIFY_DELAY_MS ?? 2000);
 
