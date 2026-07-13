@@ -43,5 +43,10 @@
     "id": "external-review",
     "path": "/appeals/external-review",
     "text": "Internal appeal denied? An independent external review may be next. Check eligibility and deadlines."
+  },
+  {
+    "id": "er-denial",
+    "path": "/appeals/emergency-room-claim-denied",
+    "text": "ER denied as “not an emergency”? Coverage is judged by symptoms at the door, not the final diagnosis."
   }
 ]
