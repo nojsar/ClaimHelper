@@ -55,6 +55,9 @@ firebase-debug.log
 firestore-debug.log
 ui-debug.log
 
+# Local code-graph analysis output
+graphify-out/
+
 # Secrets / local config — never commit real keys
 .env
 .env.local

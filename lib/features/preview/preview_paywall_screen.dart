@@ -410,23 +410,23 @@ class _PreviewCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                if (preview.amountAtStake != null)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.accentTint,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(preview.amountAtStake!,
-                        style: const TextStyle(
-                            color: AppColors.accentBright,
-                            fontWeight: FontWeight.w700)),
+            if (preview.amountAtStake != null)
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.accentTint,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  preview.amountAtStake!,
+                  softWrap: true,
+                  style: const TextStyle(
+                    color: AppColors.accentBright,
+                    fontWeight: FontWeight.w700,
                   ),
-              ],
-            ),
+                ),
+              ),
             const SizedBox(height: 12),
             const Text('What happened',
                 style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
@@ -965,16 +965,17 @@ class _TierOption extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    Text(title,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w800, fontSize: 15)),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Expanded(
-                          child: Text(title,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w800, fontSize: 15)),
-                        ),
                         if (badge != null)
                           Container(
-                            margin: const EdgeInsets.only(right: 8),
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 7, vertical: 3),
                             decoration: BoxDecoration(

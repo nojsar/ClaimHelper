@@ -206,12 +206,14 @@ class _CaseTrackerPanelState extends ConsumerState<CaseTrackerPanel> {
     VoidCallback? onClear,
   }) {
     final valueLabel = value == null ? 'Not set' : _date(value);
-    return Semantics(
-      button: true,
-      label: '$label, $valueLabel${required ? ', required' : ''}',
-      child: Row(
-        children: [
-          Expanded(
+    return Row(
+      children: [
+        Expanded(
+          child: Semantics(
+            button: true,
+            label: '$label, $valueLabel${required ? ', required' : ''}',
+            onTap: onPressed,
+            excludeSemantics: true,
             child: OutlinedButton.icon(
               onPressed: onPressed,
               icon: const Icon(Icons.calendar_today_outlined, size: 18),
@@ -221,16 +223,16 @@ class _CaseTrackerPanelState extends ConsumerState<CaseTrackerPanel> {
               ),
             ),
           ),
-          if (value != null && onClear != null) ...[
-            const SizedBox(width: 6),
-            IconButton(
-              onPressed: onClear,
-              tooltip: 'Clear $label',
-              icon: const Icon(Icons.clear),
-            ),
-          ],
+        ),
+        if (value != null && onClear != null) ...[
+          const SizedBox(width: 6),
+          IconButton(
+            onPressed: onClear,
+            tooltip: 'Clear $label',
+            icon: const Icon(Icons.clear),
+          ),
         ],
-      ),
+      ],
     );
   }
 
@@ -262,10 +264,14 @@ class _CaseTrackerPanelState extends ConsumerState<CaseTrackerPanel> {
         const SizedBox(height: 12),
         DropdownButtonFormField<SubmissionMethod>(
           initialValue: _submissionMethod,
+          isExpanded: true,
           decoration: const InputDecoration(labelText: 'Submission method'),
           items: [
             for (final method in SubmissionMethod.values)
-              DropdownMenuItem(value: method, child: Text(method.label)),
+              DropdownMenuItem(
+                value: method,
+                child: Text(method.label, overflow: TextOverflow.ellipsis),
+              ),
           ],
           onChanged: (value) {
             if (value != null) _changed(() => _submissionMethod = value);
@@ -301,10 +307,14 @@ class _CaseTrackerPanelState extends ConsumerState<CaseTrackerPanel> {
         const Divider(height: 32),
         DropdownButtonFormField<InsurerResponseStatus>(
           initialValue: _responseStatus,
+          isExpanded: true,
           decoration: const InputDecoration(labelText: 'Insurer status'),
           items: [
             for (final status in InsurerResponseStatus.values)
-              DropdownMenuItem(value: status, child: Text(status.label)),
+              DropdownMenuItem(
+                value: status,
+                child: Text(status.label, overflow: TextOverflow.ellipsis),
+              ),
           ],
           onChanged: (value) {
             if (value != null) _changed(() => _responseStatus = value);
@@ -320,10 +330,14 @@ class _CaseTrackerPanelState extends ConsumerState<CaseTrackerPanel> {
         const SizedBox(height: 12),
         DropdownButtonFormField<AppealOutcome>(
           initialValue: _outcome,
+          isExpanded: true,
           decoration: const InputDecoration(labelText: 'Current outcome'),
           items: [
             for (final outcome in AppealOutcome.values)
-              DropdownMenuItem(value: outcome, child: Text(outcome.label)),
+              DropdownMenuItem(
+                value: outcome,
+                child: Text(outcome.label, overflow: TextOverflow.ellipsis),
+              ),
           ],
           onChanged: (value) {
             if (value != null) _changed(() => _outcome = value);

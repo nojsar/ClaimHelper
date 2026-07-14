@@ -38,8 +38,10 @@ const checks = [
   ["flutter", ["analyze"]],
   ["flutter", ["test"]],
   ["npm", ["ci", "--prefix", "functions"]],
+  ["npm", ["--prefix", "functions", "audit", "--omit=dev", "--audit-level=high"]],
   ["npm", ["--prefix", "functions", "run", "build"]],
   ["npm", ["--prefix", "functions", "test"]],
+  ["node", ["tool/rules_test.mjs"]],
   ["node", ["tool/analytics_tracker_test.mjs"]],
   ["node", ["tool/marketing_build.mjs"]],
   ["node", ["tool/accessibility_check.mjs", "web"]],
@@ -48,6 +50,7 @@ const checks = [
   ["node", ["tool/marketing_build.mjs", "--stage-build"]],
   ["node", ["tool/marketing_build.mjs", "--verify-build"]],
   ["node", ["tool/accessibility_check.mjs", "build/web"]],
+  ["node", ["tool/rendered_accessibility_check.mjs", "build/web"]],
 ];
 
 for (const [command, args] of checks) run(command, args);

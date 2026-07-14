@@ -11,27 +11,37 @@ service cloud.firestore {
       return signedIn() && resource.data.ownerUid == request.auth.uid;
     }
 
-    // Fields only Cloud Functions (Admin SDK, which bypasses rules) may set.
-    function touchesServerOnlyFields() {
-      return request.resource.data.diff(resource.data).affectedKeys().hasAny([
-        'paid', 'pricePaid', 'stripeSessionId', 'packet', 'preview',
-        'ownerUid', 'storageOwnerUids', 'guestSessionId',
-        'ownershipTransferredAt', 'createdAt', 'consentConfirmedAt',
-        'followUps', 'followUpCredits', 'fullCase', 'generation',
-        'caseTracker', 'analyticsMilestones'
-      ]);
+    // The web client has exactly three direct case-edit flows: extraction
+    // corrections, appending uploaded source paths, and user additions. Every
+    // retention, ownership, entitlement, payment, generation, and workflow
+    // field is written through an Admin-SDK Cloud Function instead.
+    function isValidClientCaseUpdate() {
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      return changed.hasOnly([
+          'extraction', 'sourceFilePaths', 'userAdditions', 'updatedAt'
+        ])
+        && changed.hasAll(['updatedAt'])
+        && request.resource.data.updatedAt == request.time
+        && (!changed.hasAny(['extraction'])
+          || request.resource.data.extraction is map)
+        && (!changed.hasAny(['sourceFilePaths'])
+          || request.resource.data.sourceFilePaths is list)
+        && (!changed.hasAny(['userAdditions'])
+          || request.resource.data.userAdditions is string);
     }
 
     match /cases/{caseId} {
       // Cases are created by the createCaseUploadSession function, not the client.
       allow create: if false;
       allow read: if ownsCase();
-      // Clients may edit their extraction review, guided answers, and status,
-      // but can never grant themselves entitlements or rewrite payment state.
-      allow update: if ownsCase() && !touchesServerOnlyFields();
-      // Deletion goes through deleteCaseAndFiles so Storage is cleaned too,
-      // but direct doc deletion by the owner is also allowed as a fallback.
-      allow delete: if ownsCase();
+      // Direct edits are deliberately narrow. In particular, clients cannot
+      // set saved=true, clear expiresAt, move ownership, or grant themselves
+      // paid/generated content.
+      allow update: if ownsCase() && isValidClientCaseUpdate();
+      // Deletion must go through deleteCaseAndFiles so the case document,
+      // uploaded source documents, exports, and reminders are removed as one
+      // server-authorized operation. Admin SDK calls bypass these rules.
+      allow delete: if false;
     }
 
     match /users/{uid} {

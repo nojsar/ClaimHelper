@@ -36,6 +36,16 @@ function fail(message) {
   throw new Error(`[marketing] ${message}`);
 }
 
+async function fileExists(file) {
+  try {
+    await access(file);
+    return true;
+  } catch (error) {
+    if (error?.code === "ENOENT") return false;
+    throw error;
+  }
+}
+
 function match(html, pattern, label, file) {
   const value = html.match(pattern)?.[1]?.trim();
   if (!value) fail(`${file} is missing ${label}.`);
@@ -364,6 +374,9 @@ async function generate() {
   if (!index.includes('<script src="/analytics.js"></script>')) {
     fail("The homepage is missing the auth-gated first-party visit counter.");
   }
+  if (/three\.min\.js|window\.THREE|new\s+THREE\./.test(index)) {
+    fail("The homepage reintroduced the retired Three.js landing dependency.");
+  }
   if (!index.includes('href="/appeals/"')) fail("The homepage has no crawlable link to /appeals/.");
   if (!index.includes('href="/codes/"')) fail("The homepage has no crawlable link to /codes/.");
   if (!index.includes('href="/insurers/"')) fail("The homepage has no crawlable link to /insurers/.");
@@ -414,6 +427,16 @@ async function verifyBuild() {
   const pages = await guideModel();
   await validatePosts(pages);
   await extraModel(new Set(pages.map((page) => page.slug)));
+  const bootstrap = await readFile(path.join(buildRoot, "flutter_bootstrap.js"), "utf8");
+  if (!/canvasKitBaseUrl\s*:\s*["']canvaskit\//.test(bootstrap)) {
+    fail("The Flutter bootstrap is not configured for same-origin CanvasKit.");
+  }
+  const fontManifest = JSON.parse(
+    await readFile(path.join(buildRoot, "assets", "FontManifest.json"), "utf8"),
+  );
+  if (!fontManifest.some((entry) => entry.family === "Roboto")) {
+    fail("The local CanvasKit Roboto fallback is missing from FontManifest.json.");
+  }
   for (const name of discoveryFiles) {
     await assertEqual(path.join(webRoot, name), path.join(buildRoot, name), name);
   }
@@ -433,6 +456,9 @@ async function verifyBuild() {
   }
   for (const page of standalonePages) {
     await assertEqual(path.join(webRoot, page.file), path.join(buildRoot, page.file), page.file);
+  }
+  if (await fileExists(path.join(buildRoot, "js", "three.min.js"))) {
+    fail("The deploy artifact still contains the retired Three.js bundle.");
   }
   const socialImagesRoot = path.join(guidesRoot, "og");
   for (const name of (await readdir(socialImagesRoot)).filter((file) => file.endsWith(".png"))) {

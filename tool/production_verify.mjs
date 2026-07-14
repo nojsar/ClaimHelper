@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import process from "node:process";
@@ -11,7 +11,7 @@ const artifactRoot = artifactFlag >= 0
   ? path.resolve(projectRoot, process.argv[artifactFlag + 1] ?? "build/web")
   : null;
 
-const pages = [
+const representativePages = [
   { route: "/", file: "index.html" },
   { route: "/accessibility", file: "accessibility.html" },
   { route: "/privacy", file: "privacy.html" },
@@ -26,12 +26,45 @@ const pages = [
   { route: "/sample-packet", file: "sample-packet.html" },
   { route: "/editorial-policy", file: "editorial-policy.html" },
 ];
+
+async function artifactHtmlPages(root, relative = "") {
+  const directory = path.join(root, relative);
+  const entries = await readdir(directory, { withFileTypes: true });
+  const pages = [];
+  for (const entry of entries) {
+    const file = path.posix.join(relative.replaceAll("\\", "/"), entry.name);
+    if (entry.isDirectory()) {
+      pages.push(...await artifactHtmlPages(root, file));
+      continue;
+    }
+    if (!entry.isFile() || !entry.name.endsWith(".html") || file === "404.html") continue;
+    let route;
+    if (file === "index.html") route = "/";
+    else if (file.endsWith("/index.html")) route = `/${file.slice(0, -"index.html".length)}`;
+    else route = `/${file.slice(0, -".html".length)}`;
+    pages.push({ route, file });
+  }
+  return pages;
+}
+
+const pages = artifactRoot
+  ? (await artifactHtmlPages(artifactRoot)).sort((a, b) => a.route.localeCompare(b.route))
+  : representativePages;
 const bundles = [
   "main.dart.js",
   "flutter_bootstrap.js",
+  "canvaskit/canvaskit.js",
+  "canvaskit/canvaskit.wasm",
+  "canvaskit/chromium/canvaskit.js",
+  "canvaskit/chromium/canvaskit.wasm",
   "analytics.js",
   "legal.css",
   "appeals/guide.css",
+  "sitemap.xml",
+  "feed.xml",
+  "robots.txt",
+  "manifest.json",
+  "llms.txt",
 ];
 const retries = Number(process.env.PRODUCTION_VERIFY_RETRIES ?? 6);
 const retryDelayMs = Number(process.env.PRODUCTION_VERIFY_DELAY_MS ?? 2000);
@@ -96,6 +129,13 @@ async function fetchOnce(route, { allowErrorStatus = false } = {}) {
     "permissions-policy",
     (value) => value.includes("geolocation=()") && value.includes("microphone=()"),
   );
+  checkHeader(
+    response,
+    "cross-origin-opener-policy",
+    (value) => value === "same-origin-allow-popups",
+  );
+  checkHeader(response, "cross-origin-resource-policy", (value) => value === "same-origin");
+  checkHeader(response, "x-permitted-cross-domain-policies", (value) => value === "none");
   if (origin.startsWith("https://")) {
     checkHeader(response, "strict-transport-security", (value) => /max-age=\d+/.test(value));
   }
@@ -111,14 +151,21 @@ async function verifyResource(route, file, checkDocument) {
       if (checkDocument) {
         checkHeader(
           response,
-          "content-security-policy-report-only",
-          (value) => value.includes("default-src 'self'") && value.includes("object-src 'none'"),
+          "content-security-policy",
+          (value) => value.includes("default-src 'self'")
+            && value.includes("object-src 'none'")
+            && value.includes("https://www.gstatic.com")
+            && value.includes("upgrade-insecure-requests"),
         );
         const type = response.headers.get("content-type") ?? "";
         if (!type.toLowerCase().includes("text/html")) {
           fail(`${response.url} has unexpected content type ${type || "missing"}.`);
         }
         checkHtml(response.url, bytes.toString("utf8"));
+      }
+      if (file === "flutter_bootstrap.js"
+          && !/canvasKitBaseUrl\s*:\s*["']canvaskit\//.test(bytes.toString("utf8"))) {
+        fail(`${response.url} is not configured to load CanvasKit from the app origin.`);
       }
       if (expected && hash(bytes) !== hash(expected)) {
         fail(`${response.url} does not match the tested artifact ${file}.`);
@@ -151,6 +198,34 @@ async function verifyEndpoint(route, expectedStatus) {
   throw lastError;
 }
 
+async function verifyNotFound(route) {
+  const expected = artifactRoot ? await readFile(path.join(artifactRoot, "404.html")) : null;
+  let lastError;
+  for (let attempt = 1; attempt <= retries; attempt += 1) {
+    try {
+      const { response, bytes } = await fetchOnce(route, { allowErrorStatus: true });
+      if (response.status !== 404) {
+        fail(`${response.url} returned HTTP ${response.status}; expected 404.`);
+      }
+      checkHeader(
+        response,
+        "content-security-policy",
+        (value) => value.includes("default-src 'self'") && value.includes("object-src 'none'"),
+      );
+      checkHtml(response.url, bytes.toString("utf8"));
+      if (expected && hash(bytes) !== hash(expected)) {
+        fail(`${response.url} does not match the tested artifact 404.html.`);
+      }
+      console.log(`[production] OK ${route} (real tested 404 page)`);
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt < retries) await sleep(retryDelayMs);
+    }
+  }
+  throw lastError;
+}
+
 for (const page of pages) {
   await verifyResource(page.route, page.file, true);
 }
@@ -163,8 +238,9 @@ await verifyEndpoint("/api/track", 204);
 // GET must reach the protected function and be rejected. A 200 would mean the
 // Hosting catch-all served index.html instead of the token exchange endpoint.
 await verifyEndpoint("/api/admin-analytics-exclusion", 405);
-await verifyEndpoint("/__getmyyes_missing_page__", 404);
+await verifyNotFound("/__getmyyes_missing_page__");
+await verifyEndpoint("/js/three.min.js", 404);
 
 console.log(
-  `[production] Verified ${pages.length} public pages, ${bundles.length} app bundles, and both analytics rewrites at ${origin}.`,
+  `[production] Verified ${pages.length} public pages, ${bundles.length} app bundles, analytics rewrites, and retired assets at ${origin}.`,
 );

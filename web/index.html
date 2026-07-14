@@ -416,11 +416,71 @@
     .splat { position: absolute; z-index: 4; pointer-events: none; opacity: 0; }
     .splat path { fill: var(--red-bright); opacity: 0.75; }
 
-    /* 3D stamp canvas floats over the letter */
+    /* Lightweight CSS stamp floats over the letter. It keeps the dimensional
+       flourish without downloading a WebGL engine for one decorative object. */
     #stamp3d {
-      position: absolute; inset: -30% -26% -16% -26%; z-index: 7; pointer-events: none;
+      position: absolute; inset: 0; z-index: 7; pointer-events: none;
+      perspective: 900px; overflow: visible;
     }
-    #stamp3d canvas { width: 100% !important; height: 100% !important; }
+    #stamp3d .stamp-motion {
+      position: absolute; left: 72%; top: -46%; width: 116px; height: 178px;
+      transform-origin: 50% 92%; will-change: transform, top, left;
+    }
+    #stamp3d .stamp-object {
+      position: absolute; inset: 0;
+      transform: rotateZ(7deg) rotateX(-5deg) rotateY(-8deg);
+      transform-style: preserve-3d;
+      filter: drop-shadow(8px 13px 9px rgba(41, 27, 13, 0.24));
+    }
+    #stamp3d .stamp-knob {
+      position: absolute; left: 50%; top: 0; width: 58px; height: 66px;
+      transform: translateX(-50%); border: 1px solid rgba(68, 38, 13, 0.68);
+      border-radius: 52% 52% 45% 45% / 45% 45% 56% 56%;
+      background:
+        radial-gradient(circle at 34% 22%, rgba(255, 224, 167, 0.66), transparent 24%),
+        linear-gradient(104deg, #6a3d18 0%, #b67a3c 34%, #8b5728 63%, #543011 100%);
+      box-shadow: inset -8px -5px 10px rgba(57, 28, 8, 0.28), inset 5px 3px 8px rgba(255, 221, 162, 0.2);
+    }
+    #stamp3d .stamp-stem {
+      position: absolute; left: 50%; top: 54px; width: 24px; height: 47px;
+      transform: translateX(-50%); border: 1px solid rgba(68, 38, 13, 0.62);
+      border-radius: 7px 7px 3px 3px;
+      background: linear-gradient(90deg, #603613 0%, #b67839 42%, #754317 100%);
+      box-shadow: inset 4px 0 5px rgba(255, 220, 155, 0.16);
+    }
+    #stamp3d .stamp-neck {
+      position: absolute; left: 50%; top: 91px; width: 54px; height: 36px;
+      transform: translateX(-50%); clip-path: polygon(35% 0, 65% 0, 100% 100%, 0 100%);
+      background: linear-gradient(92deg, #57300f 0%, #a96d31 47%, #663714 100%);
+    }
+    #stamp3d .stamp-base {
+      position: absolute; left: 50%; top: 116px; width: 112px; height: 42px;
+      transform: translateX(-50%); border: 1px solid rgba(61, 34, 13, 0.72);
+      border-radius: 50% / 26%;
+      background:
+        radial-gradient(ellipse at 50% 12%, #bb7d3c 0%, #8b5728 45%, transparent 47%),
+        linear-gradient(90deg, #4e2b10 0%, #9a602a 38%, #6c3c17 74%, #3f230d 100%);
+      box-shadow: inset 0 -9px 9px rgba(54, 29, 10, 0.32);
+    }
+    #stamp3d .stamp-band {
+      position: absolute; left: 50%; top: 131px; width: 111px; height: 20px;
+      transform: translateX(-50%); border: 3px solid #b48a3e;
+      border-left-color: #71521f; border-right-color: #d6b760;
+      border-radius: 50%; box-shadow: 0 1px 2px rgba(50, 31, 8, 0.35);
+    }
+    #stamp3d .stamp-pad {
+      position: absolute; left: 50%; top: 148px; width: 116px; height: 29px;
+      transform: translateX(-50%); border: 1px solid #67151c;
+      border-radius: 50% / 30%;
+      background: linear-gradient(90deg, #6f151d 0%, #bd2b35 44%, #831c25 100%);
+      box-shadow: inset 0 -7px 7px rgba(63, 8, 13, 0.32);
+    }
+    #stamp3d .stamp-shadow {
+      position: absolute; left: 72%; top: 35%; width: 122px; height: 26px;
+      transform: translateX(-50%) scale(0.3); border-radius: 50%; opacity: 0;
+      background: radial-gradient(ellipse, rgba(43, 28, 14, 0.34) 0%, rgba(43, 28, 14, 0.14) 48%, transparent 72%);
+      filter: blur(3px); will-change: transform, opacity;
+    }
     @media (max-width: 620px) { #stamp3d { display: none; } }
 
     .scroll-cue {
@@ -948,7 +1008,19 @@
           <svg class="splat" id="splat1" viewBox="0 0 100 100" style="right:4%; top:26%; width:52px; height:52px;" aria-hidden="true" focusable="false">
             <path d="M50 18c6 8 16 2 20 10s-6 12 0 20-14 8-12 18-14 4-20 10-12-8-22-6-4-14-12-18 8-12 4-20 12-6 16-14 18-8 26 0z"/>
           </svg>
-          <div id="stamp3d" aria-hidden="true"></div>
+          <div id="stamp3d" aria-hidden="true">
+            <div class="stamp-shadow" id="stamp-shadow"></div>
+            <div class="stamp-motion" id="stamp-motion">
+              <div class="stamp-object">
+                <span class="stamp-knob"></span>
+                <span class="stamp-stem"></span>
+                <span class="stamp-neck"></span>
+                <span class="stamp-base"></span>
+                <span class="stamp-band"></span>
+                <span class="stamp-pad"></span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="scroll-cue">Turn the page<span class="pen"></span></div>
@@ -1414,96 +1486,22 @@
         gsap.from('.hero-copy > *', { y: 30, opacity: 0, stagger: 0.1, duration: 1, ease: 'power3.out', delay: 0.1 });
         gsap.from('#exhibit', { y: 44, opacity: 0, rotate: 3, duration: 1.1, ease: 'power3.out', delay: 0.25 });
 
-        /* ---------- 3D STAMP (Three.js) ---------- */
-        var stampReady = false, stampGroup = null, renderer = null, scene3 = null, cam = null;
-        var mouseX = 0, mouseY = 0;
+        /* ---------- DIMENSIONAL STAMP (CSS + GSAP) ---------- */
+        var stampReady = false;
+        var stampGroup = document.getElementById('stamp-motion');
+        var stampShadow = document.getElementById('stamp-shadow');
+        var mouseX = 0, mouseY = 0, driftX = 0, driftY = 0, driftRotate = 0;
         function buildStamp() {
-          if (!window.THREE) return false;
           var host = document.getElementById('stamp3d');
-          if (!host) return false;
-          var w = host.clientWidth, h = host.clientHeight;
-          if (!w || !h) return false; // hidden on small screens
-          renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-          renderer.setSize(w, h);
-          renderer.shadowMap.enabled = true;
-          renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-          host.appendChild(renderer.domElement);
-
-          scene3 = new THREE.Scene();
-          cam = new THREE.PerspectiveCamera(30, w / h, 0.1, 100);
-          cam.position.set(0, 2.2, 12.2);
-          cam.lookAt(0.6, 0.8, 0);
-
-          var amb = new THREE.AmbientLight(0xfff4e0, 0.85);
-          scene3.add(amb);
-          var key = new THREE.DirectionalLight(0xfff1d6, 1.5);
-          key.position.set(3, 6, 4);
-          key.castShadow = true;
-          key.shadow.mapSize.set(1024, 1024);
-          scene3.add(key);
-          var rim = new THREE.DirectionalLight(0xd8e2ff, 0.5);
-          rim.position.set(-4, 3, -3);
-          scene3.add(rim);
-
-          // ground plane just to catch the stamp's shadow (invisible material)
-          var shadowMat = new THREE.ShadowMaterial({ opacity: 0.05 });
-          window.__stampShadowMat = shadowMat;
-          var ground = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), shadowMat);
-          ground.rotation.x = -Math.PI / 2;
-          ground.position.y = -0.72;
-          ground.receiveShadow = true;
-          scene3.add(ground);
-
-          // — the stamp —
-          stampGroup = new THREE.Group();
-          var wood = new THREE.MeshStandardMaterial({ color: 0x8a5a2b, roughness: 0.55, metalness: 0.05 });
-          var woodDark = new THREE.MeshStandardMaterial({ color: 0x6e441d, roughness: 0.6 });
-          var rubber = new THREE.MeshStandardMaterial({ color: 0xb3202a, roughness: 0.9 });
-
-          var base = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.14, 0.42, 48), woodDark);
-          base.castShadow = true;
-          stampGroup.add(base);
-          var pad = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.06, 0.16, 48), rubber);
-          pad.position.y = -0.28;
-          pad.castShadow = true;
-          stampGroup.add(pad);
-          var neck = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.34, 0.75, 32), wood);
-          neck.position.y = 0.55;
-          neck.castShadow = true;
-          stampGroup.add(neck);
-          var knobStem = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.2, 0.5, 32), wood);
-          knobStem.position.y = 1.12;
-          stampGroup.add(knobStem);
-          var knob = new THREE.Mesh(new THREE.SphereGeometry(0.46, 40, 28), wood);
-          knob.position.y = 1.62;
-          knob.scale.y = 1.12;
-          knob.castShadow = true;
-          stampGroup.add(knob);
-          var band = new THREE.Mesh(new THREE.TorusGeometry(1.06, 0.045, 14, 60), new THREE.MeshStandardMaterial({ color: 0xc9a24a, roughness: 0.35, metalness: 0.7 }));
-          band.rotation.x = Math.PI / 2;
-          band.position.y = 0.02;
-          stampGroup.add(band);
-
-          stampGroup.scale.setScalar(0.55);
-          stampGroup.position.set(1.8, 6.2, 0.4);   // hovering high, off-stage
-          stampGroup.rotation.z = 0.14;
-          scene3.add(stampGroup);
+          if (!host || !stampGroup || !host.clientWidth || !host.clientHeight ||
+              window.getComputedStyle(host).display === 'none') return false;
 
           window.addEventListener('mousemove', function (e) {
             mouseX = (e.clientX / window.innerWidth - 0.5);
             mouseY = (e.clientY / window.innerHeight - 0.5);
           }, { passive: true });
 
-          window.addEventListener('resize', function () {
-            var w2 = host.clientWidth, h2 = host.clientHeight;
-            if (!w2 || !h2) return;
-            cam.aspect = w2 / h2;
-            cam.updateProjectionMatrix();
-            renderer.setSize(w2, h2);
-          });
-
-          // Only spend GPU while the hero is on screen.
+          // Pause the subtle drift while the hero is outside the viewport.
           var heroVisible = true;
           ScrollTrigger.create({
             trigger: '#s1', start: 'top bottom', end: 'bottom top',
@@ -1511,14 +1509,11 @@
           });
 
           gsap.ticker.add(function () {
-            if (!renderer || !heroVisible) return;
-            // idle drift + gentle mouse parallax after the slam
-            if (stampReady && stampGroup) {
-              stampGroup.position.x += ((2.3 + mouseX * 0.5) - stampGroup.position.x) * 0.04;
-              stampGroup.rotation.y += (mouseX * 0.5 - stampGroup.rotation.y) * 0.03;
-              stampGroup.position.y += ((2.9 + mouseY * -0.25) - stampGroup.position.y) * 0.035;
-            }
-            renderer.render(scene3, cam);
+            if (!stampReady || !heroVisible || !stampGroup) return;
+            driftX += (mouseX * 18 - driftX) * 0.035;
+            driftY += (mouseY * -10 - driftY) * 0.03;
+            driftRotate += (mouseX * 5 - driftRotate) * 0.025;
+            gsap.set(stampGroup, { x: driftX, y: driftY, rotationY: driftRotate });
           });
           return true;
         }
@@ -1527,38 +1522,26 @@
           var imprint = document.getElementById('imprint');
           var splat = document.getElementById('splat1');
           var tl = gsap.timeline();
-          if (stampGroup) {
-            tl.to(stampGroup.position, { x: 1.7, y: -0.15, duration: 0.34, ease: 'power3.in' }, 0)
-              .to(stampGroup.rotation, { z: -0.02, duration: 0.3, ease: 'power2.in' }, 0)
-              .to(window.__stampShadowMat || {}, { opacity: 0.22, duration: 0.3 }, 0)
-              .to(stampGroup.scale, { y: 0.46, duration: 0.09, ease: 'power2.out' }, 0.34)
-              .to(stampGroup.scale, { y: 0.55, duration: 0.32, ease: 'elastic.out(1.4, 0.4)' }, 0.44)
-              .to(window.__stampShadowMat || {}, { opacity: 0.05, duration: 0.5 }, 0.55)
-              .to(stampGroup.position, { x: 2.3, y: 2.9, duration: 0.8, ease: 'power2.out', onComplete: function () { stampReady = true; } }, 0.52);
+          if (stampBuilt && stampGroup) {
+            tl.to(stampGroup, { left: '72%', top: '4%', rotation: -2, duration: 0.34, ease: 'power3.in' }, 0)
+              .to(stampShadow, { opacity: 0.26, scale: 1, duration: 0.3, ease: 'power2.in' }, 0)
+              .to(stampGroup, { scaleY: 0.82, duration: 0.09, ease: 'power2.out' }, 0.34)
+              .to(stampGroup, { scaleY: 1, duration: 0.32, ease: 'elastic.out(1.4, 0.4)' }, 0.44)
+              .to(stampShadow, { opacity: 0.09, scale: 0.72, duration: 0.5 }, 0.55)
+              .to(stampGroup, { left: '74%', top: '-12%', rotation: 3, duration: 0.8, ease: 'power2.out', onComplete: function () { stampReady = true; } }, 0.52);
           }
           tl.add(function () {
             imprint.classList.add('on');
-          }, stampGroup ? 0.36 : 0)
-            .fromTo(imprint, { scale: 1.5, opacity: 0 }, { scale: 1, opacity: 0.92, duration: 0.18, ease: 'power4.out' }, stampGroup ? 0.36 : 0)
-            .fromTo(splat, { scale: 0.2, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(2.5)' }, stampGroup ? 0.4 : 0.05)
-            .fromTo('#landing', { x: 0 }, { x: 6, duration: 0.05, repeat: 5, yoyo: true, ease: 'none', clearProps: 'transform' }, stampGroup ? 0.36 : 0);
+          }, stampBuilt ? 0.36 : 0)
+            .fromTo(imprint, { scale: 1.5, opacity: 0 }, { scale: 1, opacity: 0.92, duration: 0.18, ease: 'power4.out' }, stampBuilt ? 0.36 : 0)
+            .fromTo(splat, { scale: 0.2, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(2.5)' }, stampBuilt ? 0.4 : 0.05)
+            .fromTo('#landing', { x: 0 }, { x: 6, duration: 0.05, repeat: 5, yoyo: true, ease: 'none', clearProps: 'transform' }, stampBuilt ? 0.36 : 0);
         }
 
-        function loadStampWhenIdle() {
-          loadScript('js/three.min.js')
-            .then(function () {
-              var built = buildStamp();
-              gsap.delayedCall(built ? 0.25 : 0, slam);
-            })
-            .catch(function () { gsap.delayedCall(0, slam); });
-        }
-        // The 3D flourish is non-essential. Let readable content and the core
-        // motion system become interactive before downloading Three.js.
-        if ('requestIdleCallback' in window) {
-          requestIdleCallback(loadStampWhenIdle, { timeout: 1400 });
-        } else {
-          setTimeout(loadStampWhenIdle, 700);
-        }
+        // The stamp is already in the document, so there is no secondary engine
+        // download and the imprint still lands immediately if it is hidden.
+        var stampBuilt = buildStamp();
+        gsap.delayedCall(stampBuilt ? 0.25 : 0, slam);
 
         /* ---------- hero letter annotations draw on scroll ---------- */
         document.querySelectorAll('.letter .circ path').forEach(function (p, i) {

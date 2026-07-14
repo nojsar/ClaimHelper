@@ -77,3 +77,16 @@ flutter:
           weight: 500
         - asset: assets/fonts/IBMPlexMono-SemiBold.ttf
           weight: 600
+    # CanvasKit checks for a family named Roboto before downloading its own
+    # fallback from Google. Point that fallback at our bundled Noto Sans files
+    # so every font remains same-origin and covered by the privacy policy.
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/NotoSans-Regular.ttf
+        - asset: assets/fonts/NotoSans-Italic.ttf
+          style: italic
+        - asset: assets/fonts/NotoSans-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/NotoSans-BoldItalic.ttf
+          weight: 700
+          style: italic

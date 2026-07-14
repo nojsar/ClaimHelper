@@ -19,6 +19,35 @@ test("case milestone and daily aggregate writes share one transaction", () => {
   assert.match(analytics, /isAdminAnalyticsUid\(uid\)/);
 });
 
+test("public analytics endpoints enforce provenance without broad CORS", () => {
+  const analytics = source("analytics.ts");
+  assert.doesNotMatch(analytics, /cors:\s*true/);
+  assert.match(
+    analytics,
+    /setAdminAnalyticsExclusion[\s\S]*isTrustedAnalyticsRequest\(req\.headers\)/,
+  );
+  assert.match(
+    analytics,
+    /trackEvent[\s\S]*isTrustedAnalyticsRequest\(req\.headers\)/,
+  );
+  for (const header of [
+    "Content-Security-Policy",
+    "Cross-Origin-Opener-Policy",
+    "Cross-Origin-Resource-Policy",
+    "X-Permitted-Cross-Domain-Policies",
+  ]) {
+    assert.match(analytics, new RegExp(`setHeader\\("${header}"`));
+  }
+  assert.match(
+    analytics,
+    /setAdminAnalyticsExclusion[\s\S]*setAnalyticsSecurityHeaders\(res\)/,
+  );
+  assert.match(
+    analytics,
+    /trackEvent[\s\S]*setAnalyticsSecurityHeaders\(res\)/,
+  );
+});
+
 test("extraction records first start, completion, and bounded failures", () => {
   const extraction = source("extraction.ts");
   assert.match(extraction, /"extraction_started"/);

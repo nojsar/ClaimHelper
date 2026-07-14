@@ -22,6 +22,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -35,8 +39,11 @@ jobs:
       - name: Build and test analytics functions
         run: |
           npm ci --prefix functions
+          npm --prefix functions audit --omit=dev --audit-level=high
           npm --prefix functions run build
           npm --prefix functions test
+          node tool/rules_test.mjs
+          node tool/analytics_tracker_test.mjs
       - name: Validate source accessibility
         run: |
           node tool/marketing_build.mjs
@@ -48,3 +55,4 @@ jobs:
           node tool/marketing_build.mjs --stage-build
           node tool/marketing_build.mjs --verify-build
           node tool/accessibility_check.mjs build/web
+          node tool/rendered_accessibility_check.mjs build/web

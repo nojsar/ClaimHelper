@@ -194,8 +194,10 @@ class _StatsBodyState extends State<_StatsBody> {
                   const SizedBox(height: 4),
                   const Text(
                     'Customer-only counters — cookieless, aggregate-only. '
-                    'Owner activity is excluded; legacy totals are not mixed '
-                    'in.',
+                    'Signed-in owner activity and private stats routes are '
+                    'excluded; public visits from a new, unlinked browser '
+                    'cannot be identified as owner traffic. Legacy totals '
+                    'are not mixed in.',
                     style: TextStyle(color: AppColors.textMuted, fontSize: 13),
                   ),
                   const SizedBox(height: 8),

@@ -5,6 +5,7 @@ service firebase.storage {
 
     function ownsCase(caseId) {
       return request.auth != null
+        && firestore.exists(/databases/(default)/documents/cases/$(caseId))
         && firestore.get(/databases/(default)/documents/cases/$(caseId)).data.ownerUid
              == request.auth.uid;
     }
@@ -18,7 +19,8 @@ service firebase.storage {
       allow read, delete: if false;
       allow create, update: if request.auth != null
         && request.auth.uid == userId
-        && request.resource.size < 20 * 1024 * 1024
+        && ownsCase(caseId)
+        && request.resource.size <= 20 * 1024 * 1024
         && (
           request.resource.contentType == 'application/pdf'
           || request.resource.contentType.matches('image/(jpeg|png|heic|heif|webp)')

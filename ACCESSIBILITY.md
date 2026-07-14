@@ -26,6 +26,7 @@ flutter build web
 node tool/marketing_build.mjs
 node tool/accessibility_check.mjs web
 npx --yes html-validate@10.10.0 "web/**/*.html"
+node tool/rendered_accessibility_check.mjs build/web
 ```
 
 For a production release, use the fail-closed release command instead of
@@ -35,14 +36,15 @@ running `firebase deploy` directly:
 node tool/deploy_release.mjs
 ```
 
-This runs the Flutter and Functions checks, regenerates and validates the
-static content, builds the deploy artifact, deploys every Firebase resource in
-`firebase.json`, and then verifies that production pages and app bundles match
-the tested artifact. Use `node tool/deploy_release.mjs --check-only` when a
-non-deploying release rehearsal is needed. A local pass is not production
-evidence until the post-deploy verification also passes. This command fails
-closed for the automated gates; it does not replace the manual and
-assistive-technology checks below.
+This runs the Flutter, Functions, dependency-audit, Firebase security-rule,
+static-markup, and rendered axe checks; regenerates and validates the static
+content; builds the deploy artifact; deploys every Firebase resource in
+`firebase.json`; and then verifies that every production page and critical app
+bundle matches the tested artifact. Use `node tool/deploy_release.mjs
+--check-only` when a non-deploying release rehearsal is needed. A local pass is
+not production evidence until the post-deploy verification also passes. This
+command fails closed for the automated gates; it does not replace the manual
+and assistive-technology checks below.
 
 Automated checks are only a regression floor. Before claiming conformance for a release, manually test a representative sample and every unique step in the complete process:
 

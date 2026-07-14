@@ -276,10 +276,14 @@ class _CategoryPicker extends StatelessWidget {
   Widget build(BuildContext context) {
     return DropdownButtonFormField<DenialCategory>(
       initialValue: value,
+      isExpanded: true,
       decoration: InputDecoration(labelText: label),
       items: [
         for (final c in DenialCategory.values)
-          DropdownMenuItem(value: c, child: Text(c.label)),
+          DropdownMenuItem(
+            value: c,
+            child: Text(c.label, overflow: TextOverflow.ellipsis),
+          ),
       ],
       onChanged: (v) => v != null ? onChanged(v) : null,
     );

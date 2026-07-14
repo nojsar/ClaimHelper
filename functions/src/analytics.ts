@@ -54,6 +54,100 @@ const ADMIN_ANALYTICS_SESSION_SECONDS = Math.floor(
   ADMIN_ANALYTICS_SESSION_MS / 1000,
 );
 
+type RequestHeader = string | string[] | undefined;
+
+export interface AnalyticsProvenanceHeaders {
+  origin?: RequestHeader;
+  referer?: RequestHeader;
+  "sec-fetch-site"?: RequestHeader;
+}
+
+/** Origins from which the first-party tracker is intentionally served. */
+const FIRST_PARTY_ANALYTICS_ORIGINS = new Set([
+  "https://getmyyes.com",
+  "https://www.getmyyes.com",
+  "https://claimhelper-38152.web.app",
+  "https://claimhelper-38152.firebaseapp.com",
+]);
+
+interface ParsedHeader {
+  present: boolean;
+  value: string | null;
+}
+
+/** Reject duplicated security headers instead of choosing an attacker value. */
+function parsedHeader(raw: RequestHeader): ParsedHeader {
+  if (raw === undefined) return { present: false, value: null };
+  if (Array.isArray(raw)) {
+    if (raw.length !== 1) return { present: true, value: null };
+    raw = raw[0];
+  }
+  const value = raw.trim();
+  return { present: true, value: value.length > 0 ? value : null };
+}
+
+/** Whether a URL belongs to one of the site's fixed first-party origins. */
+export function isFirstPartyAnalyticsUrl(raw: string): boolean {
+  try {
+    const url = new URL(raw);
+    return (
+      (url.protocol === "https:" || url.protocol === "http:") &&
+      FIRST_PARTY_ANALYTICS_ORIGINS.has(url.origin)
+    );
+  } catch {
+    return false;
+  }
+}
+
+function isFirstPartyAnalyticsOrigin(raw: string): boolean {
+  try {
+    const url = new URL(raw);
+    return raw === url.origin && FIRST_PARTY_ANALYTICS_ORIGINS.has(url.origin);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Enforce browser provenance for the browser-only analytics endpoints.
+ *
+ * Modern browsers supply Sec-Fetch-Site and/or Origin, so cross-site requests
+ * are rejected even though sendBeacon uses a CORS-safelisted content type.
+ * Older same-origin browsers can be validated by Referer. Requests with none
+ * of these browser-provenance headers are dropped. These headers are not an
+ * authentication mechanism, so the bounded taxonomies below remain the main
+ * protection against forged server requests and unbounded database writes.
+ */
+export function isTrustedAnalyticsRequest(
+  headers: AnalyticsProvenanceHeaders,
+): boolean {
+  const fetchSite = parsedHeader(headers["sec-fetch-site"]);
+  if (
+    fetchSite.present &&
+    fetchSite.value !== "same-origin" &&
+    fetchSite.value !== "same-site"
+  ) {
+    return false;
+  }
+
+  const origin = parsedHeader(headers.origin);
+  if (
+    origin.present &&
+    (!origin.value || !isFirstPartyAnalyticsOrigin(origin.value))
+  ) {
+    return false;
+  }
+
+  const referer = parsedHeader(headers.referer);
+  if (
+    referer.present &&
+    (!referer.value || !isFirstPartyAnalyticsUrl(referer.value))
+  ) {
+    return false;
+  }
+  return fetchSite.present || origin.present || referer.present;
+}
+
 /** UTC day key, e.g. "2026-07-11". */
 function dayKey(): string {
   return new Date().toISOString().slice(0, 10);
@@ -190,13 +284,45 @@ export function isAdminAnalyticsUid(
   return uid === ADMIN_UID;
 }
 
-/**
- * The private dashboard is not customer traffic. Suppress it even on a fresh
- * browser before Firebase Auth has had time to establish the exclusion cookie.
- */
-export function isExcludedAnalyticsPath(raw: unknown): boolean {
-  if (typeof raw !== "string") return false;
-  let path = raw.trim();
+/** A finite path taxonomy prevents arbitrary URLs becoming Firestore fields. */
+const ANALYTICS_EXACT_PATH_CATEGORIES = new Set([
+  "/",
+  "/upload",
+  "/processing",
+  "/account",
+  "/settings",
+  "/privacy",
+  "/terms",
+  "/accessibility",
+  "/editorial-policy",
+  "/sample-packet",
+  "/insurer-denial-rates",
+  "/appeals",
+  "/codes",
+  "/insurers",
+]);
+const CASE_PATH_STAGES = new Set([
+  "processing",
+  "review",
+  "questions",
+  "preview",
+  "purchase-success",
+  "packet",
+]);
+const ANALYTICS_GROUPED_PATH_CATEGORIES = new Set([
+  "/appeals/:article",
+  "/codes/:code",
+  "/insurers/:insurer",
+  "/tools/:tool",
+  ...Array.from(CASE_PATH_STAGES, (stage) => `/case/:id/${stage}`),
+]);
+export const ANALYTICS_OTHER_PATH = "/other";
+
+/** Parse a browser route once, including encoded and hash-router variants. */
+function analyticsRequestPath(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  let path = raw.trim().slice(0, 1024);
+  if (!path) return null;
   try {
     const url = new URL(path);
     path = url.hash.startsWith("#/") ? url.hash.slice(1) : url.pathname;
@@ -206,8 +332,42 @@ export function isExcludedAnalyticsPath(raw: unknown): boolean {
   const hashRoute = path.indexOf("#/");
   if (hashRoute >= 0) path = path.slice(hashRoute + 1);
   path = path.replace(/[?&#].*$/, "");
+  try {
+    path = decodeURIComponent(path);
+  } catch {
+    return null;
+  }
+  path = path.replace(/\/{2,}/g, "/");
+  if (!path.startsWith("/")) path = `/${path}`;
   if (path.length > 1) path = path.replace(/\/+$/, "");
-  return path === "/stats" || path.startsWith("/stats/");
+  path = path.replace(/\.html$/i, "").toLowerCase();
+  return path || "/";
+}
+
+/**
+ * The private dashboard is not customer traffic. Suppress it even on a fresh
+ * browser before Firebase Auth has had time to establish the exclusion cookie.
+ */
+export function isExcludedAnalyticsPath(raw: unknown): boolean {
+  const path = analyticsRequestPath(raw);
+  return path === "/stats" || Boolean(path?.startsWith("/stats/"));
+}
+
+/** Collapse every accepted route to a fixed category or `/other`. */
+export function analyticsPathCategory(raw: unknown): string {
+  const path = analyticsRequestPath(raw);
+  if (!path || isExcludedAnalyticsPath(path)) return ANALYTICS_OTHER_PATH;
+  if (ANALYTICS_EXACT_PATH_CATEGORIES.has(path)) return path;
+
+  const caseMatch = /^\/case\/[^/]+\/([^/]+)$/.exec(path);
+  if (caseMatch && CASE_PATH_STAGES.has(caseMatch[1])) {
+    return `/case/:id/${caseMatch[1]}`;
+  }
+  if (/^\/appeals\/[^/]+$/.test(path)) return "/appeals/:article";
+  if (/^\/codes\/[^/]+$/.test(path)) return "/codes/:code";
+  if (/^\/insurers\/[^/]+$/.test(path)) return "/insurers/:insurer";
+  if (/^\/tools\/[^/]+$/.test(path)) return "/tools/:tool";
+  return ANALYTICS_OTHER_PATH;
 }
 
 /** Read one cookie without trusting any client-provided exclusion flag. */
@@ -252,12 +412,112 @@ export function adminAnalyticsCookieHeader(sessionCookie: string): string {
   ].join("; ");
 }
 
-type SegmentType = "country" | "referrer" | "campaign" | "path";
+export type SegmentType = "country" | "referrer" | "campaign" | "path";
 
-interface AnalyticsSegment {
+export interface AnalyticsSegment {
   type: SegmentType;
   key: string;
 }
+
+export const MAX_ANALYTICS_SEGMENTS_PER_EVENT = 4;
+export const MAX_TRAFFIC_COUNTER_FIELDS_PER_EVENT = 8;
+const MAX_ANALYTICS_SEGMENT_KEY_LENGTH = 64;
+
+/** ISO 3166-1 alpha-2 codes plus XK, which upstream geolocation may emit. */
+const ANALYTICS_COUNTRY_CODES = new Set(
+  (
+    "AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ " +
+    "BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY BZ " +
+    "CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ " +
+    "DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR " +
+    "GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY " +
+    "HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP " +
+    "KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY " +
+    "MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ " +
+    "NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR " +
+    "PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN " +
+    "SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW " +
+    "TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS XK YE YT ZA ZM ZW"
+  ).split(" "),
+);
+
+const SELF_HOSTS = new Set([
+  "getmyyes.com",
+  "www.getmyyes.com",
+  "claimhelper-38152.web.app",
+  "claimhelper-38152.firebaseapp.com",
+  "localhost",
+]);
+
+const REFERRER_DOMAIN_RULES: ReadonlyArray<
+  readonly [string, readonly string[]]
+> = [
+  ["chatgpt", ["chatgpt.com", "chat.openai.com"]],
+  ["perplexity", ["perplexity.ai"]],
+  ["gemini", ["gemini.google.com"]],
+  ["copilot", ["copilot.microsoft.com"]],
+  ["claude", ["claude.ai"]],
+  [
+    "google",
+    [
+      "google.com",
+      "google.co.uk",
+      "google.ca",
+      "google.de",
+      "google.fr",
+      "google.lt",
+      "google.com.au",
+    ],
+  ],
+  ["bing", ["bing.com"]],
+  ["duckduckgo", ["duckduckgo.com"]],
+  ["yahoo", ["search.yahoo.com", "yahoo.com"]],
+  ["facebook", ["facebook.com", "fb.com"]],
+  ["instagram", ["instagram.com"]],
+  ["linkedin", ["linkedin.com"]],
+  ["reddit", ["reddit.com"]],
+  ["x", ["x.com", "twitter.com", "t.co"]],
+  ["tiktok", ["tiktok.com"]],
+  ["youtube", ["youtube.com", "youtu.be"]],
+];
+const ANALYTICS_REFERRER_CATEGORIES = new Set([
+  ...REFERRER_DOMAIN_RULES.map(([category]) => category),
+  "other",
+]);
+
+const CAMPAIGN_SOURCE_CATEGORIES = new Set([
+  "google",
+  "bing",
+  "duckduckgo",
+  "yahoo",
+  "meta",
+  "linkedin",
+  "reddit",
+  "x",
+  "tiktok",
+  "youtube",
+  "email",
+  "partner",
+  "affiliate",
+  "other",
+]);
+const CAMPAIGN_MEDIUM_CATEGORIES = new Set([
+  "paid_search",
+  "paid_social",
+  "organic",
+  "social",
+  "email",
+  "referral",
+  "affiliate",
+  "display",
+  "other",
+]);
+const CAMPAIGN_TAG_CATEGORIES = new Set(["tagged", "untagged"]);
+const ANALYTICS_PATH_CATEGORIES = new Set([
+  ...ANALYTICS_EXACT_PATH_CATEGORIES,
+  ...ANALYTICS_GROUPED_PATH_CATEGORIES,
+  ANALYTICS_OTHER_PATH,
+]);
 
 /**
  * Stable, URL-safe ids prevent a segment key from becoming a Firestore path.
@@ -271,23 +531,178 @@ export function analyticsSegmentDocumentId(
   return `${day}__${type}__${Buffer.from(key, "utf8").toString("base64url")}`;
 }
 
-/** Funnel and revenue are not segmentable without visitor/session tracking. */
-const SEGMENTABLE_FIELD_ROOTS = new Set([
-  "visits",
-  "pageviews",
-  "boots",
-  "countries",
-  "referrers",
-  "campaigns",
-  "paths",
-]);
+/** Whether a host equals or is a real subdomain of a fixed domain. */
+function hostMatches(host: string, domain: string): boolean {
+  return host === domain || host.endsWith(`.${domain}`);
+}
+
+export function countryAnalyticsCategory(raw: RequestHeader): string | null {
+  const parsed = parsedHeader(raw);
+  if (!parsed.present || !parsed.value) return null;
+  const country = parsed.value.toUpperCase();
+  return ANALYTICS_COUNTRY_CODES.has(country) ? country : null;
+}
+
+/** Map an arbitrary referrer URL into a finite acquisition-source category. */
+export function referrerAnalyticsCategory(raw: unknown): string | null {
+  if (typeof raw !== "string" || raw.length > 2048) return null;
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+    const host = url.hostname.toLowerCase();
+    if (SELF_HOSTS.has(host)) return null;
+    for (const [category, domains] of REFERRER_DOMAIN_RULES) {
+      if (domains.some((domain) => hostMatches(host, domain))) return category;
+    }
+    return "other";
+  } catch {
+    return null;
+  }
+}
+
+function normalizedCampaignToken(raw: string | null): string | null {
+  if (!raw) return null;
+  const token = raw
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 40);
+  return token || null;
+}
+
+function campaignSourceCategory(raw: string | null): string {
+  const token = normalizedCampaignToken(raw);
+  if (!token) return "other";
+  if (["facebook", "fb", "instagram", "ig", "meta"].includes(token)) {
+    return "meta";
+  }
+  if (["twitter", "twitter_ads"].includes(token)) return "x";
+  if (["newsletter", "mail", "email_newsletter"].includes(token)) {
+    return "email";
+  }
+  return CAMPAIGN_SOURCE_CATEGORIES.has(token) ? token : "other";
+}
+
+function campaignMediumCategory(raw: string | null): string {
+  const token = normalizedCampaignToken(raw);
+  if (!token) return "other";
+  if (["cpc", "ppc", "paidsearch", "search_ads"].includes(token)) {
+    return "paid_search";
+  }
+  if (["paid_social", "paidsocial", "social_ads"].includes(token)) {
+    return "paid_social";
+  }
+  if (["organic_search", "seo"].includes(token)) return "organic";
+  if (["newsletter", "mail"].includes(token)) return "email";
+  return CAMPAIGN_MEDIUM_CATEGORIES.has(token) ? token : "other";
+}
+
+/** Parse only a first-party landing-page Referer and retain fixed UTM buckets. */
+export function campaignAnalyticsCategory(raw: RequestHeader): string | null {
+  const parsed = parsedHeader(raw);
+  if (!parsed.present || !parsed.value || !isFirstPartyAnalyticsUrl(parsed.value)) {
+    return null;
+  }
+  try {
+    const url = new URL(parsed.value);
+    const sourceRaw = url.searchParams.get("utm_source");
+    const mediumRaw = url.searchParams.get("utm_medium");
+    const nameRaw = url.searchParams.get("utm_campaign");
+    if (!sourceRaw && !mediumRaw && !nameRaw) return null;
+    const source = campaignSourceCategory(sourceRaw);
+    const medium = campaignMediumCategory(mediumRaw);
+    const tag = normalizedCampaignToken(nameRaw) ? "tagged" : "untagged";
+    return `${source}|${medium}|${tag}`;
+  } catch {
+    return null;
+  }
+}
+
+function isAllowedCampaignCategory(key: string): boolean {
+  const [source, medium, tag, extra] = key.split("|");
+  return (
+    extra === undefined &&
+    CAMPAIGN_SOURCE_CATEGORIES.has(source) &&
+    CAMPAIGN_MEDIUM_CATEGORIES.has(medium) &&
+    CAMPAIGN_TAG_CATEGORIES.has(tag)
+  );
+}
+
+function isAllowedSegment(segment: AnalyticsSegment): boolean {
+  if (
+    typeof segment?.key !== "string" ||
+    segment.key.length === 0 ||
+    segment.key.length > MAX_ANALYTICS_SEGMENT_KEY_LENGTH
+  ) {
+    return false;
+  }
+  switch (segment.type) {
+    case "country":
+      return ANALYTICS_COUNTRY_CODES.has(segment.key);
+    case "referrer":
+      return ANALYTICS_REFERRER_CATEGORIES.has(segment.key);
+    case "campaign":
+      return isAllowedCampaignCategory(segment.key);
+    case "path":
+      return ANALYTICS_PATH_CATEGORIES.has(segment.key);
+    default:
+      return false;
+  }
+}
+
+/** Deduplicate and cap segment-document writes even if a future caller errs. */
+export function boundedAnalyticsSegments(
+  segments: readonly AnalyticsSegment[],
+): AnalyticsSegment[] {
+  const unique = new Map<string, AnalyticsSegment>();
+  for (const segment of segments) {
+    if (!isAllowedSegment(segment)) continue;
+    unique.set(`${segment.type}\u0000${segment.key}`, { ...segment });
+    if (unique.size >= MAX_ANALYTICS_SEGMENTS_PER_EVENT) break;
+  }
+  return [...unique.values()];
+}
+
+function isAllowedTrafficCounterPath(path: string): boolean {
+  if (path === "visits" || path === "pageviews" || path === "boots") {
+    return true;
+  }
+  if (path.startsWith("performance.app_ready.")) {
+    return appReadyBucketNames.has(path.slice("performance.app_ready.".length));
+  }
+  const separator = path.indexOf(".");
+  if (separator < 1) return false;
+  const root = path.slice(0, separator);
+  const key = path.slice(separator + 1);
+  if (root === "countries") return ANALYTICS_COUNTRY_CODES.has(key);
+  if (root === "referrers") return ANALYTICS_REFERRER_CATEGORIES.has(key);
+  if (root === "campaigns") return isAllowedCampaignCategory(key);
+  if (root === "paths") return ANALYTICS_PATH_CATEGORIES.has(key);
+  return false;
+}
+
+/** Keep only fixed one-count traffic fields and enforce the per-event cap. */
+export function filterTrafficCounterFields(
+  fields: Record<string, number>,
+): Record<string, number> {
+  const result: Record<string, number> = {};
+  for (const [path, value] of Object.entries(fields)) {
+    if (value !== 1 || !isAllowedTrafficCounterPath(path)) continue;
+    result[path] = 1;
+    if (Object.keys(result).length >= MAX_TRAFFIC_COUNTER_FIELDS_PER_EVENT) {
+      break;
+    }
+  }
+  return result;
+}
 
 export function filterSegmentableFields(
   fields: Record<string, number>,
 ): Record<string, number> {
   return Object.fromEntries(
-    Object.entries(fields).filter(([path]) =>
-      SEGMENTABLE_FIELD_ROOTS.has(path.split(".", 1)[0]),
+    Object.entries(filterTrafficCounterFields(fields)).filter(
+      ([path]) => !path.startsWith("performance."),
     ),
   );
 }
@@ -309,22 +724,6 @@ function incrementUpdate(
     node[segs[segs.length - 1]] = FieldValue.increment(n);
   }
   return update;
-}
-
-/**
- * Sanitize a dynamic map key: collapse case ids so path cardinality stays
- * bounded, replace dots (display-only; keeps Firestore field names tidy),
- * and cap length. Returns null for junk.
- */
-function keyify(raw: unknown, max = 64): string | null {
-  if (typeof raw !== "string" || raw.length === 0) return null;
-  const cleaned = raw
-    .replace(/\/case\/[^/]+/g, "/case/:id")
-    .replace(/[?&#].*$/, "")
-    .replace(/\./g, "_")
-    .replace(/[^\w:/\- ]/g, "")
-    .slice(0, max);
-  return cleaned.length > 0 ? cleaned : null;
 }
 
 /**
@@ -649,6 +1048,8 @@ async function bumpTrafficDaily(
   segments: AnalyticsSegment[],
 ): Promise<void> {
   try {
+    const trafficFields = filterTrafficCounterFields(fields);
+    if (Object.keys(trafficFields).length === 0) return;
     const firestore = getFirestore();
     const batch = firestore.batch();
     const day = dayKey();
@@ -656,16 +1057,12 @@ async function bumpTrafficDaily(
 
     batch.set(
       firestore.collection(ANALYTICS_DAILY_COLLECTION).doc(day),
-      { updatedAt, ...incrementUpdate(fields) },
+      { updatedAt, ...incrementUpdate(trafficFields) },
       { merge: true },
     );
 
-    const segmentFields = filterSegmentableFields(fields);
-    const unique = new Map<string, AnalyticsSegment>();
-    for (const segment of segments) {
-      unique.set(`${segment.type}\u0000${segment.key}`, segment);
-    }
-    for (const segment of unique.values()) {
+    const segmentFields = filterSegmentableFields(trafficFields);
+    for (const segment of boundedAnalyticsSegments(segments)) {
       const id = analyticsSegmentDocumentId(day, segment.type, segment.key);
       batch.set(
         firestore.collection(ANALYTICS_SEGMENT_DAILY_COLLECTION).doc(id),
@@ -732,34 +1129,6 @@ async function bumpCountryUniqueDaily(
   }
 }
 
-/** Referrer hosts that are ourselves — not interesting as acquisition. */
-const SELF_HOSTS = new Set([
-  "getmyyes.com",
-  "www.getmyyes.com",
-  "claimhelper-38152.web.app",
-  "claimhelper-38152.firebaseapp.com",
-  "localhost",
-]);
-
-/** A bounded, aggregate campaign label parsed from standard UTM parameters. */
-function campaignFromRequest(req: {
-  headers: { referer?: string | string[] };
-}): string | null {
-  const raw = req.headers.referer;
-  const referer = Array.isArray(raw) ? raw[0] : String(raw ?? "");
-  if (!referer) return null;
-  try {
-    const url = new URL(referer);
-    const source = keyify(url.searchParams.get("utm_source"), 28);
-    const medium = keyify(url.searchParams.get("utm_medium"), 28);
-    const name = keyify(url.searchParams.get("utm_campaign"), 36);
-    if (!source && !medium && !name) return null;
-    return [source || "unknown", medium || "unknown", name || "untagged"].join(" | ");
-  } catch {
-    return null;
-  }
-}
-
 async function hasSignedAdminExclusion(req: {
   headers: { cookie?: string | string[] };
 }): Promise<boolean> {
@@ -784,6 +1153,13 @@ export type AppReadyBucket =
   | "2_to_4s"
   | "4_to_8s"
   | "over_8s";
+const appReadyBucketNames = new Set<string>([
+  "under_1s",
+  "1_to_2s",
+  "2_to_4s",
+  "4_to_8s",
+  "over_8s",
+]);
 
 /**
  * Convert an untrusted client timing into one fixed aggregate bucket. The
@@ -806,6 +1182,128 @@ export function appReadyBucket(value: unknown): AppReadyBucket | null {
   return "over_8s";
 }
 
+export type PublicTrafficEventType =
+  | "visit"
+  | "boot"
+  | "pageview"
+  | "app_ready";
+
+export interface NormalizedTrafficEvent {
+  type: PublicTrafficEventType;
+  country: string | null;
+  fields: Record<string, number>;
+  segments: AnalyticsSegment[];
+}
+
+export interface TrafficEventHeaders {
+  referer?: RequestHeader;
+  "x-country-code"?: RequestHeader;
+}
+
+/**
+ * Turn a public payload into the complete, finite write plan for one event.
+ * No string supplied by the caller can survive as a Firestore key or doc id.
+ */
+export function normalizeTrafficEvent(
+  body: unknown,
+  headers: TrafficEventHeaders,
+): NormalizedTrafficEvent | null {
+  if (typeof body !== "object" || body === null || Array.isArray(body)) {
+    return null;
+  }
+  const value = body as Record<string, unknown>;
+  const type = value.t;
+  if (
+    type !== "visit" &&
+    type !== "boot" &&
+    type !== "pageview" &&
+    type !== "app_ready"
+  ) {
+    return null;
+  }
+  if (isExcludedAnalyticsPath(value.path)) return null;
+
+  const readyBucket = type === "app_ready" ? appReadyBucket(value.ms) : null;
+  if (type === "app_ready" && !readyBucket) return null;
+
+  const country = type === "app_ready"
+    ? null
+    : countryAnalyticsCategory(headers["x-country-code"]);
+  const path = analyticsPathCategory(value.path);
+  const campaign = type === "app_ready"
+    ? null
+    : campaignAnalyticsCategory(headers.referer);
+  const referrer = type === "app_ready"
+    ? null
+    : referrerAnalyticsCategory(value.ref);
+
+  const fields: Record<string, number> = {};
+  const segments: AnalyticsSegment[] = type === "app_ready"
+    ? []
+    : [{ type: "path", key: path }];
+  if (country) segments.push({ type: "country", key: country });
+  if (campaign) segments.push({ type: "campaign", key: campaign });
+  if (referrer) segments.push({ type: "referrer", key: referrer });
+
+  if (type === "visit") {
+    fields.visits = 1;
+    fields.pageviews = 1;
+    fields[`paths.${path}`] = 1;
+    if (country) fields[`countries.${country}`] = 1;
+    if (campaign) fields[`campaigns.${campaign}`] = 1;
+    if (referrer) fields[`referrers.${referrer}`] = 1;
+  } else if (type === "boot") {
+    fields.boots = 1;
+  } else if (type === "pageview") {
+    fields.pageviews = 1;
+    fields[`paths.${path}`] = 1;
+  } else if (readyBucket) {
+    fields[`performance.app_ready.${readyBucket}`] = 1;
+  }
+
+  return {
+    type,
+    country,
+    fields: filterTrafficCounterFields(fields),
+    segments: boundedAnalyticsSegments(segments),
+  };
+}
+
+const FUNCTION_CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'self'",
+  "form-action 'self' https://checkout.stripe.com",
+  "img-src 'self' data: blob:",
+  "font-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "script-src 'self' https://www.gstatic.com 'unsafe-inline' 'wasm-unsafe-eval'",
+  "connect-src 'self' https://*.googleapis.com https://us-central1-claimhelper-38152.cloudfunctions.net",
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+  "upgrade-insecure-requests",
+].join("; ");
+
+/** Hosting headers are not guaranteed on rewritten Function error responses. */
+function setAnalyticsSecurityHeaders(res: {
+  setHeader(name: string, value: string): unknown;
+}): void {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", "geolocation=(), microphone=()");
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+  res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
+  res.setHeader("X-Permitted-Cross-Domain-Policies", "none");
+  res.setHeader("Content-Security-Policy", FUNCTION_CONTENT_SECURITY_POLICY);
+  res.setHeader(
+    "Strict-Transport-Security",
+    "max-age=31536000; includeSubDomains",
+  );
+  res.setHeader("Cache-Control", "no-store");
+}
+
 /**
  * Exchanges the signed-in owner's Firebase ID token for a signed, HttpOnly
  * session cookie. Hosting exposes this as POST /api/admin-analytics-exclusion.
@@ -813,23 +1311,16 @@ export function appReadyBucket(value: unknown): AppReadyBucket | null {
  * client-side opt-out flag.
  */
 export const setAdminAnalyticsExclusion = onRequest(
-  { invoker: "public", cors: true },
+  { invoker: "public" },
   async (req, res) => {
-    // Firebase Hosting does not consistently append configured Hosting
-    // headers to non-2xx responses from a rewritten Function, so protect this
-    // endpoint at the source as well.
-    res.setHeader("X-Content-Type-Options", "nosniff");
-    res.setHeader("X-Frame-Options", "SAMEORIGIN");
-    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-    res.setHeader("Permissions-Policy", "geolocation=(), microphone=()");
-    res.setHeader(
-      "Strict-Transport-Security",
-      "max-age=31536000; includeSubDomains",
-    );
-    res.setHeader("Cache-Control", "no-store");
+    setAnalyticsSecurityHeaders(res);
     if (req.method !== "POST") {
       res.setHeader("Allow", "POST");
       res.status(405).send("");
+      return;
+    }
+    if (!isTrustedAnalyticsRequest(req.headers)) {
+      res.status(403).send("");
       return;
     }
 
@@ -872,17 +1363,21 @@ export const setAdminAnalyticsExclusion = onRequest(
  * dropped. Responds 204 always — the client never reads the response.
  */
 export const trackEvent = onRequest(
-  { invoker: "public", cors: true, secrets: [analyticsUniqueSalt] },
+  { invoker: "public", secrets: [analyticsUniqueSalt] },
   async (req, res) => {
+    setAnalyticsSecurityHeaders(res);
     if (req.method !== "POST") {
+      res.status(204).send("");
+      return;
+    }
+    if (!isTrustedAnalyticsRequest(req.headers)) {
       res.status(204).send("");
       return;
     }
     // Country of the visit, resolved by Firebase Hosting for requests routed
     // through the /api/track rewrite (x-country-code). Aggregate-only, like
     // everything else here — the IP it derives from is never stored.
-    const rawCountry = String(req.headers["x-country-code"] ?? "").toUpperCase();
-    const country = /^[A-Z]{2}$/.test(rawCountry) ? rawCountry : null;
+    const country = countryAnalyticsCategory(req.headers["x-country-code"]);
     if (req.query.echo === "1") {
       // Debug aid: echoes the requester's own resolved country, nothing else.
       res.status(200).json({ ok: true, country });
@@ -891,17 +1386,8 @@ export const trackEvent = onRequest(
     try {
       // sendBeacon posts as text/plain, so parse rawBody ourselves.
       const body = JSON.parse(req.rawBody.toString("utf8").slice(0, 2048));
-      const t = body?.t as string;
-      if (
-        t !== "visit" &&
-        t !== "boot" &&
-        t !== "pageview" &&
-        t !== "app_ready"
-      ) {
-        res.status(204).send("");
-        return;
-      }
-      if (isExcludedAnalyticsPath(body?.path)) {
+      const event = normalizeTrafficEvent(body, req.headers);
+      if (!event) {
         res.status(204).send("");
         return;
       }
@@ -909,61 +1395,15 @@ export const trackEvent = onRequest(
         res.status(204).send("");
         return;
       }
-      const path = keyify(body?.path) ?? "/";
-      const readyBucket = t === "app_ready" ? appReadyBucket(body?.ms) : null;
-      if (t === "app_ready" && !readyBucket) {
-        res.status(204).send("");
-        return;
-      }
-
-      const fields: Record<string, number> = {};
-      const segments: AnalyticsSegment[] =
-        t === "app_ready" ? [] : [{ type: "path", key: path }];
-      if (country && t !== "app_ready") {
-        segments.push({ type: "country", key: country });
-      }
-      const campaign = t === "app_ready" ? null : campaignFromRequest(req);
-      if (campaign) segments.push({ type: "campaign", key: campaign });
-      let referrer: string | null = null;
-      if (typeof body?.ref === "string" && body.ref) {
-        try {
-          const host = new URL(body.ref).hostname.toLowerCase();
-          if (!SELF_HOSTS.has(host)) referrer = keyify(host);
-        } catch {
-          /* unparseable referrer — skip */
-        }
-      }
-      if (referrer && t !== "app_ready") {
-        segments.push({ type: "referrer", key: referrer });
-      }
-
-      if (t === "visit") {
-        fields["visits"] = 1;
-        fields["pageviews"] = 1;
-        fields[`paths.${path}`] = 1;
-        if (country) fields[`countries.${country}`] = 1;
-        if (campaign) {
-          fields[`campaigns.${campaign}`] = 1;
-        }
-        if (referrer) fields[`referrers.${referrer}`] = 1;
-      } else if (t === "boot") {
-        fields["boots"] = 1;
-      } else if (t === "pageview") {
-        fields["pageviews"] = 1;
-        fields[`paths.${path}`] = 1;
-      } else if (t === "app_ready" && readyBucket) {
-        fields[`performance.app_ready.${readyBucket}`] = 1;
-      }
-
-      if (Object.keys(fields).length > 0) {
-        await bumpTrafficDaily(fields, segments);
-        if (t === "visit" && country) {
+      if (Object.keys(event.fields).length > 0) {
+        await bumpTrafficDaily(event.fields, event.segments);
+        if (event.type === "visit" && event.country) {
           const networkAddress = clientNetworkAddress(
             req.headers["x-forwarded-for"],
           );
           if (networkAddress) {
             await bumpCountryUniqueDaily(
-              country,
+              event.country,
               networkAddress,
               analyticsUniqueSalt.value(),
             );
