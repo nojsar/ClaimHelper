@@ -151,7 +151,10 @@ for (const file of files) {
   must(file, !/tabindex=["']?[1-9]/i.test(html), "positive tabindex disrupts the natural focus order.");
   must(file, /:focus-visible/i.test(css), "visible keyboard focus styling is missing.");
   must(file, /prefers-reduced-motion\s*:\s*reduce/i.test(css), "reduced-motion handling is missing.");
-  must(file, !/animation(?:-iteration-count)?\s*:[^;{}]*\binfinite\b/i.test(css), "an automatic infinite animation has no pause or stop mechanism.");
+  const hasInfiniteAnimation = /animation(?:-iteration-count)?\s*:[^;{}]*\binfinite\b/i.test(css);
+  const hasAnimationControl = /<button\b[^>]*\bdata-animation-control\b[^>]*>/i.test(html)
+    && /animation-play-state\s*:\s*paused\b/i.test(css);
+  must(file, !hasInfiniteAnimation || hasAnimationControl, "an automatic infinite animation has no pause or stop mechanism.");
 
   let previousHeadingLevel = 0;
   for (const heading of semanticHtml.matchAll(/<h([1-6])\b[^>]*>/gi)) {

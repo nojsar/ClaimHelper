@@ -377,6 +377,17 @@ async function generate() {
   if (/three\.min\.js|window\.THREE|new\s+THREE\./.test(index)) {
     fail("The homepage reintroduced the retired Three.js landing dependency.");
   }
+  const tickerSets = index.match(/class=["']set["']/g) ?? [];
+  if (tickerSets.length !== 2 || !/animation:\s*ticker-marquee\b/.test(index) || !/@keyframes\s+ticker-marquee\b/.test(index)) {
+    fail("The homepage ticker must contain two synchronized sets and the marquee animation.");
+  }
+  if (!/id=["']ticker-motion-toggle["'][^>]*data-animation-control/.test(index)
+      || !/\.ticker\.is-paused\s+\.track\s*\{[^}]*animation-play-state:\s*paused\b/s.test(index)) {
+    fail("The homepage ticker is missing its accessible pause control.");
+  }
+  if (!/\.actuary\s+\.num\s*\{[^}]*white-space:\s*nowrap\b/s.test(index)) {
+    fail("Homepage statistics must stay on one line.");
+  }
   if (!index.includes('href="/appeals/"')) fail("The homepage has no crawlable link to /appeals/.");
   if (!index.includes('href="/codes/"')) fail("The homepage has no crawlable link to /codes/.");
   if (!index.includes('href="/insurers/"')) fail("The homepage has no crawlable link to /insurers/.");

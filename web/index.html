@@ -498,12 +498,30 @@
       transform: rotate(-0.6deg) scale(1.02); position: relative; z-index: 3;
     }
     .ticker .track {
-      display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 44px;
-      width: 100%; min-width: 0;
+      display: flex; flex-wrap: nowrap; width: max-content; min-width: 200%;
       font-family: var(--mono); font-size: 12.5px; font-weight: 600;
       letter-spacing: 2.5px; text-transform: uppercase; color: var(--red);
+      animation: ticker-marquee 26s linear infinite; will-change: transform;
     }
+    .ticker .set {
+      display: flex; flex: 0 0 auto; align-items: center; justify-content: space-around;
+      gap: 44px; min-width: 100vw; padding: 0 22px; box-sizing: border-box;
+    }
+    .ticker .track span { flex: 0 0 auto; white-space: nowrap; }
     .ticker .track span::before { content: "✕ "; color: var(--ink-faint); }
+    .ticker.is-paused .track { animation-play-state: paused; }
+    .ticker .motion-toggle {
+      position: absolute; z-index: 2; top: 50%; right: 16px; transform: translateY(-50%);
+      min-width: 68px; min-height: 32px; padding: 6px 10px;
+      border: 1px solid var(--line-strong); background: var(--paper-2); color: var(--ink);
+      font: 600 9px/1 var(--mono); letter-spacing: 1.5px; text-transform: uppercase;
+      cursor: pointer;
+    }
+    .ticker .motion-toggle:hover { background: var(--paper); color: var(--red); }
+    @keyframes ticker-marquee {
+      from { transform: translate3d(0, 0, 0); }
+      to { transform: translate3d(-50%, 0, 0); }
+    }
 
     /* ============ SCENE II · THE ODDS ============ */
     .odds { padding: clamp(110px, 15vh, 190px) 0 clamp(90px, 12vh, 160px); }
@@ -532,8 +550,10 @@
     .actuary .num {
       font-family: var(--serif); font-weight: 620; letter-spacing: -0.03em;
       font-size: clamp(40px, 5.2vw, 76px); line-height: 1;
-      font-variation-settings: "SOFT" 30; max-width: 100%; overflow-wrap: anywhere;
+      font-variation-settings: "SOFT" 30; max-width: 100%;
+      white-space: nowrap; overflow-wrap: normal;
     }
+    .actuary .num.ratio { font-size: clamp(40px, 4.7vw, 68px); letter-spacing: -0.045em; }
     .actuary .num sup { font-size: 0.45em; font-style: italic; font-weight: 400; }
     .actuary .cap {
       font-family: var(--mono); font-size: 11px; letter-spacing: 1.5px;
@@ -923,6 +943,7 @@
         transition-duration: 0.01ms !important;
       }
       .ticker .track, .scroll-cue .pen, #app-loader .tl, #app-loader .stampring, #app-loader .ripple, #app-loader p { animation: none; }
+      .ticker .motion-toggle { display: none; }
       #app-loader .tl { transform: scaleX(1); }
       #app-loader .stampring { transform: rotate(-14deg) scale(1); opacity: 0.9; }
       .imprint { opacity: 0.92; }
@@ -1027,10 +1048,16 @@
     </section>
 
     <!-- ============ THE WALL OF NO ============ -->
-    <div class="ticker" aria-hidden="true">
-      <div class="track" id="ticker-track">
-        <span>Not medically necessary</span><span>Step therapy required</span><span>Prior authorization denied</span><span>Formulary exclusion</span><span>Out of network</span><span>Experimental / investigational</span><span>Missing information</span><span>Benefit excluded</span>
+    <div class="ticker">
+      <div class="track" id="ticker-track" aria-hidden="true">
+        <div class="set">
+          <span>Not medically necessary</span><span>Step therapy required</span><span>Prior authorization denied</span><span>Formulary exclusion</span><span>Out of network</span><span>Experimental / investigational</span><span>Missing information</span><span>Benefit excluded</span>
+        </div>
+        <div class="set">
+          <span>Not medically necessary</span><span>Step therapy required</span><span>Prior authorization denied</span><span>Formulary exclusion</span><span>Out of network</span><span>Experimental / investigational</span><span>Missing information</span><span>Benefit excluded</span>
+        </div>
       </div>
+      <button class="motion-toggle" id="ticker-motion-toggle" type="button" aria-pressed="false" aria-label="Pause moving denial-reason ticker" data-animation-control>Pause</button>
     </div>
 
     <!-- ============ SCENE II · THE ODDS ============ -->
@@ -1050,7 +1077,7 @@
                 <div class="cap">of denied claims are ever appealed</div>
               </div>
               <div class="cell greencell">
-                <div class="num">4<sup>in</sup>10</div>
+                <div class="num ratio">4<sup>in</sup>10</div>
                 <div class="cap">appealed denials get overturned</div>
               </div>
               <div class="cell">
@@ -1441,6 +1468,17 @@
         if (pg) pg.textContent = page;
       }
       window.addEventListener('scroll', updatePage, { passive: true });
+
+      var ticker = document.querySelector('.ticker');
+      var tickerMotionToggle = document.getElementById('ticker-motion-toggle');
+      if (ticker && tickerMotionToggle) {
+        tickerMotionToggle.addEventListener('click', function () {
+          var paused = ticker.classList.toggle('is-paused');
+          tickerMotionToggle.setAttribute('aria-pressed', String(paused));
+          tickerMotionToggle.setAttribute('aria-label', (paused ? 'Play' : 'Pause') + ' moving denial-reason ticker');
+          tickerMotionToggle.textContent = paused ? 'Play' : 'Pause';
+        });
+      }
 
       var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (reduceMotion) {
