@@ -8,6 +8,56 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('AnalyticsDashboardContent interactions', () {
     testWidgets(
+        'explains traffic, purchase, submission, and country boundaries',
+        (tester) async {
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(_dashboard());
+
+      expect(find.textContaining('Stripe Transactions'), findsOneWidget);
+      expect(find.textContaining('authoritative'), findsOneWidget);
+
+      const paidKey = ValueKey('analytics-metric:funnel.paid');
+      const submittedKey = ValueKey('analytics-metric:product.case.submitted');
+      final paid = find.byKey(paidKey);
+      final submitted = find.byKey(submittedKey);
+      expect(paid, findsOneWidget);
+      expect(submitted, findsOneWidget);
+      expect(
+        find.descendant(of: paid, matching: find.text('Paid packages')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: submitted,
+          matching: find.text('Submitted appeals'),
+        ),
+        findsOneWidget,
+      );
+      expect(_semanticsData(tester, paid).flagsCollection.isButton, isTrue);
+      expect(
+        _semanticsData(tester, submitted).flagsCollection.isButton,
+        isTrue,
+      );
+
+      final routeMeaning = find.textContaining(
+        'does not mean an appeal was created or submitted',
+      );
+      await _scrollTo(tester, routeMeaning);
+      expect(routeMeaning, findsOneWidget);
+      expect(
+        find.textContaining('count pageviews, not unique visitors or customer'),
+        findsOneWidget,
+      );
+
+      final countryMeaning = find.textContaining(
+        'not linked to a page, case, submission, or payment',
+      );
+      await _scrollTo(tester, countryMeaning);
+      expect(countryMeaning, findsOneWidget);
+      semantics.dispose();
+    });
+
+    testWidgets(
         'Revenue card is an accessible selectable metric and changes the chart',
         (tester) async {
       final semantics = tester.ensureSemantics();
@@ -47,7 +97,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(selectedDays, const ['2026-07-13']);
-      expect(find.text('Funnel (Jul 13)'), findsOneWidget);
+      expect(find.text('Customer journey (Jul 13)'), findsOneWidget);
       expect(
         find.descendant(
           of: find.byKey(const ValueKey('analytics-metric:visits')),
@@ -66,6 +116,100 @@ void main() {
 
       expect(selectedDays, const ['2026-07-13', null]);
       semantics.dispose();
+    });
+
+    testWidgets(
+        'selected page route shows selected state instead of a self-comparison',
+        (tester) async {
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(
+        _dashboard(selectedFilter: _appealsFilter),
+      );
+
+      const rowKey = ValueKey('path:/appeals');
+      final row = find.byKey(rowKey);
+      await _scrollTo(tester, row);
+
+      expect(
+        find.descendant(of: row, matching: find.text('1 · Selected')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: row, matching: find.text('1 | 1')),
+        findsNothing,
+      );
+      final data = _semanticsData(tester, row);
+      expect(data.flagsCollection.isButton, isTrue);
+      expect(data.flagsCollection.isSelected, Tristate.isTrue);
+      expect(data.hasAction(SemanticsAction.tap), isTrue);
+      expect(data.label.toLowerCase(), contains('selected'));
+      expect(data.label.toLowerCase(), isNot(contains('filtered')));
+      semantics.dispose();
+    });
+
+    testWidgets('desktop daily chart fits all 30 accessible day targets',
+        (tester) async {
+      tester.view.physicalSize = const Size(920, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(_dashboard());
+
+      const chartKey = ValueKey('analytics-daily-chart');
+      final chart = find.byKey(chartKey);
+      await _scrollTo(tester, chart);
+      final horizontal = _horizontalScrollable(chart);
+      final position = tester.state<ScrollableState>(horizontal).position;
+
+      expect(position.maxScrollExtent, 0);
+      expect(
+        find.descendant(of: chart, matching: find.byType(Scrollbar)),
+        findsNothing,
+      );
+      final dayTargets = _dayTargets(chart);
+      expect(dayTargets, findsNWidgets(30));
+      for (var index = 0; index < 30; index++) {
+        expect(
+          tester.getSize(dayTargets.at(index)).width,
+          greaterThanOrEqualTo(24),
+        );
+      }
+    });
+
+    testWidgets('narrow daily chart scrolls and starts on its newest day',
+        (tester) async {
+      tester.view.physicalSize = const Size(320, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(_dashboard());
+
+      const chartKey = ValueKey('analytics-daily-chart');
+      final chart = find.byKey(chartKey);
+      await _scrollTo(tester, chart);
+      final horizontal = _horizontalScrollable(chart);
+      final position = tester.state<ScrollableState>(horizontal).position;
+
+      expect(position.maxScrollExtent, greaterThan(0));
+      expect(position.pixels, closeTo(position.maxScrollExtent, 0.1));
+      expect(
+        find.descendant(of: chart, matching: find.byType(Scrollbar)),
+        findsOneWidget,
+      );
+      final dayTargets = _dayTargets(chart);
+      expect(dayTargets, findsNWidgets(30));
+      for (var index = 0; index < 30; index++) {
+        expect(
+          tester.getSize(dayTargets.at(index)).width,
+          greaterThanOrEqualTo(24),
+        );
+      }
+
+      const newestKey = ValueKey('analytics-day:2026-07-13');
+      final viewport = tester.getRect(horizontal);
+      final newest = tester.getRect(find.byKey(newestKey));
+      expect(newest.left, greaterThanOrEqualTo(viewport.left - 0.1));
+      expect(newest.right, lessThanOrEqualTo(viewport.right + 0.1));
     });
 
     testWidgets(
@@ -273,6 +417,25 @@ Finder _tapTarget(Finder keyedControl) => find.descendant(
       matching: find.byType(InkWell),
     );
 
+Finder _horizontalScrollable(Finder chart) => find.descendant(
+      of: chart,
+      matching: find.byWidgetPredicate(
+        (widget) =>
+            widget is Scrollable &&
+            (widget.axisDirection == AxisDirection.left ||
+                widget.axisDirection == AxisDirection.right),
+      ),
+    );
+
+Finder _dayTargets(Finder chart) => find.descendant(
+      of: chart,
+      matching: find.byWidgetPredicate((widget) {
+        final key = widget.key;
+        return key is ValueKey<String> &&
+            key.value.startsWith('analytics-day:');
+      }),
+    );
+
 dynamic _semanticsData(WidgetTester tester, Finder keyedControl) {
   final semantics = find.descendant(
     of: keyedControl,
@@ -337,7 +500,7 @@ AnalyticsSummary _overallSummary() => AnalyticsSummary.fromDocuments(
           'countries': {'FR': 1},
           'referrers': {'google.com': 1},
           'campaigns': {'launch': 1},
-          'paths': {'/': 2},
+          'paths': {'/': 1, '/appeals': 1},
         }),
         AnalyticsDocument('2026-07-13', {
           'visits': 2,
@@ -392,4 +555,10 @@ const _franceFilter = AnalyticsFilter(
   dimension: AnalyticsDimension.country,
   key: 'FR',
   label: 'France',
+);
+
+const _appealsFilter = AnalyticsFilter(
+  dimension: AnalyticsDimension.path,
+  key: '/appeals',
+  label: '/appeals',
 );

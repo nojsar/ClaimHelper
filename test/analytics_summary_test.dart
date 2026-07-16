@@ -495,14 +495,14 @@ void main() {
         ],
       ));
 
-      expect(find.text('All | France'), findsOneWidget);
+      expect(find.text('All visits | France visits'), findsOneWidget);
       // A selected dimension keeps its exact historical primary total.
-      expect(find.text('12 | 12'), findsOneWidget);
+      expect(find.text('12 · Selected'), findsOneWidget);
       expect(find.text('8 | 3'), findsOneWidget);
 
       final selected = tester
           .getSemantics(find.bySemanticsLabel(
-            'France, 12 overall, 12 filtered',
+            'France, 12 overall, selected filter. Activate to clear this filter.',
           ))
           .getSemanticsData();
       expect(selected.flagsCollection.isButton, isTrue);
@@ -534,9 +534,9 @@ void main() {
         compareWithActiveFilter: false,
       ));
 
-      expect(find.text('All | France'), findsNothing);
+      expect(find.text('All visits | France visits'), findsNothing);
       expect(find.text('12'), findsOneWidget);
-      expect(find.text('12 | 12'), findsNothing);
+      expect(find.text('12 · Selected'), findsNothing);
     });
 
     testWidgets('reflows at 200 percent text on a 320 pixel viewport',
@@ -557,8 +557,8 @@ void main() {
       await tester.pump();
 
       expect(tester.takeException(), isNull);
-      expect(find.text('All | France'), findsOneWidget);
-      expect(find.text('12 | 12'), findsOneWidget);
+      expect(find.text('All visits | France visits'), findsOneWidget);
+      expect(find.text('12 · Selected'), findsOneWidget);
       expect(find.text('8 | 3'), findsOneWidget);
     });
   });

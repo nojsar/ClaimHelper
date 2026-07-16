@@ -333,6 +333,8 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
           'and breakdowns compare all traffic with that segment.',
           style: TextStyle(color: AppColors.textMuted, fontSize: 13),
         ),
+        const SizedBox(height: 14),
+        const _AnalyticsMeaningNotice(),
         if (hasActiveView) ...[
           const SizedBox(height: 14),
           _ActiveViewBanner(
@@ -360,6 +362,8 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
               AnalyticsMetric.pageviews,
               AnalyticsMetric.appOpens,
               AnalyticsMetric.revenue,
+              AnalyticsMetric.paid,
+              AnalyticsMetric.submittedAppeal,
             ])
               _StatTile(
                 metric: metric,
@@ -407,8 +411,18 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
           onSelectDay: _selectDay,
         ),
         const SizedBox(height: 28),
-        _SectionTitle(
-          dateLabel == null ? 'Funnel (30 days)' : 'Funnel ($dateLabel)',
+        _SectionTitle(dateLabel == null
+            ? 'Customer journey (30 days)'
+            : 'Customer journey ($dateLabel)'),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 10),
+          child: Text(
+            'Page traffic is not a case milestone. Paid packages are counted '
+            'only after Stripe confirms a completed checkout; submitted '
+            'appeals are counted only when a customer records the case as '
+            'sent.',
+            style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+          ),
         ),
         _FunnelCard(
           summary: scopedOverall,
@@ -458,7 +472,8 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
             'Repeat visits from the same network are deduplicated across the '
             '30-day range. This is an aggregate estimate, not an exact count '
             'of people: shared networks and VPNs can merge or split visitors. '
-            'Country estimates stay 30-day overall-only${dateLabel == null ? '' : ' and are not narrowed to $dateLabel'}.',
+            'Country estimates stay 30-day overall-only${dateLabel == null ? '' : ' and are not narrowed to $dateLabel'}. '
+            'They are not linked to a page, case, submission, or payment.',
             style: const TextStyle(
               color: AppColors.textMuted,
               fontSize: 13,
@@ -498,12 +513,24 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
           emptyLabel: 'No tagged campaign visits yet.',
         ),
         const SizedBox(height: 28),
-        _SectionTitle(dateLabel == null ? 'Top pages' : 'Pages · $dateLabel'),
+        _SectionTitle(dateLabel == null
+            ? 'Top page routes (pageviews)'
+            : 'Page routes (pageviews) · $dateLabel'),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 10),
+          child: Text(
+            'These rows count pageviews, not unique visitors or customer '
+            'cases. The /appeals route is the public appeals guide index; it '
+            'does not mean an appeal was created or submitted.',
+            style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+          ),
+        ),
         AnalyticsBreakdownList(
           dimension: AnalyticsDimension.path,
           entries: scopedOverall.topPaths,
           filteredEntries: scopedFiltered?.topPaths,
           selectedFilter: filter,
+          labelForKey: _pageRouteLabel,
           onSelect: widget.onFilterSelect,
           emptyLabel: 'No pageviews yet.',
         ),
@@ -586,6 +613,12 @@ String _displayDay(String key) {
 String _flag(String cc) => cc.length == 2
     ? String.fromCharCodes(cc.codeUnits.map((c) => 0x1F1E6 + (c - 0x41)))
     : '';
+
+String _pageRouteLabel(String route) => switch (route) {
+      '/appeals' => 'Appeals guide index (/appeals)',
+      '/appeals/:article' => 'Appeal guide article (/appeals/:article)',
+      _ => route,
+    };
 
 class _ActiveViewBanner extends StatelessWidget {
   const _ActiveViewBanner({
@@ -722,6 +755,53 @@ class _SectionTitle extends StatelessWidget {
           child: Text(text, style: Theme.of(context).textTheme.titleMedium),
         ),
       );
+}
+
+class _AnalyticsMeaningNotice extends StatelessWidget {
+  const _AnalyticsMeaningNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    const message =
+        'Routes and pageviews are not submitted cases. Paid packages and '
+        'revenue are anonymous, best-effort analytics totals; Stripe '
+        'Transactions is authoritative for an individual purchase. '
+        'Unique-country estimates are not linked to page routes, cases, or '
+        'payments.';
+    return Semantics(
+      container: true,
+      label: message,
+      excludeSemantics: true,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceAlt,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: const Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.info_outline,
+              size: 20,
+              color: AppColors.textSecondary,
+            ),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _StatTile extends StatelessWidget {
@@ -930,6 +1010,7 @@ class _DailyBarsState extends State<_DailyBars> {
         if (day.wasRecorded) day.key: day,
     };
     return Container(
+      key: const ValueKey('analytics-daily-chart'),
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -955,18 +1036,21 @@ class _DailyBarsState extends State<_DailyBars> {
             height: 156,
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final minimumWidth = widget.days.length * 48.0;
-                final chartWidth = constraints.maxWidth > minimumWidth
-                    ? constraints.maxWidth
-                    : minimumWidth;
+                // WCAG 2.2's 24 CSS-pixel target minimum lets all 30 days fit
+                // in the desktop dashboard. Narrow screens keep a visible,
+                // horizontal scroll affordance rather than shrinking targets.
+                final minimumWidth = widget.days.length * 24.0;
+                final needsHorizontalScroll =
+                    constraints.maxWidth < minimumWidth;
+                final chartWidth =
+                    needsHorizontalScroll ? minimumWidth : constraints.maxWidth;
                 final itemWidth = widget.days.isEmpty
-                    ? 48.0
+                    ? 24.0
                     : chartWidth / widget.days.length;
-                return Scrollbar(
-                  controller: _scrollController,
-                  thumbVisibility: true,
-                  trackVisibility: true,
-                  interactive: true,
+                final scrollView = ScrollConfiguration(
+                  behavior: ScrollConfiguration.of(context).copyWith(
+                    scrollbars: false,
+                  ),
                   child: SingleChildScrollView(
                     controller: _scrollController,
                     scrollDirection: Axis.horizontal,
@@ -992,6 +1076,14 @@ class _DailyBarsState extends State<_DailyBars> {
                       ),
                     ),
                   ),
+                );
+                if (!needsHorizontalScroll) return scrollView;
+                return Scrollbar(
+                  controller: _scrollController,
+                  thumbVisibility: true,
+                  trackVisibility: true,
+                  interactive: true,
+                  child: scrollView,
                 );
               },
             ),
@@ -1191,7 +1283,7 @@ class _FunnelCard extends StatelessWidget {
       ('Extracted facts', AnalyticsMetric.extractedFacts),
       ('Saw preview', AnalyticsMetric.sawPreview),
       ('Started checkout', AnalyticsMetric.startedCheckout),
-      ('Paid', AnalyticsMetric.paid),
+      ('Paid package', AnalyticsMetric.paid),
       ('Packet ready', AnalyticsMetric.packetReady),
       ('Submitted appeal', AnalyticsMetric.submittedAppeal),
     ];
@@ -1831,6 +1923,8 @@ class AnalyticsBreakdownList extends StatelessWidget {
       if (!keys.contains(key)) keys.add(key);
     }
     final selected = selectedFilter;
+    final comparisonUnit =
+        dimension.primaryMetric == 'pageviews' ? 'pageviews' : 'visits';
     if (selected?.dimension == dimension && !keys.contains(selected!.key)) {
       keys.add(selected.key);
     }
@@ -1856,7 +1950,8 @@ class AnalyticsBreakdownList extends StatelessWidget {
                     child: Align(
                       alignment: Alignment.centerRight,
                       child: Text(
-                        'All | ${selected.label}',
+                        'All $comparisonUnit | ${selected.label} '
+                        '$comparisonUnit',
                         style: const TextStyle(
                           color: AppColors.primary,
                           fontSize: 11,
@@ -1929,8 +2024,11 @@ class _TopListRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final valueLabel =
-        filterActive ? '$overall | ${filtered ?? '—'}' : '$overall';
+    final valueLabel = selected && filterActive
+        ? '$overall · Selected'
+        : filterActive
+            ? '$overall | ${filtered ?? '—'}'
+            : '$overall';
     final icon = Icon(
       selected ? Icons.filter_alt : Icons.filter_alt_outlined,
       size: 18,
@@ -1954,9 +2052,12 @@ class _TopListRow extends StatelessWidget {
       button: true,
       selected: selected,
       onTap: onTap,
-      label: filterActive
-          ? '$label, $overall overall, ${filtered ?? 'not available'} filtered'
-          : '$label, $overall. Activate to filter every statistic.',
+      label: selected && filterActive
+          ? '$label, $overall overall, selected filter. Activate to clear this '
+              'filter.'
+          : filterActive
+              ? '$label, $overall overall, ${filtered ?? 'not available'} filtered'
+              : '$label, $overall. Activate to filter every statistic.',
       excludeSemantics: true,
       child: Material(
         color: selected ? AppColors.surfaceAlt : Colors.transparent,
