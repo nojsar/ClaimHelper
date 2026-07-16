@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:country_flags/country_flags.dart' as country_flags;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -485,7 +486,8 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
           entries: widget.overall.topCountries,
           filteredEntries: null,
           selectedFilter: filter,
-          labelForKey: (key) => '${_flag(key)} $key',
+          labelForKey: (key) => key,
+          leadingForKey: (key) => _CountryFlagIcon(key),
           onSelect: widget.onFilterSelect,
           emptyLabel: 'No unique-country estimates recorded yet.',
           compareWithActiveFilter: false,
@@ -608,11 +610,24 @@ String _displayDay(String key) {
   return parsed == null ? key : DateFormat('MMM d').format(parsed);
 }
 
-/// ISO 3166-1 alpha-2 code → flag emoji (regional indicator pair). Windows
-/// has no flag glyphs and falls back to plain letters — harmless.
-String _flag(String cc) => cc.length == 2
-    ? String.fromCharCodes(cc.codeUnits.map((c) => 0x1F1E6 + (c - 0x41)))
-    : '';
+class _CountryFlagIcon extends StatelessWidget {
+  const _CountryFlagIcon(this.countryCode);
+
+  final String countryCode;
+
+  @override
+  Widget build(BuildContext context) => ExcludeSemantics(
+        child: country_flags.CountryFlag.fromCountryCode(
+          countryCode,
+          key: ValueKey('country-flag:$countryCode'),
+          theme: const country_flags.ImageTheme(
+            width: 24,
+            height: 16,
+            shape: country_flags.RoundedRectangle(2),
+          ),
+        ),
+      );
+}
 
 String _pageRouteLabel(String route) => switch (route) {
       '/appeals' => 'Appeals guide index (/appeals)',
@@ -1899,6 +1914,7 @@ class AnalyticsBreakdownList extends StatelessWidget {
     required this.onSelect,
     required this.emptyLabel,
     this.labelForKey,
+    this.leadingForKey,
     this.compareWithActiveFilter = true,
   });
 
@@ -1909,6 +1925,7 @@ class AnalyticsBreakdownList extends StatelessWidget {
   final ValueChanged<AnalyticsFilter> onSelect;
   final String emptyLabel;
   final String Function(String key)? labelForKey;
+  final Widget Function(String key)? leadingForKey;
   final bool compareWithActiveFilter;
 
   @override
@@ -1964,6 +1981,7 @@ class AnalyticsBreakdownList extends StatelessWidget {
                   _TopListRow(
                     key: ValueKey('${dimension.storageName}:$key'),
                     label: labelForKey?.call(key) ?? key,
+                    leading: leadingForKey?.call(key),
                     overall: overall[key] ?? 0,
                     filtered: compareWithActiveFilter
                         ? _filteredValue(
@@ -2008,6 +2026,7 @@ class _TopListRow extends StatelessWidget {
   const _TopListRow({
     super.key,
     required this.label,
+    required this.leading,
     required this.overall,
     required this.filtered,
     required this.selected,
@@ -2016,6 +2035,7 @@ class _TopListRow extends StatelessWidget {
   });
 
   final String label;
+  final Widget? leading;
   final int overall;
   final int? filtered;
   final bool selected;
@@ -2081,6 +2101,10 @@ class _TopListRow extends StatelessWidget {
                           children: [
                             icon,
                             const SizedBox(width: 8),
+                            if (leading != null) ...[
+                              leading!,
+                              const SizedBox(width: 8),
+                            ],
                             Expanded(child: labelText),
                           ],
                         ),
@@ -2096,6 +2120,10 @@ class _TopListRow extends StatelessWidget {
                     children: [
                       icon,
                       const SizedBox(width: 8),
+                      if (leading != null) ...[
+                        leading!,
+                        const SizedBox(width: 8),
+                      ],
                       Expanded(child: labelText),
                       const SizedBox(width: 12),
                       valueText,

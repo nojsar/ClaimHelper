@@ -2,6 +2,7 @@ import 'dart:ui' show SemanticsAction, Tristate;
 
 import 'package:claimhelper/features/admin/analytics_summary.dart';
 import 'package:claimhelper/features/admin/stats_screen.dart';
+import 'package:country_flags/country_flags.dart' as country_flags;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -54,6 +55,106 @@ void main() {
       );
       await _scrollTo(tester, countryMeaning);
       expect(countryMeaning, findsOneWidget);
+      semantics.dispose();
+    });
+
+    testWidgets(
+        'country rows render vector flags and remain accessible filters',
+        (tester) async {
+      final selectedFilters = <AnalyticsFilter>[];
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(
+        _dashboard(
+          overall: _overallSummaryWithCountries(),
+          onFilterSelect: selectedFilters.add,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      for (final code in const ['US', 'LT', 'FR', 'RU']) {
+        final row = find.byKey(ValueKey('country:$code'));
+        await _scrollTo(tester, row);
+
+        final flagFinder = find.descendant(
+          of: row,
+          matching: find.byKey(ValueKey('country-flag:$code')),
+        );
+        expect(flagFinder, findsOneWidget);
+        final flag = tester.widget<country_flags.CountryFlag>(flagFinder);
+        expect(flag.flagCode, code.toLowerCase());
+        expect(flag.theme, isA<country_flags.ImageTheme>());
+        expect(
+          find.descendant(of: row, matching: find.text(code)),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: row,
+            matching: find.byWidgetPredicate(_hasRegionalIndicatorText),
+          ),
+          findsNothing,
+        );
+
+        final data = _semanticsData(tester, row);
+        expect(data.flagsCollection.isButton, isTrue);
+        expect(data.hasAction(SemanticsAction.tap), isTrue);
+        expect(data.label, contains(code));
+
+        await tester.tap(_tapTarget(row));
+        await tester.pump();
+        expect(selectedFilters.last.dimension, AnalyticsDimension.country);
+        expect(selectedFilters.last.key, code);
+      }
+
+      expect(tester.takeException(), isNull);
+      semantics.dispose();
+    });
+
+    testWidgets('country flags reflow at 200 percent text on a narrow screen',
+        (tester) async {
+      final selectedFilters = <AnalyticsFilter>[];
+      final semantics = tester.ensureSemantics();
+      tester.view.physicalSize = const Size(320, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        _dashboard(
+          overall: _overallSummaryWithCountries(),
+          textScaler: const TextScaler.linear(2),
+          onFilterSelect: selectedFilters.add,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      for (final code in const ['US', 'LT', 'FR', 'RU']) {
+        final row = find.byKey(ValueKey('country:$code'));
+        await _scrollTo(tester, row);
+
+        expect(
+          find.descendant(
+            of: row,
+            matching: find.byKey(ValueKey('country-flag:$code')),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(of: row, matching: find.text(code)),
+          findsOneWidget,
+        );
+        final rect = tester.getRect(row);
+        expect(rect.left, greaterThanOrEqualTo(0));
+        expect(rect.right, lessThanOrEqualTo(320));
+        expect(_semanticsData(tester, row).flagsCollection.isButton, isTrue);
+      }
+
+      final france = find.byKey(const ValueKey('country:FR'));
+      await _scrollTo(tester, france);
+      await tester.tap(_tapTarget(france));
+      await tester.pump();
+      expect(selectedFilters.last.key, 'FR');
+      expect(tester.takeException(), isNull);
       semantics.dispose();
     });
 
@@ -445,9 +546,17 @@ dynamic _semanticsData(WidgetTester tester, Finder keyedControl) {
   return tester.getSemantics(semantics.first).getSemanticsData();
 }
 
+bool _hasRegionalIndicatorText(Widget widget) {
+  if (widget is! Text) return false;
+  final value = widget.data ?? widget.textSpan?.toPlainText() ?? '';
+  return value.runes.any((rune) => rune >= 0x1F1E6 && rune <= 0x1F1FF);
+}
+
 Widget _dashboard({
+  AnalyticsSummary? overall,
   AnalyticsFilter? selectedFilter,
   AnalyticsSummary? filtered,
+  ValueChanged<AnalyticsFilter>? onFilterSelect,
   ValueChanged<AnalyticsMetric>? onMetricChanged,
   ValueChanged<String?>? onDayChanged,
   TextScaler textScaler = TextScaler.noScaling,
@@ -459,10 +568,10 @@ Widget _dashboard({
     ),
     home: Scaffold(
       body: AnalyticsDashboardContent(
-        overall: _overallSummary(),
+        overall: overall ?? _overallSummary(),
         filtered: filtered,
         selectedFilter: selectedFilter,
-        onFilterSelect: (_) {},
+        onFilterSelect: onFilterSelect ?? (_) {},
         onMetricChanged: onMetricChanged,
         onDayChanged: onDayChanged,
       ),
@@ -535,6 +644,19 @@ AnalyticsSummary _overallSummary() => AnalyticsSummary.fromDocuments(
       ],
       now: DateTime.utc(2026, 7, 13, 23, 59),
     );
+
+AnalyticsSummary _overallSummaryWithCountries() {
+  final overall = _overallSummary();
+  return AnalyticsSummary(
+    overall.days,
+    topCountries: const [
+      MapEntry('US', 7),
+      MapEntry('LT', 4),
+      MapEntry('FR', 1),
+      MapEntry('RU', 1),
+    ],
+  );
+}
 
 AnalyticsSummary _filteredSummary() => AnalyticsSummary.fromDocuments(
       const [
