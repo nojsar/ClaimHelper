@@ -86,6 +86,114 @@ class AnalyticsDay {
       (((data['funnel'] as Map<String, dynamic>?)?[step] ?? 0) as num).toInt();
 }
 
+/// A safe, aggregate-only statistic that can be focused in the dashboard.
+///
+/// These metrics are evaluated from the already-bounded daily documents. They
+/// never turn revenue, funnel, product, or performance data into a user cohort.
+enum AnalyticsMetric {
+  visits('visits', 'Visits'),
+  pageviews('pageviews', 'Pageviews'),
+  appOpens('boots', 'App opens'),
+  revenue('revenueCents', 'Revenue'),
+  uploadedDenial('funnel.upload', 'Uploaded denial'),
+  extractedFacts('product.extraction.completed', 'Extracted facts'),
+  sawPreview('funnel.preview', 'Saw preview'),
+  startedCheckout('funnel.checkout_started', 'Started checkout'),
+  paid('funnel.paid', 'Paid'),
+  packetReady('product.packet.completed', 'Packet ready'),
+  submittedAppeal('product.case.submitted', 'Submitted appeal'),
+  extractionStarted('product.extraction.started', 'Extraction started'),
+  extractionErrors('product.extraction.errors', 'Extraction errors'),
+  previewStarted('product.preview.started', 'Preview started'),
+  previewCompleted('product.preview.completed', 'Preview completed'),
+  previewErrors('product.preview.errors', 'Preview errors'),
+  packetStarted('product.packet.started', 'Packet started'),
+  packetErrors('product.packet.errors', 'Packet errors'),
+  outcomeApproved('product.outcomes.approved', 'Approved'),
+  outcomePartiallyApproved(
+      'product.outcomes.partially_approved', 'Partially approved'),
+  outcomeDenied('product.outcomes.denied', 'Denied'),
+  outcomeWithdrawn('product.outcomes.withdrawn', 'Withdrawn'),
+  readyUnderOneSecond('performance.app_ready.under_1s', 'Ready under 1 second'),
+  readyOneToTwoSeconds('performance.app_ready.1_to_2s', 'Ready in 1–2 seconds'),
+  readyTwoToFourSeconds(
+      'performance.app_ready.2_to_4s', 'Ready in 2–4 seconds'),
+  readyFourToEightSeconds(
+      'performance.app_ready.4_to_8s', 'Ready in 4–8 seconds'),
+  readyOverEightSeconds(
+      'performance.app_ready.over_8s', 'Ready over 8 seconds');
+
+  const AnalyticsMetric(this.id, this.label);
+
+  final String id;
+  final String label;
+
+  bool get isMoney => this == revenue;
+
+  /// Only public traffic counters exist inside country/referrer/campaign/path
+  /// segment documents. All other metrics must remain overall-only.
+  bool get supportsSegmentComparison =>
+      this == visits || this == pageviews || this == appOpens;
+
+  String format(int value) => isMoney
+      ? '\$${(value / 100).toStringAsFixed(2)}'
+      : NumberFormat.decimalPattern().format(value);
+
+  int valueForDay(AnalyticsDay day) => switch (this) {
+        visits => day.count('visits'),
+        pageviews => day.count('pageviews'),
+        appOpens => day.count('boots'),
+        revenue => day.count('revenueCents'),
+        uploadedDenial => day.funnelCount('upload'),
+        extractedFacts => day.pathCount('product.extraction.completed'),
+        sawPreview => day.funnelCount('preview'),
+        startedCheckout => day.funnelCount('checkout_started'),
+        paid => day.funnelCount('paid'),
+        packetReady => day.pathCount('product.packet.completed'),
+        submittedAppeal => day.pathCount('product.case.submitted'),
+        extractionStarted => day.pathCount('product.extraction.started'),
+        extractionErrors => _stageErrors(day, 'extraction'),
+        previewStarted => day.pathCount('product.preview.started'),
+        previewCompleted => day.pathCount('product.preview.completed'),
+        previewErrors => _stageErrors(day, 'preview'),
+        packetStarted => day.pathCount('product.packet.started'),
+        packetErrors => _stageErrors(day, 'packet'),
+        outcomeApproved => day.pathCount('product.outcomes.approved'),
+        outcomePartiallyApproved =>
+          day.pathCount('product.outcomes.partially_approved'),
+        outcomeDenied => day.pathCount('product.outcomes.denied'),
+        outcomeWithdrawn => day.pathCount('product.outcomes.withdrawn'),
+        readyUnderOneSecond => day.pathCount('performance.app_ready.under_1s'),
+        readyOneToTwoSeconds => day.pathCount('performance.app_ready.1_to_2s'),
+        readyTwoToFourSeconds => day.pathCount('performance.app_ready.2_to_4s'),
+        readyFourToEightSeconds =>
+          day.pathCount('performance.app_ready.4_to_8s'),
+        readyOverEightSeconds => day.pathCount('performance.app_ready.over_8s'),
+      };
+
+  int total(AnalyticsSummary summary) => summary.days.fold(
+        0,
+        (sum, day) => sum + valueForDay(day),
+      );
+
+  int week(AnalyticsSummary summary) => summary.days
+      .skip(math.max(0, summary.days.length - 7))
+      .fold(0, (sum, day) => sum + valueForDay(day));
+}
+
+int _stageErrors(AnalyticsDay day, String stage) {
+  const categories = [
+    'validation',
+    'rate_limit',
+    'missing_prerequisite',
+    'model_failure',
+  ];
+  return categories.fold(
+    0,
+    (sum, category) => sum + day.pathCount('product.$stage.errors.$category'),
+  );
+}
+
 /// Mergeable, aggregate-only HyperLogLog helpers shared by the dashboard and
 /// deterministic tests. The backend stores only these fixed-size registers;
 /// it never stores a network address, digest, or per-visitor record.
@@ -200,6 +308,27 @@ class AnalyticsSummary {
   }
 
   bool get hasRecordedData => days.any((day) => day.wasRecorded);
+
+  AnalyticsDay? day(String key) {
+    for (final day in days) {
+      if (day.key == key) return day;
+    }
+    return null;
+  }
+
+  /// Return a dashboard-compatible summary where only [key] contributes to
+  /// totals. The 30-day shape is retained so existing week helpers stay safe.
+  AnalyticsSummary scopedToDay(String? key) {
+    if (key == null) return this;
+    return AnalyticsSummary([
+      for (final day in days)
+        AnalyticsDay(
+          day.key,
+          day.key == key ? day.data : const {},
+          wasRecorded: day.key == key && day.wasRecorded,
+        ),
+    ]);
+  }
 
   String? get firstRecordedDay {
     for (final day in days) {

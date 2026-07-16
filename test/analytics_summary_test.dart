@@ -65,6 +65,147 @@ void main() {
     });
   });
 
+  group('AnalyticsMetric aggregation', () {
+    test('reads every traffic, funnel, product, outcome, and readiness metric',
+        () {
+      final summary = _metricSummary();
+      final latest = summary.day('2026-07-13');
+      expect(latest, isNotNull);
+
+      final expected = <AnalyticsMetric, int>{
+        AnalyticsMetric.visits: 2,
+        AnalyticsMetric.pageviews: 3,
+        AnalyticsMetric.appOpens: 4,
+        AnalyticsMetric.revenue: 505,
+        AnalyticsMetric.uploadedDenial: 5,
+        AnalyticsMetric.extractedFacts: 6,
+        AnalyticsMetric.sawPreview: 7,
+        AnalyticsMetric.startedCheckout: 8,
+        AnalyticsMetric.paid: 9,
+        AnalyticsMetric.packetReady: 10,
+        AnalyticsMetric.submittedAppeal: 11,
+        AnalyticsMetric.extractionStarted: 12,
+        AnalyticsMetric.extractionErrors: 14,
+        AnalyticsMetric.previewStarted: 13,
+        AnalyticsMetric.previewCompleted: 14,
+        AnalyticsMetric.previewErrors: 4,
+        AnalyticsMetric.packetStarted: 15,
+        AnalyticsMetric.packetErrors: 8,
+        AnalyticsMetric.outcomeApproved: 16,
+        AnalyticsMetric.outcomePartiallyApproved: 17,
+        AnalyticsMetric.outcomeDenied: 18,
+        AnalyticsMetric.outcomeWithdrawn: 19,
+        AnalyticsMetric.readyUnderOneSecond: 20,
+        AnalyticsMetric.readyOneToTwoSeconds: 21,
+        AnalyticsMetric.readyTwoToFourSeconds: 22,
+        AnalyticsMetric.readyFourToEightSeconds: 23,
+        AnalyticsMetric.readyOverEightSeconds: 24,
+      };
+
+      expect(expected.keys, containsAll(AnalyticsMetric.values));
+      expect(expected, hasLength(AnalyticsMetric.values.length));
+      for (final entry in expected.entries) {
+        expect(
+          entry.key.valueForDay(latest!),
+          entry.value,
+          reason: '${entry.key.name} should read ${entry.key.id}',
+        );
+      }
+    });
+
+    test('computes 30-day and seven-day totals for each metric family', () {
+      final summary = _metricSummary();
+
+      expect(AnalyticsMetric.visits.total(summary), 3);
+      expect(AnalyticsMetric.visits.week(summary), 2);
+      expect(AnalyticsMetric.uploadedDenial.total(summary), 6);
+      expect(AnalyticsMetric.uploadedDenial.week(summary), 5);
+      expect(AnalyticsMetric.extractionStarted.total(summary), 13);
+      expect(AnalyticsMetric.extractionStarted.week(summary), 12);
+      expect(AnalyticsMetric.extractionErrors.total(summary), 18);
+      expect(AnalyticsMetric.extractionErrors.week(summary), 14);
+      expect(AnalyticsMetric.outcomeApproved.total(summary), 17);
+      expect(AnalyticsMetric.outcomeApproved.week(summary), 16);
+      expect(AnalyticsMetric.readyOverEightSeconds.total(summary), 25);
+      expect(AnalyticsMetric.readyOverEightSeconds.week(summary), 24);
+    });
+
+    test('formats revenue as currency while keeping count formatting', () {
+      final summary = _metricSummary();
+
+      expect(AnalyticsMetric.revenue.isMoney, isTrue);
+      expect(AnalyticsMetric.revenue.total(summary), 700);
+      expect(AnalyticsMetric.revenue.week(summary), 505);
+      expect(AnalyticsMetric.revenue.format(700), r'$7.00');
+      expect(AnalyticsMetric.revenue.format(505), r'$5.05');
+      expect(AnalyticsMetric.visits.isMoney, isFalse);
+      expect(AnalyticsMetric.visits.format(1234), contains('1'));
+      expect(AnalyticsMetric.visits.format(1234), contains('234'));
+    });
+
+    test('only public traffic counters allow segment comparison', () {
+      expect(
+        AnalyticsMetric.values
+            .where((metric) => metric.supportsSegmentComparison)
+            .toSet(),
+        {
+          AnalyticsMetric.visits,
+          AnalyticsMetric.pageviews,
+          AnalyticsMetric.appOpens,
+        },
+      );
+      expect(AnalyticsMetric.revenue.supportsSegmentComparison, isFalse);
+      expect(AnalyticsMetric.paid.supportsSegmentComparison, isFalse);
+      expect(
+        AnalyticsMetric.extractionErrors.supportsSegmentComparison,
+        isFalse,
+      );
+      expect(
+        AnalyticsMetric.readyUnderOneSecond.supportsSegmentComparison,
+        isFalse,
+      );
+    });
+  });
+
+  group('AnalyticsSummary day scoping', () {
+    test('finds a day and retains only that day in dashboard totals', () {
+      final summary = _metricSummary();
+
+      expect(summary.day('2026-07-13')?.wasRecorded, isTrue);
+      expect(summary.day('2030-01-01'), isNull);
+      expect(summary.scopedToDay(null), same(summary));
+
+      final scoped = summary.scopedToDay('2026-07-13');
+      expect(scoped.days, hasLength(30));
+      expect(scoped.hasRecordedData, isTrue);
+      expect(scoped.firstRecordedDay, '2026-07-13');
+      expect(scoped.days.where((day) => day.wasRecorded), hasLength(1));
+      expect(AnalyticsMetric.visits.total(scoped), 2);
+      expect(AnalyticsMetric.visits.week(scoped), 2);
+      expect(AnalyticsMetric.revenue.total(scoped), 505);
+      expect(AnalyticsMetric.uploadedDenial.total(scoped), 5);
+      expect(AnalyticsMetric.packetErrors.total(scoped), 8);
+      expect(AnalyticsMetric.outcomeDenied.total(scoped), 18);
+      expect(AnalyticsMetric.readyTwoToFourSeconds.total(scoped), 22);
+    });
+
+    test('an unknown or zero-filled date scopes to an honest empty view', () {
+      final summary = _metricSummary();
+
+      final unknown = summary.scopedToDay('2030-01-01');
+      expect(unknown.hasRecordedData, isFalse);
+      expect(unknown.firstRecordedDay, isNull);
+      expect(
+          AnalyticsMetric.values.every((metric) => metric.total(unknown) == 0),
+          isTrue);
+
+      final zeroFilled = summary.scopedToDay('2026-07-12');
+      expect(zeroFilled.hasRecordedData, isFalse);
+      expect(zeroFilled.day('2026-07-12')?.wasRecorded, isFalse);
+      expect(AnalyticsMetric.visits.total(zeroFilled), 0);
+    });
+  });
+
   group('AnalyticsFilter document IDs', () {
     test('match the backend unpadded UTF-8 base64url format', () {
       const cases = <(AnalyticsFilter, String)>[
@@ -422,6 +563,132 @@ void main() {
     });
   });
 }
+
+AnalyticsSummary _metricSummary() => AnalyticsSummary.fromDocuments(
+      const [
+        AnalyticsDocument('2026-06-14', {
+          'visits': 1,
+          'pageviews': 1,
+          'boots': 1,
+          'revenueCents': 195,
+          'funnel': {
+            'upload': 1,
+            'preview': 1,
+            'checkout_started': 1,
+            'paid': 1,
+          },
+          'product': {
+            'extraction': {
+              'started': 1,
+              'completed': 1,
+              'errors': {
+                'validation': 1,
+                'rate_limit': 1,
+                'missing_prerequisite': 1,
+                'model_failure': 1,
+              },
+            },
+            'preview': {
+              'started': 1,
+              'completed': 1,
+              'errors': {
+                'validation': 1,
+                'rate_limit': 1,
+                'missing_prerequisite': 1,
+                'model_failure': 1,
+              },
+            },
+            'packet': {
+              'started': 1,
+              'completed': 1,
+              'errors': {
+                'validation': 1,
+                'rate_limit': 1,
+                'missing_prerequisite': 1,
+                'model_failure': 1,
+              },
+            },
+            'case': {'submitted': 1},
+            'outcomes': {
+              'approved': 1,
+              'partially_approved': 1,
+              'denied': 1,
+              'withdrawn': 1,
+            },
+          },
+          'performance': {
+            'app_ready': {
+              'under_1s': 1,
+              '1_to_2s': 1,
+              '2_to_4s': 1,
+              '4_to_8s': 1,
+              'over_8s': 1,
+            },
+          },
+        }),
+        AnalyticsDocument('2026-07-13', {
+          'visits': 2,
+          'pageviews': 3,
+          'boots': 4,
+          'revenueCents': 505,
+          'funnel': {
+            'upload': 5,
+            'preview': 7,
+            'checkout_started': 8,
+            'paid': 9,
+          },
+          'product': {
+            'extraction': {
+              'started': 12,
+              'completed': 6,
+              'errors': {
+                'validation': 2,
+                'rate_limit': 3,
+                'missing_prerequisite': 4,
+                'model_failure': 5,
+              },
+            },
+            'preview': {
+              'started': 13,
+              'completed': 14,
+              'errors': {
+                'validation': 1,
+                'rate_limit': 1,
+                'missing_prerequisite': 1,
+                'model_failure': 1,
+              },
+            },
+            'packet': {
+              'started': 15,
+              'completed': 10,
+              'errors': {
+                'validation': 2,
+                'rate_limit': 2,
+                'missing_prerequisite': 2,
+                'model_failure': 2,
+              },
+            },
+            'case': {'submitted': 11},
+            'outcomes': {
+              'approved': 16,
+              'partially_approved': 17,
+              'denied': 18,
+              'withdrawn': 19,
+            },
+          },
+          'performance': {
+            'app_ready': {
+              'under_1s': 20,
+              '1_to_2s': 21,
+              '2_to_4s': 22,
+              '4_to_8s': 23,
+              'over_8s': 24,
+            },
+          },
+        }),
+      ],
+      now: DateTime.utc(2026, 7, 13, 23, 59),
+    );
 
 List<int> _registers(Map<int, int> values) {
   final registers = List<int>.filled(UniqueVisitorSketch.registerCount, 0);

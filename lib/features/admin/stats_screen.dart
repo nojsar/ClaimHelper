@@ -186,185 +186,13 @@ class _StatsBodyState extends State<_StatsBody> {
             return RefreshIndicator(
               color: AppColors.primary,
               onRefresh: _refresh,
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 96, 20, 40),
-                children: [
-                  Text('Last 30 days',
-                      style: Theme.of(context).textTheme.headlineSmall),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Customer-only counters — cookieless, aggregate-only. '
-                    'Signed-in owner activity and private stats routes are '
-                    'excluded; public visits from a new, unlinked browser '
-                    'cannot be identified as owner traffic. Legacy totals '
-                    'are not mixed in.',
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 13),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Select any country, referrer, campaign, or page to '
-                    'compare all traffic with that segment.',
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 13),
-                  ),
-                  if (filter != null) ...[
-                    const SizedBox(height: 14),
-                    _ActiveFilterBanner(
-                      filter: filter,
-                      filtered: filtered,
-                      loading: isLoading,
-                      hasError: filteredSnap.hasError,
-                      onClear: () => _selectFilter(filter),
-                    ),
-                  ],
-                  const SizedBox(height: 20),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: [
-                      _StatTile(
-                        'Visits',
-                        overall.total('visits'),
-                        overall.week('visits'),
-                        filtered30: _filteredMetric(
-                            overall, segmentData, filter, 'visits'),
-                        filtered7: _filteredWeek(
-                            overall, segmentData, filter, 'visits'),
-                        filterLabel: filter?.label,
-                        loading: isLoading,
-                      ),
-                      _StatTile(
-                        'Pageviews',
-                        overall.total('pageviews'),
-                        overall.week('pageviews'),
-                        filtered30: _filteredMetric(
-                            overall, segmentData, filter, 'pageviews'),
-                        filtered7: _filteredWeek(
-                            overall, segmentData, filter, 'pageviews'),
-                        filterLabel: filter?.label,
-                        loading: isLoading,
-                      ),
-                      _StatTile(
-                        'App opens',
-                        overall.total('boots'),
-                        overall.week('boots'),
-                        filtered30: segmentData?.total('boots'),
-                        filtered7: segmentData?.week('boots'),
-                        filterLabel: filter?.label,
-                        loading: isLoading,
-                      ),
-                      _StatTile.money(
-                        'Revenue',
-                        overall.totalRevenueCents,
-                        overall.weekRevenueCents,
-                        filterLabel: filter?.label,
-                        loading: isLoading,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 28),
-                  const _SectionTitle('Daily visits'),
-                  _DailyBars(
-                    days: overall.days,
-                    filteredDays: filter == null ? null : segmentData?.days,
-                    filterLabel: filter?.label,
-                  ),
-                  const SizedBox(height: 28),
-                  const _SectionTitle('Funnel (30 days)'),
-                  _FunnelCard(
-                    summary: overall,
-                    filterLabel: filter?.label,
-                  ),
-                  const SizedBox(height: 28),
-                  const _SectionTitle('Product reliability and outcomes'),
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 10),
-                    child: Text(
-                      'Each workflow transition and final outcome is counted '
-                      'at most once per case. Error categories are bounded; '
-                      'case text and health information never enter analytics.',
-                      style: TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                  _ProductHealthCard(summary: overall),
-                  const SizedBox(height: 28),
-                  const _SectionTitle('App click-to-ready time'),
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 10),
-                    child: Text(
-                      'Measured from opening the secure workspace to its '
-                      'first rendered frame. Only fixed timing buckets are '
-                      'stored; exact timings and pages are discarded.',
-                      style: TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                  _AppReadinessCard(summary: overall),
-                  const SizedBox(height: 28),
-                  const _SectionTitle('Estimated unique visitors by country'),
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 10),
-                    child: Text(
-                      'Repeat visits from the same network are deduplicated '
-                      'across the 30-day range. This is an aggregate estimate, '
-                      'not an exact count of people: shared networks and VPNs '
-                      'can merge or split visitors. It begins with this release; '
-                      'legacy interaction totals are not mixed in. Country '
-                      'estimates stay overall-only when another filter is active.',
-                      style: TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                  AnalyticsBreakdownList(
-                    dimension: AnalyticsDimension.country,
-                    entries: overall.topCountries,
-                    // Cross-filtered unique-country estimates would require
-                    // storing a much more identifying multi-dimensional
-                    // visitor profile. Keep this list aggregate-only.
-                    filteredEntries: null,
-                    selectedFilter: filter,
-                    labelForKey: (key) => '${_flag(key)} $key',
-                    onSelect: _selectFilter,
-                    emptyLabel: 'No unique-country estimates recorded yet.',
-                    compareWithActiveFilter: false,
-                  ),
-                  const SizedBox(height: 28),
-                  const _SectionTitle('Top referrers'),
-                  AnalyticsBreakdownList(
-                    dimension: AnalyticsDimension.referrer,
-                    entries: overall.topReferrers,
-                    filteredEntries: segmentData?.topReferrers,
-                    selectedFilter: filter,
-                    onSelect: _selectFilter,
-                    emptyLabel: 'Direct only so far.',
-                  ),
-                  const SizedBox(height: 28),
-                  const _SectionTitle('Top campaigns'),
-                  AnalyticsBreakdownList(
-                    dimension: AnalyticsDimension.campaign,
-                    entries: overall.topCampaigns,
-                    filteredEntries: segmentData?.topCampaigns,
-                    selectedFilter: filter,
-                    onSelect: _selectFilter,
-                    emptyLabel: 'No tagged campaign visits yet.',
-                  ),
-                  const SizedBox(height: 28),
-                  const _SectionTitle('Top pages'),
-                  AnalyticsBreakdownList(
-                    dimension: AnalyticsDimension.path,
-                    entries: overall.topPaths,
-                    filteredEntries: segmentData?.topPaths,
-                    selectedFilter: filter,
-                    onSelect: _selectFilter,
-                    emptyLabel: 'No pageviews yet.',
-                  ),
-                ],
+              child: AnalyticsDashboardContent(
+                overall: overall,
+                filtered: segmentData,
+                selectedFilter: filter,
+                filterLoading: isLoading,
+                filterHasError: filteredSnap.hasError,
+                onFilterSelect: _selectFilter,
               ),
             );
           },
@@ -372,37 +200,385 @@ class _StatsBodyState extends State<_StatsBody> {
       },
     );
   }
+}
+
+/// Firebase-free dashboard content so every drill-down interaction can be
+/// exercised in widget tests without weakening the owner-only data gate.
+class AnalyticsDashboardContent extends StatefulWidget {
+  const AnalyticsDashboardContent({
+    super.key,
+    required this.overall,
+    required this.onFilterSelect,
+    this.filtered,
+    this.selectedFilter,
+    this.filterLoading = false,
+    this.filterHasError = false,
+    this.onMetricChanged,
+    this.onDayChanged,
+  });
+
+  final AnalyticsSummary overall;
+  final AnalyticsSummary? filtered;
+  final AnalyticsFilter? selectedFilter;
+  final bool filterLoading;
+  final bool filterHasError;
+  final ValueChanged<AnalyticsFilter> onFilterSelect;
+  final ValueChanged<AnalyticsMetric>? onMetricChanged;
+  final ValueChanged<String?>? onDayChanged;
+
+  @override
+  State<AnalyticsDashboardContent> createState() =>
+      _AnalyticsDashboardContentState();
+}
+
+class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
+  AnalyticsMetric _metric = AnalyticsMetric.visits;
+  String? _dayKey;
+
+  @override
+  void didUpdateWidget(covariant AnalyticsDashboardContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_dayKey != null && widget.overall.day(_dayKey!) == null) {
+      _dayKey = null;
+    }
+  }
+
+  void _selectMetric(AnalyticsMetric metric) {
+    if (_metric == metric) return;
+    setState(() => _metric = metric);
+    widget.onMetricChanged?.call(metric);
+  }
+
+  void _selectDay(String key) {
+    final next = _dayKey == key ? null : key;
+    setState(() => _dayKey = next);
+    widget.onDayChanged?.call(next);
+  }
+
+  void _clearMetric() => _selectMetric(AnalyticsMetric.visits);
+
+  void _clearDay() {
+    if (_dayKey == null) return;
+    setState(() => _dayKey = null);
+    widget.onDayChanged?.call(null);
+  }
+
+  void _resetView() {
+    final filter = widget.selectedFilter;
+    final metricChanged = _metric != AnalyticsMetric.visits;
+    final dayChanged = _dayKey != null;
+    setState(() {
+      _metric = AnalyticsMetric.visits;
+      _dayKey = null;
+    });
+    if (metricChanged) {
+      widget.onMetricChanged?.call(AnalyticsMetric.visits);
+    }
+    if (dayChanged) widget.onDayChanged?.call(null);
+    if (filter != null) widget.onFilterSelect(filter);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filter = widget.selectedFilter;
+    final scopedOverall = widget.overall.scopedToDay(_dayKey);
+    final candidateFiltered = widget.filtered?.scopedToDay(_dayKey);
+    final scopedFiltered =
+        _dayKey != null && candidateFiltered?.hasRecordedData != true
+            ? null
+            : candidateFiltered;
+    final dateLabel = _dayKey == null ? null : _displayDay(_dayKey!);
+    final secondaryPeriod =
+        _dayKey == null ? 'in last 7 days' : 'in all 30 days';
+    final hasLocalFocus = _metric != AnalyticsMetric.visits || _dayKey != null;
+    final hasActiveView = filter != null || hasLocalFocus;
+
+    int secondaryValue(AnalyticsMetric metric) => _dayKey == null
+        ? metric.week(widget.overall)
+        : metric.total(widget.overall);
+
+    int? filteredPrimary(AnalyticsMetric metric) => _filteredMetric(
+          scopedOverall,
+          scopedFiltered,
+          filter,
+          metric,
+        );
+
+    int? filteredSecondary(AnalyticsMetric metric) => _dayKey == null
+        ? _filteredWeek(widget.overall, widget.filtered, filter, metric)
+        : _filteredMetric(
+            widget.overall,
+            widget.filtered,
+            filter,
+            metric,
+          );
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 96, 20, 40),
+      children: [
+        Text('Last 30 days', style: Theme.of(context).textTheme.headlineSmall),
+        const SizedBox(height: 4),
+        const Text(
+          'Customer-only counters — cookieless, aggregate-only. Signed-in '
+          'owner activity and private stats routes are excluded; public visits '
+          'from a new, unlinked browser cannot be identified as owner traffic. '
+          'Legacy totals are not mixed in.',
+          style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Select any total, graph bar, funnel step, reliability value, timing '
+          'row, country, referrer, campaign, or page. Statistics change the '
+          'daily series, graph bars filter compatible totals to one UTC day, '
+          'and breakdowns compare all traffic with that segment.',
+          style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+        ),
+        if (hasActiveView) ...[
+          const SizedBox(height: 14),
+          _ActiveViewBanner(
+            filter: filter,
+            filtered: widget.filtered,
+            loading: widget.filterLoading,
+            hasError: widget.filterHasError,
+            metric: _metric,
+            dayKey: _dayKey,
+            onClearFilter:
+                filter == null ? null : () => widget.onFilterSelect(filter),
+            onClearMetric:
+                _metric == AnalyticsMetric.visits ? null : _clearMetric,
+            onClearDay: _dayKey == null ? null : _clearDay,
+            onReset: _resetView,
+          ),
+        ],
+        const SizedBox(height: 20),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            for (final metric in const [
+              AnalyticsMetric.visits,
+              AnalyticsMetric.pageviews,
+              AnalyticsMetric.appOpens,
+              AnalyticsMetric.revenue,
+            ])
+              _StatTile(
+                metric: metric,
+                valuePrimary: metric.total(scopedOverall),
+                valueSecondary: secondaryValue(metric),
+                filteredPrimary: filteredPrimary(metric),
+                filteredSecondary: filteredSecondary(metric),
+                filterLabel: filter?.label,
+                primaryPeriod: dateLabel ?? '30-day total',
+                secondaryPeriod: secondaryPeriod,
+                loading:
+                    widget.filterLoading && metric.supportsSegmentComparison,
+                selected: _metric == metric,
+                onTap: () => _selectMetric(metric),
+              ),
+          ],
+        ),
+        const SizedBox(height: 28),
+        _SectionTitle('Daily ${_metric.label.toLowerCase()}'),
+        if (filter != null && !_metric.supportsSegmentComparison)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Text(
+              '${_metric.label} is aggregate-only; comparison with '
+              '${filter.label} is unavailable.',
+              style: const TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        _DailyBars(
+          days: widget.overall.days,
+          metric: _metric,
+          filteredDays: _filteredChartDays(
+            widget.overall,
+            widget.filtered,
+            filter,
+            _metric,
+          ),
+          filterLabel: filter != null && _metric.supportsSegmentComparison
+              ? filter.label
+              : null,
+          selectedDayKey: _dayKey,
+          onSelectDay: _selectDay,
+        ),
+        const SizedBox(height: 28),
+        _SectionTitle(
+          dateLabel == null ? 'Funnel (30 days)' : 'Funnel ($dateLabel)',
+        ),
+        _FunnelCard(
+          summary: scopedOverall,
+          filterLabel: filter?.label,
+          selectedMetric: _metric,
+          onSelectMetric: _selectMetric,
+        ),
+        const SizedBox(height: 28),
+        const _SectionTitle('Product reliability and outcomes'),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 10),
+          child: Text(
+            'Each workflow transition and final outcome is counted at most '
+            'once per case. Error categories are bounded; case text and health '
+            'information never enter analytics.',
+            style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+          ),
+        ),
+        _ProductHealthCard(
+          summary: scopedOverall,
+          filterLabel: filter?.label,
+          selectedMetric: _metric,
+          onSelectMetric: _selectMetric,
+        ),
+        const SizedBox(height: 28),
+        const _SectionTitle('App click-to-ready time'),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 10),
+          child: Text(
+            'Measured from opening the secure workspace to its first rendered '
+            'frame. Only fixed timing buckets are stored; exact timings and '
+            'pages are discarded.',
+            style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+          ),
+        ),
+        _AppReadinessCard(
+          summary: scopedOverall,
+          filterLabel: filter?.label,
+          selectedMetric: _metric,
+          onSelectMetric: _selectMetric,
+        ),
+        const SizedBox(height: 28),
+        const _SectionTitle('Estimated unique visitors by country'),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Text(
+            'Repeat visits from the same network are deduplicated across the '
+            '30-day range. This is an aggregate estimate, not an exact count '
+            'of people: shared networks and VPNs can merge or split visitors. '
+            'Country estimates stay 30-day overall-only${dateLabel == null ? '' : ' and are not narrowed to $dateLabel'}.',
+            style: const TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 13,
+            ),
+          ),
+        ),
+        AnalyticsBreakdownList(
+          dimension: AnalyticsDimension.country,
+          entries: widget.overall.topCountries,
+          filteredEntries: null,
+          selectedFilter: filter,
+          labelForKey: (key) => '${_flag(key)} $key',
+          onSelect: widget.onFilterSelect,
+          emptyLabel: 'No unique-country estimates recorded yet.',
+          compareWithActiveFilter: false,
+        ),
+        const SizedBox(height: 28),
+        _SectionTitle(
+            dateLabel == null ? 'Top referrers' : 'Referrers · $dateLabel'),
+        AnalyticsBreakdownList(
+          dimension: AnalyticsDimension.referrer,
+          entries: scopedOverall.topReferrers,
+          filteredEntries: scopedFiltered?.topReferrers,
+          selectedFilter: filter,
+          onSelect: widget.onFilterSelect,
+          emptyLabel: 'Direct only so far.',
+        ),
+        const SizedBox(height: 28),
+        _SectionTitle(
+            dateLabel == null ? 'Top campaigns' : 'Campaigns · $dateLabel'),
+        AnalyticsBreakdownList(
+          dimension: AnalyticsDimension.campaign,
+          entries: scopedOverall.topCampaigns,
+          filteredEntries: scopedFiltered?.topCampaigns,
+          selectedFilter: filter,
+          onSelect: widget.onFilterSelect,
+          emptyLabel: 'No tagged campaign visits yet.',
+        ),
+        const SizedBox(height: 28),
+        _SectionTitle(dateLabel == null ? 'Top pages' : 'Pages · $dateLabel'),
+        AnalyticsBreakdownList(
+          dimension: AnalyticsDimension.path,
+          entries: scopedOverall.topPaths,
+          filteredEntries: scopedFiltered?.topPaths,
+          selectedFilter: filter,
+          onSelect: widget.onFilterSelect,
+          emptyLabel: 'No pageviews yet.',
+        ),
+      ],
+    );
+  }
 
   int? _filteredMetric(
     AnalyticsSummary overall,
     AnalyticsSummary? filtered,
     AnalyticsFilter? filter,
-    String field,
+    AnalyticsMetric metric,
   ) {
-    if (filter == null) return null;
-    if (filter.dimension.primaryMetric == field) {
+    if (filter == null || !metric.supportsSegmentComparison) return null;
+    if ((metric == AnalyticsMetric.visits ||
+            metric == AnalyticsMetric.pageviews) &&
+        filter.dimension.primaryMetric == metric.id) {
       return overall.dimensionCount(filter);
     }
-    return filtered?.total(field);
+    return filtered == null ? null : metric.total(filtered);
   }
 
   int? _filteredWeek(
     AnalyticsSummary overall,
     AnalyticsSummary? filtered,
     AnalyticsFilter? filter,
-    String field,
+    AnalyticsMetric metric,
   ) {
-    if (filter == null) return null;
-    if (filter.dimension.primaryMetric == field) {
+    if (filter == null || !metric.supportsSegmentComparison) return null;
+    if ((metric == AnalyticsMetric.visits ||
+            metric == AnalyticsMetric.pageviews) &&
+        filter.dimension.primaryMetric == metric.id) {
       final mapField = filter.dimension.mapField;
-      return overall.days.skip(overall.days.length - 7).fold<int>(0,
-          (total, day) {
+      return overall.days
+          .skip(overall.days.length > 7 ? overall.days.length - 7 : 0)
+          .fold<int>(0, (total, day) {
         final map = day.data[mapField] as Map<String, dynamic>? ?? const {};
         return total + ((map[filter.key] ?? 0) as num).toInt();
       });
     }
-    return filtered?.week(field);
+    return filtered == null ? null : metric.week(filtered);
   }
+
+  List<AnalyticsDay>? _filteredChartDays(
+    AnalyticsSummary overall,
+    AnalyticsSummary? filtered,
+    AnalyticsFilter? filter,
+    AnalyticsMetric metric,
+  ) {
+    if (filter == null || !metric.supportsSegmentComparison) return null;
+    if ((metric == AnalyticsMetric.visits ||
+            metric == AnalyticsMetric.pageviews) &&
+        filter.dimension.primaryMetric == metric.id) {
+      final mapField = filter.dimension.mapField;
+      return [
+        for (final day in overall.days)
+          AnalyticsDay(
+            day.key,
+            {
+              metric.id: ((day.data[mapField] as Map<String, dynamic>? ??
+                          const {})[filter.key] as num?)
+                      ?.toInt() ??
+                  0,
+            },
+            wasRecorded: day.wasRecorded,
+          ),
+      ];
+    }
+    return filtered?.days;
+  }
+}
+
+String _displayDay(String key) {
+  final parsed = DateTime.tryParse(key);
+  return parsed == null ? key : DateFormat('MMM d').format(parsed);
 }
 
 /// ISO 3166-1 alpha-2 code → flag emoji (regional indicator pair). Windows
@@ -411,39 +587,59 @@ String _flag(String cc) => cc.length == 2
     ? String.fromCharCodes(cc.codeUnits.map((c) => 0x1F1E6 + (c - 0x41)))
     : '';
 
-class _ActiveFilterBanner extends StatelessWidget {
-  const _ActiveFilterBanner({
+class _ActiveViewBanner extends StatelessWidget {
+  const _ActiveViewBanner({
     required this.filter,
     required this.filtered,
     required this.loading,
     required this.hasError,
-    required this.onClear,
+    required this.metric,
+    required this.dayKey,
+    required this.onClearFilter,
+    required this.onClearMetric,
+    required this.onClearDay,
+    required this.onReset,
   });
 
-  final AnalyticsFilter filter;
+  final AnalyticsFilter? filter;
   final AnalyticsSummary? filtered;
   final bool loading;
   final bool hasError;
-  final VoidCallback onClear;
+  final AnalyticsMetric metric;
+  final String? dayKey;
+  final VoidCallback? onClearFilter;
+  final VoidCallback? onClearMetric;
+  final VoidCallback? onClearDay;
+  final VoidCallback onReset;
 
   @override
   Widget build(BuildContext context) {
     final firstDay = filtered?.firstRecordedDay;
-    final detail = hasError
-        ? 'Filtered totals could not be loaded. Clear the filter and try again.'
-        : loading
-            ? 'Loading filtered totals…'
-            : firstDay == null
-                ? 'Historical ${filter.dimension.singularLabel} totals are shown '
-                    'where they already exist. Other combinations begin with new '
-                    'traffic after this feature is deployed.'
-                : 'Cross-breakdowns include segment records from $firstDay. '
-                    'Funnel and revenue stay overall-only so no person-level '
-                    'attribution is stored.';
+    final filter = this.filter;
+    final viewParts = [
+      'Metric: ${metric.label}',
+      if (dayKey != null) 'UTC date: $dayKey',
+      if (filter != null) 'Segment: ${filter.label}',
+    ];
+    final detail = filter == null
+        ? 'Metric and date focus use aggregate daily counters only.'
+        : hasError
+            ? 'Segment totals could not be loaded. Clear the segment and try again.'
+            : loading
+                ? 'Loading segment totals…'
+                : !metric.supportsSegmentComparison
+                    ? '${metric.label} remains overall-only for ${filter.label}; '
+                        'no person-level attribution is stored.'
+                    : firstDay == null
+                        ? 'Historical ${filter.dimension.singularLabel} totals are '
+                            'shown where they already exist. Other combinations '
+                            'begin with newly recorded traffic.'
+                        : 'Cross-breakdowns include segment records from '
+                            '$firstDay. Missing historical days stay unavailable.';
     return Semantics(
       container: true,
       liveRegion: true,
-      label: 'Active filter: ${filter.label}. $detail',
+      label: 'Active analytics view: ${viewParts.join(', ')}. $detail',
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
@@ -456,14 +652,14 @@ class _ActiveFilterBanner extends StatelessWidget {
           runSpacing: 10,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            Icon(Icons.filter_alt, color: AppColors.primary, size: 20),
+            Icon(Icons.tune, color: AppColors.primary, size: 20),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 590),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'All traffic | ${filter.label}',
+                    viewParts.join(' · '),
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
@@ -480,10 +676,32 @@ class _ActiveFilterBanner extends StatelessWidget {
                 ],
               ),
             ),
+            if (onClearMetric != null)
+              OutlinedButton.icon(
+                key: const ValueKey('analytics-clear-metric'),
+                onPressed: onClearMetric,
+                icon: const Icon(Icons.show_chart, size: 18),
+                label: const Text('Reset metric'),
+              ),
+            if (onClearDay != null)
+              OutlinedButton.icon(
+                key: const ValueKey('analytics-clear-day'),
+                onPressed: onClearDay,
+                icon: const Icon(Icons.calendar_today_outlined, size: 18),
+                label: const Text('Clear date'),
+              ),
+            if (onClearFilter != null)
+              OutlinedButton.icon(
+                key: const ValueKey('analytics-clear-segment'),
+                onPressed: onClearFilter,
+                icon: const Icon(Icons.filter_alt_off, size: 18),
+                label: const Text('Clear segment'),
+              ),
             OutlinedButton.icon(
-              onPressed: onClear,
-              icon: const Icon(Icons.close, size: 18),
-              label: const Text('Clear filter'),
+              key: const ValueKey('analytics-reset-view'),
+              onPressed: onReset,
+              icon: const Icon(Icons.restart_alt, size: 18),
+              label: const Text('Reset all'),
             ),
           ],
         ),
@@ -507,165 +725,296 @@ class _SectionTitle extends StatelessWidget {
 }
 
 class _StatTile extends StatelessWidget {
-  const _StatTile(
-    this.label,
-    this.value30,
-    this.value7, {
-    this.filtered30,
-    this.filtered7,
+  const _StatTile({
+    required this.metric,
+    required this.valuePrimary,
+    required this.valueSecondary,
+    required this.filteredPrimary,
+    required this.filteredSecondary,
+    required this.primaryPeriod,
+    required this.secondaryPeriod,
+    required this.selected,
+    required this.onTap,
     this.filterLabel,
     this.loading = false,
-  }) : money = false;
+  });
 
-  const _StatTile.money(
-    this.label,
-    this.value30,
-    this.value7, {
-    this.filterLabel,
-    this.loading = false,
-  })  : money = true,
-        filtered30 = null,
-        filtered7 = null;
-
-  final String label;
-  final int value30;
-  final int value7;
-  final bool money;
-  final int? filtered30;
-  final int? filtered7;
+  final AnalyticsMetric metric;
+  final int valuePrimary;
+  final int valueSecondary;
+  final int? filteredPrimary;
+  final int? filteredSecondary;
   final String? filterLabel;
+  final String primaryPeriod;
+  final String secondaryPeriod;
   final bool loading;
-
-  String _fmt(int v) => money
-      ? '\$${(v / 100).toStringAsFixed(2)}'
-      : NumberFormat.decimalPattern().format(v);
+  final bool selected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final filtered30Label = loading ? '…' : _optionalFmt(filtered30);
-    final filtered7Label = loading ? '…' : _optionalFmt(filtered7);
+    final comparisonAvailable = metric.supportsSegmentComparison;
+    final filteredPrimaryLabel = loading
+        ? '…'
+        : comparisonAvailable
+            ? _optionalFmt(filteredPrimary)
+            : '—';
+    final filteredSecondaryLabel = loading
+        ? '…'
+        : comparisonAvailable
+            ? _optionalFmt(filteredSecondary)
+            : '—';
     final mainLabel = filterLabel == null
-        ? _fmt(value30)
-        : '${_fmt(value30)} | $filtered30Label';
-    final weekLabel = filterLabel == null
-        ? '${_fmt(value7)} in last 7 days'
-        : '${_fmt(value7)} | $filtered7Label in last 7 days';
-    return Container(
+        ? metric.format(valuePrimary)
+        : '${metric.format(valuePrimary)} | $filteredPrimaryLabel';
+    final secondaryLabel = filterLabel == null
+        ? '${metric.format(valueSecondary)} $secondaryPeriod'
+        : '${metric.format(valueSecondary)} | $filteredSecondaryLabel '
+            '$secondaryPeriod';
+    final comparisonDescription = filterLabel == null
+        ? ''
+        : comparisonAvailable
+            ? ', $filteredPrimaryLabel for $filterLabel'
+            : '. Segment comparison with $filterLabel is unavailable';
+    return SizedBox(
+      key: ValueKey('analytics-metric:${metric.id}'),
       width: 210,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label,
-              style: const TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600)),
-          const SizedBox(height: 6),
-          Semantics(
-            label: filterLabel == null
-                ? '$label: ${_fmt(value30)} total'
-                : '$label: ${_fmt(value30)} overall, '
-                    '$filtered30Label for $filterLabel',
-            excludeSemantics: true,
-            child: Text(
-              mainLabel,
-              softWrap: true,
-              style: const TextStyle(
-                fontFamily: AppFonts.serif,
-                fontSize: 28,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+      child: Semantics(
+        button: true,
+        selected: selected,
+        onTap: onTap,
+        label: '${metric.label}: ${metric.format(valuePrimary)} overall for '
+            '$primaryPeriod$comparisonDescription. Activate to show daily '
+            '${metric.label.toLowerCase()}.',
+        excludeSemantics: true,
+        child: Material(
+          color: AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: BorderSide(
+              color: selected ? AppColors.primary : AppColors.border,
+              width: selected ? 2 : 1,
+            ),
+          ),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(14),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 132),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            metric.label,
+                            style: const TextStyle(
+                              color: AppColors.textMuted,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        if (selected)
+                          const Icon(
+                            Icons.show_chart,
+                            size: 18,
+                            color: AppColors.primary,
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      mainLabel,
+                      softWrap: true,
+                      style: const TextStyle(
+                        fontFamily: AppFonts.serif,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    if (filterLabel != null)
+                      Text(
+                        comparisonAvailable
+                            ? 'All | $filterLabel'
+                            : 'All | $filterLabel unavailable',
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    Text(
+                      secondaryLabel,
+                      style: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 2),
-          if (filterLabel != null)
-            Text('All | $filterLabel',
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700)),
-          Text(weekLabel,
-              style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
-        ],
+        ),
       ),
     );
   }
 
-  String _optionalFmt(int? value) => value == null ? '—' : _fmt(value);
+  String _optionalFmt(int? value) => value == null ? '—' : metric.format(value);
 }
 
-class _DailyBars extends StatelessWidget {
+class _DailyBars extends StatefulWidget {
   const _DailyBars({
     required this.days,
+    required this.metric,
+    required this.selectedDayKey,
+    required this.onSelectDay,
     this.filteredDays,
     this.filterLabel,
   });
 
   final List<AnalyticsDay> days;
+  final AnalyticsMetric metric;
   final List<AnalyticsDay>? filteredDays;
   final String? filterLabel;
+  final String? selectedDayKey;
+  final ValueChanged<String> onSelectDay;
+
+  @override
+  State<_DailyBars> createState() => _DailyBarsState();
+}
+
+class _DailyBarsState extends State<_DailyBars> {
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    WidgetsBinding.instance.addPostFrameCallback(_showLatestDays);
+  }
+
+  @override
+  void didUpdateWidget(covariant _DailyBars oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.days, widget.days)) {
+      WidgetsBinding.instance.addPostFrameCallback(_showLatestDays);
+    }
+  }
+
+  void _showLatestDays(Duration _) {
+    if (!mounted || !_scrollController.hasClients) return;
+    _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final max =
-        days.map((d) => d.count('visits')).fold(0, (a, b) => a > b ? a : b);
+    final max = widget.days
+        .map(widget.metric.valueForDay)
+        .fold<int>(0, (a, b) => a > b ? a : b);
     final filteredByDay = {
-      for (final day in filteredDays ?? const <AnalyticsDay>[])
+      for (final day in widget.filteredDays ?? const <AnalyticsDay>[])
         if (day.wasRecorded) day.key: day,
     };
     return Container(
-      height: filterLabel == null ? 140 : 172,
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.border),
       ),
-      child: max == 0
-          ? const Center(
-              child: Text('No visits recorded yet.',
-                  style: TextStyle(color: AppColors.textMuted)))
-          : Column(
-              children: [
-                Expanded(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      for (final day in days)
-                        Expanded(
-                          child: _DailyBar(
-                            day: day,
-                            filteredDay: filteredByDay[day.key],
-                            max: max,
-                            filterLabel: filterLabel,
-                          ),
-                        ),
-                    ],
-                  ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (max == 0)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(
+                'No ${widget.metric.label.toLowerCase()} recorded yet. Select a day '
+                'to inspect its other totals.',
+                style: const TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 12,
                 ),
-                if (filterLabel != null) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const _LegendSwatch(
-                          color: AppColors.accent, label: 'All traffic'),
-                      const SizedBox(width: 14),
-                      _LegendSwatch(
-                          color: AppColors.primary, label: filterLabel!),
-                    ],
+              ),
+            ),
+          SizedBox(
+            height: 156,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final minimumWidth = widget.days.length * 48.0;
+                final chartWidth = constraints.maxWidth > minimumWidth
+                    ? constraints.maxWidth
+                    : minimumWidth;
+                final itemWidth = widget.days.isEmpty
+                    ? 48.0
+                    : chartWidth / widget.days.length;
+                return Scrollbar(
+                  controller: _scrollController,
+                  thumbVisibility: true,
+                  trackVisibility: true,
+                  interactive: true,
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                      width: chartWidth,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (final day in widget.days)
+                            SizedBox(
+                              width: itemWidth,
+                              child: _DailyBar(
+                                day: day,
+                                metric: widget.metric,
+                                filteredDay: filteredByDay[day.key],
+                                max: max,
+                                filterLabel: widget.filterLabel,
+                                selected: widget.selectedDayKey == day.key,
+                                onTap: () => widget.onSelectDay(day.key),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
-                ],
+                );
+              },
+            ),
+          ),
+          if (widget.filterLabel != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const _LegendSwatch(
+                  color: AppColors.accent,
+                  label: 'All traffic',
+                ),
+                const SizedBox(width: 14),
+                _LegendSwatch(
+                  color: AppColors.primary,
+                  label: widget.filterLabel!,
+                ),
               ],
             ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -673,60 +1022,113 @@ class _DailyBars extends StatelessWidget {
 class _DailyBar extends StatelessWidget {
   const _DailyBar({
     required this.day,
+    required this.metric,
     required this.filteredDay,
     required this.max,
     required this.filterLabel,
+    required this.selected,
+    required this.onTap,
   });
 
   final AnalyticsDay day;
+  final AnalyticsMetric metric;
   final AnalyticsDay? filteredDay;
   final int max;
   final String? filterLabel;
+  final bool selected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final total = day.count('visits');
-    final filtered = filteredDay?.count('visits');
-    final totalHeight = max == 0 ? 2.0 : 4 + 104 * total / max;
+    final total = metric.valueForDay(day);
+    final filtered =
+        filteredDay == null ? null : metric.valueForDay(filteredDay!);
+    final totalHeight = max == 0 ? 3.0 : 4 + 86 * total / max;
     final filteredHeight = filtered == null || max == 0
         ? 0.0
-        : 4 + 104 * filtered.clamp(0, total) / max;
-    final filteredLabel = filteredDay == null ? 'not recorded' : '$filtered';
+        : 4 + 86 * filtered.clamp(0, total) / max;
+    final filteredLabel =
+        filtered == null ? 'not recorded' : metric.format(filtered);
     final message = filterLabel == null
-        ? '${day.key}: $total visits'
-        : '${day.key}: $total overall, $filteredLabel for $filterLabel';
-    return Semantics(
-      label: message,
-      excludeSemantics: true,
-      child: Tooltip(
-        message: message,
-        child: SizedBox(
-          height: 110,
-          child: Stack(
-            alignment: Alignment.bottomCenter,
-            children: [
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 1.5),
-                height: totalHeight,
-                decoration: BoxDecoration(
-                  color: total == 0 ? AppColors.surfaceAlt : AppColors.accent,
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(3)),
+        ? '${day.key}: ${metric.format(total)} ${metric.label.toLowerCase()}'
+        : '${day.key}: ${metric.format(total)} overall, $filteredLabel for '
+            '$filterLabel';
+    return SizedBox(
+      key: ValueKey('analytics-day:${day.key}'),
+      child: Semantics(
+        button: true,
+        selected: selected,
+        onTap: onTap,
+        label: '$message. Activate to ${selected ? 'clear' : 'select'} this '
+            'UTC date.',
+        excludeSemantics: true,
+        child: Tooltip(
+          message: message,
+          child: Material(
+            color: selected
+                ? AppColors.primary.withValues(alpha: 0.08)
+                : Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: BorderSide(
+                color: selected ? AppColors.primary : Colors.transparent,
+                width: 2,
+              ),
+            ),
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(3, 4, 3, 2),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: Stack(
+                        alignment: Alignment.bottomCenter,
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 2),
+                            height: totalHeight,
+                            decoration: BoxDecoration(
+                              color: total == 0
+                                  ? AppColors.surfaceAlt
+                                  : AppColors.accent,
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(3),
+                              ),
+                            ),
+                          ),
+                          if (filteredHeight > 0)
+                            FractionallySizedBox(
+                              widthFactor: .56,
+                              child: Container(
+                                height: filteredHeight,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.primary,
+                                  borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(3),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      day.key.length >= 10 ? day.key.substring(8) : day.key,
+                      style: TextStyle(
+                        color:
+                            selected ? AppColors.primary : AppColors.textMuted,
+                        fontSize: 10,
+                        fontWeight:
+                            selected ? FontWeight.w800 : FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              if (filteredHeight > 0)
-                FractionallySizedBox(
-                  widthFactor: .56,
-                  child: Container(
-                    height: filteredHeight,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(3)),
-                    ),
-                  ),
-                ),
-            ],
+            ),
           ),
         ),
       ),
@@ -768,24 +1170,33 @@ class _LegendSwatch extends StatelessWidget {
 }
 
 class _FunnelCard extends StatelessWidget {
-  const _FunnelCard({required this.summary, this.filterLabel});
+  const _FunnelCard({
+    required this.summary,
+    required this.selectedMetric,
+    required this.onSelectMetric,
+    this.filterLabel,
+  });
+
   final AnalyticsSummary summary;
   final String? filterLabel;
+  final AnalyticsMetric selectedMetric;
+  final ValueChanged<AnalyticsMetric> onSelectMetric;
 
   @override
   Widget build(BuildContext context) {
-    final steps = <(String, int)>[
-      ('Visits', summary.total('visits')),
-      ('Opened app', summary.total('boots')),
-      ('Uploaded denial', summary.funnel('upload')),
-      ('Extracted facts', summary.pathTotal('product.extraction.completed')),
-      ('Saw preview', summary.funnel('preview')),
-      ('Started checkout', summary.funnel('checkout_started')),
-      ('Paid', summary.funnel('paid')),
-      ('Packet ready', summary.pathTotal('product.packet.completed')),
-      ('Submitted appeal', summary.pathTotal('product.case.submitted')),
+    const steps = <(String, AnalyticsMetric)>[
+      ('Visits', AnalyticsMetric.visits),
+      ('Opened app', AnalyticsMetric.appOpens),
+      ('Uploaded denial', AnalyticsMetric.uploadedDenial),
+      ('Extracted facts', AnalyticsMetric.extractedFacts),
+      ('Saw preview', AnalyticsMetric.sawPreview),
+      ('Started checkout', AnalyticsMetric.startedCheckout),
+      ('Paid', AnalyticsMetric.paid),
+      ('Packet ready', AnalyticsMetric.packetReady),
+      ('Submitted appeal', AnalyticsMetric.submittedAppeal),
     ];
-    final top = steps.first.$2;
+    final values = [for (final step in steps) step.$2.total(summary)];
+    final top = values.first;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -799,12 +1210,15 @@ class _FunnelCard extends StatelessWidget {
             if (i > 0) const SizedBox(height: 10),
             _FunnelRow(
               label: steps[i].$1,
-              value: steps[i].$2,
+              metric: steps[i].$2,
+              value: values[i],
               filterLabel: filterLabel,
-              fraction: top == 0 ? 0 : steps[i].$2 / top,
-              conversion: i == 0 || steps[i - 1].$2 == 0
+              fraction: top == 0 ? 0 : values[i] / top,
+              conversion: i == 0 || values[i - 1] == 0
                   ? null
-                  : steps[i].$2 / steps[i - 1].$2,
+                  : values[i] / values[i - 1],
+              selected: selectedMetric == steps[i].$2,
+              onTap: () => onSelectMetric(steps[i].$2),
             ),
           ],
         ],
@@ -814,33 +1228,46 @@ class _FunnelCard extends StatelessWidget {
 }
 
 class _ProductHealthCard extends StatelessWidget {
-  const _ProductHealthCard({required this.summary});
+  const _ProductHealthCard({
+    required this.summary,
+    required this.selectedMetric,
+    required this.onSelectMetric,
+    this.filterLabel,
+  });
 
   final AnalyticsSummary summary;
-
-  static const _errorCategories = [
-    'validation',
-    'rate_limit',
-    'missing_prerequisite',
-    'model_failure',
-  ];
-
-  int _errors(String stage) => summary.pathsTotal(
-        _errorCategories.map((category) => 'product.$stage.errors.$category'),
-      );
+  final AnalyticsMetric selectedMetric;
+  final ValueChanged<AnalyticsMetric> onSelectMetric;
+  final String? filterLabel;
 
   @override
   Widget build(BuildContext context) {
-    final stages = <(String, String)>[
-      ('Extraction', 'extraction'),
-      ('Preview', 'preview'),
-      ('Packet', 'packet'),
+    const stages =
+        <(String, AnalyticsMetric, AnalyticsMetric, AnalyticsMetric)>[
+      (
+        'Extraction',
+        AnalyticsMetric.extractionStarted,
+        AnalyticsMetric.extractedFacts,
+        AnalyticsMetric.extractionErrors,
+      ),
+      (
+        'Preview',
+        AnalyticsMetric.previewStarted,
+        AnalyticsMetric.previewCompleted,
+        AnalyticsMetric.previewErrors,
+      ),
+      (
+        'Packet',
+        AnalyticsMetric.packetStarted,
+        AnalyticsMetric.packetReady,
+        AnalyticsMetric.packetErrors,
+      ),
     ];
-    final outcomes = <(String, String)>[
-      ('Approved', 'approved'),
-      ('Partially approved', 'partially_approved'),
-      ('Denied', 'denied'),
-      ('Withdrawn', 'withdrawn'),
+    const outcomes = <(String, AnalyticsMetric)>[
+      ('Approved', AnalyticsMetric.outcomeApproved),
+      ('Partially approved', AnalyticsMetric.outcomePartiallyApproved),
+      ('Denied', AnalyticsMetric.outcomeDenied),
+      ('Withdrawn', AnalyticsMetric.outcomeWithdrawn),
     ];
     return Container(
       padding: const EdgeInsets.all(16),
@@ -852,38 +1279,56 @@ class _ProductHealthCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (filterLabel != null) ...[
+            Text(
+              'Overall only | — for $filterLabel. Workflow and outcome '
+              'events are not attributed to traffic segments.',
+              style: const TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           for (var index = 0; index < stages.length; index++) ...[
             if (index > 0) const Divider(height: 24),
-            Semantics(
-              label:
-                  '${stages[index].$1}: ${summary.pathTotal('product.${stages[index].$2}.started')} started, ${summary.pathTotal('product.${stages[index].$2}.completed')} completed, ${_errors(stages[index].$2)} errors',
-              excludeSemantics: true,
-              child: Wrap(
-                spacing: 18,
-                runSpacing: 8,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 112,
-                    child: Text(stages[index].$1,
-                        style: const TextStyle(fontWeight: FontWeight.w700)),
+            Wrap(
+              spacing: 10,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                SizedBox(
+                  width: 112,
+                  child: Text(
+                    stages[index].$1,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
-                  _MiniMetric(
-                    label: 'Started',
-                    value: summary
-                        .pathTotal('product.${stages[index].$2}.started'),
-                  ),
-                  _MiniMetric(
-                    label: 'Completed',
-                    value: summary
-                        .pathTotal('product.${stages[index].$2}.completed'),
-                  ),
-                  _MiniMetric(
-                    label: 'Errors',
-                    value: _errors(stages[index].$2),
-                  ),
-                ],
-              ),
+                ),
+                _MiniMetric(
+                  label: 'Started',
+                  metric: stages[index].$2,
+                  value: stages[index].$2.total(summary),
+                  selected: selectedMetric == stages[index].$2,
+                  onTap: () => onSelectMetric(stages[index].$2),
+                  filterLabel: filterLabel,
+                ),
+                _MiniMetric(
+                  label: 'Completed',
+                  metric: stages[index].$3,
+                  value: stages[index].$3.total(summary),
+                  selected: selectedMetric == stages[index].$3,
+                  onTap: () => onSelectMetric(stages[index].$3),
+                  filterLabel: filterLabel,
+                ),
+                _MiniMetric(
+                  label: 'Errors',
+                  metric: stages[index].$4,
+                  value: stages[index].$4.total(summary),
+                  selected: selectedMetric == stages[index].$4,
+                  onTap: () => onSelectMetric(stages[index].$4),
+                  filterLabel: filterLabel,
+                ),
+              ],
             ),
           ],
           const Divider(height: 28),
@@ -897,7 +1342,11 @@ class _ProductHealthCard extends StatelessWidget {
               for (final outcome in outcomes)
                 _MiniMetric(
                   label: outcome.$1,
-                  value: summary.pathTotal('product.outcomes.${outcome.$2}'),
+                  metric: outcome.$2,
+                  value: outcome.$2.total(summary),
+                  selected: selectedMetric == outcome.$2,
+                  onTap: () => onSelectMetric(outcome.$2),
+                  filterLabel: filterLabel,
                 ),
             ],
           ),
@@ -908,40 +1357,108 @@ class _ProductHealthCard extends StatelessWidget {
 }
 
 class _MiniMetric extends StatelessWidget {
-  const _MiniMetric({required this.label, required this.value});
+  const _MiniMetric({
+    required this.label,
+    required this.metric,
+    required this.value,
+    required this.selected,
+    required this.onTap,
+    this.filterLabel,
+  });
 
   final String label;
+  final AnalyticsMetric metric;
   final int value;
+  final bool selected;
+  final VoidCallback onTap;
+  final String? filterLabel;
 
   @override
-  Widget build(BuildContext context) => Semantics(
-        label: '$label: $value',
-        excludeSemantics: true,
-        child: Text(
-          '$label $value',
-          style: const TextStyle(color: AppColors.textSecondary),
+  Widget build(BuildContext context) => SizedBox(
+        key: ValueKey('analytics-product:${metric.id}'),
+        child: Semantics(
+          button: true,
+          selected: selected,
+          onTap: onTap,
+          label: '${metric.label}: ${metric.format(value)} overall.'
+              '${filterLabel == null ? '' : ' Segment comparison with $filterLabel is unavailable.'} '
+              'Activate to show its daily totals.',
+          excludeSemantics: true,
+          child: Material(
+            color: selected
+                ? AppColors.primary.withValues(alpha: 0.08)
+                : Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(9),
+              side: BorderSide(
+                color: selected ? AppColors.primary : AppColors.border,
+                width: selected ? 2 : 1,
+              ),
+            ),
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(9),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 48),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        '$label ${metric.format(value)}',
+                        style: TextStyle(
+                          color: selected
+                              ? AppColors.primary
+                              : AppColors.textSecondary,
+                          fontWeight:
+                              selected ? FontWeight.w700 : FontWeight.w400,
+                        ),
+                      ),
+                      if (selected)
+                        const Icon(
+                          Icons.show_chart,
+                          color: AppColors.primary,
+                          size: 17,
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
       );
 }
 
 class _AppReadinessCard extends StatelessWidget {
-  const _AppReadinessCard({required this.summary});
+  const _AppReadinessCard({
+    required this.summary,
+    required this.selectedMetric,
+    required this.onSelectMetric,
+    this.filterLabel,
+  });
 
   final AnalyticsSummary summary;
+  final AnalyticsMetric selectedMetric;
+  final ValueChanged<AnalyticsMetric> onSelectMetric;
+  final String? filterLabel;
 
   @override
   Widget build(BuildContext context) {
-    final buckets = <(String, String)>[
-      ('Under 1 second', 'under_1s'),
-      ('1–2 seconds', '1_to_2s'),
-      ('2–4 seconds', '2_to_4s'),
-      ('4–8 seconds', '4_to_8s'),
-      ('Over 8 seconds', 'over_8s'),
+    const buckets = <(String, AnalyticsMetric)>[
+      ('Under 1 second', AnalyticsMetric.readyUnderOneSecond),
+      ('1–2 seconds', AnalyticsMetric.readyOneToTwoSeconds),
+      ('2–4 seconds', AnalyticsMetric.readyTwoToFourSeconds),
+      ('4–8 seconds', AnalyticsMetric.readyFourToEightSeconds),
+      ('Over 8 seconds', AnalyticsMetric.readyOverEightSeconds),
     ];
-    final values = [
-      for (final bucket in buckets)
-        summary.pathTotal('performance.app_ready.${bucket.$2}'),
-    ];
+    final values = [for (final bucket in buckets) bucket.$2.total(summary)];
     final total = values.fold(0, (runningTotal, value) => runningTotal + value);
     return Container(
       padding: const EdgeInsets.all(16),
@@ -950,23 +1467,41 @@ class _AppReadinessCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.border),
       ),
-      child: total == 0
-          ? const Text(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (filterLabel != null) ...[
+            Text(
+              'Overall only | — for $filterLabel. Readiness buckets are not '
+              'attributed to traffic segments.',
+              style: const TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+          if (total == 0) ...[
+            const Text(
               'No app-ready measurements recorded yet.',
               style: TextStyle(color: AppColors.textMuted),
-            )
-          : Column(
-              children: [
-                for (var index = 0; index < buckets.length; index++) ...[
-                  if (index > 0) const SizedBox(height: 12),
-                  _TimingBucket(
-                    label: buckets[index].$1,
-                    value: values[index],
-                    total: total,
-                  ),
-                ],
-              ],
             ),
+            const SizedBox(height: 8),
+          ],
+          for (var index = 0; index < buckets.length; index++) ...[
+            if (index > 0) const SizedBox(height: 8),
+            _TimingBucket(
+              label: buckets[index].$1,
+              metric: buckets[index].$2,
+              value: values[index],
+              total: total,
+              selected: selectedMetric == buckets[index].$2,
+              onTap: () => onSelectMetric(buckets[index].$2),
+              filterLabel: filterLabel,
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -974,39 +1509,117 @@ class _AppReadinessCard extends StatelessWidget {
 class _TimingBucket extends StatelessWidget {
   const _TimingBucket({
     required this.label,
+    required this.metric,
     required this.value,
     required this.total,
+    required this.selected,
+    required this.onTap,
+    this.filterLabel,
   });
 
   final String label;
+  final AnalyticsMetric metric;
   final int value;
   final int total;
+  final bool selected;
+  final VoidCallback onTap;
+  final String? filterLabel;
 
   @override
   Widget build(BuildContext context) {
     final fraction = total == 0 ? 0.0 : value / total;
     final percent = (fraction * 100).toStringAsFixed(1);
-    return Semantics(
-      label: '$label: $value app opens, $percent percent',
-      excludeSemantics: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(child: Text(label)),
-              Text('$value · $percent%',
-                  style: const TextStyle(color: AppColors.textSecondary)),
-            ],
+    return SizedBox(
+      key: ValueKey('analytics-ready:${metric.id}'),
+      child: Semantics(
+        button: true,
+        selected: selected,
+        onTap: onTap,
+        label: '$label: $value app opens, $percent percent overall.'
+            '${filterLabel == null ? '' : ' Segment comparison with $filterLabel is unavailable.'} '
+            'Activate to show its daily totals.',
+        excludeSemantics: true,
+        child: Material(
+          color: selected
+              ? AppColors.primary.withValues(alpha: 0.08)
+              : Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(9),
+            side: BorderSide(
+              color: selected ? AppColors.primary : Colors.transparent,
+              width: 2,
+            ),
           ),
-          const SizedBox(height: 5),
-          LinearProgressIndicator(
-            value: fraction.clamp(0, 1),
-            minHeight: 10,
-            backgroundColor: AppColors.surfaceAlt,
-            color: AppColors.primary,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(9),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 56),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final scaledFont =
+                        MediaQuery.textScalerOf(context).scale(13);
+                    final compact =
+                        constraints.maxWidth < 360 || scaledFont > 17;
+                    final valueText = Text(
+                      '$value · $percent%${selected ? ' · selected' : ''}',
+                      style: TextStyle(
+                        color: selected
+                            ? AppColors.primary
+                            : AppColors.textSecondary,
+                        fontWeight:
+                            selected ? FontWeight.w700 : FontWeight.w400,
+                      ),
+                    );
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (compact) ...[
+                          Text(
+                            label,
+                            style: TextStyle(
+                              fontWeight:
+                                  selected ? FontWeight.w700 : FontWeight.w400,
+                            ),
+                          ),
+                          valueText,
+                        ] else
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  label,
+                                  style: TextStyle(
+                                    fontWeight: selected
+                                        ? FontWeight.w700
+                                        : FontWeight.w400,
+                                  ),
+                                ),
+                              ),
+                              valueText,
+                            ],
+                          ),
+                        const SizedBox(height: 5),
+                        LinearProgressIndicator(
+                          value: fraction.clamp(0, 1),
+                          minHeight: 10,
+                          backgroundColor: AppColors.surfaceAlt,
+                          color:
+                              selected ? AppColors.primary : AppColors.accent,
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -1015,16 +1628,22 @@ class _TimingBucket extends StatelessWidget {
 class _FunnelRow extends StatelessWidget {
   const _FunnelRow({
     required this.label,
+    required this.metric,
     required this.value,
     required this.fraction,
+    required this.selected,
+    required this.onTap,
     this.filterLabel,
     this.conversion,
   });
 
   final String label;
+  final AnalyticsMetric metric;
   final int value;
   final double fraction;
   final String? filterLabel;
+  final bool selected;
+  final VoidCallback onTap;
 
   /// Conversion from the previous step, null for the first row.
   final double? conversion;
@@ -1034,66 +1653,143 @@ class _FunnelRow extends StatelessWidget {
     final overallLabel = conversion == null
         ? '$value'
         : '$value (${(conversion! * 100).toStringAsFixed(1)}% conversion)';
-    final valueLabel = filterLabel == null ? overallLabel : '$overallLabel | —';
+    final canCompare = filterLabel != null && metric.supportsSegmentComparison;
+    final valueLabel = filterLabel == null
+        ? overallLabel
+        : canCompare
+            ? '$overallLabel | graph'
+            : '$overallLabel | —';
     Widget bar() => ClipRRect(
           borderRadius: BorderRadius.circular(6),
           child: LinearProgressIndicator(
             value: fraction.clamp(0, 1),
             minHeight: 14,
             backgroundColor: AppColors.surfaceAlt,
-            color: AppColors.accent,
+            color: selected ? AppColors.primary : AppColors.accent,
           ),
         );
-    return Semantics(
-      label: filterLabel == null
-          ? '$label: $valueLabel'
-          : '$label: $overallLabel overall. Filtered funnel attribution is '
-              'unavailable for $filterLabel.',
-      excludeSemantics: true,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final scaledFont = MediaQuery.textScalerOf(context).scale(13);
-          if (constraints.maxWidth < 430 || scaledFont > 17) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w600),
+    final segmentDescription = filterLabel == null
+        ? ''
+        : canCompare
+            ? ' The chart can compare it with $filterLabel.'
+            : ' Segment attribution is unavailable for $filterLabel.';
+    return SizedBox(
+      key: ValueKey('analytics-funnel:${metric.id}'),
+      child: Semantics(
+        button: true,
+        selected: selected,
+        onTap: onTap,
+        label: '$label: $overallLabel overall.$segmentDescription Activate '
+            'to show its daily totals.',
+        excludeSemantics: true,
+        child: Material(
+          color: selected
+              ? AppColors.primary.withValues(alpha: 0.08)
+              : Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(9),
+            side: BorderSide(
+              color: selected ? AppColors.primary : Colors.transparent,
+              width: 2,
+            ),
+          ),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(9),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  valueLabel,
-                  style: const TextStyle(
-                      fontSize: 13, color: AppColors.textSecondary),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final scaledFont =
+                        MediaQuery.textScalerOf(context).scale(13);
+                    if (constraints.maxWidth < 430 || scaledFont > 17) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  label,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              if (selected)
+                                const Icon(
+                                  Icons.show_chart,
+                                  color: AppColors.primary,
+                                  size: 17,
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            valueLabel,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          bar(),
+                        ],
+                      );
+                    }
+                    return Row(
+                      children: [
+                        SizedBox(
+                          width: 150,
+                          child: Text(
+                            label,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        Expanded(child: bar()),
+                        SizedBox(
+                          width: 120,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  valueLabel,
+                                  textAlign: TextAlign.right,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ),
+                              if (selected) ...[
+                                const SizedBox(width: 4),
+                                const Icon(
+                                  Icons.show_chart,
+                                  color: AppColors.primary,
+                                  size: 17,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
-                const SizedBox(height: 6),
-                bar(),
-              ],
-            );
-          }
-          return Row(
-            children: [
-              SizedBox(
-                width: 150,
-                child: Text(label,
-                    style: const TextStyle(
-                        fontSize: 13, fontWeight: FontWeight.w600)),
               ),
-              Expanded(child: bar()),
-              SizedBox(
-                width: 110,
-                child: Text(
-                  valueLabel,
-                  textAlign: TextAlign.right,
-                  style: const TextStyle(
-                      fontSize: 13, color: AppColors.textSecondary),
-                ),
-              ),
-            ],
-          );
-        },
+            ),
+          ),
+        ),
       ),
     );
   }
