@@ -18,11 +18,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: "22"
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
@@ -49,6 +49,13 @@ jobs:
           node tool/marketing_build.mjs
           node tool/accessibility_check.mjs web
           npx --yes html-validate@10.10.0 "web/**/*.html"
+      - name: Match ChromeDriver to the runner's Chrome
+        # @axe-core/cli pulls the newest chromedriver, which breaks whenever the
+        # runner image's preinstalled Chrome lags a major version behind.
+        run: |
+          chrome_major="$(google-chrome --version | sed -E 's/[^0-9]*([0-9]+).*/\1/')"
+          npm install --no-save "chromedriver@^${chrome_major}"
+          echo "AXE_CHROMEDRIVER_PATH=$(node -p "require('chromedriver').path")" >> "$GITHUB_ENV"
       - name: Build and validate deploy artifact
         run: |
           flutter build web

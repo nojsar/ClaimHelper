@@ -105,6 +105,10 @@ try {
   );
 
   const executable = process.platform === "win32" ? "npx.cmd" : "npx";
+  const chromedriverPath = process.env.AXE_CHROMEDRIVER_PATH;
+  if (chromedriverPath) {
+    console.log(`[accessibility] Using ChromeDriver at ${chromedriverPath}.`);
+  }
   const exitCode = await run(executable, [
     "--yes",
     `@axe-core/cli@${axeCliVersion}`,
@@ -116,6 +120,7 @@ try {
     "--timeout",
     "120",
     "--exit",
+    ...(chromedriverPath ? ["--chromedriver-path", chromedriverPath] : []),
   ]);
   if (exitCode !== 0) process.exitCode = exitCode;
 } finally {
