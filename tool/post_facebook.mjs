@@ -13,8 +13,12 @@ import {
 // card unfurls from OG tags. Public visibility requires the Meta app to be
 // LIVE with pages_manage_posts approved (dev-mode posts publish but are only
 // visible to app users). See MARKETING_AUTOPILOT.md for the review path.
-// Secrets: FACEBOOK_PAGE_ID, FACEBOOK_PAGE_TOKEN (page token derived from a
-// long-lived user token does not expire).
+// Secrets: FACEBOOK_PAGE_ID, FACEBOOK_PAGE_TOKEN. FACEBOOK_PAGE_TOKEN must be
+// a PAGE token, not the system user token that INSTAGRAM_ACCESS_TOKEN uses —
+// Page writes have to be made as the Page. Derive it once with
+// GET /<page-id>?fields=access_token&access_token=<system-user-token>; derived
+// from a never-expiring system user token it does not expire either.
+// See MARKETING_AUTOPILOT.md for the scope list and the draft-post check.
 
 const OFFSET = 5;
 const LIMIT = 5000; // effectively unlimited; guard against runaway copy

@@ -69,9 +69,25 @@ The free API tier (~500 posts/month, 17/day) comfortably covers this cadence.
 
 ### Facebook Page
 
-1. Reuse the Meta developer app; in the **Graph API Explorer** request a user token with `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`.
-2. Exchange it for a long-lived token, then call `GET /me/accounts` — copy the Page's `id` and its `access_token` (page tokens derived from a long-lived user token do not expire).
-3. Secrets: `FACEBOOK_PAGE_ID`, `FACEBOOK_PAGE_TOKEN`.
+Use the same system user as Instagram (see Route A above) — `GET /me/accounts` is a dead end for portfolio-owned Pages.
+
+1. Add the **Manage Pages** use case to the app and add `pages_manage_posts` under its *Permissions and features* until it reads "Ready for testing". Having it on the app is **not** enough on its own: a token only carries scopes ticked at generation time, so a token minted earlier stays without it and fails with `(#200) requires both pages_read_engagement and pages_manage_posts`.
+2. Regenerate the system user token with all five scopes: `instagram_basic`, `instagram_content_publish`, `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`.
+3. **Derive a Page token from it** — `FACEBOOK_PAGE_TOKEN` must be a *Page* token, not the system user token itself. Some Page writes must be made as the Page, and the system user token fails them with `(#200) Unpublished posts must be posted to a page as the page itself`:
+
+   ```
+   GET /<page-id>?fields=access_token&access_token=<system-user-token>
+   ```
+
+   Derived from a never-expiring system user token, the Page token does not expire either.
+4. Secrets: `FACEBOOK_PAGE_ID` (`1281079755078718`), `FACEBOOK_PAGE_TOKEN` (the derived Page token). `INSTAGRAM_ACCESS_TOKEN` stays the system user token — Instagram publishing works with it directly.
+
+Verify without posting publicly — an unpublished draft never appears on the Page:
+
+```
+POST /<page-id>/feed?message=scope+check&published=false   # returns an id
+DELETE /<returned-id>                                       # clean up
+```
 4. **Visibility caveat:** while the app is in Development mode, API posts publish but are visible only to app users. Public posts require the app to be **Live** with `pages_manage_posts` passed through App Review (a short screencast of the posting flow).
 
 ### Instagram
