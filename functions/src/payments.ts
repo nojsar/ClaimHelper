@@ -19,7 +19,7 @@ import {
   recordFirstPurchaseMonetizationEvent,
   recordPurchaseRefundMonetizationEvent,
 } from "./analytics";
-import { scheduleFeedbackRequest } from "./reminders";
+import { scheduleFeedbackRequest, scheduleReviewInvite } from "./reminders";
 import { remainingFollowUpCredits } from "./entitlements";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -724,6 +724,11 @@ async function handleCompletedCheckout(session: Stripe.Checkout.Session): Promis
     // after it contributes to the aggregate.
     await recordFirstPaidAcquisitionAttribution(result.ownerUid, caseRef);
     await scheduleFeedbackRequest({
+      caseId,
+      ownerUid: result.ownerUid,
+      email: buyerEmail,
+    });
+    await scheduleReviewInvite({
       caseId,
       ownerUid: result.ownerUid,
       email: buyerEmail,

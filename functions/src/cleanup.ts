@@ -9,7 +9,7 @@ import {
 } from "firebase-admin/firestore";
 import { caseStorageOwnerUids, deleteCaseCompletely } from "./cases";
 import { responseReminderIsPending } from "./case_tracker";
-import { buildReminderMessage } from "./reminders";
+import { buildReminderMessage, buildReviewInviteMessage } from "./reminders";
 import { config } from "./config";
 
 const CLEANUP_DEADLINE_MS = 8 * 60 * 1000;
@@ -117,6 +117,7 @@ export const scheduledCleanupExpiredFiles = onSchedule(
         const kind = doc.get("kind") as string | undefined;
         const isResponseDue = kind === "case_response_due";
         const isFeedbackRequest = kind === "feedback_request";
+        const isReviewInvite = kind === "review_invite";
         const tracker = caseSnap.exists
           ? caseSnap.get("caseTracker") as
               | {
@@ -146,6 +147,16 @@ export const scheduledCleanupExpiredFiles = onSchedule(
           caseSnap.get("ownerUid") === doc.get("ownerUid") &&
           caseSnap.get("paid") === true &&
           caseSnap.get("feedback") === undefined;
+        // Deliberately blind to outcome, tracker state, and in-app feedback:
+        // a customer who told us the appeal failed is invited on exactly the
+        // same terms as one who told us nothing. Filtering by sentiment here
+        // would be review gating. A refund clears `paid` and so cancels this.
+        const reviewInviteWanted =
+          isReviewInvite &&
+          caseSnap.exists &&
+          caseSnap.get("ownerUid") === doc.get("ownerUid") &&
+          caseSnap.get("paid") === true &&
+          config.trustpilotInviteEmail !== "";
         if (responseReminderWanted) {
           const caseUrl =
             `${config.appBaseUrl}/#/case/${doc.get("caseId")}/packet`;
@@ -215,6 +226,20 @@ export const scheduledCleanupExpiredFiles = onSchedule(
               createdAt: FieldValue.serverTimestamp(),
             });
             transaction.delete(doc.ref);
+          });
+        } else if (reviewInviteWanted) {
+          await db.collection("mail").add({
+            caseId: doc.get("caseId"),
+            ownerUid: doc.get("ownerUid"),
+            to: [doc.get("email")],
+            // Trustpilot builds its invitation from this blind copy, so it
+            // receives the address and this body — and nothing else. The
+            // message is intentionally free of case facts.
+            bcc: [config.trustpilotInviteEmail],
+            message: buildReviewInviteMessage({
+              caseUrl: `${config.appBaseUrl}/#/case/${doc.get("caseId")}/packet`,
+            }),
+            createdAt: FieldValue.serverTimestamp(),
           });
         } else if (previewReminderWanted) {
           const deadline = (doc.get("deadline") as Timestamp | null)?.toDate() ?? null;

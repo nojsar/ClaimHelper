@@ -85,6 +85,19 @@ export const config = {
   get tempFileTtlHours(): number {
     return Number(process.env.TEMP_FILE_TTL_HOURS || 24);
   },
+  /**
+   * Trustpilot's BCC invitation address (`<domain>+<token>@invite.trustpilot.com`).
+   * Deployment config, never committed: anyone holding it can trigger review
+   * invitations against our business profile. Empty disables review
+   * invitations end to end — none are scheduled and none are sent.
+   */
+  get trustpilotInviteEmail(): string {
+    return (process.env.TRUSTPILOT_INVITE_EMAIL || "").trim();
+  },
+  /** Days after a confirmed first purchase before the review invitation. */
+  get reviewInviteDelayDays(): number {
+    return Number(process.env.REVIEW_INVITE_DELAY_DAYS || 21);
+  },
 } as const;
 
 /** Case lifecycle states mirrored in the Flutter app's CaseStatus enum. */
