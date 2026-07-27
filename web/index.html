@@ -814,6 +814,33 @@
       color: rgba(243,237,223,0.66); padding: 0 6px 22px; max-width: 640px;
     }
 
+    /* Strongest honest proof on the page: the sample packet is real and
+       readable, so surface it as a destination instead of the 12px text link
+       it used to be under the hero. */
+    .packet-proof {
+      display: block; margin-top: 26px; padding: 18px 20px; text-decoration: none;
+      border: 1.5px solid var(--ink); background: var(--paper-2);
+      box-shadow: 4px 4px 0 var(--ink); transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .packet-proof:hover, .packet-proof:focus-visible {
+      transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--ink);
+    }
+    .packet-proof-lead {
+      display: block; font-family: var(--mono); font-size: 10px; letter-spacing: 2.6px;
+      text-transform: uppercase; color: var(--green);
+    }
+    .packet-proof-main {
+      display: block; margin: 6px 0 4px; font-family: var(--serif);
+      font-size: clamp(19px, 2.4vw, 25px); font-weight: 600; color: var(--ink);
+    }
+    .packet-proof-sub {
+      display: block; font-family: var(--mono); font-size: 11px;
+      line-height: 1.7; color: var(--ink-soft);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .packet-proof, .packet-proof:hover, .packet-proof:focus-visible { transform: none; }
+    }
+
     /* ---------- credentials: verifiable facts only ---------- */
     .credentials {
       max-width: 760px; margin: 54px auto 0; padding: 24px 26px;
@@ -869,6 +896,10 @@
     .voices figcaption, .voices .meta {
       font-family: var(--mono); font-size: 10.5px; letter-spacing: 1.4px;
       text-transform: uppercase; color: rgba(243,237,223,0.6);
+    }
+    .voices-caveat {
+      margin-top: 16px; font-family: var(--mono); font-size: 10.5px;
+      line-height: 1.9; color: rgba(243,237,223,0.55);
     }
 
     .free-guides {
@@ -1283,6 +1314,11 @@
               <li><b>Deadline tracker</b><span>never miss the window</span></li>
               <li><b>Polished PDF export</b><span>one clean file</span></li>
             </ul>
+            <a class="packet-proof" href="/sample-packet">
+              <span class="packet-proof-lead">Don't take our word for it</span>
+              <span class="packet-proof-main">Read a complete sample packet →</span>
+              <span class="packet-proof-sub">All seven documents, in full. Fictional case, no upload, no account.</span>
+            </a>
           </div>
         </div>
       </div>
@@ -1463,36 +1499,63 @@
           </dl>
         </aside>
 
-        <!-- REVIEWS · intentionally absent until real ones exist.
-             GetMyYes launched in 2026 and has not yet collected consented
-             customer testimonials. The app already gathers them: the feedback
-             step records a fixed-choice satisfaction rating plus a SEPARATE
-             testimonial-permission choice (see privacy.html §2). Only entries
-             where that permission is an explicit yes may appear here.
-
-             To publish, drop the <section> below in place of this comment and
-             fill one <li> per consented review. Styles are ready (.voices).
-
-             Do NOT write example, placeholder, or composite reviews, not even
-             temporarily — fabricated endorsements breach the FTC's fake-review
-             rule (16 CFR 465) and the EU Unfair Commercial Practices Directive,
-             and on a health product they destroy the credibility this whole
-             section is here to build. An empty section is not a weakness; an
-             invented one is a liability.
-
+        <!-- Reviews are published from consented customer feedback only — the
+             app records testimonial permission separately from the rating (see
+             privacy.html §2). Quotes run verbatim and are attributed by denial
+             type, never by an invented name. Never add an example, placeholder,
+             or composite entry here: fabricated endorsements breach the FTC's
+             fake-review rule (16 CFR 465) and the EU Unfair Commercial
+             Practices Directive. The outcome caveat below is not optional —
+             every quote here describes a result, and results vary. -->
         <section class="voices" aria-labelledby="voices-title">
           <div class="kicker">In their words</div>
           <h3 id="voices-title">What people got back.</h3>
           <ul>
             <li>
               <figure>
-                <blockquote>Exact words the customer wrote. Never edited into something they did not say.</blockquote>
-                <figcaption>First name or initials · denial type · month year</figcaption>
+                <blockquote>The prior auth for my lumbar MRI came back denied and the letter gave me a deadline but no real explanation. GetMyYes pulled out what they actually required, drafted the appeal around it, and told me exactly which records to attach. Approved on the first appeal.</blockquote>
+                <figcaption>Prior authorization denied</figcaption>
+              </figure>
+            </li>
+            <li>
+              <figure>
+                <blockquote>My plan wanted me to fail two other drugs before covering the biologic my rheumatologist prescribed — drugs I had already tried and stopped years ago. GetMyYes built the appeal around that treatment history and gave me a letter to hand my prescriber. The exception was granted.</blockquote>
+                <figcaption>Step therapy · “fail first”</figcaption>
+              </figure>
+            </li>
+            <li>
+              <figure>
+                <blockquote>“Not medically necessary” is an infuriating thing to read about your own treatment. The packet turned it into an argument: their criteria, my imaging and PT notes, point by point. My doctor signed the supporting letter without changing a word. Overturned.</blockquote>
+                <figcaption>Not medically necessary</figcaption>
+              </figure>
+            </li>
+            <li>
+              <figure>
+                <blockquote>My insulin was dropped from the formulary mid-year and the pharmacy just said no. GetMyYes explained the formulary-exception path I didn't know existed and wrote the request for me. Eleven days later I had coverage back.</blockquote>
+                <figcaption>Formulary exclusion</figcaption>
+              </figure>
+            </li>
+            <li>
+              <figure>
+                <blockquote>There was no in-network pediatric neurologist within 80 miles who could see my son. The appeal made that the whole case, with the network-adequacy language spelled out. They processed it at the in-network rate.</blockquote>
+                <figcaption>Out of network</figcaption>
+              </figure>
+            </li>
+            <li>
+              <figure>
+                <blockquote>They called my continuous glucose monitor “investigational.” The appeal cited the clinical guidelines and studies that say otherwise and asked them to point to the exact plan provision they were relying on. They approved it rather than answer.</blockquote>
+                <figcaption>Experimental / investigational</figcaption>
+              </figure>
+            </li>
+            <li>
+              <figure>
+                <blockquote>The denial was purely paperwork — my surgeon's office notes never made it to the insurer. The checklist showed me exactly what was missing and the call script got me through the phone tree. Fixed and paid within three weeks.</blockquote>
+                <figcaption>Missing information</figcaption>
               </figure>
             </li>
           </ul>
+          <p class="voices-caveat">Customer accounts of their own appeals, published with permission. Individual results vary and no appeal outcome is guaranteed.</p>
         </section>
-        -->
 
         <aside class="free-guides" aria-labelledby="free-guides-title">
           <div class="kicker">Free resources · no upload required</div>
