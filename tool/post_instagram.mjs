@@ -49,6 +49,35 @@ const GRAPH = token.startsWith("IGAA")
 const post = postForDay(OFFSET);
 const meta = await guideMeta(post);
 
+// Read-before-write, like the Bluesky/Mastodon/X posters. Two runs can land in
+// the same UTC day — a manual dispatch plus a cron firing late, which is what
+// happened on 2026-07-27 when the 15:17 slot arrived at 16:04 and this poster
+// published the same guide twice. postForDay is deterministic, so the second
+// run picks the same guide; matching today's date against the guide URL in the
+// caption is enough to recognise our own post and stand down.
+const marker = `getmyyes.com${post.path}`;
+const today = new Date().toISOString().slice(0, 10);
+const recent = new URL(`${GRAPH}/${userId}/media`);
+recent.searchParams.set("fields", "id,caption,timestamp");
+recent.searchParams.set("limit", "25");
+recent.searchParams.set("access_token", token);
+const recentMedia = await jsonRequest(recent).catch((error) => {
+  // Fail open so a read blip cannot cost a whole publishing slot, but say so —
+  // a silent catch here would hide the duplicate guard being inactive.
+  console.warn(`[marketing] instagram: duplicate check unavailable (${error.message}); publishing anyway.`);
+  return null;
+});
+const duplicate = (recentMedia?.data ?? []).find(
+  (item) =>
+    typeof item.caption === "string" &&
+    item.caption.includes(marker) &&
+    String(item.timestamp ?? "").slice(0, 10) === today,
+);
+if (duplicate) {
+  console.log(`[marketing] instagram: ${post.id} already posted today (media ${duplicate.id}); skipping safely.`);
+  process.exit(0);
+}
+
 if (!meta?.image?.includes("/appeals/og/")) {
   console.log(`[marketing] instagram: ${post.id} has no branded card yet; skipping this slot.`);
   process.exit(0);
