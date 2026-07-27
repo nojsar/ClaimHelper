@@ -78,13 +78,22 @@ The free API tier (~500 posts/month, 17/day) comfortably covers this cadence.
 
 The account must be a **Professional** account either way. Meta offers two ways to mint the token; `tool/post_instagram.mjs` picks the matching API host from the token prefix, so both work with the same two secrets.
 
-**Route A — Facebook login (preferred: the token does not expire).** Use this when the Instagram account is managed through a Meta business portfolio and has no usable standalone Instagram password.
+**Route A — System user token (what GetMyYes uses; the token never expires).** Correct whenever the Instagram account is owned by a Meta business portfolio, which also means it may have no usable standalone Instagram password.
 
-1. Link the Instagram account to a Facebook Page (Page → Settings → Linked accounts).
-2. Reuse the Meta developer app; in the **Graph API Explorer** request a user token with `instagram_basic`, `instagram_content_publish`, `pages_show_list`, `pages_read_engagement`.
-3. Exchange it for a long-lived token, then `GET /me/accounts` for the Page `id` and its `access_token`.
-4. `GET /<page-id>?fields=instagram_business_account` — that `id` is the IG Business Account id.
-5. Secrets: `INSTAGRAM_USER_ID` = the IG Business Account id, `INSTAGRAM_ACCESS_TOKEN` = the Page token.
+1. Link the Instagram account to a Facebook Page (Page → Settings → Linked accounts). For GetMyYes: Page `Getmyyes` = `1281079755078718`, IG business account = `17841414691594124`.
+2. Business settings → **Users → System users** → add one (role Admin), then **Assign assets**: the Page and the Instagram account, both with full control.
+3. **Generate new token** on that system user: app `GetMyYes IGautopilot`, expiry **Never**, scopes `instagram_basic`, `instagram_content_publish`, `pages_show_list`, `pages_read_engagement`. Meta shows the token **once** — copy it immediately.
+4. Secrets: `INSTAGRAM_USER_ID` = the IG business account id, `INSTAGRAM_ACCESS_TOKEN` = the system user token.
+
+Do **not** try to derive this from a personal user token via `GET /me/accounts` — that returns an empty `data` array for portfolio-owned Pages no matter which permissions the token carries, which looks like a permissions bug and is not one. Assets owned by a business portfolio need an identity the portfolio can hold assets against, i.e. a system user.
+
+Verify without posting — creating a media container is not a publish, and an unpublished container expires in 24h:
+
+```
+GET  /<page-id>?fields=instagram_business_account     # confirms the link
+GET  /<ig-user-id>?fields=id,username,media_count     # confirms the identity
+POST /<ig-user-id>/media?image_url=...&caption=...    # confirms content_publish
+```
 
 **Route B — Instagram login.** Simpler when the account has its own password.
 
