@@ -246,6 +246,14 @@
       font-family: var(--mono); font-weight: 400; font-size: 10px;
       color: var(--ink-faint); letter-spacing: 2px;
     }
+    .mast-right { display: flex; align-items: center; gap: clamp(10px, 2vw, 20px); }
+    .mast-link {
+      font-family: var(--mono); font-size: 11.5px; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--ink-soft); text-decoration: none;
+      border-bottom: 1px solid var(--line-strong);
+      display: inline-flex; align-items: center; min-height: 44px;
+    }
+    .mast-link:hover, .mast-link:focus-visible { color: var(--ink); border-color: var(--ink); }
     .mast-cta {
       font-family: var(--mono); font-size: 12.5px; font-weight: 600; letter-spacing: 1px;
       text-transform: uppercase; color: var(--ink); background: transparent;
@@ -659,7 +667,7 @@
     .doc-list li:hover b { font-variation-settings: "SOFT" 100, "WONK" 1; color: var(--red); font-style: italic; }
     .doc-list li span { font-family: var(--mono); font-size: 10.5px; letter-spacing: 1px; color: var(--ink-faint); text-transform: uppercase; }
 
-    /* ============ SCENE V · THE LONG GAME (follow-ups ledger) ============ */
+    /* ============ SCENE VI · THE LONG GAME (follow-ups ledger) ============ */
     .longgame { padding: clamp(100px, 14vh, 170px) 0; }
     .ledger {
       display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
@@ -691,7 +699,7 @@
       font-size: 10px; letter-spacing: 1px; color: var(--ink-faint); text-transform: uppercase;
     }
 
-    /* ============ SCENE VI · THE RECKONING (pricing receipts) ============ */
+    /* ============ SCENE V · THE RECKONING (pricing receipts) ============ */
     .reckoning { padding: clamp(100px, 14vh, 180px) 0; background:
       linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 20%, var(--paper-2) 80%, var(--paper) 100%); }
     .reckoning .head { display: grid; grid-template-columns: 220px 1fr; gap: clamp(24px, 4vw, 60px); margin-bottom: clamp(44px, 6vh, 80px); align-items: start; }
@@ -804,6 +812,63 @@
     .faq .a {
       font-family: var(--mono); font-size: 12.5px; line-height: 2;
       color: rgba(243,237,223,0.66); padding: 0 6px 22px; max-width: 640px;
+    }
+
+    /* ---------- credentials: verifiable facts only ---------- */
+    .credentials {
+      max-width: 760px; margin: 54px auto 0; padding: 24px 26px;
+      text-align: left; border: 1px solid rgba(243,237,223,0.25);
+      background: rgba(243,237,223,0.045);
+    }
+    .credentials .kicker {
+      font-family: var(--mono); font-size: 10px; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--green-bright);
+    }
+    .credentials h3 {
+      margin: 9px 0 14px; font-family: var(--serif); font-size: clamp(22px, 3vw, 32px);
+      font-weight: 560; color: var(--paper);
+    }
+    .credentials dl { margin: 0; display: grid; gap: 14px; }
+    .credentials div { display: grid; gap: 3px; }
+    .credentials dt {
+      font-family: var(--mono); font-size: 10.5px; letter-spacing: 1.6px;
+      text-transform: uppercase; color: var(--paper);
+    }
+    .credentials dd {
+      margin: 0; color: rgba(243,237,223,0.67); line-height: 1.65; font-size: 14px;
+    }
+    .credentials dd a {
+      color: rgba(243,237,223,0.85); text-decoration: none;
+      border-bottom: 1px solid rgba(243,237,223,0.35);
+    }
+    .credentials dd a:hover { color: var(--green-bright); border-color: var(--green-bright); }
+    @media (min-width: 720px) { .credentials dl { grid-template-columns: 1fr 1fr; gap: 18px 30px; } }
+
+    /* Reviews render only when marketing/testimonials.json has real, consented
+       entries — see the empty-state note in that file. Never seed placeholders:
+       an invented review on a health product is both unlawful (FTC 16 CFR 465,
+       EU UCPD) and the fastest way to lose the trust this section exists for. */
+    .voices { max-width: 760px; margin: 54px auto 0; text-align: left; }
+    .voices .kicker {
+      font-family: var(--mono); font-size: 10px; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--green-bright);
+    }
+    .voices h3 {
+      margin: 9px 0 16px; font-family: var(--serif); font-size: clamp(22px, 3vw, 32px);
+      font-weight: 560; color: var(--paper);
+    }
+    .voices ul { list-style: none; display: grid; gap: 16px; }
+    @media (min-width: 720px) { .voices ul { grid-template-columns: 1fr 1fr; } }
+    .voices li {
+      border: 1px solid rgba(243,237,223,0.25); background: rgba(243,237,223,0.045);
+      padding: 20px 22px;
+    }
+    .voices blockquote {
+      margin: 0 0 12px; color: rgba(243,237,223,0.82); line-height: 1.7; font-size: 15px;
+    }
+    .voices figcaption, .voices .meta {
+      font-family: var(--mono); font-size: 10.5px; letter-spacing: 1.4px;
+      text-transform: uppercase; color: rgba(243,237,223,0.6);
     }
 
     .free-guides {
@@ -1012,7 +1077,10 @@
 
     <nav class="masthead" aria-label="Primary">
       <div class="brand"><span class="tick stamped">✓ YES</span> GetMyYes <small>EST. 2026</small></div>
-      <button type="button" class="mast-cta" data-boot="/account">My cases →</button>
+      <div class="mast-right">
+        <a class="mast-link" href="/privacy">Privacy</a>
+        <button type="button" class="mast-cta" data-boot="/account">My cases →</button>
+      </div>
     </nav>
 
     <main id="main-content" tabindex="-1">
@@ -1220,40 +1288,12 @@
       </div>
     </section>
 
-    <!-- ============ SCENE V · THE LONG GAME ============ -->
-    <section class="scene longgame" id="s5">
-      <div class="wrap ledger">
-        <div class="ledger-copy">
-          <div class="scene-roman" style="font-size:clamp(60px,7vw,110px)" aria-hidden="true">V</div>
-          <div class="scene-kicker" style="margin-bottom:22px">The long game</div>
-          <h2 class="headline">They reply.<br><em>You reply harder.</em></h2>
-          <p class="lede" style="margin-top:24px">An appeal is rarely one letter. When the insurer answers — or ignores you — report what happened and GetMyYes drafts the next move: a second-level appeal, an external-review request, or a status demand.</p>
-        </div>
-        <div class="ledger-table" id="ledger">
-          <div class="lt-head"><span>Follow-up ledger</span><span>Per case</span></div>
-          <div class="lt-row">
-            <div class="what">2 follow-up rounds, included with your packet<small>usable immediately — no waiting period</small></div>
-            <div class="amt free">$0</div>
-          </div>
-          <div class="lt-row">
-            <div class="what">Each additional round<small>one insurer response → one drafted comeback</small></div>
-            <div class="amt">$19</div>
-          </div>
-          <div class="lt-row">
-            <div class="what">Full Case upgrade<small>up to 10 drafting rounds · $59 total after your packet</small></div>
-            <div class="amt">$20</div>
-          </div>
-          <div class="lt-cap">One round = one submission · include everything you have</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ SCENE VI · THE RECKONING ============ -->
-    <section class="scene reckoning" id="s6">
+    <!-- ============ SCENE V · THE RECKONING ============ -->
+    <section class="scene reckoning" id="s5">
       <div class="wrap">
         <div class="head">
           <div>
-            <div class="scene-roman" aria-hidden="true">VI</div>
+            <div class="scene-roman" aria-hidden="true">V</div>
             <div class="scene-kicker">The reckoning</div>
           </div>
           <div>
@@ -1273,7 +1313,7 @@
               <li><span>Likely appeal path</span><span>incl.</span></li>
               <li><span>Missing-info checklist</span><span>incl.</span></li>
             </ul>
-            <button type="button" class="btn-paper" data-boot="/upload">Get my free preview</button>
+            <button type="button" class="btn-paper" data-boot="/upload">Open my case — free</button>
             <div class="barcode" aria-hidden="true"></div>
           </div>
           <div class="receipt paid">
@@ -1290,7 +1330,7 @@
               <li><span>Never used to train AI</span><span>promise</span></li>
               <li><span><a href="/terms#accuracy-guarantee">14-day accuracy guarantee</a></span><span>refund</span></li>
             </ul>
-            <button type="button" class="btn-ink" data-boot="/upload">Start my appeal</button>
+            <button type="button" class="btn-ink" data-boot="/upload">Open my case — free</button>
             <p class="sub"><a href="/sample-packet">Inspect a fictional, redacted sample packet first</a></p>
             <div class="barcode" aria-hidden="true"></div>
           </div>
@@ -1308,10 +1348,38 @@
               <li><span>Already bought the packet?</span><span>+$20</span></li>
               <li><span><a href="/terms#accuracy-guarantee">14-day accuracy guarantee</a></span><span>refund</span></li>
             </ul>
-            <button type="button" class="btn-ink" data-boot="/upload?tier=packet_plus">Start with Full Case</button>
+            <button type="button" class="btn-ink" data-boot="/upload?tier=packet_plus">Open my case — free</button>
             <p class="sub">No outcome is guaranteed. You review every draft before sending.</p>
             <div class="barcode" aria-hidden="true"></div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SCENE VI · THE LONG GAME ============ -->
+    <section class="scene longgame" id="s6">
+      <div class="wrap ledger">
+        <div class="ledger-copy">
+          <div class="scene-roman" style="font-size:clamp(60px,7vw,110px)" aria-hidden="true">VI</div>
+          <div class="scene-kicker" style="margin-bottom:22px">The long game</div>
+          <h2 class="headline">They reply.<br><em>You reply harder.</em></h2>
+          <p class="lede" style="margin-top:24px">An appeal is rarely one letter. When the insurer answers — or ignores you — report what happened and GetMyYes drafts the next move: a second-level appeal, an external-review request, or a status demand.</p>
+        </div>
+        <div class="ledger-table" id="ledger">
+          <div class="lt-head"><span>Follow-up ledger</span><span>Per case</span></div>
+          <div class="lt-row">
+            <div class="what">2 follow-up rounds, included with your packet<small>usable immediately — no waiting period</small></div>
+            <div class="amt free">$0</div>
+          </div>
+          <div class="lt-row">
+            <div class="what">Each additional round<small>one insurer response → one drafted comeback</small></div>
+            <div class="amt">$19</div>
+          </div>
+          <div class="lt-row">
+            <div class="what">Full Case upgrade<small>up to 10 drafting rounds · $59 total after your packet</small></div>
+            <div class="amt">$20</div>
+          </div>
+          <div class="lt-cap">One round = one submission · include everything you have</div>
         </div>
       </div>
     </section>
@@ -1350,7 +1418,81 @@
             <summary>Is my health data private?</summary>
             <div class="a">Your files are processed only to draft your appeal — never to train AI. Guest uploads normally auto-delete after 24 hours. If you explicitly request a saved preview link and reminders, that unpaid case is kept for up to 14 days. You can delete your case and files at any time.</div>
           </details>
+          <details>
+            <summary>Who is behind GetMyYes?</summary>
+            <div class="a">GetMyYes is operated by Nojus Sargevičius, a sole trader registered for individual activity in Lithuania (activity code 621090, State Tax Inspectorate certificate No. 1531216). That is also the data controller named in our <a href="/privacy">Privacy Policy</a>. Questions go to <a href="mailto:support@getmyyes.com">support@getmyyes.com</a> and reach a person, not a queue.</div>
+          </details>
         </div>
+
+        <aside class="credentials" aria-labelledby="credentials-title">
+          <div class="kicker">On the record</div>
+          <h3 id="credentials-title">Who you're dealing with.</h3>
+          <dl>
+            <div>
+              <dt>Operator</dt>
+              <dd>Nojus Sargevičius — registered sole trader (<i lang="lt">individuali veikla</i>), Lithuania. Activity code 621090. State Tax Inspectorate certificate No.&nbsp;1531216.</dd>
+            </div>
+            <div>
+              <dt>Contact</dt>
+              <dd><a href="mailto:support@getmyyes.com">support@getmyyes.com</a> — a real person answers.</dd>
+            </div>
+            <div>
+              <dt>Payments</dt>
+              <dd>Processed by Stripe. Your card number never reaches our servers.</dd>
+            </div>
+            <div>
+              <dt>Your documents</dt>
+              <dd>Never used to train AI. Retention is disabled on our AI provider's API. Full detail in the <a href="/privacy">Privacy Policy</a>.</dd>
+            </div>
+            <div>
+              <dt>Deletion</dt>
+              <dd>Guest uploads normally delete after 24 hours. You can delete any case, file, or your entire account from Settings, any time.</dd>
+            </div>
+            <div>
+              <dt>No tracking</dt>
+              <dd>No third-party trackers, no advertising, no analytics cookies. Fonts and scripts are self-hosted, so loading a page sends your data to nobody.</dd>
+            </div>
+            <div>
+              <dt>If we get it wrong</dt>
+              <dd>14-day accuracy guarantee — corrected or refunded. If a packet fails to generate and we can't fix it, you're refunded in full.</dd>
+            </div>
+            <div>
+              <dt>Accessibility</dt>
+              <dd>Built to a WCAG 2.2 Level AA target. Known limitations are listed in our <a href="/accessibility">Accessibility Statement</a>.</dd>
+            </div>
+          </dl>
+        </aside>
+
+        <!-- REVIEWS · intentionally absent until real ones exist.
+             GetMyYes launched in 2026 and has not yet collected consented
+             customer testimonials. The app already gathers them: the feedback
+             step records a fixed-choice satisfaction rating plus a SEPARATE
+             testimonial-permission choice (see privacy.html §2). Only entries
+             where that permission is an explicit yes may appear here.
+
+             To publish, drop the <section> below in place of this comment and
+             fill one <li> per consented review. Styles are ready (.voices).
+
+             Do NOT write example, placeholder, or composite reviews, not even
+             temporarily — fabricated endorsements breach the FTC's fake-review
+             rule (16 CFR 465) and the EU Unfair Commercial Practices Directive,
+             and on a health product they destroy the credibility this whole
+             section is here to build. An empty section is not a weakness; an
+             invented one is a liability.
+
+        <section class="voices" aria-labelledby="voices-title">
+          <div class="kicker">In their words</div>
+          <h3 id="voices-title">What people got back.</h3>
+          <ul>
+            <li>
+              <figure>
+                <blockquote>Exact words the customer wrote. Never edited into something they did not say.</blockquote>
+                <figcaption>First name or initials · denial type · month year</figcaption>
+              </figure>
+            </li>
+          </ul>
+        </section>
+        -->
 
         <aside class="free-guides" aria-labelledby="free-guides-title">
           <div class="kicker">Free resources · no upload required</div>
@@ -1377,6 +1519,13 @@
         <div>
           <b style="color:rgba(243,237,223,0.9)">GETMYYES</b> · turn a health-insurance denial into a ready-to-send appeal<br>
           Case files set in Fraunces &amp; IBM Plex Mono.
+        </div>
+        <div>
+          <b style="color:rgba(243,237,223,0.9)">OPERATOR</b><br>
+          Nojus Sargevičius<br>
+          Individuali veikla (registered sole trader), Lithuania<br>
+          Activity code 621090 · VMI certificate No. 1531216<br>
+          <a href="mailto:support@getmyyes.com">support@getmyyes.com</a>
         </div>
         <div>
           <a href="/terms">Terms of Service</a> &nbsp;·&nbsp;
@@ -1724,7 +1873,7 @@
         /* ---------- ledger ---------- */
         gsap.from('.ledger-copy > *', {
           y: 36, opacity: 0, stagger: 0.1, duration: 0.8, ease: 'power3.out',
-          scrollTrigger: { trigger: '#s5', start: 'top 72%' }
+          scrollTrigger: { trigger: '#s6', start: 'top 72%' }
         });
         gsap.from('#ledger', {
           y: 50, opacity: 0, rotation: 1.2, duration: 0.9, ease: 'power3.out',
@@ -1799,6 +1948,12 @@
           var counter = { v: 0 };
           gsap.to(counter, {
             v: 15, duration: 1.1, ease: 'power2.out',
+            // Without this GSAP renders the tween once at creation, writing
+            // Math.round(0) over the server-rendered "15" — so the stat read
+            // "0 min from denial letter to a full packet" until you scrolled
+            // to it. The markup value is the correct no-JS fallback; leave it
+            // alone until the ScrollTrigger actually fires.
+            immediateRender: false,
             scrollTrigger: { trigger: '#actuary', start: 'top 78%' },
             onUpdate: function () { cnt15.textContent = Math.round(counter.v); }
           });
