@@ -3,6 +3,7 @@ import 'dart:ui' show ImageFilter;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart' show MaxLengthEnforcement;
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -17,14 +18,20 @@ import '../../widgets/account_gate.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/case_loader.dart';
 import '../../widgets/ui.dart';
+import '../upload/upload_validation.dart';
 
 /// Free preview + paywall. Generates the preview from the confirmed
 /// extraction, lets the user supply anything the preview flagged as missing
 /// (text details and/or more documents), then locks the full packet behind
 /// the one-time purchase.
 class PreviewPaywallScreen extends ConsumerStatefulWidget {
-  const PreviewPaywallScreen({super.key, required this.caseId});
+  const PreviewPaywallScreen({
+    super.key,
+    required this.caseId,
+    this.resumeCheckoutKind,
+  });
   final String caseId;
+  final String? resumeCheckoutKind;
 
   @override
   ConsumerState<PreviewPaywallScreen> createState() =>
@@ -32,6 +39,8 @@ class PreviewPaywallScreen extends ConsumerStatefulWidget {
 }
 
 class _PreviewPaywallScreenState extends ConsumerState<PreviewPaywallScreen> {
+  static const _maxAdditionalDetailsLength = 8000;
+
   FreePreview? _preview;
   DenialExtraction? _extraction;
   bool _loading = true;
@@ -45,15 +54,22 @@ class _PreviewPaywallScreenState extends ConsumerState<PreviewPaywallScreen> {
   final _detailsCtrl = TextEditingController();
   final List<PickedUpload> _extraFiles = [];
   bool _updating = false;
+  String? _extraFileError;
 
   // Deadline-reminder opt-in state.
   final _reminderCtrl = TextEditingController();
   bool _savingReminder = false;
   bool _reminderSaved = false;
+  bool _resumeCheckoutStarted = false;
+  String? _acquisitionSource;
 
   @override
   void initState() {
     super.initState();
+    if (ref.read(intakeControllerProvider).requestedPurchaseKind ==
+        'packet_plus') {
+      _selectedKind = 'packet_plus';
+    }
     _load();
   }
 
@@ -101,6 +117,7 @@ class _PreviewPaywallScreenState extends ConsumerState<PreviewPaywallScreen> {
             _extraction = ex;
             _loading = false;
           });
+          _resumeCheckoutAfterEmailLink();
           return;
         }
       }
@@ -110,12 +127,26 @@ class _PreviewPaywallScreenState extends ConsumerState<PreviewPaywallScreen> {
         _extraction = ex;
         _loading = false;
       });
+      _resumeCheckoutAfterEmailLink();
     } catch (e) {
       setState(() {
         _error = _friendlyError(e);
         _loading = false;
       });
     }
+  }
+
+  void _resumeCheckoutAfterEmailLink() {
+    final kind = widget.resumeCheckoutKind;
+    if (_resumeCheckoutStarted || (kind != 'packet' && kind != 'packet_plus')) {
+      return;
+    }
+    _resumeCheckoutStarted = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() => _selectedKind = kind!);
+      _purchase();
+    });
   }
 
   static String _mimeFor(String name) {
@@ -131,10 +162,38 @@ class _PreviewPaywallScreenState extends ConsumerState<PreviewPaywallScreen> {
       case 'webp':
         return 'image/webp';
       case 'heic':
+      case 'heif':
         return 'image/heic';
       default:
         return 'application/octet-stream';
     }
+  }
+
+  UploadFileDescriptor _descriptor(PickedUpload file) => UploadFileDescriptor(
+        name: file.name,
+        sizeBytes: file.bytes.length,
+      );
+
+  void _addExtraFiles(List<PickedUpload> candidates) {
+    if (!mounted || candidates.isEmpty) return;
+    final plan = planUploadSelection(
+      existing: _extraFiles.map(_descriptor).toList(growable: false),
+      incoming: candidates.map(_descriptor).toList(growable: false),
+    );
+    final firstIssue =
+        plan.rejections.isEmpty ? null : plan.rejections.first.message;
+    final extraIssues = plan.rejections.length - 1;
+    setState(() {
+      for (final index in plan.acceptedIndexes) {
+        _extraFiles.add(candidates[index]);
+      }
+      _extraFileError = firstIssue == null
+          ? null
+          : extraIssues == 0
+              ? firstIssue
+              : '$firstIssue $extraIssues more '
+                  'file${extraIssues == 1 ? ' was' : 's were'} skipped.';
+    });
   }
 
   Future<void> _pickExtraFiles() async {
@@ -142,18 +201,31 @@ class _PreviewPaywallScreenState extends ConsumerState<PreviewPaywallScreen> {
       allowMultiple: true,
       withData: true,
       type: FileType.custom,
-      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic'],
+      allowedExtensions: allowedUploadExtensions,
     );
     if (result == null) return;
-    setState(() {
-      _extraFiles.addAll(result.files.where((f) => f.bytes != null).map((f) =>
+    if (!mounted) return;
+    _addExtraFiles([
+      for (final file in result.files)
+        if (file.bytes != null)
           PickedUpload(
-              name: f.name, bytes: f.bytes!, mimeType: _mimeFor(f.name))));
-    });
+            name: file.name,
+            bytes: file.bytes!,
+            mimeType: _mimeFor(file.name),
+          ),
+    ]);
   }
 
   Future<void> _applyAdditions() async {
-    final details = _detailsCtrl.text.trim();
+    final rawDetails = _detailsCtrl.text;
+    if (rawDetails.length > _maxAdditionalDetailsLength) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content:
+            Text('Additional case details must be 8,000 characters or fewer.'),
+      ));
+      return;
+    }
+    final details = rawDetails.trim();
     if (details.isEmpty && _extraFiles.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Add some details or attach a document first.')));
@@ -202,6 +274,25 @@ class _PreviewPaywallScreenState extends ConsumerState<PreviewPaywallScreen> {
   }
 
   Future<void> _purchase() async {
+    final backend = ref.read(backendProvider);
+    // Analytics failures must never interrupt checkout. These calls accept only
+    // fixed categories, never document content or free text.
+    await _recordFunnelEvent('tier_selected');
+    try {
+      await backend.recordCaseTierSelection(widget.caseId, _selectedKind);
+    } catch (_) {
+      // Aggregate telemetry is always best-effort.
+    }
+    if (_acquisitionSource != null) {
+      try {
+        await backend.saveCaseAcquisitionAttribution(
+            widget.caseId, _acquisitionSource!);
+      } catch (_) {}
+    }
+    if (!mounted) return;
+    final wasAnonymous = ref.read(authProvider).isAnonymous;
+    if (wasAnonymous) await _recordFunnelEvent('account_gate_shown');
+    if (!mounted) return;
     // A purchase must belong to a recoverable account. ensureAccount also
     // completes an interrupted guest-case transfer after a browser reload.
     final ok = await ensureAccount(
@@ -212,11 +303,12 @@ class _PreviewPaywallScreenState extends ConsumerState<PreviewPaywallScreen> {
       reason: 'Your paid appeal packet is stored on your account so you can '
           'come back to it from any device. This takes 20 seconds, then '
           'checkout continues.',
+      resumeCheckoutKind: _selectedKind,
     );
     if (!ok || !mounted) return;
+    if (wasAnonymous) await _recordFunnelEvent('account_completed');
     setState(() => _purchasing = true);
     try {
-      final backend = ref.read(backendProvider);
       final url = await backend.createCheckoutSession(widget.caseId,
           kind: _selectedKind);
       if (url != null) {
@@ -233,6 +325,16 @@ class _PreviewPaywallScreenState extends ConsumerState<PreviewPaywallScreen> {
       }
     } finally {
       if (mounted) setState(() => _purchasing = false);
+    }
+  }
+
+  Future<void> _recordFunnelEvent(String event) async {
+    try {
+      await ref
+          .read(backendProvider)
+          .recordCaseFunnelEvent(widget.caseId, event);
+    } catch (_) {
+      // Aggregate telemetry is always best-effort.
     }
   }
 
@@ -322,9 +424,13 @@ class _PreviewPaywallScreenState extends ConsumerState<PreviewPaywallScreen> {
               _MissingPiecesCard(
                 detailsCtrl: _detailsCtrl,
                 files: _extraFiles,
+                fileError: _extraFileError,
                 updating: _updating,
                 onPickFiles: _pickExtraFiles,
-                onRemoveFile: (f) => setState(() => _extraFiles.remove(f)),
+                onRemoveFile: (f) => setState(() {
+                  _extraFiles.remove(f);
+                  _extraFileError = null;
+                }),
                 onApply: _applyAdditions,
               ),
             ],
@@ -336,6 +442,9 @@ class _PreviewPaywallScreenState extends ConsumerState<PreviewPaywallScreen> {
               purchasing: _purchasing,
               selectedKind: _selectedKind,
               onSelectKind: (k) => setState(() => _selectedKind = k),
+              acquisitionSource: _acquisitionSource,
+              onSelectAcquisitionSource: (value) =>
+                  setState(() => _acquisitionSource = value),
               onBuy: _purchase,
             ),
             const SizedBox(height: 20),
@@ -593,6 +702,7 @@ class _MissingPiecesCard extends StatelessWidget {
   const _MissingPiecesCard({
     required this.detailsCtrl,
     required this.files,
+    required this.fileError,
     required this.updating,
     required this.onPickFiles,
     required this.onRemoveFile,
@@ -601,6 +711,7 @@ class _MissingPiecesCard extends StatelessWidget {
 
   final TextEditingController detailsCtrl;
   final List<PickedUpload> files;
+  final String? fileError;
   final bool updating;
   final VoidCallback onPickFiles;
   final void Function(PickedUpload) onRemoveFile;
@@ -636,6 +747,8 @@ class _MissingPiecesCard extends StatelessWidget {
               controller: detailsCtrl,
               maxLines: 4,
               minLines: 3,
+              maxLength: _PreviewPaywallScreenState._maxAdditionalDetailsLength,
+              maxLengthEnforcement: MaxLengthEnforcement.enforced,
               decoration: const InputDecoration(
                 labelText: 'Additional case details',
                 alignLabelWithHint: true,
@@ -656,6 +769,37 @@ class _MissingPiecesCard extends StatelessWidget {
                       onDeleted: updating ? null : () => onRemoveFile(f),
                     ),
                 ],
+              ),
+              const SizedBox(height: 12),
+            ],
+            if (fileError != null) ...[
+              Semantics(
+                container: true,
+                liveRegion: true,
+                label: 'File error: $fileError',
+                child: ExcludeSemantics(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        size: 18,
+                        color: AppColors.error,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          fileError!,
+                          style: const TextStyle(
+                            color: AppColors.error,
+                            fontSize: 13,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
               const SizedBox(height: 12),
             ],
@@ -680,6 +824,11 @@ class _MissingPiecesCard extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 6),
+            const Text(
+              'PDF, JPG, PNG, HEIC, or WebP — 20 MB each, 45 MB total.',
+              style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+            ),
           ],
         ),
       ),
@@ -695,6 +844,8 @@ class _PaywallCard extends StatelessWidget {
     required this.purchasing,
     required this.selectedKind,
     required this.onSelectKind,
+    required this.acquisitionSource,
+    required this.onSelectAcquisitionSource,
     required this.onBuy,
   });
   final String recommended;
@@ -703,6 +854,8 @@ class _PaywallCard extends StatelessWidget {
   final bool purchasing;
   final String selectedKind;
   final ValueChanged<String> onSelectKind;
+  final String? acquisitionSource;
+  final ValueChanged<String?> onSelectAcquisitionSource;
   final VoidCallback onBuy;
 
   static const _includes = [
@@ -769,13 +922,15 @@ class _PaywallCard extends StatelessWidget {
             const SizedBox(height: 10),
             _TierOption(
               selected: plus,
-              title: 'Full Case — until it\'s resolved',
+              title:
+                  'Full Case — up to ${Pricing.fullCaseRoundsCap} follow-up drafts',
               price: Pricing.fullCaseUsd,
-              badge: 'BEST VALUE',
               caption:
                   'Everything in the packet, plus up to ${Pricing.fullCaseRoundsCap} '
-                  'follow-up rounds — second-level appeals, external review, '
-                  'every insurer reply handled.',
+                  'follow-up drafting rounds for later insurer responses. It costs '
+                  '\$${Pricing.fullCaseUpgradeUsd} more than the packet today; a '
+                  'packet customer can make that same optional upgrade later. You '
+                  'review and send each document; no appeal outcome is promised.',
               onTap: purchasing ? null : () => onSelectKind('packet_plus'),
             ),
             const Divider(height: 26),
@@ -791,6 +946,31 @@ class _PaywallCard extends StatelessWidget {
                   ],
                 ),
               ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              initialValue: acquisitionSource,
+              isExpanded: true,
+              decoration: const InputDecoration(
+                labelText: 'How did you hear about us? (optional)',
+                helperText:
+                    'A fixed category only — never a link, name, or case detail.',
+              ),
+              items: const [
+                DropdownMenuItem(value: 'google', child: Text('Google search')),
+                DropdownMenuItem(value: 'quora', child: Text('Quora')),
+                DropdownMenuItem(value: 'social', child: Text('Social media')),
+                DropdownMenuItem(
+                    value: 'friend_family', child: Text('Friend or family')),
+                DropdownMenuItem(
+                    value: 'advocate_provider',
+                    child: Text('Patient advocate or provider')),
+                DropdownMenuItem(value: 'other', child: Text('Other')),
+                DropdownMenuItem(
+                    value: 'prefer_not_to_say',
+                    child: Text('Prefer not to say')),
+              ],
+              onChanged: purchasing ? null : onSelectAcquisitionSource,
+            ),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
@@ -909,14 +1089,12 @@ class _TierOption extends StatelessWidget {
     required this.price,
     required this.caption,
     required this.onTap,
-    this.badge,
   });
 
   final bool selected;
   final String title;
   final int price;
   final String caption;
-  final String? badge;
   final VoidCallback? onTap;
 
   @override
@@ -974,22 +1152,6 @@ class _TierOption extends StatelessWidget {
                       runSpacing: 4,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        if (badge != null)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 7, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: AppColors.accent,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(badge!,
-                                style: const TextStyle(
-                                    fontFamily: AppFonts.mono,
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.8,
-                                    color: Colors.white)),
-                          ),
                         Text('\$$price',
                             style: const TextStyle(
                                 fontSize: 19,
@@ -1047,8 +1209,9 @@ class _ReminderCard extends StatelessWidget {
                 SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Reminders on. We emailed you the case link and will nudge '
-                    'you before your deadline. Stop any time by deleting the case.',
+                    'Your private case link and transactional reminders are on. '
+                    'Your unpaid case is retained for up to 14 days; we may nudge '
+                    'you before the deadline. No marketing. Stop by deleting the case.',
                     style: TextStyle(height: 1.45),
                   ),
                 ),
@@ -1070,7 +1233,7 @@ class _ReminderCard extends StatelessWidget {
                     color: AppColors.primaryDark, size: 20),
                 SizedBox(width: 8),
                 Expanded(
-                  child: Text('Deciding later? Don\'t lose the deadline.',
+                  child: Text('Save a private link to this preview',
                       style:
                           TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
                 ),
@@ -1079,10 +1242,13 @@ class _ReminderCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               daysToDeadline != null
-                  ? 'We\'ll email you this preview now and remind you before '
-                      'your $daysToDeadline-day window closes. No marketing, ever.'
-                  : 'We\'ll email you this preview now and nudge you so the '
-                      'appeal window doesn\'t slip. No marketing, ever.',
+                  ? 'Optional. We\'ll email this preview and a private case link, '
+                      'then send transactional deadline reminders before your '
+                      '$daysToDeadline-day window closes. Your unpaid case is '
+                      'retained for up to 14 days; this is not marketing.'
+                  : 'Optional. We\'ll email this preview and a private case link, '
+                      'then send transactional deadline reminders. Your unpaid case '
+                      'is retained for up to 14 days; this is not marketing.',
               style: const TextStyle(
                   color: AppColors.textSecondary, height: 1.45, fontSize: 13),
             ),
@@ -1111,7 +1277,7 @@ class _ReminderCard extends StatelessWidget {
                           height: 16,
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: Colors.white))
-                      : const Text('Remind me'),
+                      : const Text('Save preview & remind me'),
                 );
                 if (stack) {
                   return Column(

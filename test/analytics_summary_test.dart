@@ -102,8 +102,6 @@ void main() {
         AnalyticsMetric.readyOverEightSeconds: 24,
       };
 
-      expect(expected.keys, containsAll(AnalyticsMetric.values));
-      expect(expected, hasLength(AnalyticsMetric.values.length));
       for (final entry in expected.entries) {
         expect(
           entry.key.valueForDay(latest!),
@@ -111,6 +109,82 @@ void main() {
           reason: '${entry.key.name} should read ${entry.key.id}',
         );
       }
+      // The enum switch is exhaustive; every newly displayed metric must at
+      // least read a bounded integer even before its collection has data.
+      for (final metric in AnalyticsMetric.values) {
+        expect(metric.valueForDay(latest!), isA<int>());
+      }
+    });
+
+    test('reads aggregate monetization and model-operation counters', () {
+      final summary = AnalyticsSummary.fromDocuments(
+        const [
+          AnalyticsDocument('2026-07-13', {
+            'monetization': {
+              'packet': {
+                'tier_selected': 4,
+                'paid': 3,
+                'refunded': 1,
+                'checkout_expired': 2,
+                'checkout_recovered': 1,
+                'netRevenueCents': 7800,
+              },
+              'full_case': {
+                'tier_selected': 2,
+                'paid': 1,
+                'netRevenueCents': 5900,
+              },
+              'followup_round': {'paid': 2, 'netRevenueCents': 3800},
+              'full_case_upgrade': {'paid': 1, 'netRevenueCents': 2000},
+            },
+            'model': {
+              'calls': 7,
+              'errors': 1,
+              'inputTokens': 1200,
+              'outputTokens': 340,
+              'totalDurationMs': 12500,
+              'estimatedCostMicros': 5275,
+              'operations': {
+                'extraction': {
+                  'calls': 2,
+                  'errors': 1,
+                  'inputTokens': 500,
+                  'outputTokens': 100,
+                  'totalDurationMs': 3000,
+                },
+                'followup': {
+                  'calls': 3,
+                  'inputTokens': 600,
+                  'outputTokens': 180,
+                  'totalDurationMs': 7000,
+                },
+              },
+            },
+          }),
+        ],
+        now: DateTime.utc(2026, 7, 13),
+      );
+
+      expect(AnalyticsMetric.packetSelected.total(summary), 4);
+      expect(AnalyticsMetric.packetPaid.total(summary), 3);
+      expect(AnalyticsMetric.packetRefunded.total(summary), 1);
+      expect(AnalyticsMetric.packetCheckoutExpired.total(summary), 2);
+      expect(AnalyticsMetric.packetCheckoutRecovered.total(summary), 1);
+      expect(AnalyticsMetric.packetNetRevenue.total(summary), 7800);
+      expect(AnalyticsMetric.fullCaseNetRevenue.total(summary), 5900);
+      expect(AnalyticsMetric.followupRoundPaid.total(summary), 2);
+      expect(AnalyticsMetric.fullCaseUpgradeNetRevenue.total(summary), 2000);
+      expect(AnalyticsMetric.modelCalls.total(summary), 7);
+      expect(AnalyticsMetric.modelDurationMs.total(summary), 12500);
+      expect(AnalyticsMetric.modelEstimatedCostMicros.total(summary), 5275);
+      expect(
+          AnalyticsMetric.contributionAfterAiMicros.total(summary), 194994725);
+      expect(AnalyticsMetric.modelExtractionErrors.total(summary), 1);
+      expect(AnalyticsMetric.modelFollowupOutputTokens.total(summary), 180);
+      expect(AnalyticsMetric.modelPreviewCalls.total(summary), 0);
+      expect(AnalyticsMetric.modelDurationMs.format(12500), '12.50s');
+      expect(AnalyticsMetric.packetNetRevenue.format(7800), r'$78.00');
+      expect(AnalyticsMetric.modelEstimatedCostMicros.format(5275), r'$0.0053');
     });
 
     test('computes 30-day and seven-day totals for each metric family', () {
@@ -280,6 +354,34 @@ void main() {
         )),
         5,
       );
+    });
+  });
+
+  group('customer-reported acquisition', () {
+    test('merges only fixed aggregate selected, paid, and revenue values', () {
+      final summary = AnalyticsSummary.fromDocuments(
+        const [
+          AnalyticsDocument('2026-07-12', {
+            'acquisition': {
+              'google': {'selected': 4, 'paid': 2, 'revenueCents': 7800},
+              'quora': {'selected': 1, 'paid': 0, 'revenueCents': 0},
+            },
+          }),
+          AnalyticsDocument('2026-07-13', {
+            'acquisition': {
+              'google': {'selected': 3, 'paid': 1, 'revenueCents': 5900},
+            },
+          }),
+        ],
+        now: DateTime.utc(2026, 7, 13),
+      );
+
+      final google = summary.acquisitionSources
+          .firstWhere((entry) => entry.source == 'google');
+      expect(google.selected, 7);
+      expect(google.paid, 3);
+      expect(google.revenueCents, 13700);
+      expect(summary.acquisitionSources.last.source, 'quora');
     });
   });
 

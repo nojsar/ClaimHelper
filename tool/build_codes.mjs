@@ -11,7 +11,11 @@ import { codes } from "./codes_data.mjs";
 const projectRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const outRoot = path.join(projectRoot, "web", "codes");
 const siteOrigin = "https://getmyyes.com";
-const updated = "2026-07-12";
+const publishedAt = "2026-07-12T00:00:00Z";
+const modifiedAt = "2026-07-27T00:00:00Z";
+const modifiedLabel = "JULY 27, 2026";
+const socialImage = `${siteOrigin}/og-image.png`;
+const socialImageAlt = "GetMyYes graphic: The insurer stamped no. We draft the comeback. Free preview, $39 full packet, no subscription.";
 
 const guideTitles = {
   "not-medically-necessary": "“Not medically necessary” denials",
@@ -38,6 +42,15 @@ const truncate = (value, max) => value.length <= max
   ? value
   : `${value.slice(0, max - 1).replace(/\s+\S*$/, "")}…`;
 
+function officialCodeSources() {
+  return `      <aside class="sources" aria-labelledby="official-code-sources">
+        <div class="kicker">Official references</div>
+        <h2 id="official-code-sources">Check the code before you act</h2>
+        <p>GetMyYes adds plain-English context. Confirm the code number, current status, and official wording in the <a href="https://x12.org/codes/claim-adjustment-reason-codes" rel="noopener">X12 Claim Adjustment Reason Code list</a>. If your notice also shows a remark code, check the <a href="https://x12.org/codes/remittance-advice-remark-codes" rel="noopener">X12 Remittance Advice Remark Code list</a>. <a href="https://www.cms.gov/medicare/coding-billing/electronic-billing/health-care-payment-remittance-advice" rel="noopener">CMS explains how reason and remark codes work together</a>.</p>
+        <p class="source-note">Your payer’s full notice and plan documents control.</p>
+      </aside>`;
+}
+
 function shell({ title, description, canonical, h1, crumb, body }) {
   const pageTitle = truncate(title, 65);
   const pageDescription = truncate(description, 165);
@@ -54,11 +67,21 @@ function shell({ title, description, canonical, h1, crumb, body }) {
   <link rel="stylesheet" href="/fonts.css">
   <link rel="stylesheet" href="/appeals/guide.css">
   <meta property="og:type" content="article">
+  <meta property="og:locale" content="en_US">
   <meta property="og:site_name" content="GetMyYes">
   <meta property="og:title" content="${esc(pageTitle)}">
   <meta property="og:description" content="${esc(pageDescription)}">
   <meta property="og:url" content="${canonical}">
-  <meta property="og:image" content="${siteOrigin}/og-image.png">
+  <meta property="og:image" content="${socialImage}">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="${esc(socialImageAlt)}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${esc(pageTitle)}">
+  <meta name="twitter:description" content="${esc(pageDescription)}">
+  <meta name="twitter:image" content="${socialImage}">
+  <meta name="twitter:image:alt" content="${esc(socialImageAlt)}">
   <script src="/analytics.js" data-static></script>
 </head>
 <body>
@@ -79,7 +102,7 @@ function shell({ title, description, canonical, h1, crumb, body }) {
     <main id="main-content" tabindex="-1">
     <article>
       <h1>${h1}</h1>
-      <p class="updated">UPDATED JULY 2026 · U.S. PLANS · NOT LEGAL OR MEDICAL ADVICE</p>
+      <p class="updated">UPDATED <time datetime="${modifiedAt}">${modifiedLabel}</time> · U.S. PLANS · NOT LEGAL OR MEDICAL ADVICE</p>
 ${body}
     </article>
     </main>
@@ -95,6 +118,7 @@ ${body}
 }
 
 function codePage(entry) {
+  const canonical = `${siteOrigin}/codes/${entry.slug}`;
   const related = codes.filter((c) => c.slug !== entry.slug && c.guide === entry.guide && entry.guide).slice(0, 3);
   const fallbackRelated = related.length ? related : codes.filter((c) => c.slug !== entry.slug && c.group === entry.group).slice(0, 3);
   const guideLink = entry.guide
@@ -105,12 +129,16 @@ function codePage(entry) {
     "@graph": [
       {
         "@type": "Article",
+        "@id": `${canonical}#article`,
         headline: `${entry.code} denial code: ${entry.name}`,
         description: entry.meaning,
+        url: canonical,
+        inLanguage: "en-US",
         author: { "@type": "Organization", name: "GetMyYes", url: `${siteOrigin}/` },
-        publisher: { "@type": "Organization", name: "GetMyYes" },
-        dateModified: updated,
-        mainEntityOfPage: `${siteOrigin}/codes/${entry.slug}`,
+        publisher: { "@type": "Organization", name: "GetMyYes", url: `${siteOrigin}/` },
+        datePublished: publishedAt,
+        dateModified: modifiedAt,
+        mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
       },
       {
         "@type": "BreadcrumbList",
@@ -140,11 +168,17 @@ ${entry.steps.map((s) => `        <li>${esc(s)}</li>`).join("\n")}
       </ol>
       ${guideLink}
 
+${officialCodeSources()}
+
       <div class="cta">
         <div class="kicker">Denied? Don’t drop it</div>
         <h2>Upload your denial letter. Get the whole appeal packet.</h2>
         <p>GetMyYes reads the actual letter — codes, fine print, deadlines — and drafts your appeal letter, evidence checklist, doctor letter request, and call script. Free preview first.</p>
-        <a class="go" href="/#/upload">Start my appeal — free preview</a>
+        <p class="cta-trust" id="preview-trust">No card is required for the preview. Unsaved guest uploads normally auto-delete after 24 hours. <a href="/privacy">Read the retention details</a>.</p>
+        <div class="cta-actions">
+          <a class="go" href="/#/upload" aria-describedby="preview-trust">Start my appeal — free preview</a>
+          <a class="sample" href="/sample-packet">See a sample packet first</a>
+        </div>
         <p class="sub">FREE PREVIEW · $39 FULL PACKET · NO SUBSCRIPTION. EVER.</p>
       </div>
 
@@ -158,7 +192,7 @@ ${fallbackRelated.map((c) => `          <li><a href="/codes/${c.slug}">${esc(c.c
   return shell({
     title: `${entry.code} Denial Code: ${entry.name} | GetMyYes`,
     description: `${entry.code}: ${entry.name}. Learn what it means on an EOB, who normally fixes it, whether an appeal may help, and the next steps.`,
-    canonical: `${siteOrigin}/codes/${entry.slug}`,
+    canonical,
     h1: `${esc(entry.code)}: ${esc(entry.name)}`,
     crumb: entry.code,
     body,
@@ -167,7 +201,7 @@ ${fallbackRelated.map((c) => `          <li><a href="/codes/${c.slug}">${esc(c.c
 
 function hubPage() {
   const rows = codes
-    .map((c) => `          <tr><th scope="row"><a href="/codes/${c.slug}">${esc(c.code)}</a></th><td>${esc(c.name)}</td><td>${esc(appealLabels[c.appeal].split(" —")[0])}</td></tr>`)
+    .map((c) => `          <tr data-code-row data-code-search="${esc(`${c.code} ${c.name} ${c.meaning}`)}"><th scope="row"><a href="/codes/${c.slug}">${esc(c.code)}</a></th><td>${esc(c.name)}</td><td>${esc(appealLabels[c.appeal].split(" —")[0])}</td></tr>`)
     .join("\n");
   const jsonLd = {
     "@context": "https://schema.org",
@@ -189,6 +223,16 @@ function hubPage() {
         </ul>
       </div>
 
+      <div class="code-finder" role="search" aria-label="Search denial codes">
+        <label for="code-query">Find the code printed on your EOB</label>
+        <p id="code-query-help">Enter a code or a few words, such as <strong>CO-50</strong>, <strong>CO50</strong>, or <strong>prior authorization</strong>.</p>
+        <div class="code-finder-controls">
+          <input id="code-query" name="code" type="search" autocomplete="off" spellcheck="false" aria-describedby="code-query-help code-results-status">
+          <button id="clear-code-query" type="button" hidden>Clear search</button>
+        </div>
+        <p id="code-results-status" class="code-results-status" role="status" aria-live="polite" aria-atomic="true">Showing all ${codes.length} codes.</p>
+      </div>
+
       <section class="table-wrap" aria-labelledby="codes-table-caption" tabindex="0">
       <table>
         <caption id="codes-table-caption">Claim adjustment reason codes: meaning and whether to appeal</caption>
@@ -201,13 +245,24 @@ ${rows}
       </table>
       </section>
 
+      <div id="code-no-results" class="code-no-results" hidden>
+        <p><strong>No matching code in this guide.</strong> Check the letters and numbers on your notice, or upload the letter so GetMyYes can identify the denial reason.</p>
+        <a href="/#/upload">Upload my denial letter — free preview</a>
+      </div>
+
       <p>Don’t see your code? The letter must still explain the denial in words and state your appeal rights — start with <a href="/appeals/how-to-appeal-health-insurance-denial">the step-by-step appeal guide</a>.</p>
+
+${officialCodeSources()}
 
       <div class="cta">
         <div class="kicker">Skip the decoding</div>
         <h2>Upload the letter. We read the codes for you.</h2>
         <p>GetMyYes identifies the denial type from your actual letter and drafts the right response: appeal letter, evidence checklist, doctor letter request, call script, deadlines.</p>
-        <a class="go" href="/#/upload">Start my appeal — free preview</a>
+        <p class="cta-trust" id="preview-trust">No card is required for the preview. Unsaved guest uploads normally auto-delete after 24 hours. <a href="/privacy">Read the retention details</a>.</p>
+        <div class="cta-actions">
+          <a class="go" href="/#/upload" aria-describedby="preview-trust">Start my appeal — free preview</a>
+          <a class="sample" href="/sample-packet">See a sample packet first</a>
+        </div>
         <p class="sub">FREE PREVIEW · $39 FULL PACKET · NO SUBSCRIPTION. EVER.</p>
       </div>`;
   return shell({
@@ -217,7 +272,7 @@ ${rows}
     h1: "Insurance denial codes, decoded",
     crumb: "",
     body,
-  });
+  }).replace("</body>", "  <script src=\"/codes/code-finder.js\" defer></script>\n</body>");
 }
 
 await mkdir(outRoot, { recursive: true });

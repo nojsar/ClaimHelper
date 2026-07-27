@@ -60,6 +60,15 @@ Key design choices:
   with mobile IAP/RevenueCat addable later. The mobile paywall UI is present but isolated.
 - **`Backend` interface** with two implementations: `FirebaseBackend` (production) and
   `MockBackend` (in-memory, for demos/tests). Swap with `--dart-define=USE_MOCKS=true`.
+- **Paid fulfillment is browser-independent**: a verified Stripe payment creates a pending
+  fulfillment state, a Firestore trigger generates the packet, and a scheduled watchdog retries
+  interrupted work. Firestore generation leases prevent duplicate model calls when the browser,
+  trigger, and retry worker overlap.
+- **AI telemetry is aggregate-only**: daily operation counters record token totals, latency buckets,
+  success/error counts, and estimated model cost without prompts, outputs, case IDs, or user IDs.
+- **Model-call abuse controls are server-side**: extraction and free-preview calls use separate,
+  atomic per-user hourly allowances, and a completed paid packet is immutable/idempotent so an
+  undocumented client flag cannot trigger duplicate paid generation.
 
 ---
 
@@ -90,6 +99,7 @@ claimhelper/
 │   ├── src/
 │   │   ├── index.ts              # exports all callables + webhook + scheduler
 │   │   ├── config.ts             # secrets + configurable model/price/TTL
+│   │   ├── rate_limit.ts         # atomic per-user model-call allowances
 │   │   ├── cases.ts              # createCaseUploadSession, deleteCaseAndFiles, saveCase
 │   │   ├── extraction.ts         # extractDenialFromUploadedFile (OpenAI)
 │   │   ├── preview.ts            # generateFreePreview
@@ -203,12 +213,14 @@ Deployed functions:
 | Function | Type | Purpose |
 | --- | --- | --- |
 | `createCaseUploadSession` | callable | Creates the case doc + returns the upload path prefix. Requires consent. |
-| `extractDenialFromUploadedFile` | callable | Sends uploaded PDFs/images to OpenAI Responses API; stores structured extraction. |
+| `extractDenialFromUploadedFile` | callable | Sends uploaded PDFs/images to OpenAI Responses API; stores structured extraction; enforces a bounded hourly allowance. |
 | `generateFreePreview` | callable | Free-tier summary, amount at stake, likely appeal path. |
 | `saveGuidedAnswers` | callable | Persists guided-question answers. |
 | `createCheckoutSession` | callable | Starts $39 Stripe Checkout for web. |
 | `stripeWebhook` | HTTP | Verifies signature; the only path that sets `paid=true`. |
 | `generateAppealPacket` | callable | Paid: drafts the full packet (entitlement enforced server-side). |
+| `fulfillPaidPacket` | Firestore trigger | Starts packet generation after verified payment grants entitlement. |
+| `repairPaidPacketFulfillment` | scheduler | Retries interrupted or stale paid fulfillment with bounded attempts. |
 | `deleteCaseAndFiles` | callable | Deletes the Firestore doc + all Storage files. |
 | `scheduledCleanupExpiredFiles` | scheduler | Hourly: deletes expired unsaved cases and their files. |
 | `trackEvent` | HTTP | Writes aggregate traffic counts and secret-keyed unique-country sketches. |
@@ -227,14 +239,22 @@ Set in `functions/.env` (plain config) and via `functions:secrets:set` (the key)
 | Var | Where | Default | Notes |
 | --- | --- | --- | --- |
 | `OPENAI_API_KEY` | secret | — | **Server-only.** Never in the Flutter app. |
-| `OPENAI_MODEL` | env | `gpt-5.5` | Configurable; not hardcoded at call sites. |
+| `OPENAI_MODEL` | env | `gpt-5.6-terra` | Configurable; not hardcoded at call sites. |
+| `OPENAI_REASONING_EFFORT` | env | `high` | Explicit quality/latency setting for GPT-5.6 Terra. |
+| `OPENAI_INPUT_COST_PER_MILLION` | env | `2.5` | Reporting estimate only; USD per million input tokens. |
+| `OPENAI_CACHED_INPUT_COST_PER_MILLION` | env | `0.25` | Reporting estimate only; USD per million cached input tokens. |
+| `OPENAI_OUTPUT_COST_PER_MILLION` | env | `15` | Reporting estimate only; USD per million output tokens. |
 
 Implementation notes (`functions/src/openai/`):
 
 - Uses `client.responses.create({ ..., store: false, text: { format: { type: "json_schema", strict: true }}})`.
+- Uses GPT-5.6 Terra with explicit `high` reasoning; the model and effort remain configurable.
 - PDFs are sent as `input_file` (base64 data URL); photos as `input_image`. 45 MB combined cap.
 - Prompts instruct the model to extract only present facts, return `null` for unknowns, and never
   invent medical facts or claim medical necessity.
+- Every operation has an explicit output-token budget. Deterministic model-contract tests run under
+  `npm test`; an optional paid smoke evaluation can be run with
+  `RUN_LIVE_MODEL_EVAL=1 npm run eval:model`.
 
 ---
 
@@ -246,6 +266,10 @@ Implementation notes (`functions/src/openai/`):
 | `STRIPE_WEBHOOK_SECRET` | secret | `whsec_...` from the webhook endpoint. |
 | `APP_BASE_URL` | env | Used to build Checkout success/cancel URLs. |
 | `FULL_PACKET_PRICE_CENTS` | env | Defaults to `3900` ($39). |
+| `FULL_CASE_PRICE_CENTS` | env | Defaults to `5900` ($59 total). |
+| `FULL_CASE_UPGRADE_PRICE_CENTS` | env | Defaults to `2000` ($20 after a packet purchase). |
+| `FULL_CASE_ROUNDS_CAP` | env | Defaults to `10` follow-up drafting rounds. |
+| `FOLLOWUP_ROUND_PRICE_CENTS` | env | Defaults to `1900` ($19 per additional round). |
 
 Set up the webhook:
 
@@ -253,11 +277,16 @@ Set up the webhook:
 # Local testing with the Stripe CLI:
 stripe listen --forward-to http://localhost:5001/<project>/us-central1/stripeWebhook
 # In production, add an endpoint in the Stripe Dashboard pointing at the deployed
-# stripeWebhook URL and subscribe to: checkout.session.completed
+# stripeWebhook URL and subscribe to:
+# checkout.session.completed
+# checkout.session.expired
+# checkout.session.async_payment_succeeded
+# checkout.session.async_payment_failed
 ```
 
 The webhook verifies the signature and marks the case `paid` in a transaction; the client can never
-grant itself entitlement (enforced by Firestore rules).
+grant itself entitlement (enforced by Firestore rules). Verified payment also creates a pending
+fulfillment state so packet generation continues even if the customer closes the browser.
 
 ---
 

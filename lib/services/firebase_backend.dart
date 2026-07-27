@@ -9,6 +9,7 @@ import '../models/extraction.dart';
 import '../models/follow_up.dart';
 import '../models/guided_answers.dart';
 import '../models/packet.dart';
+import 'upload_object_name.dart';
 import 'backend.dart';
 
 /// Production backend. All OpenAI and Stripe work happens in Cloud
@@ -69,6 +70,18 @@ class FirebaseBackend implements Backend {
       _auth.signInWithEmailAndPassword(email: email, password: password);
 
   @override
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (error) {
+      // Keep account existence private even when Firebase email-enumeration
+      // protection is not enabled for this project.
+      if (error.code == 'user-not-found') return;
+      rethrow;
+    }
+  }
+
+  @override
   Future<void> signInWithEmailAndClaimCase(
       String email, String password, String caseId) async {
     final current = _auth.currentUser;
@@ -90,6 +103,48 @@ class FirebaseBackend implements Backend {
         signedInEmail != email.trim().toLowerCase()) {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
     }
+    await claimGuestCase(caseId);
+  }
+
+  @override
+  Future<void> sendEmailLinkAndPrepareCaseClaim({
+    required String email,
+    required String caseId,
+    required String continueUrl,
+  }) async {
+    final current = _auth.currentUser;
+    if (current != null && current.isAnonymous) {
+      // Keep the same case-transfer authorization used by password sign-in.
+      // The server binds it to this exact email and expires it quickly, so a
+      // forwarded link cannot move a guest case to a different account.
+      await _functions
+          .httpsCallable('prepareGuestCaseClaim')
+          .call<Map<String, dynamic>>({
+        'caseId': caseId,
+        'targetEmail': email,
+      });
+    }
+
+    await _auth.sendSignInLinkToEmail(
+      email: email,
+      actionCodeSettings: ActionCodeSettings(
+        url: continueUrl,
+        handleCodeInApp: true,
+      ),
+    );
+  }
+
+  @override
+  bool isEmailSignInLink(String emailLink) =>
+      _auth.isSignInWithEmailLink(emailLink);
+
+  @override
+  Future<void> signInWithEmailLinkAndClaimCase({
+    required String email,
+    required String emailLink,
+    required String caseId,
+  }) async {
+    await _auth.signInWithEmailLink(email: email, emailLink: emailLink);
     await claimGuestCase(caseId);
   }
 
@@ -126,10 +181,16 @@ class FirebaseBackend implements Backend {
     final paths = <String>[];
     final totalBytes = files.fold<int>(0, (acc, f) => acc + f.bytes.length);
     var sentBytes = 0;
+    final batchId = newUploadBatchId();
 
-    for (final file in files) {
-      final safeName = file.name.replaceAll(RegExp(r'[^\w.\-]'), '_');
-      final path = '${session.uploadPathPrefix}$safeName';
+    for (final entry in files.asMap().entries) {
+      final file = entry.value;
+      final objectName = uploadObjectName(
+        file.name,
+        batchId: batchId,
+        index: entry.key,
+      );
+      final path = '${session.uploadPathPrefix}$objectName';
       final task = _storage.ref(path).putData(
             file.bytes,
             SettableMetadata(contentType: file.mimeType),
@@ -196,6 +257,55 @@ class FirebaseBackend implements Backend {
         .httpsCallable('createCheckoutSession')
         .call<Map<String, dynamic>>({'caseId': caseId, 'kind': kind});
     return result.data['checkoutUrl'] as String?;
+  }
+
+  @override
+  Future<void> confirmCheckoutSession(String caseId, String sessionId) async {
+    await _functions
+        .httpsCallable('confirmCheckoutSession')
+        .call<Map<String, dynamic>>({
+      'caseId': caseId,
+      'sessionId': sessionId,
+    });
+  }
+
+  @override
+  Future<void> recordCaseFunnelEvent(String caseId, String event) async {
+    await _functions
+        .httpsCallable('recordCaseFunnelEvent')
+        .call<Map<String, dynamic>>({'caseId': caseId, 'event': event});
+  }
+
+  @override
+  Future<void> recordCaseTierSelection(String caseId, String kind) async {
+    await _functions
+        .httpsCallable('recordCaseTierSelection')
+        .call<Map<String, dynamic>>({'caseId': caseId, 'kind': kind});
+  }
+
+  @override
+  Future<void> saveCaseAcquisitionAttribution(
+      String caseId, String source) async {
+    await _functions
+        .httpsCallable('saveCaseAcquisitionAttribution')
+        .call<Map<String, dynamic>>({'caseId': caseId, 'source': source});
+  }
+
+  @override
+  Future<void> saveCaseFeedback(
+    String caseId, {
+    required String satisfaction,
+    required String outcome,
+    required bool testimonialPermission,
+  }) async {
+    await _functions
+        .httpsCallable('saveCaseFeedback')
+        .call<Map<String, dynamic>>({
+      'caseId': caseId,
+      'satisfaction': satisfaction,
+      'outcome': outcome,
+      'testimonialPermission': testimonialPermission,
+    });
   }
 
   @override
@@ -267,7 +377,8 @@ class FirebaseBackend implements Backend {
   @override
   Future<void> deleteAccount() async {
     await _functions
-        .httpsCallable('deleteAccount')
+        .httpsCallable('deleteAccount',
+            options: HttpsCallableOptions(timeout: const Duration(minutes: 9)))
         .call<Map<String, dynamic>>();
     // The server already deleted the Auth user; drop the local session too.
     await _auth.signOut();

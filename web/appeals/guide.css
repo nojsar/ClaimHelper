@@ -105,6 +105,19 @@ strong { color: var(--ink); }
 .keyfacts ul { margin: 0; padding-left: 20px; }
 .keyfacts li { font-size: 15px; margin-bottom: 6px; }
 
+/* Visible source trail for factual reference pages */
+.sources {
+  border-left: 4px solid var(--green); border-radius: 0 12px 12px 0;
+  background: var(--letter); padding: 18px 22px; margin: 30px 0;
+}
+.sources .kicker {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--green); margin-bottom: 5px;
+}
+.sources h2 { margin: 0 0 8px; font-family: inherit; font-size: 18px; letter-spacing: 0; }
+.sources p { font-size: 14.5px; margin-bottom: 8px; }
+.sources .source-note { color: var(--muted); margin-bottom: 0; }
+
 /* Template letter block */
 .letterblock { margin: 24px 0; }
 .letterblock .lb-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
@@ -128,6 +141,44 @@ button.copybtn:hover { border-color: var(--green); color: var(--green); }
   overscroll-behavior-inline: contain;
 }
 
+/* Progressive denial-code finder */
+.code-finder {
+  margin: 30px 0 14px; padding: 20px 22px;
+  border: 1px solid var(--border-strong); border-radius: 14px; background: var(--letter);
+}
+.code-finder label {
+  display: block; color: var(--ink); font-weight: 800; font-size: 17px;
+}
+.code-finder > p {
+  color: var(--ink-soft); font-size: 14px; margin: 6px 0 12px;
+}
+.code-finder-controls {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px;
+}
+.code-finder input,
+.code-finder button {
+  min-height: 48px; border: 1px solid var(--border-strong); border-radius: 10px;
+  font: inherit;
+}
+.code-finder input {
+  width: 100%; padding: 10px 13px; background: var(--paper); color: var(--ink);
+}
+.code-finder button {
+  padding: 10px 16px; background: var(--letter); color: var(--ink);
+  font-weight: 700; cursor: pointer;
+}
+.code-finder button:hover { border-color: var(--green); color: var(--green); }
+.code-finder .code-results-status {
+  min-height: 1.5em; margin: 10px 0 0; color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+}
+.code-no-results {
+  margin: 16px 0 24px; padding: 18px 20px;
+  border-left: 4px solid var(--carmine); background: var(--letter);
+}
+.code-no-results p { margin: 0 0 8px; }
+.code-no-results a { font-weight: 700; }
+
 /* FAQ */
 details {
   border: 1px solid var(--border); border-radius: 12px; background: var(--letter);
@@ -148,11 +199,22 @@ details p { margin: 10px 0 2px; font-size: 15px; }
 .cta .kicker { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--green-on-dark); margin-bottom: 8px; }
 .cta h2 { margin: 0 0 8px; color: var(--paper); font-size: 26px; }
 .cta p { color: rgba(243, 237, 223, 0.8); font-size: 15px; margin-bottom: 18px; }
+.cta .cta-trust {
+  max-width: 64ch; margin: -2px 0 16px; color: var(--paper); font-size: 13.5px;
+}
+.cta .cta-trust a { color: var(--green-on-dark); font-weight: 700; text-underline-offset: 3px; }
+.cta .cta-trust a:hover { color: #fff; }
+.cta .cta-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
 .cta a.go {
   display: inline-flex; align-items: center; min-height: 44px; background: var(--carmine); color: #fff; text-decoration: none;
   padding: 13px 26px; border-radius: 12px; font-weight: 800; font-size: 15.5px;
 }
 .cta a.go:hover { background: #D92632; }
+.cta a.sample {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 8px 2px;
+  color: var(--paper); font-weight: 700; text-underline-offset: 4px;
+}
+.cta a.sample:hover { color: var(--green-on-dark); }
 .cta .sub { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: rgba(243,237,223,0.6); margin: 12px 0 0; }
 
 /* Related guides + footer */
@@ -191,6 +253,8 @@ footer.site a { color: var(--ink-soft); }
   header.site nav a { min-height: 44px; }
   a.btn-start { padding: 8px 10px; font-size: 12px; }
   .letter { padding: 22px 18px; font-size: 12.5px; }
+  .code-finder { padding: 18px; }
+  .code-finder-controls { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -205,5 +269,5 @@ footer.site a { color: var(--ink-soft); }
 
 @media (forced-colors: active) {
   :where(a, button, summary, input, select, textarea, [tabindex]:not([tabindex="-1"])):focus-visible { outline-color: Highlight; box-shadow: none; }
-  .gcard, .keyfacts, details, .letter, .cta { border: 1px solid CanvasText; }
+  .gcard, .keyfacts, .sources, details, .letter, .cta, .code-finder, .code-no-results { border: 1px solid CanvasText; }
 }

@@ -43,9 +43,12 @@ const checks = [
   ["npm", ["--prefix", "functions", "test"]],
   ["node", ["tool/rules_test.mjs"]],
   ["node", ["tool/analytics_tracker_test.mjs"]],
+  ["node", ["--test", "tool/email_link_boot_test.mjs"]],
+  ["node", ["tool/code_finder_test.mjs"]],
   ["node", ["tool/marketing_build.mjs"]],
   ["node", ["tool/accessibility_check.mjs", "web"]],
   ["npx", ["--yes", "html-validate@10.10.0", "web/**/*.html"]],
+  ["node", ["tool/clean_web_build.mjs"]],
   ["flutter", ["build", "web"]],
   ["node", ["tool/marketing_build.mjs", "--stage-build"]],
   ["node", ["tool/marketing_build.mjs", "--verify-build"]],
@@ -62,7 +65,10 @@ if (checkOnly) {
 
 // Deploy every Firebase resource represented in firebase.json so a frontend,
 // callable function, analytics rewrite, and security rules cannot drift apart.
-run("firebase", ["deploy", "--project", project]);
+// The paid-packet Firestore trigger deliberately enables retry. Its
+// generation lease and fulfillment state machine make overlapping deliveries
+// idempotent, so production releases explicitly acknowledge the failure policy.
+run("firebase", ["deploy", "--project", project, "--force"]);
 run("node", ["tool/production_verify.mjs", "--artifact", "build/web"]);
 
 console.log("\n[release] Production deployment and artifact verification passed.");

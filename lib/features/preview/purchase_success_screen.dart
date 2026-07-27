@@ -31,6 +31,35 @@ class _PurchaseSuccessScreenState extends ConsumerState<PurchaseSuccessScreen> {
   bool _generating = false;
   String? _error;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _confirmReturnedCheckout();
+    });
+  }
+
+  Future<void> _confirmReturnedCheckout() async {
+    final sessionId = widget.sessionId;
+    if (sessionId == null || sessionId.isEmpty) return;
+    try {
+      await ref
+          .read(backendProvider)
+          .confirmCheckoutSession(widget.caseId, sessionId);
+    } catch (_) {
+      // Stripe's webhook and the scheduled reconciliation watchdog remain
+      // authoritative fallbacks. Keep observing the case instead of showing
+      // a false payment failure for a transient confirmation error.
+    } finally {
+      if (mounted) ref.invalidate(caseStreamProvider(widget.caseId));
+    }
+  }
+
+  void _refreshPaymentStatus() {
+    _confirmReturnedCheckout();
+    ref.invalidate(caseStreamProvider(widget.caseId));
+  }
+
   Future<void> _generateThenGo(AppealCase c) async {
     if (_generating || c.packet != null) {
       if (c.packet != null && mounted) {
@@ -38,11 +67,23 @@ class _PurchaseSuccessScreenState extends ConsumerState<PurchaseSuccessScreen> {
       }
       return;
     }
-    _generating = true;
+    if (!mounted) return;
+    setState(() {
+      _generating = true;
+      _error = null;
+    });
     try {
       await ref.read(backendProvider).generateAppealPacket(widget.caseId);
       if (mounted) context.go('/case/${widget.caseId}/packet');
-    } catch (_) {
+    } catch (error) {
+      final message = error.toString().toLowerCase();
+      if (message.contains('aborted') ||
+          message.contains('already being prepared') ||
+          message.contains('another case task')) {
+        // The payment-triggered background worker owns the generation lease.
+        // Keep observing the live case instead of presenting a false failure.
+        return;
+      }
       if (mounted) {
         setState(() {
           _error = 'Your purchase is safe, but packet generation failed. '
@@ -73,29 +114,41 @@ class _PurchaseSuccessScreenState extends ConsumerState<PurchaseSuccessScreen> {
           if (_error != null) {
             return ErrorRetry(
               message: _error!,
-              onRetry: () {
-                _error = null;
-                _generateThenGo(c);
-              },
+              onRetry: () => _generateThenGo(c),
+            );
+          }
+          final generationFailed =
+              c.paid && c.packet == null && c.status == CaseStatus.error;
+          if (generationFailed && !_generating) {
+            return ErrorRetry(
+              message: 'Your purchase is safe, but packet drafting stopped '
+                  'before it finished. Try again to resume it.',
+              onRetry: () => _generateThenGo(c),
             );
           }
           if (c.paid) {
             // Fire generation once the case is paid.
-            WidgetsBinding.instance
-                .addPostFrameCallback((_) => _generateThenGo(c));
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _generateThenGo(c);
+            });
             final done = c.packet != null;
             return _GenerationTheater(
               progress: done ? 1.0 : c.generationProgress,
               stage: done
                   ? 'Ready — opening your packet…'
-                  : (c.generationStage ?? 'Starting the drafting engine…'),
+                  : generationFailed
+                      ? 'Retrying packet generation…'
+                      : (c.generationStage ?? 'Starting the drafting engine…'),
               paymentConfirmed: true,
+              onOpenSavedCases: () => context.go('/account'),
             );
           }
-          return const _GenerationTheater(
+          return _GenerationTheater(
             progress: null,
             stage: 'Waiting for payment confirmation… this can take a few '
                 'seconds.',
+            onRefresh: _refreshPaymentStatus,
+            onOpenSavedCases: () => context.go('/account'),
           );
         },
       ),
@@ -111,10 +164,14 @@ class _GenerationTheater extends StatefulWidget {
     required this.progress,
     required this.stage,
     this.paymentConfirmed = false,
+    this.onRefresh,
+    this.onOpenSavedCases,
   });
   final double? progress;
   final String stage;
   final bool paymentConfirmed;
+  final VoidCallback? onRefresh;
+  final VoidCallback? onOpenSavedCases;
 
   @override
   State<_GenerationTheater> createState() => _GenerationTheaterState();
@@ -200,7 +257,7 @@ class _GenerationTheaterState extends State<_GenerationTheater>
           ? 'Payment confirmed. ${widget.stage}'
           : widget.stage,
       value: progressValue,
-      hint: 'Keep this tab open. Your packet is saved to your account.',
+      hint: 'You may leave this page. Generation continues on your account.',
       child: ExcludeSemantics(
         child: Center(
           child: SingleChildScrollView(
@@ -326,12 +383,48 @@ class _GenerationTheaterState extends State<_GenerationTheater>
                                 ),
                                 const SizedBox(height: 10),
                                 const Text(
-                                  'This usually takes a minute or two — keep this tab '
-                                  'open. Your packet is saved to your account either way.',
+                                  'This usually takes a minute or two. You may safely '
+                                  'leave this page — generation continues on your account.',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                       color: Colors.white70, fontSize: 12),
                                 ),
+                                if (widget.onRefresh != null ||
+                                    widget.onOpenSavedCases != null) ...[
+                                  const SizedBox(height: 14),
+                                  Wrap(
+                                    alignment: WrapAlignment.center,
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: [
+                                      if (widget.onRefresh != null)
+                                        TextButton.icon(
+                                          onPressed: widget.onRefresh,
+                                          icon: const Icon(Icons.refresh,
+                                              size: 18),
+                                          label: const Text('Refresh status'),
+                                          style: TextButton.styleFrom(
+                                            foregroundColor: Colors.white,
+                                          ),
+                                        ),
+                                      if (widget.onOpenSavedCases != null)
+                                        OutlinedButton.icon(
+                                          onPressed: widget.onOpenSavedCases,
+                                          icon: const Icon(
+                                            Icons.folder_open_outlined,
+                                            size: 18,
+                                          ),
+                                          label: const Text('My saved cases'),
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: Colors.white,
+                                            side: const BorderSide(
+                                              color: Colors.white70,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ],
                               ],
                             ),
                           ),

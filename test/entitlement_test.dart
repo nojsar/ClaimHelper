@@ -21,6 +21,8 @@ void main() {
 
   AppealCase base({
     bool paid = false,
+    bool fullCase = false,
+    int? followUpCredits,
     DenialExtraction? ex,
     GuidedAnswers? answers,
   }) =>
@@ -28,6 +30,8 @@ void main() {
         id: 'c1',
         status: CaseStatus.extracted,
         paid: paid,
+        fullCase: fullCase,
+        followUpCredits: followUpCredits,
         extraction: ex,
         guidedAnswers: answers,
       );
@@ -87,6 +91,24 @@ void main() {
             base(paid: true, ex: null, answers: completeAnswers)),
         isFalse,
       );
+    });
+  });
+
+  group('AppealCase.remainingFollowUps', () {
+    test('keeps the legacy Full Case entitlement when credits are absent', () {
+      expect(base(paid: true, fullCase: true).remainingFollowUps, 10);
+    });
+
+    test('uses an explicit credit counter when it is present', () {
+      expect(
+        base(paid: true, fullCase: true, followUpCredits: 4)
+            .remainingFollowUps,
+        4,
+      );
+    });
+
+    test('does not expose follow-ups on an unpaid case', () {
+      expect(base(fullCase: true).remainingFollowUps, 0);
     });
   });
 }

@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   ADMIN_ANALYTICS_COOKIE,
   ANALYTICS_DAILY_COLLECTION,
+  ANALYTICS_MODEL_DAILY_COLLECTION,
   ANALYTICS_OTHER_PATH,
   ANALYTICS_SEGMENT_DAILY_COLLECTION,
   MAX_ANALYTICS_SEGMENTS_PER_EVENT,
@@ -13,6 +14,7 @@ import {
   adminAnalyticsCookieHeader,
   analyticsPathCategory,
   appReadyBucket,
+  acquisitionSourceCategory,
   analyticsSegmentDocumentId,
   bearerToken,
   boundedAnalyticsSegments,
@@ -26,24 +28,90 @@ import {
   estimateUniqueVisitors,
   filterSegmentableFields,
   filterTrafficCounterFields,
+  feedbackOutcomeCategory,
+  feedbackSatisfactionCategory,
   isAdminAnalyticsUid,
   isExcludedAnalyticsPath,
   isFirstPartyAnalyticsUrl,
   isTrustedAnalyticsRequest,
   modelAnalyticsErrorCategory,
+  modelAnalyticsCounterFields,
+  modelAnalyticsOperation,
   normalizeTrafficEvent,
   normalizeUniqueVisitorRegisters,
   prepareUniqueVisitorSketchUpdate,
+  paymentAnalyticsCounterFields,
+  paymentAnalyticsProduct,
   referrerAnalyticsCategory,
   updateUniqueVisitorRegisters,
 } from "../analytics";
 import { ADMIN_UID } from "../config";
+import { feedbackReminderId } from "../reminders";
 
 test("clean analytics use dedicated customer-only collections", () => {
   assert.equal(ANALYTICS_DAILY_COLLECTION, "analytics_customer_daily");
   assert.equal(
     ANALYTICS_SEGMENT_DAILY_COLLECTION,
     "analytics_customer_segment_daily",
+  );
+  assert.equal(ANALYTICS_MODEL_DAILY_COLLECTION, "analytics_model_daily");
+});
+
+test("payment monetization fields use only fixed product buckets and server cents", () => {
+  assert.equal(paymentAnalyticsProduct("packet"), "packet");
+  assert.equal(paymentAnalyticsProduct("packet_plus"), "full_case");
+  assert.equal(paymentAnalyticsProduct("followup_round"), "followup_round");
+  assert.equal(paymentAnalyticsProduct("full_case"), "full_case_upgrade");
+  assert.equal(paymentAnalyticsProduct("anything_else"), null);
+  assert.deepEqual(
+    paymentAnalyticsCounterFields("packet_plus", "paid", 5900),
+    {
+      "monetization.full_case.paid": 1,
+      "monetization.full_case.revenueCents": 5900,
+      "monetization.full_case.netRevenueCents": 5900,
+    },
+  );
+  assert.deepEqual(
+    paymentAnalyticsCounterFields("full_case", "refunded", 2000),
+    {
+      "monetization.full_case_upgrade.refunded": 1,
+      "monetization.full_case_upgrade.refundCents": 2000,
+      "monetization.full_case_upgrade.netRevenueCents": -2000,
+    },
+  );
+  assert.equal(paymentAnalyticsCounterFields("forged", "paid", 1), null);
+});
+
+test("model operation counters stay fixed, bounded, and aggregate-only", () => {
+  assert.equal(modelAnalyticsOperation("extraction"), "extraction");
+  assert.equal(modelAnalyticsOperation("followup"), "followup");
+  assert.equal(modelAnalyticsOperation("arbitrary-path"), null);
+  assert.deepEqual(
+    modelAnalyticsCounterFields("packet", {
+      calls: 1,
+      errors: 0,
+      inputTokens: 123,
+      outputTokens: 45,
+      totalDurationMs: 987,
+    }),
+    {
+      "operations.packet.calls": 1,
+      calls: 1,
+      "operations.packet.inputTokens": 123,
+      inputTokens: 123,
+      "operations.packet.outputTokens": 45,
+      outputTokens: 45,
+      "operations.packet.totalDurationMs": 987,
+      totalDurationMs: 987,
+    },
+  );
+  assert.deepEqual(
+    modelAnalyticsCounterFields("attacker.input", { calls: 1 }),
+    {},
+  );
+  assert.deepEqual(
+    modelAnalyticsCounterFields("preview", { calls: -1, errors: Number.NaN }),
+    {},
   );
 });
 
@@ -431,6 +499,18 @@ test("case product events map only to fixed aggregate counter paths", () => {
   assert.deepEqual(caseAnalyticsCounterFields("checkout_started"), {
     "funnel.checkout_started": 1,
   });
+  assert.deepEqual(caseAnalyticsCounterFields("checkout_created"), {
+    "product.checkout.created": 1,
+  });
+  assert.deepEqual(caseAnalyticsCounterFields("checkout_expired"), {
+    "product.checkout.expired": 1,
+  });
+  assert.deepEqual(caseAnalyticsCounterFields("checkout_recovered"), {
+    "product.checkout.recovered": 1,
+  });
+  assert.deepEqual(caseAnalyticsCounterFields("checkout_duplicate"), {
+    "product.checkout.duplicate": 1,
+  });
   assert.deepEqual(caseAnalyticsCounterFields("paid"), {
     "funnel.paid": 1,
   });
@@ -444,6 +524,24 @@ test("case product events map only to fixed aggregate counter paths", () => {
   ]) {
     assert.equal(caseAnalyticsCounterFields(invalid), null);
   }
+});
+
+test("acquisition and feedback inputs accept only fixed privacy-safe categories", () => {
+  assert.equal(acquisitionSourceCategory("google"), "google");
+  assert.equal(acquisitionSourceCategory("advocate_provider"), "advocate_provider");
+  assert.equal(acquisitionSourceCategory("https://quora.com/question"), null);
+  assert.equal(acquisitionSourceCategory("someone@example.com"), null);
+  assert.equal(acquisitionSourceCategory({ source: "google" }), null);
+
+  assert.equal(feedbackSatisfactionCategory("very_satisfied"), "very_satisfied");
+  assert.equal(feedbackSatisfactionCategory("five stars!!!"), null);
+  assert.equal(feedbackOutcomeCategory("submitted_waiting"), "submitted_waiting");
+  assert.equal(feedbackOutcomeCategory("my insurer said..."), null);
+});
+
+test("feedback reminders use one deterministic case-scoped id", () => {
+  assert.equal(feedbackReminderId("case_123"), "feedback_case_123");
+  assert.equal(feedbackReminderId("case_123"), feedbackReminderId("case_123"));
 });
 
 test("product error events are bounded by stage and category", () => {

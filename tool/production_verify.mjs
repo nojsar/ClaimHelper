@@ -66,6 +66,10 @@ const bundles = [
   "manifest.json",
   "llms.txt",
 ];
+const revalidatedStaticAssets = new Set([
+  "legal.css",
+  "appeals/guide.css",
+]);
 const retries = Number(process.env.PRODUCTION_VERIFY_RETRIES ?? 6);
 const retryDelayMs = Number(process.env.PRODUCTION_VERIFY_DELAY_MS ?? 2000);
 
@@ -149,6 +153,15 @@ async function verifyResource(route, file, checkDocument) {
     try {
       const { response, bytes } = await fetchOnce(route);
       if (checkDocument) {
+        if (route === "/") {
+          checkHeader(
+            response,
+            "cache-control",
+            (value) => value.includes("no-cache")
+              && value.includes("no-store")
+              && value.includes("must-revalidate"),
+          );
+        }
         checkHeader(
           response,
           "content-security-policy",
@@ -166,6 +179,13 @@ async function verifyResource(route, file, checkDocument) {
       if (file === "flutter_bootstrap.js"
           && !/canvasKitBaseUrl\s*:\s*["']canvaskit\//.test(bytes.toString("utf8"))) {
         fail(`${response.url} is not configured to load CanvasKit from the app origin.`);
+      }
+      if (revalidatedStaticAssets.has(file)) {
+        checkHeader(
+          response,
+          "cache-control",
+          (value) => value.includes("no-cache") && value.includes("must-revalidate"),
+        );
       }
       if (expected && hash(bytes) !== hash(expected)) {
         fail(`${response.url} does not match the tested artifact ${file}.`);

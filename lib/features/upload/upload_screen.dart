@@ -15,7 +15,11 @@ import 'file_drop.dart';
 import 'upload_validation.dart';
 
 class UploadScreen extends ConsumerStatefulWidget {
-  const UploadScreen({super.key});
+  const UploadScreen({super.key, this.requestedPurchaseKind});
+
+  /// A fragment-route preference from the public Full Case CTA. It is kept
+  /// only in the in-memory intake, never attached to the uploaded case.
+  final String? requestedPurchaseKind;
 
   @override
   ConsumerState<UploadScreen> createState() => _UploadScreenState();
@@ -32,6 +36,11 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.requestedPurchaseKind != null) {
+      ref
+          .read(intakeControllerProvider.notifier)
+          .setRequestedPurchaseKind(widget.requestedPurchaseKind);
+    }
     // Native browser drag-and-drop (web only; a no-op elsewhere).
     _fileDrop.attach(
       onFiles: _onDroppedFiles,

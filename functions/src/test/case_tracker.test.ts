@@ -3,7 +3,10 @@ import test from "node:test";
 
 import { HttpsError } from "firebase-functions/v2/https";
 
-import { normalizeCaseTrackerInput } from "../case_tracker";
+import {
+  normalizeCaseTrackerInput,
+  responseReminderIsPending,
+} from "../case_tracker";
 
 const now = new Date("2026-07-13T12:00:00.000Z");
 
@@ -97,4 +100,63 @@ test("confirmation numbers are length and control-character bounded", () => {
       now,
     ),
   );
+});
+
+test("response reminders stop as soon as a response or outcome is recorded", () => {
+  const pending = {
+    expectedResponseDate: "2026-08-10",
+    responseDate: null,
+    responseStatus: "under_review" as const,
+    outcome: "pending" as const,
+    responseReminderEnabled: true,
+  };
+  assert.equal(responseReminderIsPending(pending), true);
+
+  assert.equal(
+    responseReminderIsPending({
+      ...pending,
+      responseReminderEnabled: false,
+    }),
+    false,
+  );
+  assert.equal(
+    responseReminderIsPending({
+      ...pending,
+      expectedResponseDate: null,
+    }),
+    false,
+  );
+  assert.equal(
+    responseReminderIsPending({
+      ...pending,
+      responseDate: "2026-07-20",
+    }),
+    false,
+  );
+  assert.equal(
+    responseReminderIsPending({
+      ...pending,
+      responseStatus: "decision_received",
+    }),
+    false,
+  );
+  assert.equal(
+    responseReminderIsPending({
+      ...pending,
+      responseStatus: "closed",
+    }),
+    false,
+  );
+  for (const outcome of [
+    "approved",
+    "partially_approved",
+    "denied",
+    "withdrawn",
+  ] as const) {
+    assert.equal(
+      responseReminderIsPending({ ...pending, outcome }),
+      false,
+      `final outcome ${outcome} must cancel the queued reminder`,
+    );
+  }
 });

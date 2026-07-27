@@ -8,6 +8,52 @@ import '../../models/appeal_case.dart';
 import '../../state/providers.dart';
 import '../../widgets/app_scaffold.dart';
 
+/// Gives every saved case a route that can recover its actual workflow state.
+/// A missing or failed extraction must go through Processing so the customer
+/// can restore and retry the durable upload instead of seeing an empty review.
+String caseResumeRoute(AppealCase appealCase) {
+  if (appealCase.packet != null) return '/case/${appealCase.id}/packet';
+  if (appealCase.paid) return '/case/${appealCase.id}/purchase-success';
+  if (appealCase.preview != null) return '/case/${appealCase.id}/preview';
+  if (appealCase.extraction == null ||
+      appealCase.status == CaseStatus.error ||
+      appealCase.status == CaseStatus.uploaded ||
+      appealCase.status == CaseStatus.extracting) {
+    return '/case/${appealCase.id}/processing';
+  }
+  return '/case/${appealCase.id}/review';
+}
+
+String caseResumeStatus(AppealCase appealCase) {
+  if (appealCase.packet != null) return 'Packet ready';
+  if (appealCase.paid) return 'Payment confirmed — preparing your packet';
+  if (appealCase.preview != null) return 'Free preview ready';
+  return switch (appealCase.status) {
+    CaseStatus.uploaded => 'Upload received — continue secure processing',
+    CaseStatus.extracting => 'Reading your documents — continue processing',
+    CaseStatus.extracted => 'Extracted details ready to review',
+    CaseStatus.preview => 'Free preview ready',
+    CaseStatus.paid => 'Payment confirmed — preparing your packet',
+    CaseStatus.generated => 'Packet is being prepared',
+    CaseStatus.error => 'Needs attention — retry document reading',
+  };
+}
+
+String caseResumeAction(AppealCase appealCase) {
+  if (appealCase.packet != null) return 'Open packet';
+  if (appealCase.paid) return 'Check packet status';
+  if (appealCase.preview != null) return 'Open preview';
+  return switch (appealCase.status) {
+    CaseStatus.uploaded => 'Continue processing',
+    CaseStatus.extracting => 'Continue processing',
+    CaseStatus.extracted => 'Review details',
+    CaseStatus.preview => 'Open preview',
+    CaseStatus.paid => 'Check packet status',
+    CaseStatus.generated => 'Check packet status',
+    CaseStatus.error => 'Retry reading',
+  };
+}
+
 /// Saved cases + account. We only prompt for account creation here (or at
 /// purchase/save time), never on first launch.
 class AccountScreen extends ConsumerWidget {
@@ -77,6 +123,7 @@ class _AccountPromptState extends ConsumerState<_AccountPrompt> {
   bool _signInMode = false;
   bool _busy = false;
   String? _error;
+  String? _status;
 
   @override
   void dispose() {
@@ -102,6 +149,7 @@ class _AccountPromptState extends ConsumerState<_AccountPrompt> {
     setState(() {
       _busy = true;
       _error = null;
+      _status = null;
     });
     try {
       final auth = ref.read(authProvider.notifier);
@@ -115,6 +163,41 @@ class _AccountPromptState extends ConsumerState<_AccountPrompt> {
       setState(() =>
           _error = 'Could not ${_signInMode ? 'sign in' : 'create account'}. '
               'Check your details and try again.');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _sendPasswordReset() async {
+    final email = _email.text.trim();
+    if (email.isEmpty || !email.contains('@')) {
+      setState(() {
+        _status = null;
+        _error = 'Enter your account email first.';
+      });
+      return;
+    }
+
+    setState(() {
+      _busy = true;
+      _error = null;
+      _status = null;
+    });
+    try {
+      await ref.read(authProvider.notifier).sendPasswordResetEmail(email);
+      if (mounted) {
+        setState(() {
+          _status = 'If an account uses that email, a password reset link is '
+              'on its way. Check your inbox and spam folder.';
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _error = 'We could not send the reset email. Check your connection '
+              'and try again.';
+        });
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -176,6 +259,19 @@ class _AccountPromptState extends ConsumerState<_AccountPrompt> {
                 ),
               ),
             ],
+            if (_status != null) ...[
+              const SizedBox(height: 8),
+              Semantics(
+                liveRegion: true,
+                label: _status!,
+                child: ExcludeSemantics(
+                  child: Text(
+                    _status!,
+                    style: const TextStyle(color: AppColors.accent),
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
             Wrap(
               spacing: 12,
@@ -194,10 +290,16 @@ class _AccountPromptState extends ConsumerState<_AccountPrompt> {
                       : () => setState(() {
                             _signInMode = !_signInMode;
                             _error = null;
+                            _status = null;
                           }),
                   child: Text(
                       _signInMode ? 'Need an account?' : 'Already have one?'),
                 ),
+                if (_signInMode)
+                  TextButton(
+                    onPressed: _busy ? null : _sendPasswordReset,
+                    child: const Text('Forgot password?'),
+                  ),
               ],
             ),
           ],
@@ -234,13 +336,6 @@ class _CaseTile extends StatelessWidget {
   const _CaseTile({required this.appealCase});
   final AppealCase appealCase;
 
-  String _route() {
-    if (appealCase.packet != null) return '/case/${appealCase.id}/packet';
-    if (appealCase.paid) return '/case/${appealCase.id}/purchase-success';
-    if (appealCase.preview != null) return '/case/${appealCase.id}/preview';
-    return '/case/${appealCase.id}/review';
-  }
-
   @override
   Widget build(BuildContext context) {
     final ex = appealCase.extraction;
@@ -257,11 +352,21 @@ class _CaseTile extends StatelessWidget {
             maxLines: 1, overflow: TextOverflow.ellipsis),
         subtitle: Text([
           ex?.insurerName,
-          appealCase.status.wire,
+          caseResumeStatus(appealCase),
           if (updated != null) DateFormat.yMMMd().format(updated),
         ].whereType<String>().join(' · ')),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () => context.go(_route()),
+        trailing: Semantics(
+          button: true,
+          label: caseResumeAction(appealCase),
+          excludeSemantics: true,
+          onTap: () => context.go(caseResumeRoute(appealCase)),
+          child: IconButton(
+            tooltip: caseResumeAction(appealCase),
+            onPressed: () => context.go(caseResumeRoute(appealCase)),
+            icon: const Icon(Icons.arrow_forward),
+          ),
+        ),
+        onTap: () => context.go(caseResumeRoute(appealCase)),
       ),
     );
   }

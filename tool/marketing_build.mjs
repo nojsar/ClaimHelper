@@ -83,12 +83,187 @@ function validateSearchMetadata(html, file) {
   return { title, description };
 }
 
+function jsonLdGraphs(html, file) {
+  const graphs = [];
+  for (const script of html.matchAll(
+    /<script\s+type=["']application\/ld\+json["']>([\s\S]*?)<\/script>/gi,
+  )) {
+    try {
+      graphs.push(JSON.parse(script[1]));
+    } catch (error) {
+      fail(`${file} has invalid JSON-LD: ${error.message}`);
+    }
+  }
+  return graphs;
+}
+
+function schemaNodes(graphs) {
+  return graphs.flatMap((graph) => Array.isArray(graph?.["@graph"])
+    ? graph["@graph"]
+    : [graph]);
+}
+
+function sitemapDateModified(html) {
+  return html.match(
+    /"dateModified"\s*:\s*"(\d{4}-\d{2}-\d{2})(?:T[^"]*)?"/,
+  )?.[1] ?? null;
+}
+
+function requireGuideBreadcrumb(graphs, canonical, file) {
+  const breadcrumb = schemaNodes(graphs).find((node) => node?.["@type"] === "BreadcrumbList");
+  const items = breadcrumb?.itemListElement;
+  if (!Array.isArray(items) || items.length !== 3) {
+    fail(`${file} needs a three-level BreadcrumbList.`);
+  }
+  if (
+    items[0]?.position !== 1 || items[0]?.item !== `${siteOrigin}/` ||
+    items[1]?.position !== 2 || items[1]?.item !== `${siteOrigin}/appeals/` ||
+    items[2]?.position !== 3 || items[2]?.item !== canonical
+  ) {
+    fail(`${file} has an invalid BreadcrumbList hierarchy.`);
+  }
+}
+
+function requireArticleIdentity(graphs, html, canonical, file) {
+  const article = schemaNodes(graphs).find((node) => node?.["@type"] === "Article");
+  if (!article) fail(`${file} is missing Article structured data.`);
+  if (
+    article["@id"] !== `${canonical}#article`
+    || article.url !== canonical
+    || article.inLanguage !== "en-US"
+    || article.mainEntityOfPage?.["@type"] !== "WebPage"
+    || article.mainEntityOfPage?.["@id"] !== canonical
+  ) {
+    fail(`${file} Article identity does not match its canonical URL.`);
+  }
+  for (const role of ["author", "publisher"]) {
+    if (
+      article[role]?.["@type"] !== "Organization"
+      || article[role]?.name !== "GetMyYes"
+      || article[role]?.url !== `${siteOrigin}/`
+    ) {
+      fail(`${file} has incomplete Article ${role} identity.`);
+    }
+  }
+  const isoWithTimezone = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})$/;
+  if (
+    !isoWithTimezone.test(article.datePublished ?? "")
+    || !isoWithTimezone.test(article.dateModified ?? "")
+    || Date.parse(article.dateModified) < Date.parse(article.datePublished)
+  ) {
+    fail(`${file} needs valid, chronological Article dates with timezone information.`);
+  }
+  const visibleModified = html.match(
+    /<time\b[^>]*\bdatetime=["']([^"']+)["'][^>]*>/i,
+  )?.[1];
+  if (visibleModified !== article.dateModified) {
+    fail(`${file} visible updated date does not match Article dateModified.`);
+  }
+  if (sitemapDateModified(html) !== article.dateModified.slice(0, 10)) {
+    fail(`${file} Article dateModified cannot be emitted as sitemap lastmod.`);
+  }
+}
+
 function requireStaticTracker(html, file) {
   if (!html.includes('<script src="/analytics.js" data-static></script>')) {
     fail(`${file} is missing the shared first-party visit counter.`);
   }
   if (html.includes("sendBeacon('/api/track'") || html.includes('sendBeacon("/api/track"')) {
     fail(`${file} still contains a stale inline visit counter.`);
+  }
+}
+
+function requireSamplePacketChoice(html, file) {
+  const sampleLinks = [...html.matchAll(/<a\b[^>]*\bhref=["']\/sample-packet["'][^>]*>/gi)];
+  if (!sampleLinks.some((link) => /\bclass=["'][^"']*\bsample\b[^"']*["']/i.test(link[0]))) {
+    fail(`${file} is missing the sample-packet choice beside its conversion CTA.`);
+  }
+}
+
+function requirePreviewReassurance(html, file) {
+  const reassurance = html.match(
+    /<p\b[^>]*\bclass=["'][^"']*\bcta-trust\b[^"']*["'][^>]*\bid=["']preview-trust["'][^>]*>([\s\S]*?)<\/p>/i,
+  )?.[1];
+  if (
+    !reassurance
+    || !reassurance.includes("No card is required for the preview.")
+    || !reassurance.includes("Unsaved guest uploads normally auto-delete after 24 hours.")
+    || !/href=["']\/privacy["']/.test(reassurance)
+  ) {
+    fail(`${file} is missing the preview payment and retention reassurance.`);
+  }
+  const uploadLinks = [...html.matchAll(/<a\b[^>]*\bhref=["']\/#\/upload["'][^>]*>/gi)];
+  if (!uploadLinks.some((link) => /\baria-describedby=["']preview-trust["']/i.test(link[0]))) {
+    fail(`${file} does not programmatically associate the reassurance with its upload CTA.`);
+  }
+}
+
+function requireOfficialCodeSources(html, file) {
+  if (!/<aside\b[^>]*\bclass=["'][^"']*\bsources\b[^"']*["'][^>]*\baria-labelledby=["']official-code-sources["']/i.test(html)) {
+    fail(`${file} is missing its visible official-source panel.`);
+  }
+  const urls = [
+    "https://x12.org/codes/claim-adjustment-reason-codes",
+    "https://x12.org/codes/remittance-advice-remark-codes",
+    "https://www.cms.gov/medicare/coding-billing/electronic-billing/health-care-payment-remittance-advice",
+  ];
+  for (const url of urls) {
+    if (!html.includes(`href="${url}"`)) {
+      fail(`${file} is missing official source ${url}.`);
+    }
+  }
+}
+
+function requireCodeFinder(html, expectedRows, file) {
+  if (
+    !/<div\b[^>]*\bclass=["'][^"']*\bcode-finder\b[^"']*["'][^>]*\brole=["']search["'][^>]*\baria-label=["']Search denial codes["']/i.test(html)
+    || !/<label\b[^>]*\bfor=["']code-query["']/i.test(html)
+    || !/<input\b[^>]*\bid=["']code-query["'][^>]*\btype=["']search["']/i.test(html)
+    || !/id=["']code-results-status["'][^>]*\brole=["']status["'][^>]*\baria-live=["']polite["']/i.test(html)
+    || !/id=["']code-no-results["'][^>]*\bhidden\b/i.test(html)
+    || !/<script\b[^>]*\bsrc=["']\/codes\/code-finder\.js["'][^>]*\bdefer\b/i.test(html)
+  ) {
+    fail(`${file} is missing the accessible denial-code finder contract.`);
+  }
+  const rows = html.match(/<tr\b[^>]*\bdata-code-row\b[^>]*\bdata-code-search=["'][^"']+["']/gi) ?? [];
+  if (rows.length !== expectedRows) {
+    fail(`${file} exposes ${rows.length} searchable code rows; expected ${expectedRows}.`);
+  }
+}
+
+function socialMetaContent(html, attribute, key, file) {
+  const tag = (html.match(/<meta\b[^>]*>/gi) ?? []).find(
+    (candidate) => candidate.includes(`${attribute}="${key}"`)
+      || candidate.includes(`${attribute}='${key}'`),
+  );
+  const value = tag?.match(/\bcontent=(["'])([\s\S]*?)\1/i)?.[2]?.trim();
+  if (!value) fail(`${file} is missing ${key}.`);
+  return value;
+}
+
+function requireSharePreview(html, file) {
+  const ogTitle = socialMetaContent(html, "property", "og:title", file);
+  const ogDescription = socialMetaContent(html, "property", "og:description", file);
+  const ogImage = socialMetaContent(html, "property", "og:image", file);
+  const ogImageAlt = socialMetaContent(html, "property", "og:image:alt", file);
+  if (
+    socialMetaContent(html, "property", "og:locale", file) !== "en_US"
+    || socialMetaContent(html, "property", "og:image:type", file) !== "image/png"
+    || socialMetaContent(html, "property", "og:image:width", file) !== "1200"
+    || socialMetaContent(html, "property", "og:image:height", file) !== "630"
+  ) {
+    fail(`${file} has incomplete Open Graph image metadata.`);
+  }
+  if (socialMetaContent(html, "name", "twitter:card", file) !== "summary_large_image") {
+    fail(`${file} must request a large social preview card.`);
+  }
+  if (
+    socialMetaContent(html, "name", "twitter:title", file) !== ogTitle
+    || socialMetaContent(html, "name", "twitter:description", file) !== ogDescription
+    || socialMetaContent(html, "name", "twitter:image", file) !== ogImage
+    || socialMetaContent(html, "name", "twitter:image:alt", file) !== ogImageAlt
+  ) {
+    fail(`${file} has mismatched Open Graph and Twitter preview metadata.`);
   }
 }
 
@@ -115,15 +290,7 @@ async function guideModel() {
     const html = await readFile(path.join(guidesRoot, name), "utf8");
     allHtml.set(name, html);
 
-    for (const script of html.matchAll(
-      /<script\s+type=["']application\/ld\+json["']>([\s\S]*?)<\/script>/gi,
-    )) {
-      try {
-        JSON.parse(script[1]);
-      } catch (error) {
-        fail(`${name} has invalid JSON-LD: ${error.message}`);
-      }
-    }
+    const graphs = jsonLdGraphs(html, name);
     const ids = [...html.matchAll(/\sid=["']([^"']+)["']/g)].map((found) => found[1]);
     if (new Set(ids).size !== ids.length) fail(`${name} contains duplicate HTML ids.`);
     requireStaticTracker(html, name);
@@ -164,6 +331,7 @@ async function guideModel() {
     if (canonical !== expected) {
       fail(`${name} canonical is ${canonical}; expected ${expected}.`);
     }
+    requireGuideBreadcrumb(graphs, canonical, name);
     if (slugs.has(slug)) fail(`Duplicate guide slug: ${slug}.`);
     slugs.add(slug);
 
@@ -173,7 +341,7 @@ async function guideModel() {
       title: decodeHtml(match(html, /<title>([\s\S]*?)<\/title>/i, "a title", name))
         .replace(/\s+[—-]\s+GetMyYes\s*$/i, ""),
       description: decodeHtml(metaDescription(html, name)),
-      modified: html.match(/"dateModified"\s*:\s*"(\d{4}-\d{2}-\d{2})"/)?.[1] ?? null,
+      modified: sitemapDateModified(html),
     });
   }
 
@@ -208,15 +376,7 @@ async function extraModel(guideSlugs) {
   const insurerSlugs = new Set(insurerNames.filter((n) => n !== "index.html").map((n) => n.slice(0, -5)));
 
   const validate = (name, html, expectedCanonical) => {
-    for (const script of html.matchAll(
-      /<script\s+type=["']application\/ld\+json["']>([\s\S]*?)<\/script>/gi,
-    )) {
-      try {
-        JSON.parse(script[1]);
-      } catch (error) {
-        fail(`${name} has invalid JSON-LD: ${error.message}`);
-      }
-    }
+    const graphs = jsonLdGraphs(html, name);
     requireStaticTracker(html, name);
     validateSearchMetadata(html, name);
     const canonical = match(
@@ -250,6 +410,7 @@ async function extraModel(guideSlugs) {
         fail(`${name} links to missing insurer page ${route}.`);
       }
     }
+    return graphs;
   };
 
   for (const name of codeNames) {
@@ -257,10 +418,20 @@ async function extraModel(guideSlugs) {
     const expected = name === "index.html"
       ? `${siteOrigin}/codes/`
       : `${siteOrigin}/codes/${name.slice(0, -5)}`;
-    validate(`codes/${name}`, html, expected);
+    requireSamplePacketChoice(html, `codes/${name}`);
+    requirePreviewReassurance(html, `codes/${name}`);
+    requireOfficialCodeSources(html, `codes/${name}`);
+    requireSharePreview(html, `codes/${name}`);
+    if (name === "index.html") {
+      requireCodeFinder(html, codeSlugs.size, `codes/${name}`);
+    }
+    const graphs = validate(`codes/${name}`, html, expected);
+    if (name !== "index.html") {
+      requireArticleIdentity(graphs, html, expected, `codes/${name}`);
+    }
     entries.push({
       url: expected,
-      modified: html.match(/"dateModified"\s*:\s*"(\d{4}-\d{2}-\d{2})"/)?.[1] ?? null,
+      modified: sitemapDateModified(html),
     });
   }
   for (const name of insurerNames) {
@@ -268,10 +439,16 @@ async function extraModel(guideSlugs) {
     const expected = name === "index.html"
       ? `${siteOrigin}/insurers/`
       : `${siteOrigin}/insurers/${name.slice(0, -5)}`;
-    validate(`insurers/${name}`, html, expected);
+    requireSamplePacketChoice(html, `insurers/${name}`);
+    requirePreviewReassurance(html, `insurers/${name}`);
+    requireSharePreview(html, `insurers/${name}`);
+    const graphs = validate(`insurers/${name}`, html, expected);
+    if (name !== "index.html") {
+      requireArticleIdentity(graphs, html, expected, `insurers/${name}`);
+    }
     entries.push({
       url: expected,
-      modified: html.match(/"dateModified"\s*:\s*"(\d{4}-\d{2}-\d{2})"/)?.[1] ?? null,
+      modified: sitemapDateModified(html),
     });
   }
   for (const page of standalonePages) {
@@ -279,7 +456,7 @@ async function extraModel(guideSlugs) {
     validate(page.file, html, page.canonical);
     entries.push({
       url: page.canonical,
-      modified: html.match(/"dateModified"\s*:\s*"(\d{4}-\d{2}-\d{2})"/)?.[1] ?? null,
+      modified: sitemapDateModified(html),
     });
   }
   return entries;
@@ -371,6 +548,17 @@ async function generate() {
   const extras = await extraModel(new Set(pages.map((page) => page.slug)));
   const index = await readFile(path.join(webRoot, "index.html"), "utf8");
   validateSearchMetadata(index, "index.html");
+  if (Buffer.byteLength(index, "utf8") > 120_000) {
+    fail("The homepage exceeded its 120 KB uncompressed performance budget.");
+  }
+  if (/<script\b[^>]*\bsrc=["']\/?flutter_bootstrap\.js["']/i.test(index)
+      || /<link\b[^>]*\bhref=["']\/?main\.dart\.js["']/i.test(index)) {
+    fail("The public homepage must lazy-load Flutter only after app intent.");
+  }
+  if (!/s\.src\s*=\s*["']flutter_bootstrap\.js["']/.test(index)
+      || !/\[data-boot\]/.test(index)) {
+    fail("The homepage is missing its intent-driven Flutter boot path.");
+  }
   if (!index.includes('<script src="/analytics.js"></script>')) {
     fail("The homepage is missing the auth-gated first-party visit counter.");
   }
@@ -391,6 +579,15 @@ async function generate() {
   if (!index.includes('href="/appeals/"')) fail("The homepage has no crawlable link to /appeals/.");
   if (!index.includes('href="/codes/"')) fail("The homepage has no crawlable link to /codes/.");
   if (!index.includes('href="/insurers/"')) fail("The homepage has no crawlable link to /insurers/.");
+  const manifest = JSON.parse(
+    await readFile(path.join(webRoot, "manifest.json"), "utf8"),
+  );
+  if (manifest.id !== "/" || manifest.scope !== "/" || manifest.start_url !== "/#/account") {
+    fail("The installed app must reopen the same-origin My cases workspace.");
+  }
+  if (Object.hasOwn(manifest, "orientation")) {
+    fail("The web app manifest must not lock device orientation.");
+  }
   for (const name of publicStaticPages) {
     const html = await readFile(path.join(webRoot, name), "utf8");
     requireStaticTracker(html, name);
@@ -442,6 +639,9 @@ async function verifyBuild() {
   if (!/canvasKitBaseUrl\s*:\s*["']canvaskit\//.test(bootstrap)) {
     fail("The Flutter bootstrap is not configured for same-origin CanvasKit.");
   }
+  if (/\n\s*serviceWorkerSettings\s*:\s*\{/.test(bootstrap)) {
+    fail("The Flutter bootstrap must not register the deprecated generated service worker.");
+  }
   const fontManifest = JSON.parse(
     await readFile(path.join(buildRoot, "assets", "FontManifest.json"), "utf8"),
   );
@@ -458,7 +658,7 @@ async function verifyBuild() {
     await assertEqual(path.join(guidesRoot, name), path.join(buildRoot, "appeals", name), `appeals/${name}`);
   }
   const codesRoot = path.join(webRoot, codesRootName);
-  for (const name of (await readdir(codesRoot)).filter((file) => file.endsWith(".html"))) {
+  for (const name of (await readdir(codesRoot)).filter((file) => /\.(html|js)$/.test(file))) {
     await assertEqual(path.join(codesRoot, name), path.join(buildRoot, codesRootName, name), `codes/${name}`);
   }
   const insurersRoot = path.join(webRoot, insurersRootName);

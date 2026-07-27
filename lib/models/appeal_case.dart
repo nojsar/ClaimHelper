@@ -3,6 +3,7 @@ import 'extraction.dart';
 import 'follow_up.dart';
 import 'guided_answers.dart';
 import 'packet.dart';
+import '../core/constants.dart';
 
 enum CaseStatus {
   uploaded('uploaded'),
@@ -44,6 +45,7 @@ class AppealCase {
     this.followUpCredits,
     this.fullCase = false,
     this.caseTracker,
+    this.feedback,
   });
 
   final String id;
@@ -74,8 +76,19 @@ class AppealCase {
   final int? followUpCredits;
   final bool fullCase;
   final CaseTracker? caseTracker;
+  final CaseFeedback? feedback;
 
-  int get remainingFollowUps => paid ? (followUpCredits ?? 2) : 0;
+  int get remainingFollowUps {
+    if (!paid) return 0;
+    final stored = followUpCredits;
+    if (stored != null) return stored < 0 ? 0 : stored;
+    if (fullCase) {
+      return (Pricing.fullCaseRoundsCap - followUps.length)
+          .clamp(0, Pricing.fullCaseRoundsCap)
+          .toInt();
+    }
+    return Pricing.freeFollowUpRounds;
+  }
 
   factory AppealCase.fromJson(String id, Map<String, dynamic> json) {
     final generation = json['generation'];
@@ -122,6 +135,10 @@ class AppealCase {
           ? CaseTracker.fromJson(
               Map<String, dynamic>.from(json['caseTracker'] as Map))
           : null,
+      feedback: json['feedback'] is Map
+          ? CaseFeedback.fromJson(
+              Map<String, dynamic>.from(json['feedback'] as Map))
+          : null,
     );
   }
 
@@ -154,6 +171,7 @@ class AppealCase {
     int? followUpCredits,
     bool? fullCase,
     CaseTracker? caseTracker,
+    CaseFeedback? feedback,
   }) {
     return AppealCase(
       id: id,
@@ -175,8 +193,31 @@ class AppealCase {
       followUpCredits: followUpCredits ?? this.followUpCredits,
       fullCase: fullCase ?? this.fullCase,
       caseTracker: caseTracker ?? this.caseTracker,
+      feedback: feedback ?? this.feedback,
     );
   }
+}
+
+/// Minimal voluntary post-purchase feedback. The app intentionally supports
+/// fixed choices only: no diagnosis, insurer name, case facts, or testimonial
+/// text is collected here. Permission is a request for consent, not automatic
+/// publication of anything.
+class CaseFeedback {
+  const CaseFeedback({
+    required this.satisfaction,
+    required this.outcome,
+    required this.testimonialPermission,
+  });
+
+  final String satisfaction;
+  final String outcome;
+  final bool testimonialPermission;
+
+  factory CaseFeedback.fromJson(Map<String, dynamic> json) => CaseFeedback(
+        satisfaction: json['satisfaction'] as String? ?? 'neutral',
+        outcome: json['outcome'] as String? ?? 'not_submitted_yet',
+        testimonialPermission: json['testimonialPermission'] as bool? ?? false,
+      );
 }
 
 /// Paywall entitlement rules, kept as pure functions so they are trivially

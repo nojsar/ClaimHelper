@@ -12,6 +12,37 @@ import { config } from "./config";
 import { requireUid, requireOwnedCase } from "./util";
 import { recordFirstCaseAnalyticsEvent } from "./analytics";
 
+const ACCOUNT_DELETION_PAGE_SIZE = 5;
+
+export type OwnedCaseDeletionTarget = {
+  id: string;
+  storageOwnerUids: string[];
+};
+
+/**
+ * Re-query a small page after every successful batch instead of loading an
+ * account's entire case history into memory. If one deletion fails, the
+ * callable stops before deleting Auth; a retry safely resumes from whatever
+ * cases remain.
+ */
+export async function deleteOwnedCasePages(
+  loadPage: (limit: number) => Promise<OwnedCaseDeletionTarget[]>,
+  deleteOne: (target: OwnedCaseDeletionTarget) => Promise<void>,
+  pageSize = ACCOUNT_DELETION_PAGE_SIZE,
+): Promise<number> {
+  if (!Number.isInteger(pageSize) || pageSize < 1) {
+    throw new Error("pageSize must be a positive integer.");
+  }
+
+  let deleted = 0;
+  while (true) {
+    const page = await loadPage(pageSize);
+    if (page.length === 0) return deleted;
+    await Promise.all(page.map(deleteOne));
+    deleted += page.length;
+  }
+}
+
 /**
  * createCaseUploadSession
  * Creates the case document and returns the Storage path prefix the client
@@ -118,6 +149,16 @@ export async function deleteCaseCompletely(
   for (const doc of reminders.docs) {
     await doc.ref.delete();
   }
+  // The Trigger Email extension may not have delivered a queued transactional
+  // message yet. Remove new case-tagged queue entries along with the case so
+  // deletion and account erasure do not leave a delayed email behind.
+  const queuedMail = await db
+    .collection("mail")
+    .where("caseId", "==", caseId)
+    .get();
+  for (const doc of queuedMail.docs) {
+    await doc.ref.delete();
+  }
   await db.collection("cases").doc(caseId).delete();
 }
 
@@ -129,20 +170,33 @@ export async function deleteCaseCompletely(
  * they are accounting/tax records we are legally required to keep
  * (GDPR art. 17(3)(b)); they hold no uploaded documents.
  */
-export const deleteAccount = onCall({ invoker: "public" }, async (request) => {
-  const uid = requireUid(request);
-  const db = getFirestore();
+export const deleteAccount = onCall(
+  { invoker: "public", timeoutSeconds: 540 },
+  async (request) => {
+    const uid = requireUid(request);
+    const db = getFirestore();
 
-  const owned = await db.collection("cases").where("ownerUid", "==", uid).get();
-  for (const doc of owned.docs) {
-    await deleteCaseCompletely(doc.id, caseStorageOwnerUids(doc));
-  }
+    await deleteOwnedCasePages(
+      async (limit) => {
+        const owned = await db
+          .collection("cases")
+          .where("ownerUid", "==", uid)
+          .limit(limit)
+          .get();
+        return owned.docs.map((doc) => ({
+          id: doc.id,
+          storageOwnerUids: caseStorageOwnerUids(doc),
+        }));
+      },
+      (target) => deleteCaseCompletely(target.id, target.storageOwnerUids),
+    );
 
-  await db.collection("users").doc(uid).delete();
-  await db.collection("rateLimits").doc(`preview_${uid}`).delete();
-  await getAuth().deleteUser(uid);
-  return { deleted: true };
-});
+    await db.collection("users").doc(uid).delete();
+    await db.collection("rateLimits").doc(`preview_${uid}`).delete();
+    await getAuth().deleteUser(uid);
+    return { deleted: true };
+  },
+);
 
 /**
  * saveCase — marks a case as saved so cleanup will not remove it.

@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'core/theme.dart';
 import 'features/account/account_screen.dart';
+import 'features/account/email_link_sign_in_screen.dart';
 import 'features/admin/stats_screen.dart';
 import 'features/extraction/extraction_review_screen.dart';
 import 'features/guided/guided_questions_screen.dart';
@@ -17,8 +18,32 @@ import 'features/settings/settings_screen.dart';
 import 'features/upload/upload_screen.dart';
 import 'widgets/app_scaffold.dart';
 
+/// Resolves our internal hash route from both the final app URL and Firebase's
+/// email-action URL. Firebase can preserve ActionCodeSettings.url in a
+/// `continueUrl` query parameter while keeping the one-time code in the
+/// outer URL, so checking the browser fragment alone would send a valid link
+/// to the public landing page instead of the confirmation screen.
+String initialRouterLocationFor(Uri location) {
+  final fragment = location.fragment;
+  if (fragment.startsWith('/')) return fragment;
+
+  final continueUrl = location.queryParameters['continueUrl'];
+  if (continueUrl != null) {
+    final continuation = Uri.tryParse(continueUrl);
+    final continuationFragment = continuation?.fragment;
+    if (continuationFragment != null &&
+        (continuationFragment == '/email-link' ||
+            continuationFragment.startsWith('/email-link?'))) {
+      return continuationFragment;
+    }
+  }
+  return '/';
+}
+
+String get _initialRouterLocation => initialRouterLocationFor(Uri.base);
+
 final appRouter = GoRouter(
-  initialLocation: '/',
+  initialLocation: _initialRouterLocation,
   routes: [
     // getmyyes.com has ONE homepage: the static Case File landing that
     // index.html serves before the app boots. On web, the app's own root
@@ -30,7 +55,19 @@ final appRouter = GoRouter(
       builder: (_, __) =>
           kIsWeb ? const _ExitToLanding() : const LandingScreen(),
     ),
-    GoRoute(path: '/upload', builder: (_, __) => const UploadScreen()),
+    GoRoute(
+      path: '/upload',
+      builder: (_, s) => UploadScreen(
+        requestedPurchaseKind: s.uri.queryParameters['tier'],
+      ),
+    ),
+    GoRoute(
+      path: '/email-link',
+      builder: (_, s) => EmailLinkSignInScreen(
+        caseId: s.uri.queryParameters['caseId'] ?? '',
+        resumeCheckoutKind: s.uri.queryParameters['resumeCheckout'],
+      ),
+    ),
     GoRoute(
       path: '/processing',
       builder: (_, __) => const ProcessingScreen(),
@@ -51,8 +88,10 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/case/:caseId/preview',
-      builder: (_, s) =>
-          PreviewPaywallScreen(caseId: s.pathParameters['caseId']!),
+      builder: (_, s) => PreviewPaywallScreen(
+        caseId: s.pathParameters['caseId']!,
+        resumeCheckoutKind: s.uri.queryParameters['resumeCheckout'],
+      ),
     ),
     GoRoute(
       path: '/case/:caseId/purchase-success',
@@ -63,8 +102,10 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/case/:caseId/packet',
-      builder: (_, s) =>
-          AppealPacketScreen(caseId: s.pathParameters['caseId']!),
+      builder: (_, s) => AppealPacketScreen(
+        caseId: s.pathParameters['caseId']!,
+        initialTab: s.uri.queryParameters['tab'],
+      ),
     ),
     GoRoute(path: '/account', builder: (_, __) => const AccountScreen()),
     GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),

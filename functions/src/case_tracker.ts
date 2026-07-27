@@ -48,6 +48,31 @@ export interface NormalizedCaseTracker {
   responseReminderEnabled: boolean;
 }
 
+export interface ResponseReminderState {
+  expectedResponseDate?: string | null;
+  responseDate?: string | null;
+  responseStatus?: string;
+  outcome?: string;
+  responseReminderEnabled?: boolean;
+}
+
+/**
+ * A queued response reminder remains useful only while the case is still
+ * waiting for a decision. Use the same predicate when scheduling and when
+ * dispatching so a recorded response or final outcome cancels stale email.
+ */
+export function responseReminderIsPending(
+  tracker: ResponseReminderState | null | undefined,
+): boolean {
+  return tracker?.responseReminderEnabled === true &&
+    typeof tracker.expectedResponseDate === "string" &&
+    tracker.expectedResponseDate.length > 0 &&
+    tracker.responseDate == null &&
+    tracker.outcome === "pending" &&
+    tracker.responseStatus !== "decision_received" &&
+    tracker.responseStatus !== "closed";
+}
+
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -199,11 +224,7 @@ async function syncResponseReminder(args: {
     ? args.email.trim().toLowerCase()
     : "";
   const expected = args.tracker.expectedResponseDate;
-  if (
-    !args.tracker.responseReminderEnabled ||
-    !expected ||
-    !EMAIL_RE.test(email)
-  ) {
+  if (!responseReminderIsPending(args.tracker) || !EMAIL_RE.test(email)) {
     await reminderRef.delete().catch(() => undefined);
     return false;
   }

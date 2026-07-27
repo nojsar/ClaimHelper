@@ -64,9 +64,40 @@ class AuthController extends StateNotifier<AuthSnapshot> {
     _refresh();
   }
 
+  Future<void> sendPasswordResetEmail(String email) =>
+      _backend.sendPasswordResetEmail(email);
+
   Future<void> signInAndClaimCase(
       String email, String password, String caseId) async {
     await _backend.signInWithEmailAndClaimCase(email, password, caseId);
+    _refresh();
+  }
+
+  Future<void> sendCheckoutEmailLink({
+    required String email,
+    required String caseId,
+    required String continueUrl,
+  }) async {
+    await _backend.sendEmailLinkAndPrepareCaseClaim(
+      email: email,
+      caseId: caseId,
+      continueUrl: continueUrl,
+    );
+  }
+
+  bool isEmailSignInLink(String emailLink) =>
+      _backend.isEmailSignInLink(emailLink);
+
+  Future<void> completeEmailLinkSignIn({
+    required String email,
+    required String emailLink,
+    required String caseId,
+  }) async {
+    await _backend.signInWithEmailLinkAndClaimCase(
+      email: email,
+      emailLink: emailLink,
+      caseId: caseId,
+    );
     _refresh();
   }
 

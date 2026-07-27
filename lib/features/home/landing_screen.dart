@@ -660,7 +660,7 @@ class _PricingTeaser extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final wide = MediaQuery.sizeOf(context).width > 720;
+    final wide = MediaQuery.sizeOf(context).width > 1040;
     return _Section(
       color: AppColors.surfaceAlt,
       fillViewport: true,
@@ -669,7 +669,7 @@ class _PricingTeaser extends StatelessWidget {
         children: [
           const SectionHeader(
             eyebrow: 'Simple pricing',
-            title: 'Free to preview. \$39 for the full packet.',
+            title: 'Free to preview. Choose \$39 or \$59.',
             subtitle:
                 'See your denial type, what\'s at stake, and your likely appeal '
                 'path before you pay a cent.',
@@ -681,8 +681,10 @@ class _PricingTeaser extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: const [
                   Expanded(child: _FreePriceCard()),
-                  SizedBox(width: 20),
+                  SizedBox(width: 16),
                   Expanded(child: _PaidPriceCard()),
+                  SizedBox(width: 16),
+                  Expanded(child: _FullCasePriceCard()),
                 ],
               ),
             )
@@ -692,6 +694,8 @@ class _PricingTeaser extends StatelessWidget {
                 _FreePriceCard(),
                 SizedBox(height: 20),
                 _PaidPriceCard(),
+                SizedBox(height: 20),
+                _FullCasePriceCard(),
               ],
             ),
         ],
@@ -730,8 +734,27 @@ class _PaidPriceCard extends StatelessWidget {
           'Doctor letter request',
           'Insurer call script',
           'Deadline tracker + PDF export',
+          '2 follow-up drafting rounds',
         ],
         highlighted: true,
+      );
+}
+
+class _FullCasePriceCard extends StatelessWidget {
+  const _FullCasePriceCard();
+  @override
+  Widget build(BuildContext context) => const _PriceCard(
+        title: 'Full Case',
+        price: '\$59',
+        blurb: 'Packet plus a larger follow-up bundle.',
+        features: [
+          'Everything in the full packet',
+          'Up to 10 follow-up drafting rounds',
+          'Second-level appeal drafts',
+          'External-review request drafts',
+          '\$20 upgrade after buying the packet',
+        ],
+        highlighted: false,
       );
 }
 

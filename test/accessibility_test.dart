@@ -180,8 +180,8 @@ void main() {
     await tester.pumpWidget(ProviderScope(
       child: MaterialApp(
         theme: buildAppTheme(),
-        home: const MediaQuery(
-          data: MediaQueryData(
+        home: MediaQuery(
+          data: const MediaQueryData(
             textScaler: TextScaler.linear(2),
             disableAnimations: true,
           ),
@@ -234,8 +234,8 @@ void main() {
       overrides: [backendProvider.overrideWithValue(_GuidedA11yBackend())],
       child: MaterialApp(
         theme: buildAppTheme(),
-        home: const MediaQuery(
-          data: MediaQueryData(
+        home: MediaQuery(
+          data: const MediaQueryData(
             textScaler: TextScaler.linear(2),
             disableAnimations: true,
           ),
@@ -267,23 +267,33 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
+    final backend = MockBackend();
+    final session = await tester.runAsync(
+      () => backend.createCaseUploadSession(consentConfirmed: true),
+    );
+    expect(session, isNotNull);
+
     await tester.pumpWidget(ProviderScope(
-      overrides: [backendProvider.overrideWithValue(MockBackend())],
+      overrides: [backendProvider.overrideWithValue(backend)],
       child: MaterialApp(
         theme: buildAppTheme(),
-        home: const MediaQuery(
-          data: MediaQueryData(
+        home: MediaQuery(
+          data: const MediaQueryData(
             textScaler: TextScaler.linear(2),
             disableAnimations: true,
           ),
-          child: PurchaseSuccessScreen(caseId: 'missing-case'),
+          child: PurchaseSuccessScreen(caseId: session!.caseId),
         ),
       ),
     ));
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
 
     expect(tester.takeException(), isNull);
-    expect(find.textContaining('Loading'), findsWidgets);
+    expect(find.textContaining('Waiting for payment confirmation'),
+        findsOneWidget);
+    expect(find.text('Refresh status'), findsOneWidget);
+    expect(find.text('My saved cases'), findsOneWidget);
   });
 
   testWidgets('extraction review keeps headings and fields accessible at 200%',
@@ -352,6 +362,8 @@ void main() {
           RegExp(r'Reminder email address', caseSensitive: false)),
       findsOneWidget,
     );
+    expect(find.text('Save a private link to this preview'), findsOneWidget);
+    expect(find.text('Save preview & remind me'), findsOneWidget);
     semantics.dispose();
   });
 

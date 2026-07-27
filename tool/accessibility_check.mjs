@@ -182,6 +182,20 @@ for (const file of files) {
   for (const match of semanticHtml.matchAll(/<img\b[^>]*>/gi)) {
     must(file, /\salt\s*=\s*(["'])[^"']*\1/i.test(match[0]), `image is missing alt text: ${match[0].slice(0, 100)}`);
   }
+  const metaTags = openingTags(semanticHtml, "meta").map((match) => match[0]);
+  const twitterImage = metaTags.find(
+    (tag) => (attribute(tag, "name") ?? "").toLowerCase() === "twitter:image",
+  );
+  if (twitterImage) {
+    const twitterImageAlt = metaTags.find(
+      (tag) => (attribute(tag, "name") ?? "").toLowerCase() === "twitter:image:alt",
+    );
+    must(
+      file,
+      Boolean(attribute(twitterImageAlt ?? "", "content")?.trim()),
+      "the social preview image is missing twitter:image:alt text.",
+    );
+  }
   for (const match of semanticHtml.matchAll(/(<button\b[^>]*>)([\s\S]*?)<\/button>/gi)) {
     must(file, hasAccessibleName(match[1], match[2]), `button has no accessible name: ${match[1]}`);
     must(file, /\stype=["'](?:button|submit|reset)["']/i.test(match[1]), `button is missing an explicit type: ${match[1]}`);

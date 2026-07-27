@@ -1,14 +1,19 @@
 import OpenAI from "openai";
+
 import { config, openaiApiKey } from "../config";
+import { ModelOperation, recordModelUsage } from "../model_usage";
 
 /**
  * Server-side OpenAI access. The API key never leaves Cloud Functions.
- * Uses the Responses API (not Chat Completions) per OpenAI's current guidance,
- * with Structured Outputs (json_schema, strict) and store:false so requests
- * are not retained by OpenAI.
+ * Uses the Responses API with strict Structured Outputs and store:false.
  */
-
 export interface StructuredRequest {
+  /** Fixed operation name used only for aggregate cost/latency reporting. */
+  operation: ModelOperation;
+  /** Upper bound includes reasoning tokens and the structured answer. */
+  maxOutputTokens: number;
+  /** Owner/admin test generations must never enter customer analytics. */
+  excludeUsageAnalytics?: boolean;
   systemPrompt: string;
   /** Content parts for the user turn: text plus optional file/image parts. */
   userContent: ResponseContentPart[];
@@ -59,39 +64,71 @@ export function toContentPart(
 }
 
 /**
- * Run one structured-output request and return the parsed JSON object.
- * Throws if the model refuses or returns non-JSON (callers surface a
- * user-facing error and mark the case status "error").
+ * Run one structured-output request and return parsed JSON. Usage data is
+ * written only as aggregate counters and can never make generation fail.
  */
 export async function runStructured<T>(req: StructuredRequest): Promise<T> {
   const openai = client();
-  const response = await openai.responses.create({
-    model: config.openaiModel,
-    store: false,
-    input: [
-      { role: "system", content: [{ type: "input_text", text: req.systemPrompt }] },
-      { role: "user", content: req.userContent as never },
-    ],
-    text: {
-      format: {
-        type: "json_schema",
-        name: req.schemaName,
-        schema: req.schema,
-        strict: true,
-      },
-    },
-    // Reasoning effort + processing speed. Spread with a loose cast so the
-    // request compiles across OpenAI SDK versions that predate the "xhigh"
-    // effort literal / service_tier param — the API accepts them at runtime.
-    ...({
-      reasoning: { effort: config.openaiReasoningEffort },
-      service_tier: config.openaiServiceTier,
-    } as Record<string, unknown>),
-  });
+  const startedAt = Date.now();
+  let inputTokens = 0;
+  let cachedInputTokens = 0;
+  let outputTokens = 0;
+  let succeeded = false;
 
-  const text = response.output_text;
-  if (!text) {
-    throw new Error("OpenAI returned an empty response.");
+  try {
+    const response = await openai.responses.create({
+      model: config.openaiModel,
+      store: false,
+      max_output_tokens: req.maxOutputTokens,
+      input: [
+        {
+          role: "system",
+          content: [{ type: "input_text", text: req.systemPrompt }],
+        },
+        { role: "user", content: req.userContent as never },
+      ],
+      text: {
+        format: {
+          type: "json_schema",
+          name: req.schemaName,
+          schema: req.schema,
+          strict: true,
+        },
+      },
+      ...({
+        reasoning: { effort: config.openaiReasoningEffort },
+        service_tier: config.openaiServiceTier,
+      } as Record<string, unknown>),
+    });
+
+    const usage = response.usage as unknown as
+      | {
+          input_tokens?: number;
+          output_tokens?: number;
+          input_tokens_details?: { cached_tokens?: number };
+        }
+      | undefined;
+    inputTokens = usage?.input_tokens ?? 0;
+    cachedInputTokens = usage?.input_tokens_details?.cached_tokens ?? 0;
+    outputTokens = usage?.output_tokens ?? 0;
+
+    const text = response.output_text;
+    if (!text) {
+      throw new Error("OpenAI returned an empty response.");
+    }
+    const parsed = JSON.parse(text) as T;
+    succeeded = true;
+    return parsed;
+  } finally {
+    if (!req.excludeUsageAnalytics) {
+      await recordModelUsage({
+        operation: req.operation,
+        succeeded,
+        durationMs: Date.now() - startedAt,
+        inputTokens,
+        cachedInputTokens,
+        outputTokens,
+      });
+    }
   }
-  return JSON.parse(text) as T;
 }

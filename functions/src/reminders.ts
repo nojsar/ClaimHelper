@@ -4,6 +4,50 @@ import { config } from "./config";
 import { requireUid, requireOwnedCase } from "./util";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+export const feedbackReminderId = (caseId: string) => `feedback_${caseId}`;
+
+/**
+ * Schedules one post-purchase product-feedback request for 14 days after a
+ * confirmed initial purchase. It carries only a delivery address, case id,
+ * and owner id—never denial facts, insurer, deadline, or document content.
+ */
+export async function scheduleFeedbackRequest(args: {
+  caseId: string;
+  ownerUid: string | null;
+  email: string | null;
+}): Promise<void> {
+  const email = args.email?.trim().toLowerCase();
+  if (!args.ownerUid || !email || !EMAIL_RE.test(email)) return;
+  const reminderRef = getFirestore()
+    .collection("reminders")
+    .doc(feedbackReminderId(args.caseId));
+  await getFirestore().runTransaction(async (transaction) => {
+    // Stripe can redeliver a successful checkout long after the first webhook.
+    // Keep the original due time rather than turning that retry into a second
+    // or later feedback request.
+    if ((await transaction.get(reminderRef)).exists) return;
+    const now = Timestamp.now();
+    transaction.create(reminderRef, {
+      caseId: args.caseId,
+      ownerUid: args.ownerUid,
+      email,
+      sendAt: Timestamp.fromMillis(now.toMillis() + 14 * 24 * 3600 * 1000),
+      kind: "feedback_request",
+      createdAt: now,
+    });
+  });
+}
+
+/**
+ * A preview reminder is useful only if the customer can still reopen the
+ * case. This retention extension is deliberately opt-in and case-scoped; it
+ * does not affect visitors who did not request reminders.
+ */
+export function reminderOptInExpiry(now: Timestamp): Timestamp {
+  return Timestamp.fromMillis(
+    now.toMillis() + config.reminderOptInCaseTtlDays * 24 * 3600 * 1000,
+  );
+}
 
 /**
  * saveReminderEmail
@@ -17,6 +61,15 @@ export const saveReminderEmail = onCall({ invoker: "public" }, async (request) =
   const uid = requireUid(request);
   const snap = await requireOwnedCase(request.data?.caseId, uid);
 
+  // Paid cases have their own owner-controlled response reminders. Do not
+  // attach pre-purchase recovery mail or alter retention for them here.
+  if (snap.get("paid") === true) {
+    throw new HttpsError(
+      "failed-precondition",
+      "Preview reminders are available before purchase only.",
+    );
+  }
+
   const email = String(request.data?.email ?? "").trim().toLowerCase();
   if (!EMAIL_RE.test(email)) {
     throw new HttpsError("invalid-argument", "Enter a valid email address.");
@@ -24,10 +77,20 @@ export const saveReminderEmail = onCall({ invoker: "public" }, async (request) =
 
   const db = getFirestore();
   const now = Timestamp.now();
+  const requestedExpiry = reminderOptInExpiry(now);
+  const existingExpiry = snap.get("expiresAt") as Timestamp | null | undefined;
+  // A saved case has null expiry and must remain saved. For a temporary case,
+  // keep the later of its existing expiry and the explicit 14-day opt-in.
+  const expiryUpdate = existingExpiry === null
+    ? null
+    : existingExpiry instanceof Timestamp && existingExpiry.toMillis() > requestedExpiry.toMillis()
+      ? existingExpiry
+      : requestedExpiry;
 
   await snap.ref.update({
     reminderEmail: email,
     reminderOptInAt: now,
+    expiresAt: expiryUpdate,
     updatedAt: FieldValue.serverTimestamp(),
   });
 
@@ -45,6 +108,8 @@ export const saveReminderEmail = onCall({ invoker: "public" }, async (request) =
 
   // Immediate recap so the case link is one click away when they come back.
   await db.collection("mail").add({
+    caseId: snap.id,
+    ownerUid: uid,
     to: [email],
     message: buildReminderMessage({
       subject: "Your GetMyYes appeal preview — saved for you",

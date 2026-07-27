@@ -11,7 +11,11 @@ import { insurers } from "./insurers_data.mjs";
 const projectRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const outRoot = path.join(projectRoot, "web", "insurers");
 const siteOrigin = "https://getmyyes.com";
-const updated = "2026-07-13";
+const publishedAt = "2026-07-13T00:00:00Z";
+const modifiedAt = "2026-07-27T00:00:00Z";
+const modifiedLabel = "JULY 27, 2026";
+const socialImage = `${siteOrigin}/og-image.png`;
+const socialImageAlt = "GetMyYes graphic: The insurer stamped no. We draft the comeback. Free preview, $39 full packet, no subscription.";
 
 const guideTitles = {
   "not-medically-necessary": "“Not medically necessary” denials",
@@ -28,6 +32,7 @@ const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, 
 const truncate = (value, max) => value.length <= max
   ? value
   : `${value.slice(0, max - 1).replace(/\s+\S*$/, "")}…`;
+const indefiniteArticleFor = (name) => /^(Aetna|Ambetter|Anthem|Oscar)\b/i.test(name) ? "an" : "a";
 
 function shell({ title, description, canonical, h1, crumb, body }) {
   const pageTitle = truncate(title, 65);
@@ -45,11 +50,21 @@ function shell({ title, description, canonical, h1, crumb, body }) {
   <link rel="stylesheet" href="/fonts.css">
   <link rel="stylesheet" href="/appeals/guide.css">
   <meta property="og:type" content="article">
+  <meta property="og:locale" content="en_US">
   <meta property="og:site_name" content="GetMyYes">
   <meta property="og:title" content="${esc(pageTitle)}">
   <meta property="og:description" content="${esc(pageDescription)}">
   <meta property="og:url" content="${canonical}">
-  <meta property="og:image" content="${siteOrigin}/og-image.png">
+  <meta property="og:image" content="${socialImage}">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="${esc(socialImageAlt)}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${esc(pageTitle)}">
+  <meta name="twitter:description" content="${esc(pageDescription)}">
+  <meta name="twitter:image" content="${socialImage}">
+  <meta name="twitter:image:alt" content="${esc(socialImageAlt)}">
   <script src="/analytics.js" data-static></script>
 </head>
 <body>
@@ -70,7 +85,7 @@ function shell({ title, description, canonical, h1, crumb, body }) {
     <main id="main-content" tabindex="-1">
     <article>
       <h1>${h1}</h1>
-      <p class="updated">UPDATED JULY 2026 · U.S. PLANS · NOT LEGAL OR MEDICAL ADVICE</p>
+      <p class="updated">UPDATED <time datetime="${modifiedAt}">${modifiedLabel}</time> · U.S. PLANS · NOT LEGAL OR MEDICAL ADVICE</p>
 ${body}
     </article>
     </main>
@@ -100,7 +115,9 @@ function federalBlock(name) {
 }
 
 function insurerPage(entry) {
+  const canonical = `${siteOrigin}/insurers/${entry.slug}`;
   const related = insurers.filter((i) => i.slug !== entry.slug).slice(0, 3);
+  const indefiniteArticle = indefiniteArticleFor(entry.name);
   const guideLinks = entry.guides
     .map((g) => `<a href="/appeals/${g}">${esc(guideTitles[g])}</a>`)
     .join(" and ");
@@ -109,12 +126,16 @@ function insurerPage(entry) {
     "@graph": [
       {
         "@type": "Article",
-        headline: `How to appeal a ${entry.name} denial`,
+        "@id": `${canonical}#article`,
+        headline: `How to appeal ${indefiniteArticle} ${entry.name} denial`,
         description: entry.overview,
+        url: canonical,
+        inLanguage: "en-US",
         author: { "@type": "Organization", name: "GetMyYes", url: `${siteOrigin}/` },
-        publisher: { "@type": "Organization", name: "GetMyYes" },
-        dateModified: updated,
-        mainEntityOfPage: `${siteOrigin}/insurers/${entry.slug}`,
+        publisher: { "@type": "Organization", name: "GetMyYes", url: `${siteOrigin}/` },
+        datePublished: publishedAt,
+        dateModified: modifiedAt,
+        mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
       },
       {
         "@type": "FAQPage",
@@ -162,7 +183,11 @@ ${entry.faq.map((f) => `      <h3>${esc(f.q)}</h3>\n      <p>${esc(f.a)}</p>`).j
         <div class="kicker">Denied by ${esc(entry.short)}? Don't drop it</div>
         <h2>Upload the denial letter. Get the whole appeal packet.</h2>
         <p>GetMyYes reads your actual ${esc(entry.short)} letter — denial reason, fine print, deadlines — and drafts the appeal letter, evidence checklist, doctor letter request, and call script. Free preview first.</p>
-        <a class="go" href="/#/upload">Start my appeal — free preview</a>
+        <p class="cta-trust" id="preview-trust">No card is required for the preview. Unsaved guest uploads normally auto-delete after 24 hours. <a href="/privacy">Read the retention details</a>.</p>
+        <div class="cta-actions">
+          <a class="go" href="/#/upload" aria-describedby="preview-trust">Start my appeal — free preview</a>
+          <a class="sample" href="/sample-packet">See a sample packet first</a>
+        </div>
         <p class="sub">FREE PREVIEW · $39 FULL PACKET · NO SUBSCRIPTION. EVER.</p>
       </div>
 
@@ -174,9 +199,9 @@ ${related.map((i) => `          <li><a href="/insurers/${i.slug}">How to appeal 
         </ul>
       </div>`;
   return shell({
-    title: `Appeal a ${entry.name} Denial | GetMyYes`,
+    title: `Appeal ${indefiniteArticle} ${entry.name} Denial | GetMyYes`,
     description: `How to appeal a denial from ${entry.name}: where to file, what to include, the deadlines that may apply, and external-review next steps.`,
-    canonical: `${siteOrigin}/insurers/${entry.slug}`,
+    canonical,
     h1: `How to appeal a denial from ${esc(entry.name)}`,
     crumb: entry.short,
     body,
@@ -223,7 +248,11 @@ ${rows}
         <div class="kicker">Whoever denied you</div>
         <h2>Upload the letter. We build the appeal for your exact insurer.</h2>
         <p>GetMyYes reads the actual denial letter — insurer, denial reason, deadlines — and drafts the right response: appeal letter, evidence checklist, doctor letter request, call script.</p>
-        <a class="go" href="/#/upload">Start my appeal — free preview</a>
+        <p class="cta-trust" id="preview-trust">No card is required for the preview. Unsaved guest uploads normally auto-delete after 24 hours. <a href="/privacy">Read the retention details</a>.</p>
+        <div class="cta-actions">
+          <a class="go" href="/#/upload" aria-describedby="preview-trust">Start my appeal — free preview</a>
+          <a class="sample" href="/sample-packet">See a sample packet first</a>
+        </div>
         <p class="sub">FREE PREVIEW · $39 FULL PACKET · NO SUBSCRIPTION. EVER.</p>
       </div>`;
   return shell({

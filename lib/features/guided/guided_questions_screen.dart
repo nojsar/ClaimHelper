@@ -33,6 +33,7 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
   bool _initialized = false;
   bool _saving = false;
   bool _saved = false;
+  bool _continuing = false;
   String? _loadError;
   String? _saveError;
 
@@ -81,7 +82,9 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
     _saveDebounce?.cancel();
     if (_initialized) {
       _controller.updateGuidedAnswers(_collected);
-      unawaited(_controller.persistGuidedAnswers());
+      unawaited(
+        _controller.persistGuidedAnswers().catchError((Object _) {}),
+      );
     }
     _urgencyCtrl.dispose();
     _contactCtrl.dispose();
@@ -105,11 +108,17 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
   void _scheduleAutosave() {
     _controller.updateGuidedAnswers(_collected);
     _saveDebounce?.cancel();
-    _saveDebounce =
-        Timer(const Duration(milliseconds: 650), () => unawaited(_saveNow()));
+    _saveDebounce = Timer(
+      const Duration(milliseconds: 650),
+      () => unawaited(_autosaveNow()),
+    );
   }
 
-  Future<void> _saveNow() async {
+  Future<void> _autosaveNow() async {
+    await _saveNow();
+  }
+
+  Future<bool> _saveNow() async {
     _saveDebounce?.cancel();
     _controller.updateGuidedAnswers(_collected);
     if (mounted) {
@@ -126,17 +135,23 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
           _saved = true;
         });
       }
+      return true;
     } catch (_) {
       if (mounted) {
         setState(() {
           _saving = false;
-          _saveError = 'Answers are saved locally; reconnect to sync them.';
+          _saved = false;
+          _saveError =
+              'Your latest answers are still on this page. Reconnect and try '
+              'again to sync them.';
         });
       }
+      return false;
     }
   }
 
   Future<void> _continue() async {
+    if (_continuing) return;
     final collected = _collected;
     final problems = _plan!.validate(collected);
     if (problems.isNotEmpty) {
@@ -146,9 +161,15 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
       });
       return;
     }
+    setState(() {
+      _a = collected;
+      _continuing = true;
+    });
     _controller.updateGuidedAnswers(collected);
-    await _saveNow();
-    if (mounted) context.go('/case/${widget.caseId}/preview');
+    final saved = await _saveNow();
+    if (!mounted) return;
+    setState(() => _continuing = false);
+    if (saved) context.go('/case/${widget.caseId}/preview');
   }
 
   @override
@@ -164,6 +185,8 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
 
     final plan = _plan!;
     final problems = _showErrors ? plan.validate(_collected) : const <String>[];
+    final saveStatus =
+        _saving ? 'Saving…' : (_saveError ?? (_saved ? 'Answers saved' : ''));
 
     return AppScaffold(
       title: 'A few questions',
@@ -187,10 +210,10 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
             const SizedBox(height: 8),
             Semantics(
               liveRegion: true,
+              label: saveStatus,
+              excludeSemantics: true,
               child: Text(
-                _saving
-                    ? 'Saving…'
-                    : (_saveError ?? (_saved ? 'Answers saved' : '')),
+                saveStatus,
                 style: TextStyle(
                   fontSize: 12,
                   color: _saveError == null
@@ -352,9 +375,16 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
-                onPressed: _continue,
-                icon: const Icon(Icons.arrow_forward),
-                label: const Text('See my free preview'),
+                onPressed: _continuing ? null : _continue,
+                icon: _continuing
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.arrow_forward),
+                label: Text(
+                  _continuing ? 'Syncing answers…' : 'See my free preview',
+                ),
               ),
             ),
             const SizedBox(height: 24),

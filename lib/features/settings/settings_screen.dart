@@ -30,7 +30,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           'This permanently deletes your account, every case, and all '
           'uploaded files from our servers, and signs you out. Purchase '
           'receipts are kept only as required by accounting law. This '
-          'cannot be undone.',
+          'cannot be undone. If you have many saved cases, deletion may take '
+          'a few minutes; keep this tab open until it finishes.',
         ),
         actions: [
           TextButton(

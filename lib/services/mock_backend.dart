@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../core/constants.dart';
 import '../models/appeal_case.dart';
 import '../models/case_tracker.dart';
 import '../models/extraction.dart';
@@ -38,8 +39,30 @@ class MockBackend implements Backend {
   }
 
   @override
+  Future<void> sendPasswordResetEmail(String email) async {}
+
+  @override
   Future<void> signInWithEmailAndClaimCase(
       String email, String password, String caseId) async {
+    _email = email;
+  }
+
+  @override
+  Future<void> sendEmailLinkAndPrepareCaseClaim({
+    required String email,
+    required String caseId,
+    required String continueUrl,
+  }) async {}
+
+  @override
+  bool isEmailSignInLink(String emailLink) => true;
+
+  @override
+  Future<void> signInWithEmailLinkAndClaimCase({
+    required String email,
+    required String emailLink,
+    required String caseId,
+  }) async {
     _email = email;
   }
 
@@ -188,10 +211,41 @@ class MockBackend implements Backend {
         (c) => c.copyWith(
             paid: true,
             pricePaid: plus ? 59 : 39,
-            followUpCredits: plus ? 100 : 2,
+            followUpCredits: plus ? Pricing.fullCaseRoundsCap : 2,
             fullCase: plus ? true : null,
             status: CaseStatus.paid));
     return null;
+  }
+
+  @override
+  Future<void> confirmCheckoutSession(String caseId, String sessionId) async {
+    // Demo checkout grants access synchronously in createCheckoutSession.
+  }
+
+  @override
+  Future<void> recordCaseFunnelEvent(String caseId, String event) async {
+    // Demo mode intentionally keeps aggregate analytics out of local state.
+  }
+
+  @override
+  Future<void> recordCaseTierSelection(String caseId, String kind) async {
+    // Demo mode intentionally keeps aggregate analytics out of local state.
+  }
+
+  @override
+  Future<void> saveCaseAcquisitionAttribution(
+      String caseId, String source) async {
+    // Fixed attribution is a production aggregate only.
+  }
+
+  @override
+  Future<void> saveCaseFeedback(
+    String caseId, {
+    required String satisfaction,
+    required String outcome,
+    required bool testimonialPermission,
+  }) async {
+    // The feedback UI remains usable in mock mode without storing a profile.
   }
 
   @override
@@ -229,7 +283,7 @@ class MockBackend implements Backend {
   }) async {
     await Future<void>.delayed(const Duration(seconds: 2));
     final c = _cases[caseId]!;
-    final remaining = c.followUpCredits ?? 2;
+    final remaining = c.remainingFollowUps;
     if (!c.paid || remaining <= 0) {
       throw StateError('No follow-up rounds left.');
     }
@@ -277,8 +331,16 @@ class MockBackend implements Backend {
     _patch(
         caseId,
         (c) => kind == 'full_case'
-            ? c.copyWith(followUpCredits: 100, fullCase: true)
-            : c.copyWith(followUpCredits: (c.followUpCredits ?? 2) + 1));
+            ? c.copyWith(
+                followUpCredits: [
+                  c.followUpCredits ?? 0,
+                  (Pricing.fullCaseRoundsCap - c.followUps.length)
+                      .clamp(0, Pricing.fullCaseRoundsCap)
+                      .toInt(),
+                ].reduce((a, b) => a > b ? a : b),
+                fullCase: true,
+              )
+            : c.copyWith(followUpCredits: c.remainingFollowUps + 1));
     return null;
   }
 

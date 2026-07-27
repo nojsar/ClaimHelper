@@ -20,8 +20,15 @@ import 'case_tracker_panel.dart';
 /// Request, Call Script, Deadlines, plus a PDF export action. Entitlement is
 /// enforced: if the case is not paid, we send the user back to the paywall.
 class AppealPacketScreen extends ConsumerWidget {
-  const AppealPacketScreen({super.key, required this.caseId});
+  const AppealPacketScreen({
+    super.key,
+    required this.caseId,
+    this.initialTab,
+  });
   final String caseId;
+
+  /// A bounded route hint only. Unknown values deliberately start on Summary.
+  final String? initialTab;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -67,7 +74,7 @@ class AppealPacketScreen extends ConsumerWidget {
         if (c.packet == null) {
           return _GeneratePrompt(caseId: caseId);
         }
-        return _PacketTabs(appealCase: c);
+        return _PacketTabs(appealCase: c, initialTab: initialTab);
       },
     );
   }
@@ -143,8 +150,9 @@ class _GeneratePromptState extends ConsumerState<_GeneratePrompt> {
 }
 
 class _PacketTabs extends ConsumerStatefulWidget {
-  const _PacketTabs({required this.appealCase});
+  const _PacketTabs({required this.appealCase, this.initialTab});
   final AppealCase appealCase;
+  final String? initialTab;
   @override
   ConsumerState<_PacketTabs> createState() => _PacketTabsState();
 }
@@ -207,13 +215,16 @@ class _PacketTabsState extends ConsumerState<_PacketTabs> {
       Tab(text: 'Deadlines'),
       Tab(text: 'Case tracker'),
       Tab(text: 'Follow-ups'),
+      Tab(text: 'Feedback'),
     ];
+    final initialIndex = widget.initialTab == 'feedback' ? tabs.length - 1 : 0;
 
     return Title(
       color: AppColors.primary,
       title: 'Appeal packet | GetMyYes',
       child: DefaultTabController(
         length: tabs.length,
+        initialIndex: initialIndex,
         child: Scaffold(
           appBar: AppBar(
             title: const Text('Your appeal packet'),
@@ -287,7 +298,10 @@ class _PacketTabsState extends ConsumerState<_PacketTabs> {
                 constraints: const BoxConstraints(maxWidth: 820),
                 child: TabBarView(
                   children: [
-                    _SummaryTab(packet: packet),
+                    _SummaryTab(
+                      appealCase: widget.appealCase,
+                      packet: packet,
+                    ),
                     _TextTab(
                       title: 'Appeal letter',
                       body: packet.appealLetter,
@@ -307,6 +321,7 @@ class _PacketTabsState extends ConsumerState<_PacketTabs> {
                     _DeadlinesTab(items: packet.deadlineChecklist),
                     CaseTrackerPanel(appealCase: widget.appealCase),
                     _FollowUpsTab(appealCase: widget.appealCase),
+                    _FeedbackTab(appealCase: widget.appealCase),
                   ],
                 ),
               ),
@@ -421,6 +436,7 @@ class _FollowUpsTabState extends ConsumerState<_FollowUpsTab> {
                 controller: notesCtrl,
                 minLines: 6,
                 maxLines: 12,
+                maxLength: 20000,
                 decoration: const InputDecoration(
                   labelText: 'Everything you have',
                   hintText: 'Paste the insurer\'s response letter here, plus '
@@ -572,7 +588,7 @@ class _FollowUpsTabState extends ConsumerState<_FollowUpsTab> {
                   const SizedBox(height: 6),
                   const Text(
                     'Keep the case moving with one more round, or upgrade '
-                    'to Full Case for the whole fight.',
+                    'to Full Case for a larger capped drafting bundle.',
                     style:
                         TextStyle(color: AppColors.textSecondary, height: 1.45),
                   ),
@@ -586,15 +602,17 @@ class _FollowUpsTabState extends ConsumerState<_FollowUpsTab> {
                       ),
                       FilledButton(
                         onPressed: _busy ? null : () => _buy('full_case'),
-                        child: Text('Full Case — \$${Pricing.fullCaseUsd}'),
+                        child:
+                            Text('Upgrade — \$${Pricing.fullCaseUpgradeUsd}'),
                       ),
                     ],
                   ),
                   const SizedBox(height: 10),
                   Text(
                     'Full Case covers up to ${Pricing.fullCaseRoundsCap} '
-                    'follow-up rounds on this case — plenty for any appeal, '
-                    'but not unlimited.',
+                    'follow-up drafting rounds on this case. Your total is '
+                    '\$${Pricing.fullCaseUsd} including the packet you already '
+                    'bought. No outcome is guaranteed.',
                     style: const TextStyle(
                         fontSize: 12, color: AppColors.textMuted),
                   ),
@@ -602,6 +620,10 @@ class _FollowUpsTabState extends ConsumerState<_FollowUpsTab> {
               ),
             ),
           ),
+        if (!c.fullCase && c.followUps.isNotEmpty && remaining > 0) ...[
+          const SizedBox(height: 20),
+          _FullCaseUpgradeCard(appealCase: c),
+        ],
         if (c.followUps.isNotEmpty) ...[
           const SizedBox(height: 22),
           _sectionTitle('Your follow-up rounds'),
@@ -799,8 +821,185 @@ class _SaveCaseButtonState extends ConsumerState<_SaveCaseButton> {
   }
 }
 
+/// A neutral getting-started plan. It does not infer readiness, submit
+/// anything, or promise an outcome; each button only opens existing packet
+/// material the customer can review at their own pace.
+class _NextActionsChecklist extends StatelessWidget {
+  const _NextActionsChecklist();
+
+  void _openTab(BuildContext context, int index) {
+    DefaultTabController.of(context).animateTo(index);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const actions = [
+      (
+        title: 'Review the appeal letter',
+        detail:
+            'Check names, dates, facts, and the denial reason before using it.',
+        tab: 1,
+        icon: Icons.article_outlined,
+      ),
+      (
+        title: 'Gather provider evidence',
+        detail: 'Use the evidence checklist and doctor request as needed.',
+        tab: 2,
+        icon: Icons.fact_check_outlined,
+      ),
+      (
+        title: 'Submit through your plan\'s process',
+        detail:
+            'Confirm the address, portal steps, and deadline in your notice.',
+        tab: 5,
+        icon: Icons.send_outlined,
+      ),
+      (
+        title: 'Record the proof of submission',
+        detail:
+            'Save the date, method, and confirmation reference in your case tracker.',
+        tab: 6,
+        icon: Icons.bookmark_added_outlined,
+      ),
+      (
+        title: 'Use your included follow-up drafts if needed',
+        detail:
+            'When the insurer replies or misses a response date, return here.',
+        tab: 7,
+        icon: Icons.reply_all_outlined,
+      ),
+    ];
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Next actions',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Work through these in the order that fits your notice. You remain responsible for reviewing every document and confirming your plan\'s requirements.',
+              style: TextStyle(color: AppColors.textSecondary, height: 1.45),
+            ),
+            const SizedBox(height: 10),
+            for (var index = 0; index < actions.length; index++)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: CircleAvatar(
+                  radius: 15,
+                  backgroundColor: AppColors.primaryTint,
+                  foregroundColor: AppColors.primaryDark,
+                  child: Text('${index + 1}'),
+                ),
+                title: Text(actions[index].title),
+                subtitle: Text(actions[index].detail),
+                trailing: Icon(actions[index].icon),
+                onTap: () => _openTab(context, actions[index].tab),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Optional expansion of an already-paid packet. It reuses the existing
+/// server-side `full_case` checkout, which remains authoritative for pricing,
+/// eligibility, and the cap; this UI never grants rounds locally.
+class _FullCaseUpgradeCard extends ConsumerStatefulWidget {
+  const _FullCaseUpgradeCard({required this.appealCase});
+  final AppealCase appealCase;
+
+  @override
+  ConsumerState<_FullCaseUpgradeCard> createState() =>
+      _FullCaseUpgradeCardState();
+}
+
+class _FullCaseUpgradeCardState extends ConsumerState<_FullCaseUpgradeCard> {
+  bool _starting = false;
+
+  Future<void> _upgrade() async {
+    if (_starting) return;
+    setState(() => _starting = true);
+    try {
+      final url = await ref
+          .read(backendProvider)
+          .createFollowUpCheckout(widget.appealCase.id, kind: 'full_case');
+      if (url != null) {
+        await launchUrl(Uri.parse(url), webOnlyWindowName: '_self');
+      } else if (mounted) {
+        ref.invalidate(caseStreamProvider(widget.appealCase.id));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Full Case is active for this case.')),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Checkout could not start. Please try again.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _starting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Want a larger follow-up drafting bundle?',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Optional: upgrade this paid packet to Full Case for \$${Pricing.fullCaseUpgradeUsd} more. It provides up to ${Pricing.fullCaseRoundsCap} follow-up drafting rounds total for this case. Your current packet stays available, and no appeal outcome is guaranteed.',
+              style:
+                  const TextStyle(color: AppColors.textSecondary, height: 1.45),
+            ),
+            const SizedBox(height: 14),
+            FilledButton.icon(
+              onPressed: _starting ? null : _upgrade,
+              icon: _starting
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.add_task_outlined),
+              label: Text(
+                _starting
+                    ? 'Starting checkout…'
+                    : 'Upgrade to Full Case — \$${Pricing.fullCaseUpgradeUsd}',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _SummaryTab extends StatelessWidget {
-  const _SummaryTab({required this.packet});
+  const _SummaryTab({
+    required this.appealCase,
+    required this.packet,
+  });
+
+  final AppealCase appealCase;
   final AppealPacket packet;
 
   @override
@@ -813,6 +1012,8 @@ class _SummaryTab extends StatelessWidget {
         const SizedBox(height: 20),
         _sectionTitle('Appeal strategy'),
         Text(packet.appealStrategy),
+        const SizedBox(height: 24),
+        _NextActionsChecklist(),
         if (packet.warnings.isNotEmpty) ...[
           const SizedBox(height: 20),
           Container(
@@ -841,6 +1042,10 @@ class _SummaryTab extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 20),
+        if (!appealCase.fullCase) ...[
+          _FullCaseUpgradeCard(appealCase: appealCase),
+          const SizedBox(height: 20),
+        ],
         _DisclaimerFooter(text: packet.disclaimer),
       ],
     );
@@ -973,6 +1178,161 @@ class _DeadlinesTab extends StatelessWidget {
               ),
             ),
           ),
+      ],
+    );
+  }
+}
+
+/// Voluntary, fixed-choice feedback. A single transactional reminder may be
+/// emailed about 14 days after purchase if the form is still unanswered; no
+/// free text, case detail, marketing sequence, or automatic publication.
+class _FeedbackTab extends ConsumerStatefulWidget {
+  const _FeedbackTab({required this.appealCase});
+  final AppealCase appealCase;
+
+  @override
+  ConsumerState<_FeedbackTab> createState() => _FeedbackTabState();
+}
+
+class _FeedbackTabState extends ConsumerState<_FeedbackTab> {
+  String? _satisfaction;
+  String? _outcome;
+  bool _testimonialPermission = false;
+  bool _saving = false;
+  bool _saved = false;
+
+  Future<void> _save() async {
+    final satisfaction = _satisfaction;
+    final outcome = _outcome;
+    if (satisfaction == null || outcome == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Choose a satisfaction rating and current outcome.'),
+      ));
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      await ref.read(backendProvider).saveCaseFeedback(
+            widget.appealCase.id,
+            satisfaction: satisfaction,
+            outcome: outcome,
+            testimonialPermission: _testimonialPermission,
+          );
+      if (mounted) setState(() => _saved = true);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Could not save feedback. Please retry.'),
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final existing = widget.appealCase.feedback;
+    if (existing != null || _saved) {
+      return ListView(
+        padding: const EdgeInsets.all(20),
+        children: const [
+          Card(
+            child: Padding(
+              padding: EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.check_circle_outline, color: AppColors.accent),
+                  SizedBox(height: 10),
+                  Text('Thanks — your private feedback was saved.',
+                      style: TextStyle(fontWeight: FontWeight.w800)),
+                  SizedBox(height: 6),
+                  Text(
+                    'Only your fixed choices were saved. Nothing is published automatically.',
+                    style:
+                        TextStyle(color: AppColors.textSecondary, height: 1.45),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        _sectionTitle('How was this packet?'),
+        const SizedBox(height: 8),
+        const Text(
+          'Optional. Choose only the fixed options below — do not include medical, insurance, or personal details. Your choices help us improve the product. If you do not respond here, we may send one transactional feedback request about two weeks after purchase; it is not marketing.',
+          style: TextStyle(color: AppColors.textSecondary, height: 1.45),
+        ),
+        const SizedBox(height: 20),
+        DropdownButtonFormField<String>(
+          initialValue: _satisfaction,
+          decoration: const InputDecoration(labelText: 'Satisfaction'),
+          items: const [
+            DropdownMenuItem(
+                value: 'very_dissatisfied', child: Text('Very dissatisfied')),
+            DropdownMenuItem(
+                value: 'dissatisfied', child: Text('Dissatisfied')),
+            DropdownMenuItem(value: 'neutral', child: Text('Neutral')),
+            DropdownMenuItem(value: 'satisfied', child: Text('Satisfied')),
+            DropdownMenuItem(
+                value: 'very_satisfied', child: Text('Very satisfied')),
+          ],
+          onChanged:
+              _saving ? null : (value) => setState(() => _satisfaction = value),
+        ),
+        const SizedBox(height: 14),
+        DropdownButtonFormField<String>(
+          initialValue: _outcome,
+          decoration:
+              const InputDecoration(labelText: 'Current appeal outcome'),
+          items: const [
+            DropdownMenuItem(
+                value: 'not_submitted_yet', child: Text('Not submitted yet')),
+            DropdownMenuItem(
+                value: 'submitted_waiting',
+                child: Text('Submitted — waiting for a response')),
+            DropdownMenuItem(value: 'approved', child: Text('Approved')),
+            DropdownMenuItem(
+                value: 'partially_approved', child: Text('Partially approved')),
+            DropdownMenuItem(value: 'denied', child: Text('Denied')),
+            DropdownMenuItem(value: 'withdrawn', child: Text('Withdrawn')),
+          ],
+          onChanged:
+              _saving ? null : (value) => setState(() => _outcome = value),
+        ),
+        const SizedBox(height: 14),
+        CheckboxListTile(
+          contentPadding: EdgeInsets.zero,
+          value: _testimonialPermission,
+          onChanged: _saving
+              ? null
+              : (value) =>
+                  setState(() => _testimonialPermission = value ?? false),
+          title:
+              const Text('You may contact me about an anonymized testimonial'),
+          subtitle: const Text(
+            'This does not publish anything. We would ask again before using a quote, and never include case details.',
+          ),
+          controlAffinity: ListTileControlAffinity.leading,
+        ),
+        const SizedBox(height: 12),
+        FilledButton(
+          onPressed: _saving ? null : _save,
+          child: _saving
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white),
+                )
+              : const Text('Save feedback'),
+        ),
       ],
     );
   }

@@ -96,12 +96,13 @@ abstract final class Pricing {
   static const fullPacketUsd = 39;
   static const followUpRoundUsd = 19;
   static const fullCaseUsd = 59;
+  static const fullCaseUpgradeUsd = 20;
 
   /// Follow-up rounds included with every packet purchase.
   static const freeFollowUpRounds = 2;
 
-  /// Full Case is capped — up to this many rounds per case, not unlimited.
-  static const fullCaseRoundsCap = 100;
+  /// Full Case is capped — up to this many drafting rounds per case.
+  static const fullCaseRoundsCap = 10;
 }
 
 /// Compile-time switch: `flutter run --dart-define=USE_MOCKS=true` runs the

@@ -1,4 +1,4 @@
-import { onRequest } from "firebase-functions/v2/https";
+import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { getAuth } from "firebase-admin/auth";
 import {
@@ -10,6 +10,7 @@ import { createHmac } from "node:crypto";
 import { isIP } from "node:net";
 
 import { ADMIN_UID } from "./config";
+import { requireOwnedCase, requireUid } from "./util";
 
 /**
  * First-party, cookieless traffic analytics.
@@ -32,6 +33,12 @@ import { ADMIN_UID } from "./config";
 export const ANALYTICS_DAILY_COLLECTION = "analytics_customer_daily";
 export const ANALYTICS_SEGMENT_DAILY_COLLECTION =
   "analytics_customer_segment_daily";
+/**
+ * Aggregate OpenAI operational telemetry. This is intentionally separate from
+ * customer traffic/product analytics: it has no case id, user id, prompt,
+ * completion, or model-response field.
+ */
+export const ANALYTICS_MODEL_DAILY_COLLECTION = "analytics_model_daily";
 
 /**
  * HyperLogLog precision used for aggregate unique-network estimates. 256
@@ -751,8 +758,155 @@ export async function bumpUserDaily(
   }
 }
 
+/** The only model operations that may become aggregate counter paths. */
+export const MODEL_ANALYTICS_OPERATIONS = [
+  "extraction",
+  "preview",
+  "packet",
+  "followup",
+] as const;
+export type ModelAnalyticsOperation = (typeof MODEL_ANALYTICS_OPERATIONS)[number];
+
+export function modelAnalyticsOperation(
+  value: unknown,
+): ModelAnalyticsOperation | null {
+  return typeof value === "string" &&
+    (MODEL_ANALYTICS_OPERATIONS as readonly string[]).includes(value)
+    ? value as ModelAnalyticsOperation
+    : null;
+}
+
+/** Fixed, non-identifying counters recorded for one model request. */
+export interface ModelAnalyticsCounters {
+  calls: number;
+  errors?: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  totalDurationMs?: number;
+}
+
+const MODEL_ANALYTICS_COUNTERS = [
+  "calls",
+  "errors",
+  "inputTokens",
+  "outputTokens",
+  "totalDurationMs",
+] as const;
+const MAX_MODEL_ANALYTICS_INCREMENT = 1_000_000_000;
+
+function modelAnalyticsCount(value: unknown): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) return 0;
+  return Math.min(MAX_MODEL_ANALYTICS_INCREMENT, Math.max(0, Math.floor(value)));
+}
+
+/**
+ * Converts a fixed model-operation sample into aggregate-only Firestore paths.
+ * Invalid or zero counters are omitted, so no caller-controlled path can be
+ * written even if a future instrumentation call is malformed.
+ */
+export function modelAnalyticsCounterFields(
+  operation: unknown,
+  counters: Partial<ModelAnalyticsCounters>,
+): Record<string, number> {
+  const normalizedOperation = modelAnalyticsOperation(operation);
+  if (!normalizedOperation || typeof counters !== "object" || counters === null) {
+    return {};
+  }
+  const fields: Record<string, number> = {};
+  for (const counter of MODEL_ANALYTICS_COUNTERS) {
+    const value = modelAnalyticsCount(counters[counter]);
+    if (value === 0) continue;
+    fields[`operations.${normalizedOperation}.${counter}`] = value;
+    fields[counter] = value;
+  }
+  return fields;
+}
+
+/**
+ * Record operational model telemetry without retaining a customer, case, or
+ * request/response payload. Callers must pass the owning uid so owner testing
+ * is excluded from this collection just like every other customer statistic.
+ */
+export async function bumpModelDaily(
+  uid: string | null | undefined,
+  operation: unknown,
+  counters: Partial<ModelAnalyticsCounters>,
+): Promise<void> {
+  if (!uid || isAdminAnalyticsUid(uid)) return;
+  const fields = modelAnalyticsCounterFields(operation, counters);
+  if (Object.keys(fields).length === 0) return;
+  try {
+    await getFirestore()
+      .collection(ANALYTICS_MODEL_DAILY_COLLECTION)
+      .doc(dayKey())
+      .set({
+        updatedAt: FieldValue.serverTimestamp(),
+        ...incrementUpdate(fields),
+      }, { merge: true });
+  } catch {
+    // Telemetry must never fail an OpenAI request or expose customer data.
+    console.warn("model analytics bump failed (ignored)");
+  }
+}
+
 /** Product stages whose first success/failure is useful in aggregate. */
 export type ProductAnalyticsStage = "extraction" | "preview" | "packet";
+
+/**
+ * Optional, fixed acquisition categories. They deliberately contain no free
+ * text, campaign name, URL, or visitor identifier. A customer may decline by
+ * choosing `prefer_not_to_say`.
+ */
+export const ACQUISITION_SOURCES = [
+  "google",
+  "quora",
+  "social",
+  "friend_family",
+  "advocate_provider",
+  "other",
+  "prefer_not_to_say",
+] as const;
+export type AcquisitionSource = (typeof ACQUISITION_SOURCES)[number];
+
+export function acquisitionSourceCategory(value: unknown): AcquisitionSource | null {
+  return typeof value === "string" &&
+    (ACQUISITION_SOURCES as readonly string[]).includes(value)
+    ? value as AcquisitionSource
+    : null;
+}
+
+export const FEEDBACK_SATISFACTION_VALUES = [
+  "very_dissatisfied",
+  "dissatisfied",
+  "neutral",
+  "satisfied",
+  "very_satisfied",
+] as const;
+export type FeedbackSatisfaction = (typeof FEEDBACK_SATISFACTION_VALUES)[number];
+
+export const FEEDBACK_OUTCOME_VALUES = [
+  "not_submitted_yet",
+  "submitted_waiting",
+  "approved",
+  "partially_approved",
+  "denied",
+  "withdrawn",
+] as const;
+export type FeedbackOutcome = (typeof FEEDBACK_OUTCOME_VALUES)[number];
+
+export function feedbackSatisfactionCategory(value: unknown): FeedbackSatisfaction | null {
+  return typeof value === "string" &&
+    (FEEDBACK_SATISFACTION_VALUES as readonly string[]).includes(value)
+    ? value as FeedbackSatisfaction
+    : null;
+}
+
+export function feedbackOutcomeCategory(value: unknown): FeedbackOutcome | null {
+  return typeof value === "string" &&
+    (FEEDBACK_OUTCOME_VALUES as readonly string[]).includes(value)
+    ? value as FeedbackOutcome
+    : null;
+}
 
 /**
  * Intentionally small error taxonomy. Raw exception messages, model output,
@@ -775,7 +929,14 @@ export type CaseAnalyticsEvent =
   | "extraction_completed"
   | "preview_started"
   | "preview_completed"
+  | "tier_selected"
+  | "account_gate_shown"
+  | "account_completed"
   | "checkout_started"
+  | "checkout_created"
+  | "checkout_expired"
+  | "checkout_recovered"
+  | "checkout_duplicate"
   | "paid"
   | "packet_started"
   | "packet_completed"
@@ -811,7 +972,14 @@ const CASE_ANALYTICS_EVENT_FIELDS: Readonly<
     "product.preview.completed": 1,
     "funnel.preview": 1,
   },
+  tier_selected: { "funnel.tier_selected": 1 },
+  account_gate_shown: { "funnel.account_gate_shown": 1 },
+  account_completed: { "funnel.account_completed": 1 },
   checkout_started: { "funnel.checkout_started": 1 },
+  checkout_created: { "product.checkout.created": 1 },
+  checkout_expired: { "product.checkout.expired": 1 },
+  checkout_recovered: { "product.checkout.recovered": 1 },
+  checkout_duplicate: { "product.checkout.duplicate": 1 },
   paid: { "funnel.paid": 1 },
   packet_started: { "product.packet.started": 1 },
   packet_completed: { "product.packet.completed": 1 },
@@ -1037,6 +1205,399 @@ export async function recordFirstCaseOutcome(
     fields,
   );
 }
+
+/** Stripe purchase kinds are mapped to fixed, customer-safe product buckets. */
+export type PaymentAnalyticsPurchaseKind =
+  | "packet"
+  | "packet_plus"
+  | "followup_round"
+  | "full_case";
+export type PaymentAnalyticsProduct =
+  | "packet"
+  | "full_case"
+  | "followup_round"
+  | "full_case_upgrade";
+
+export function paymentAnalyticsProduct(
+  value: unknown,
+): PaymentAnalyticsProduct | null {
+  switch (value) {
+    case "packet":
+      return "packet";
+    case "packet_plus":
+      return "full_case";
+    case "followup_round":
+      return "followup_round";
+    case "full_case":
+      return "full_case_upgrade";
+    default:
+      return null;
+  }
+}
+
+export type CaseMonetizationEvent =
+  | "tier_selected"
+  | "checkout_created"
+  | "checkout_expired"
+  | "checkout_recovered";
+export type PurchaseMonetizationEvent = "paid" | "refunded";
+
+function centsForAnalytics(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value)
+    ? Math.min(10_000_000, Math.max(0, Math.floor(value)))
+    : 0;
+}
+
+/**
+ * Counter fields for a payment event. Product and event names are both closed
+ * sets, and only server-confirmed cents can affect monetary fields.
+ */
+export function paymentAnalyticsCounterFields(
+  kind: unknown,
+  event: CaseMonetizationEvent | PurchaseMonetizationEvent,
+  amountCents = 0,
+): Record<string, number> | null {
+  const product = paymentAnalyticsProduct(kind);
+  if (!product) return null;
+  const fields: Record<string, number> = {
+    [`monetization.${product}.${event}`]: 1,
+  };
+  const cents = centsForAnalytics(amountCents);
+  if (event === "paid") {
+    fields[`monetization.${product}.revenueCents`] = cents;
+    fields[`monetization.${product}.netRevenueCents`] = cents;
+  } else if (event === "refunded") {
+    fields[`monetization.${product}.refundCents`] = cents;
+    fields[`monetization.${product}.netRevenueCents`] = -cents;
+  }
+  return fields;
+}
+
+/**
+ * Record a checkout/tier event once per case and product bucket. This covers
+ * selection and open-session lifecycle events, whose source of truth is the
+ * case rather than a completed purchase document.
+ */
+export async function recordFirstCaseMonetizationEvent(
+  uid: string | null | undefined,
+  caseRef: DocumentReference,
+  kind: unknown,
+  event: CaseMonetizationEvent,
+): Promise<boolean> {
+  const product = paymentAnalyticsProduct(kind);
+  const fields = paymentAnalyticsCounterFields(kind, event);
+  if (!product || !fields) return false;
+  return recordFirstCaseAnalyticsFields(
+    uid,
+    caseRef,
+    `monetization_${product}_${event}` as CaseAnalyticsMilestone,
+    fields,
+  );
+}
+
+/**
+ * Records a customer-selected initial tier. The callable accepts only the two
+ * advertised initial products; add-ons can never be client-reported here.
+ */
+export const recordCaseTierSelection = onCall({ invoker: "public" }, async (request) => {
+  const uid = requireUid(request);
+  const caseRef = (await requireOwnedCase(request.data?.caseId, uid)).ref;
+  const kind = request.data?.kind;
+  if (kind !== "packet" && kind !== "packet_plus") {
+    throw new HttpsError("invalid-argument", "Choose an advertised package only.");
+  }
+  return {
+    recorded: await recordFirstCaseMonetizationEvent(
+      uid,
+      caseRef,
+      kind,
+      "tier_selected",
+    ),
+  };
+});
+
+/**
+ * Record a settled payment/refund once on its purchase document. Keeping the
+ * idempotency marker beside the Stripe purchase means repeat $19 follow-up
+ * purchases remain countable while webhook retries cannot inflate revenue.
+ * Unlike non-financial product analytics, a storage failure deliberately
+ * propagates: the entitlement transaction has already committed, and Stripe's
+ * webhook retry or the Checkout reconciliation watchdog can safely repair the
+ * missing revenue entry.
+ */
+export async function recordFirstPurchaseMonetizationEvent(
+  uid: string | null | undefined,
+  purchaseRef: DocumentReference,
+  kind: unknown,
+  event: PurchaseMonetizationEvent,
+  amountCents: number,
+): Promise<boolean> {
+  if (!uid || isAdminAnalyticsUid(uid)) return false;
+  const product = paymentAnalyticsProduct(kind);
+  const fields = paymentAnalyticsCounterFields(kind, event, amountCents);
+  if (!product || !fields) return false;
+  const firestore = getFirestore();
+  const dailyRef = firestore.collection(ANALYTICS_DAILY_COLLECTION).doc(dayKey());
+  return firestore.runTransaction(async (transaction) => {
+    const purchase = await transaction.get(purchaseRef);
+    if (!purchase.exists || purchase.get("uid") !== uid) return false;
+    const milestones = purchase.get("analyticsMilestones");
+    const milestone = `monetization_${event}`;
+    if (
+      typeof milestones === "object" &&
+      milestones !== null &&
+      (milestones as Record<string, unknown>)[milestone] === true
+    ) {
+      return false;
+    }
+    transaction.set(purchaseRef, {
+      [`analyticsMilestones.${milestone}`]: true,
+    }, { merge: true });
+    transaction.set(dailyRef, {
+      updatedAt: FieldValue.serverTimestamp(),
+      ...incrementUpdate(fields),
+    }, { merge: true });
+    return true;
+  });
+}
+
+/**
+ * Record one Stripe refund exactly once. Refunds are deliberately keyed below
+ * their purchase rather than using one purchase-level boolean: Stripe permits
+ * multiple partial refunds, and each one must reduce net revenue by its own
+ * settled amount without a webhook retry counting it twice.
+ */
+export async function recordPurchaseRefundMonetizationEvent(
+  uid: string | null | undefined,
+  purchaseRef: DocumentReference,
+  kind: unknown,
+  refundId: unknown,
+  amountCents: number,
+): Promise<boolean> {
+  if (!uid || isAdminAnalyticsUid(uid)) return false;
+  if (typeof refundId !== "string" || !/^[A-Za-z0-9_]{3,255}$/.test(refundId)) {
+    return false;
+  }
+  const product = paymentAnalyticsProduct(kind);
+  const fields = paymentAnalyticsCounterFields(kind, "refunded", amountCents);
+  if (!product || !fields || centsForAnalytics(amountCents) <= 0) return false;
+  try {
+    const firestore = getFirestore();
+    const dailyRef = firestore.collection(ANALYTICS_DAILY_COLLECTION).doc(dayKey());
+    const refundRef = purchaseRef.collection("refunds").doc(refundId);
+    return await firestore.runTransaction(async (transaction) => {
+      const [purchase, refund] = await Promise.all([
+        transaction.get(purchaseRef),
+        transaction.get(refundRef),
+      ]);
+      if (!purchase.exists || purchase.get("uid") !== uid) return false;
+      const milestones = purchase.get("analyticsMilestones");
+      // Never subtract a refund from the aggregate unless the matching charge
+      // was first counted there. This keeps orphaned/deleted-case refunds and
+      // pre-monetization records from making net revenue go negative.
+      if (
+        typeof milestones !== "object" ||
+        milestones === null ||
+        (milestones as Record<string, unknown>).monetization_paid !== true
+      ) {
+        return false;
+      }
+      if (refund.get("analyticsRecorded") === true) return false;
+      transaction.set(refundRef, {
+        analyticsRecorded: true,
+        analyticsRecordedAt: FieldValue.serverTimestamp(),
+      }, { merge: true });
+      transaction.set(dailyRef, {
+        updatedAt: FieldValue.serverTimestamp(),
+        ...incrementUpdate(fields),
+      }, { merge: true });
+      return true;
+    });
+  } catch {
+    console.warn("purchase refund monetization analytics failed (ignored)");
+    return false;
+  }
+}
+
+const CLIENT_CASE_FUNNEL_EVENTS = new Set<CaseAnalyticsEvent>([
+  "tier_selected",
+  "account_gate_shown",
+  "account_completed",
+]);
+
+/**
+ * Records a small, fixed UI milestone for a case. The browser can request
+ * only the three allowlisted milestones above; it can never create an
+ * analytics key from a route, email address, document field, or free text.
+ */
+export const recordCaseFunnelEvent = onCall({ invoker: "public" }, async (request) => {
+  const uid = requireUid(request);
+  const caseRef = (await requireOwnedCase(request.data?.caseId, uid)).ref;
+  const event = request.data?.event;
+  if (typeof event !== "string" || !CLIENT_CASE_FUNNEL_EVENTS.has(event as CaseAnalyticsEvent)) {
+    throw new HttpsError("invalid-argument", "Unknown funnel event.");
+  }
+  return {
+    recorded: await recordFirstCaseAnalyticsEvent(
+      uid,
+      caseRef,
+      event as CaseAnalyticsEvent,
+    ),
+  };
+});
+
+/**
+ * Saves one optional, fixed acquisition source before checkout. This is not a
+ * campaign tracker: no UTM values, referrer URL, email, or free-form answer is
+ * retained. The one category lets a later paid event be counted by source.
+ */
+export const saveCaseAcquisitionAttribution = onCall(
+  { invoker: "public" },
+  async (request) => {
+    const uid = requireUid(request);
+    const caseRef = (await requireOwnedCase(request.data?.caseId, uid)).ref;
+    const source = acquisitionSourceCategory(request.data?.source);
+    if (!source) {
+      throw new HttpsError("invalid-argument", "Choose a listed source only.");
+    }
+    if (isAdminAnalyticsUid(uid)) return { saved: false };
+
+    const firestore = getFirestore();
+    const dailyRef = firestore.collection(ANALYTICS_DAILY_COLLECTION).doc(dayKey());
+    const saved = await firestore.runTransaction(async (transaction) => {
+      const snapshot = await transaction.get(caseRef);
+      if (!snapshot.exists || snapshot.get("ownerUid") !== uid) {
+        throw new HttpsError("permission-denied", "Case access was lost.");
+      }
+      const existing = acquisitionSourceCategory(snapshot.get("acquisitionSource"));
+      // First-touch only: changing a source later would make aggregate totals
+      // impossible to correct without retaining a customer-level history.
+      if (existing) return existing === source;
+
+      transaction.update(caseRef, {
+        acquisitionSource: source,
+        "analyticsMilestones.acquisition_source_selected": true,
+      });
+      transaction.set(
+        dailyRef,
+        {
+          updatedAt: FieldValue.serverTimestamp(),
+          ...incrementUpdate({
+            "funnel.acquisition_source_selected": 1,
+            [`acquisition.${source}.selected`]: 1,
+          }),
+        },
+        { merge: true },
+      );
+      return true;
+    });
+    return { saved };
+  },
+);
+
+/**
+ * After the Stripe webhook has confirmed payment, copy only its fixed source
+ * and server-set amount into a daily aggregate. This avoids linking
+ * referrer/UTM data to an individual health-document case.
+ */
+export async function recordFirstPaidAcquisitionAttribution(
+  uid: string | null | undefined,
+  caseRef: DocumentReference,
+): Promise<boolean> {
+  if (!uid || isAdminAnalyticsUid(uid)) return false;
+  const firestore = getFirestore();
+  const dailyRef = firestore.collection(ANALYTICS_DAILY_COLLECTION).doc(dayKey());
+  return firestore.runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(caseRef);
+    if (!snapshot.exists || snapshot.get("ownerUid") !== uid || snapshot.get("paid") !== true) {
+      return false;
+    }
+    const source = acquisitionSourceCategory(snapshot.get("acquisitionSource"));
+    if (!source || snapshot.get("analyticsMilestones.paid_attribution") === true) {
+      return false;
+    }
+    const price = snapshot.get("pricePaid");
+    const cents = typeof price === "number" && Number.isFinite(price)
+      ? Math.max(0, Math.round(price * 100))
+      : 0;
+    // The category has served its sole purpose. Removing it prevents a
+    // durable source label from sitting beside a health-document case.
+    transaction.update(caseRef, {
+      "analyticsMilestones.paid_attribution": true,
+      acquisitionSource: FieldValue.delete(),
+    });
+    transaction.set(
+      dailyRef,
+      {
+        updatedAt: FieldValue.serverTimestamp(),
+        ...incrementUpdate({
+          [`acquisition.${source}.paid`]: 1,
+          [`acquisition.${source}.revenueCents`]: cents,
+        }),
+      },
+      { merge: true },
+    );
+    return true;
+  });
+}
+
+/**
+ * Stores one voluntary, fixed-choice feedback form on a paid case and copies
+ * its bounded values to aggregate counters. No free text, document content,
+ * diagnosis, insurer, or quote is accepted. Testimonial permission is only a
+ * consent flag; nothing is published automatically.
+ */
+export const saveCaseFeedback = onCall({ invoker: "public" }, async (request) => {
+  const uid = requireUid(request);
+  const caseRef = (await requireOwnedCase(request.data?.caseId, uid)).ref;
+  const satisfaction = feedbackSatisfactionCategory(request.data?.satisfaction);
+  const outcome = feedbackOutcomeCategory(request.data?.outcome);
+  const testimonialPermission = request.data?.testimonialPermission;
+  if (!satisfaction || !outcome || typeof testimonialPermission !== "boolean") {
+    throw new HttpsError("invalid-argument", "Feedback must use the listed choices.");
+  }
+  if (isAdminAnalyticsUid(uid)) return { saved: false };
+
+  const firestore = getFirestore();
+  const dailyRef = firestore.collection(ANALYTICS_DAILY_COLLECTION).doc(dayKey());
+  const saved = await firestore.runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(caseRef);
+    if (!snapshot.exists || snapshot.get("ownerUid") !== uid) {
+      throw new HttpsError("permission-denied", "Case access was lost.");
+    }
+    if (snapshot.get("paid") !== true) {
+      throw new HttpsError("failed-precondition", "Feedback is available after purchase.");
+    }
+    if (snapshot.get("feedback") !== undefined) return false;
+    transaction.update(caseRef, {
+      feedback: {
+        satisfaction,
+        outcome,
+        testimonialPermission,
+        submittedAt: FieldValue.serverTimestamp(),
+      },
+      "analyticsMilestones.feedback_submitted": true,
+    });
+    // The only scheduled feedback request has a deterministic id. Removing it
+    // atomically prevents a later survey email after an in-app response.
+    transaction.delete(firestore.collection("reminders").doc(`feedback_${caseRef.id}`));
+    transaction.set(
+      dailyRef,
+      {
+        updatedAt: FieldValue.serverTimestamp(),
+        ...incrementUpdate({
+          "product.feedback.submitted": 1,
+          [`product.feedback.satisfaction.${satisfaction}`]: 1,
+          [`product.feedback.outcome.${outcome}`]: 1,
+          [`product.feedback.testimonial_permission.${testimonialPermission ? "yes" : "no"}`]: 1,
+        }),
+      },
+      { merge: true },
+    );
+    return true;
+  });
+  return { saved };
+});
 
 /**
  * Atomically write a traffic event to the overall daily aggregate and to one

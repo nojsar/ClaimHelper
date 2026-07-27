@@ -24,7 +24,9 @@ class _ExtractionReviewScreenState
   late DenialExtraction _ex;
   final _controllers = <String, TextEditingController>{};
   bool _initialized = false;
+  bool _saving = false;
   String? _loadError;
+  String? _saveError;
 
   @override
   void initState() {
@@ -93,11 +95,30 @@ class _ExtractionReviewScreenState
       );
 
   Future<void> _continue() async {
+    if (_saving) return;
+    setState(() {
+      _saving = true;
+      _saveError = null;
+    });
+
     final updated = _collect();
     final ctrl = ref.read(intakeControllerProvider.notifier);
     ctrl.updateExtraction(updated);
-    await ctrl.persistExtraction();
-    if (mounted) context.go('/case/${widget.caseId}/questions');
+    try {
+      await ctrl.persistExtraction();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _saveError =
+            'We could not save these details. Check your connection and try again.';
+      });
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() => _saving = false);
+    context.go('/case/${widget.caseId}/questions');
   }
 
   @override
@@ -214,12 +235,36 @@ class _ExtractionReviewScreenState
               _SnippetsPanel(snippets: _ex.sourceSnippets),
             ],
             const SizedBox(height: 24),
+            if (_saveError != null) ...[
+              Semantics(
+                container: true,
+                liveRegion: true,
+                label: 'Error: $_saveError',
+                child: ExcludeSemantics(
+                  child: Text(
+                    _saveError!,
+                    style: const TextStyle(
+                      color: AppColors.error,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
-                onPressed: _continue,
-                icon: const Icon(Icons.arrow_forward),
-                label: const Text('Looks right — continue'),
+                onPressed: _saving ? null : _continue,
+                icon: _saving
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.arrow_forward),
+                label: Text(
+                  _saving ? 'Saving details…' : 'Looks right — continue',
+                ),
               ),
             ),
             const SizedBox(height: 24),

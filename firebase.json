@@ -49,6 +49,12 @@
         ]
       },
       {
+        "source": "/",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+        ]
+      },
+      {
         "source": "/index.html",
         "headers": [
           { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
@@ -99,7 +105,7 @@
       {
         "source": "**/*.css",
         "headers": [
-          { "key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=86400" }
+          { "key": "Cache-Control", "value": "no-cache, must-revalidate" }
         ]
       }
     ]

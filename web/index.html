@@ -89,7 +89,8 @@
           { "@type": "Offer", "name": "Free preview", "price": "0", "priceCurrency": "USD" },
           { "@type": "Offer", "name": "Full Appeal Packet (includes 2 follow-up rounds)", "price": "39", "priceCurrency": "USD" },
           { "@type": "Offer", "name": "Additional Follow-up Round", "price": "19", "priceCurrency": "USD" },
-          { "@type": "Offer", "name": "Full Case Upgrade (up to 100 follow-up rounds)", "price": "59", "priceCurrency": "USD" }
+          { "@type": "Offer", "name": "Full Case (up to 10 follow-up drafting rounds)", "price": "59", "priceCurrency": "USD" },
+          { "@type": "Offer", "name": "Full Case Upgrade for existing packet customers", "price": "20", "priceCurrency": "USD" }
         ],
         "areaServed": "US"
       },
@@ -119,12 +120,12 @@
           {
             "@type": "Question",
             "name": "What happens after I send the appeal?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Your packet includes 2 follow-up rounds. When the insurer replies — or ignores you — report what happened and GetMyYes drafts your next move: a second-level appeal, an external-review request, or a status demand letter. Extra rounds are $19 each, or the $59 Full Case upgrade covers up to 100 rounds per case (not unlimited)." }
+            "acceptedAnswer": { "@type": "Answer", "text": "Your packet includes 2 follow-up drafting rounds. Full Case includes up to 10 rounds for $59 total. If you already bought the $39 packet, the Full Case upgrade is only the $20 difference." }
           },
           {
             "@type": "Question",
             "name": "Is my health data private?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Your files are processed only to draft your appeal, never used to train AI. Uploads auto-delete after 24 hours unless you save your case, and you can delete your case and files at any time." }
+            "acceptedAnswer": { "@type": "Answer", "text": "Your files are processed only to draft your appeal, never used to train AI. Guest uploads normally auto-delete after 24 hours. If you explicitly request a saved preview link and reminders, that unpaid case is kept for up to 14 days. You can delete your case and files at any time." }
           }
         ]
       }
@@ -338,6 +339,11 @@
     .hero-copy .lede { margin: 30px 0 36px; }
     .cta-row { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
     .cta-note { font-family: var(--mono); font-size: 11px; letter-spacing: 1px; color: var(--ink-faint); text-transform: uppercase; line-height: 1.8; }
+    .hero-proof {
+      display: inline-block; margin-top: 16px; font-family: var(--mono);
+      font-size: 11px; letter-spacing: .7px; color: var(--ink-soft);
+      text-underline-offset: 4px; text-decoration-thickness: 1px;
+    }
 
     /* — the letter (Exhibit A) — */
     .exhibit {
@@ -966,8 +972,25 @@
 <body>
   <script>
     // Deep links (Stripe returns, saved bookmarks, refreshes inside the app)
-    // boot Flutter immediately and never show the landing page.
-    if (location.hash && location.hash.indexOf('#/') === 0) {
+    // and valid Firebase passwordless actions boot Flutter immediately.
+    // The Firebase outer URL must remain intact because it carries the
+    // one-time oobCode that Firebase Auth validates after Flutter starts.
+    window.__isSecureEmailSignInAction = function () {
+      try {
+        var params = new URLSearchParams(location.search);
+        if (params.get('mode') !== 'signIn' || !params.get('oobCode')) return false;
+        var continueUrl = params.get('continueUrl');
+        if (!continueUrl) return false;
+        var continuation = new URL(continueUrl, location.origin);
+        if (continuation.origin !== location.origin) return false;
+        return continuation.hash === '#/email-link'
+          || continuation.hash.indexOf('#/email-link?') === 0;
+      } catch (e) {
+        return false;
+      }
+    };
+    if ((location.hash && location.hash.indexOf('#/') === 0)
+        || window.__isSecureEmailSignInAction()) {
       document.documentElement.classList.add('app-mode');
     }
   </script>
@@ -1005,8 +1028,9 @@
           <p class="lede">Upload the denial letter. GetMyYes reads the fine print, builds your strongest arguments, and hands you a complete, ready-to-send appeal packet — in about fifteen minutes.</p>
           <div class="cta-row">
             <button type="button" class="btn-ink" data-boot="/upload">Open my case — free</button>
-            <span class="cta-note">Free preview · $39 full packet<br>No subscription. Ever.</span>
+            <span class="cta-note">Free preview · $39 packet · $59 Full Case<br>No subscription. Ever.</span>
           </div>
+          <a class="hero-proof" href="/sample-packet">Inspect a fictional sample packet before uploading →</a>
         </div>
 
         <div class="exhibit" id="exhibit">
@@ -1114,7 +1138,7 @@
               <span class="pin"></span>
               <div class="step-no">Move 01 — evidence in</div>
               <h3>Upload the denial</h3>
-              <p>Letter, EOB, or prior-auth denial. PDF or photo. Encrypted, private, auto-deleted in 24h unless you save your case.</p>
+              <p>Letter, EOB, or prior-auth denial. PDF or photo. Encrypted and private. Guest files delete in 24h unless you save the case or explicitly request a 14-day preview link and reminders.</p>
             </div>
             <div class="index-card" data-anchor>
               <span class="pin"></span>
@@ -1216,8 +1240,8 @@
             <div class="amt">$19</div>
           </div>
           <div class="lt-row">
-            <div class="what">Full Case upgrade<small>up to 100 rounds — the whole fight, not unlimited</small></div>
-            <div class="amt">$59</div>
+            <div class="what">Full Case upgrade<small>up to 10 drafting rounds · $59 total after your packet</small></div>
+            <div class="amt">$20</div>
           </div>
           <div class="lt-cap">One round = one submission · include everything you have</div>
         </div>
@@ -1270,6 +1294,24 @@
             <p class="sub"><a href="/sample-packet">Inspect a fictional, redacted sample packet first</a></p>
             <div class="barcode" aria-hidden="true"></div>
           </div>
+          <div class="receipt paid">
+            <div class="r-stamp stamped" aria-hidden="true">10 DRAFTS</div>
+            <div class="r-head">
+              <div class="r-title">Receipt · Full Case</div>
+              <div class="price">$59</div>
+              <div class="per">One-time · per case · no subscription</div>
+            </div>
+            <ul>
+              <li><span>Everything in the $39 packet</span><span>incl.</span></li>
+              <li><span>Up to 10 follow-up drafting rounds</span><span>incl.</span></li>
+              <li><span>Second-level and external-review drafts</span><span>incl.</span></li>
+              <li><span>Already bought the packet?</span><span>+$20</span></li>
+              <li><span><a href="/terms#accuracy-guarantee">14-day accuracy guarantee</a></span><span>refund</span></li>
+            </ul>
+            <button type="button" class="btn-ink" data-boot="/upload?tier=packet_plus">Start with Full Case</button>
+            <p class="sub">No outcome is guaranteed. You review every draft before sending.</p>
+            <div class="barcode" aria-hidden="true"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -1294,11 +1336,11 @@
           </details>
           <details>
             <summary>What happens after I send the appeal?</summary>
-            <div class="a">Your packet includes 2 follow-up rounds. When the insurer replies — or ignores you — report what happened and GetMyYes drafts your next move: a second-level appeal, an external-review request, or a status demand letter. Extra rounds are $19 each, or the $59 Full Case upgrade covers up to 100 rounds per case (not unlimited).</div>
+            <div class="a">Your packet includes 2 follow-up drafting rounds. Full Case includes up to 10 rounds for $59 total. If you already bought the $39 packet, upgrading costs only the $20 difference. No outcome is guaranteed.</div>
           </details>
           <details>
             <summary>How much does it cost?</summary>
-            <div class="a">The preview — denial type, amount at stake, and likely appeal path — is free. The full appeal packet is a one-time $39 per case. No subscription.</div>
+            <div class="a">The preview is free. The full appeal packet is a one-time $39 and includes 2 follow-up rounds. Full Case is $59 total and includes up to 10 rounds; existing packet customers pay only the $20 difference. No subscription.</div>
           </details>
           <details>
             <summary>Is this legal or medical advice?</summary>
@@ -1306,7 +1348,7 @@
           </details>
           <details>
             <summary>Is my health data private?</summary>
-            <div class="a">Your files are processed only to draft your appeal — never to train AI. Uploads auto-delete after 24 hours unless you save your case, and you can delete your case and files at any time.</div>
+            <div class="a">Your files are processed only to draft your appeal — never to train AI. Guest uploads normally auto-delete after 24 hours. If you explicitly request a saved preview link and reminders, that unpaid case is kept for up to 14 days. You can delete your case and files at any time.</div>
           </details>
         </div>
 
@@ -1450,7 +1492,11 @@
       });
 
       // Deep link → straight into the app (landing hidden by the head script).
-      if (location.hash && location.hash.indexOf('#/') === 0) {
+      // Do not pass or replace a route for an email action: its outer query
+      // carries the Firebase one-time code and app_router reads continueUrl.
+      if ((location.hash && location.hash.indexOf('#/') === 0)
+          || (typeof window.__isSecureEmailSignInAction === 'function'
+            && window.__isSecureEmailSignInAction())) {
         bootApp();
         return;
       }

@@ -41,10 +41,33 @@ abstract class Backend {
   Future<void> linkWithEmail(String email, String password);
   Future<void> signInWithEmail(String email, String password);
 
+  /// Sends a password-reset link without revealing whether [email] belongs to
+  /// an account.
+  Future<void> sendPasswordResetEmail(String email);
+
   /// Signs into an existing account without abandoning [caseId]. The backend
   /// prepares the transfer while still anonymous, then claims it after auth.
   Future<void> signInWithEmailAndClaimCase(
       String email, String password, String caseId);
+
+  /// Sends a passwordless sign-in link after securely preparing [caseId] for
+  /// transfer to [email]. The link must return to [continueUrl].
+  Future<void> sendEmailLinkAndPrepareCaseClaim({
+    required String email,
+    required String caseId,
+    required String continueUrl,
+  });
+
+  /// True when [emailLink] is a Firebase email-link sign-in action.
+  bool isEmailSignInLink(String emailLink);
+
+  /// Completes a passwordless sign-in, then claims the guest case that was
+  /// prepared for the same email before the link was sent.
+  Future<void> signInWithEmailLinkAndClaimCase({
+    required String email,
+    required String emailLink,
+    required String caseId,
+  });
 
   /// Idempotently completes a previously prepared transfer. This also repairs
   /// a transfer after a transient network failure or page reload.
@@ -74,6 +97,29 @@ abstract class Backend {
   /// kind: 'packet' ($39) or 'packet_plus' ($59 packet + capped follow-ups).
   Future<String?> createCheckoutSession(String caseId,
       {String kind = 'packet'});
+
+  /// Confirms the exact Stripe session returned on the success URL. The
+  /// server verifies ownership and applies an already-paid entitlement.
+  Future<void> confirmCheckoutSession(String caseId, String sessionId);
+
+  /// Records only a fixed, aggregate funnel milestone for this case.
+  Future<void> recordCaseFunnelEvent(String caseId, String event);
+
+  /// Records one of the two advertised package choices, aggregate-only.
+  Future<void> recordCaseTierSelection(String caseId, String kind);
+
+  /// Optional fixed-choice acquisition source. Never accepts free text, a URL,
+  /// or campaign parameters.
+  Future<void> saveCaseAcquisitionAttribution(String caseId, String source);
+
+  /// Voluntary fixed-choice product feedback. No medical details or free text
+  /// are accepted, and testimonial permission never publishes anything.
+  Future<void> saveCaseFeedback(
+    String caseId, {
+    required String satisfaction,
+    required String outcome,
+    required bool testimonialPermission,
+  });
 
   /// Opt-in deadline reminders: stores the email on the case, sends a recap
   /// now, and schedules nudges server-side until the case is paid or deleted.

@@ -11,6 +11,69 @@ service cloud.firestore {
       return signedIn() && resource.data.ownerUid == request.auth.uid;
     }
 
+    function nullableStringWithin(value, limit) {
+      return value == null || (value is string && value.size() <= limit);
+    }
+
+    function nullableAmount(value) {
+      return value == null ||
+        (value is number && value >= 0 && value <= 100000000);
+    }
+
+    // Only bounded scalar corrections can be made from the review screen.
+    // Arrays and document snippets came from the server-side strict schema and
+    // cannot be replaced with unbounded prompt content by a browser client.
+    function isValidClientExtraction() {
+      let next = request.resource.data.extraction;
+      let prior = resource.data.extraction;
+      return next is map
+        && next.keys().hasAll([
+          'documentType', 'denialCategory', 'insurerName', 'planName',
+          'patientName', 'memberIdLast4', 'claimNumber', 'priorAuthNumber',
+          'dateOfService', 'denialDate', 'appealDeadline', 'deniedItem',
+          'providerName', 'prescriberName', 'denialReasonText', 'amountBilled',
+          'patientResponsibility', 'appealInstructions', 'phoneNumbers',
+          'mailingAddresses', 'missingFields', 'sourceSnippets'
+        ])
+        && next.keys().hasOnly([
+          'documentType', 'denialCategory', 'insurerName', 'planName',
+          'patientName', 'memberIdLast4', 'claimNumber', 'priorAuthNumber',
+          'dateOfService', 'denialDate', 'appealDeadline', 'deniedItem',
+          'providerName', 'prescriberName', 'denialReasonText', 'amountBilled',
+          'patientResponsibility', 'appealInstructions', 'phoneNumbers',
+          'mailingAddresses', 'missingFields', 'sourceSnippets'
+        ])
+        && next.documentType in [
+          'denial_letter', 'eob', 'prior_authorization', 'bill', 'unknown'
+        ]
+        && next.denialCategory in [
+          'medication', 'prior_authorization', 'not_medically_necessary',
+          'step_therapy', 'formulary_exclusion', 'out_of_network',
+          'excluded_benefit', 'duplicate_claim', 'missing_information',
+          'experimental', 'partial_payment', 'unknown'
+        ]
+        && nullableStringWithin(next.insurerName, 300)
+        && nullableStringWithin(next.planName, 300)
+        && nullableStringWithin(next.patientName, 300)
+        && nullableStringWithin(next.memberIdLast4, 20)
+        && nullableStringWithin(next.claimNumber, 120)
+        && nullableStringWithin(next.priorAuthNumber, 120)
+        && nullableStringWithin(next.dateOfService, 80)
+        && nullableStringWithin(next.denialDate, 80)
+        && nullableStringWithin(next.appealDeadline, 160)
+        && nullableStringWithin(next.deniedItem, 1000)
+        && nullableStringWithin(next.providerName, 300)
+        && nullableStringWithin(next.prescriberName, 300)
+        && nullableStringWithin(next.denialReasonText, 8000)
+        && nullableAmount(next.amountBilled)
+        && nullableAmount(next.patientResponsibility)
+        && next.appealInstructions == prior.appealInstructions
+        && next.phoneNumbers == prior.phoneNumbers
+        && next.mailingAddresses == prior.mailingAddresses
+        && next.missingFields == prior.missingFields
+        && next.sourceSnippets == prior.sourceSnippets;
+    }
+
     // The web client has exactly three direct case-edit flows: extraction
     // corrections, appending uploaded source paths, and user additions. Every
     // retention, ownership, entitlement, payment, generation, and workflow
@@ -23,11 +86,13 @@ service cloud.firestore {
         && changed.hasAll(['updatedAt'])
         && request.resource.data.updatedAt == request.time
         && (!changed.hasAny(['extraction'])
-          || request.resource.data.extraction is map)
+          || isValidClientExtraction())
         && (!changed.hasAny(['sourceFilePaths'])
-          || request.resource.data.sourceFilePaths is list)
+          || (request.resource.data.sourceFilePaths is list
+            && request.resource.data.sourceFilePaths.size() <= 10))
         && (!changed.hasAny(['userAdditions'])
-          || request.resource.data.userAdditions is string);
+          || (request.resource.data.userAdditions is string
+            && request.resource.data.userAdditions.size() <= 8000));
     }
 
     match /cases/{caseId} {
@@ -86,6 +151,13 @@ service cloud.firestore {
 
     match /analytics_customer_segment_daily/{segment} {
       // Customer-only country, referrer, campaign, and page aggregates.
+      allow read: if signedIn() && request.auth.uid == '6ZETq21uHIartXQlCCrZnZiQhb83';
+      allow write: if false;
+    }
+
+    match /analytics_model_daily/{day} {
+      // Aggregate model tokens, latency, and estimated spend only. No case,
+      // prompt, user, or output data is written to this collection.
       allow read: if signedIn() && request.auth.uid == '6ZETq21uHIartXQlCCrZnZiQhb83';
       allow write: if false;
     }

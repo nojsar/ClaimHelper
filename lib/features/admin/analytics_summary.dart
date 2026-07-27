@@ -86,6 +86,23 @@ class AnalyticsDay {
       (((data['funnel'] as Map<String, dynamic>?)?[step] ?? 0) as num).toInt();
 }
 
+/// An overall-only view of a voluntary fixed acquisition category. It is not a
+/// traffic segment: source reporting is collected only from customers who
+/// choose to answer before checkout, so it must never be compared to visits.
+class AcquisitionSourceSummary {
+  const AcquisitionSourceSummary({
+    required this.source,
+    required this.selected,
+    required this.paid,
+    required this.revenueCents,
+  });
+
+  final String source;
+  final int selected;
+  final int paid;
+  final int revenueCents;
+}
+
 /// A safe, aggregate-only statistic that can be focused in the dashboard.
 ///
 /// These metrics are evaluated from the already-bounded daily documents. They
@@ -121,23 +138,109 @@ enum AnalyticsMetric {
   readyFourToEightSeconds(
       'performance.app_ready.4_to_8s', 'Ready in 4–8 seconds'),
   readyOverEightSeconds(
-      'performance.app_ready.over_8s', 'Ready over 8 seconds');
+      'performance.app_ready.over_8s', 'Ready over 8 seconds'),
+  packetSelected('monetization.packet.tier_selected', 'Packet selected'),
+  fullCaseSelected(
+      'monetization.full_case.tier_selected', 'Full Case selected'),
+  packetPaid('monetization.packet.paid', 'Packet paid'),
+  fullCasePaid('monetization.full_case.paid', 'Full Case paid'),
+  followupRoundPaid(
+      'monetization.followup_round.paid', 'Follow-up rounds paid'),
+  fullCaseUpgradePaid(
+      'monetization.full_case_upgrade.paid', 'Full Case upgrades paid'),
+  packetRefunded('monetization.packet.refunded', 'Packet refunds'),
+  fullCaseRefunded('monetization.full_case.refunded', 'Full Case refunds'),
+  packetCheckoutExpired(
+      'monetization.packet.checkout_expired', 'Packet checkout expired'),
+  fullCaseCheckoutExpired(
+      'monetization.full_case.checkout_expired', 'Full Case checkout expired'),
+  packetCheckoutRecovered(
+      'monetization.packet.checkout_recovered', 'Packet checkout recovered'),
+  fullCaseCheckoutRecovered('monetization.full_case.checkout_recovered',
+      'Full Case checkout recovered'),
+  packetNetRevenue('monetization.packet.netRevenueCents', 'Packet net revenue'),
+  fullCaseNetRevenue(
+      'monetization.full_case.netRevenueCents', 'Full Case net revenue'),
+  followupRoundNetRevenue('monetization.followup_round.netRevenueCents',
+      'Follow-up round net revenue'),
+  fullCaseUpgradeNetRevenue('monetization.full_case_upgrade.netRevenueCents',
+      'Full Case upgrade net revenue'),
+  modelCalls('model.calls', 'Model calls'),
+  modelErrors('model.errors', 'Model errors'),
+  modelInputTokens('model.inputTokens', 'Model input tokens'),
+  modelOutputTokens('model.outputTokens', 'Model output tokens'),
+  modelDurationMs('model.totalDurationMs', 'Model time'),
+  modelEstimatedCostMicros('model.estimatedCostMicros', 'Estimated model cost'),
+  contributionAfterAiMicros('derived.contributionAfterAiMicros',
+      'Contribution after AI cost, before fees and tax'),
+  modelExtractionCalls('model.operations.extraction.calls', 'Extraction calls'),
+  modelExtractionErrors(
+      'model.operations.extraction.errors', 'Extraction errors'),
+  modelExtractionInputTokens(
+      'model.operations.extraction.inputTokens', 'Extraction input tokens'),
+  modelExtractionOutputTokens(
+      'model.operations.extraction.outputTokens', 'Extraction output tokens'),
+  modelExtractionDurationMs(
+      'model.operations.extraction.totalDurationMs', 'Extraction time'),
+  modelPreviewCalls('model.operations.preview.calls', 'Preview calls'),
+  modelPreviewErrors('model.operations.preview.errors', 'Preview errors'),
+  modelPreviewInputTokens(
+      'model.operations.preview.inputTokens', 'Preview input tokens'),
+  modelPreviewOutputTokens(
+      'model.operations.preview.outputTokens', 'Preview output tokens'),
+  modelPreviewDurationMs(
+      'model.operations.preview.totalDurationMs', 'Preview time'),
+  modelPacketCalls('model.operations.packet.calls', 'Packet calls'),
+  modelPacketErrors('model.operations.packet.errors', 'Packet errors'),
+  modelPacketInputTokens(
+      'model.operations.packet.inputTokens', 'Packet input tokens'),
+  modelPacketOutputTokens(
+      'model.operations.packet.outputTokens', 'Packet output tokens'),
+  modelPacketDurationMs(
+      'model.operations.packet.totalDurationMs', 'Packet time'),
+  modelFollowupCalls('model.operations.followup.calls', 'Follow-up calls'),
+  modelFollowupErrors('model.operations.followup.errors', 'Follow-up errors'),
+  modelFollowupInputTokens(
+      'model.operations.followup.inputTokens', 'Follow-up input tokens'),
+  modelFollowupOutputTokens(
+      'model.operations.followup.outputTokens', 'Follow-up output tokens'),
+  modelFollowupDurationMs(
+      'model.operations.followup.totalDurationMs', 'Follow-up time');
 
   const AnalyticsMetric(this.id, this.label);
 
   final String id;
   final String label;
 
-  bool get isMoney => this == revenue;
+  bool get isMoney => switch (this) {
+        revenue ||
+        packetNetRevenue ||
+        fullCaseNetRevenue ||
+        followupRoundNetRevenue ||
+        fullCaseUpgradeNetRevenue =>
+          true,
+        _ => false,
+      };
+
+  bool get isMicrosMoney => switch (this) {
+        modelEstimatedCostMicros || contributionAfterAiMicros => true,
+        _ => false,
+      };
+
+  bool get isDuration => id.endsWith('totalDurationMs');
 
   /// Only public traffic counters exist inside country/referrer/campaign/path
   /// segment documents. All other metrics must remain overall-only.
   bool get supportsSegmentComparison =>
       this == visits || this == pageviews || this == appOpens;
 
-  String format(int value) => isMoney
-      ? '\$${(value / 100).toStringAsFixed(2)}'
-      : NumberFormat.decimalPattern().format(value);
+  String format(int value) => isMicrosMoney
+      ? '\$${(value / 1000000).toStringAsFixed(4)}'
+      : isMoney
+          ? '\$${(value / 100).toStringAsFixed(2)}'
+          : isDuration
+              ? '${(value / 1000).toStringAsFixed(value >= 60000 ? 1 : 2)}s'
+              : NumberFormat.decimalPattern().format(value);
 
   int valueForDay(AnalyticsDay day) => switch (this) {
         visits => day.count('visits'),
@@ -169,6 +272,82 @@ enum AnalyticsMetric {
         readyFourToEightSeconds =>
           day.pathCount('performance.app_ready.4_to_8s'),
         readyOverEightSeconds => day.pathCount('performance.app_ready.over_8s'),
+        packetSelected => day.pathCount('monetization.packet.tier_selected'),
+        fullCaseSelected =>
+          day.pathCount('monetization.full_case.tier_selected'),
+        packetPaid => day.pathCount('monetization.packet.paid'),
+        fullCasePaid => day.pathCount('monetization.full_case.paid'),
+        followupRoundPaid => day.pathCount('monetization.followup_round.paid'),
+        fullCaseUpgradePaid =>
+          day.pathCount('monetization.full_case_upgrade.paid'),
+        packetRefunded => day.pathCount('monetization.packet.refunded'),
+        fullCaseRefunded => day.pathCount('monetization.full_case.refunded'),
+        packetCheckoutExpired =>
+          day.pathCount('monetization.packet.checkout_expired'),
+        fullCaseCheckoutExpired =>
+          day.pathCount('monetization.full_case.checkout_expired'),
+        packetCheckoutRecovered =>
+          day.pathCount('monetization.packet.checkout_recovered'),
+        fullCaseCheckoutRecovered =>
+          day.pathCount('monetization.full_case.checkout_recovered'),
+        packetNetRevenue =>
+          day.pathCount('monetization.packet.netRevenueCents'),
+        fullCaseNetRevenue =>
+          day.pathCount('monetization.full_case.netRevenueCents'),
+        followupRoundNetRevenue =>
+          day.pathCount('monetization.followup_round.netRevenueCents'),
+        fullCaseUpgradeNetRevenue =>
+          day.pathCount('monetization.full_case_upgrade.netRevenueCents'),
+        modelCalls => day.pathCount('model.calls'),
+        modelErrors => day.pathCount('model.errors'),
+        modelInputTokens => day.pathCount('model.inputTokens'),
+        modelOutputTokens => day.pathCount('model.outputTokens'),
+        modelDurationMs => day.pathCount('model.totalDurationMs'),
+        modelEstimatedCostMicros => day.pathCount('model.estimatedCostMicros'),
+        contributionAfterAiMicros =>
+          (day.pathCount('monetization.packet.netRevenueCents') +
+                      day.pathCount('monetization.full_case.netRevenueCents') +
+                      day.pathCount(
+                          'monetization.followup_round.netRevenueCents') +
+                      day.pathCount(
+                          'monetization.full_case_upgrade.netRevenueCents')) *
+                  10000 -
+              day.pathCount('model.estimatedCostMicros'),
+        modelExtractionCalls =>
+          day.pathCount('model.operations.extraction.calls'),
+        modelExtractionErrors =>
+          day.pathCount('model.operations.extraction.errors'),
+        modelExtractionInputTokens =>
+          day.pathCount('model.operations.extraction.inputTokens'),
+        modelExtractionOutputTokens =>
+          day.pathCount('model.operations.extraction.outputTokens'),
+        modelExtractionDurationMs =>
+          day.pathCount('model.operations.extraction.totalDurationMs'),
+        modelPreviewCalls => day.pathCount('model.operations.preview.calls'),
+        modelPreviewErrors => day.pathCount('model.operations.preview.errors'),
+        modelPreviewInputTokens =>
+          day.pathCount('model.operations.preview.inputTokens'),
+        modelPreviewOutputTokens =>
+          day.pathCount('model.operations.preview.outputTokens'),
+        modelPreviewDurationMs =>
+          day.pathCount('model.operations.preview.totalDurationMs'),
+        modelPacketCalls => day.pathCount('model.operations.packet.calls'),
+        modelPacketErrors => day.pathCount('model.operations.packet.errors'),
+        modelPacketInputTokens =>
+          day.pathCount('model.operations.packet.inputTokens'),
+        modelPacketOutputTokens =>
+          day.pathCount('model.operations.packet.outputTokens'),
+        modelPacketDurationMs =>
+          day.pathCount('model.operations.packet.totalDurationMs'),
+        modelFollowupCalls => day.pathCount('model.operations.followup.calls'),
+        modelFollowupErrors =>
+          day.pathCount('model.operations.followup.errors'),
+        modelFollowupInputTokens =>
+          day.pathCount('model.operations.followup.inputTokens'),
+        modelFollowupOutputTokens =>
+          day.pathCount('model.operations.followup.outputTokens'),
+        modelFollowupDurationMs =>
+          day.pathCount('model.operations.followup.totalDurationMs'),
       };
 
   int total(AnalyticsSummary summary) => summary.days.fold(
@@ -386,4 +565,38 @@ class AnalyticsSummary {
   List<MapEntry<String, int>> get topReferrers => topOf('referrers');
   List<MapEntry<String, int>> get topCampaigns => topOf('campaigns');
   List<MapEntry<String, int>> get topPaths => topOf('paths');
+
+  List<AcquisitionSourceSummary> get acquisitionSources {
+    final merged = <String, ({int selected, int paid, int revenueCents})>{};
+    for (final day in days) {
+      final raw = day.data['acquisition'];
+      if (raw is! Map) continue;
+      raw.forEach((key, value) {
+        if (key is! String || value is! Map) return;
+        final current = merged[key] ?? (selected: 0, paid: 0, revenueCents: 0);
+        int count(String field) =>
+            (value[field] is num) ? (value[field] as num).toInt() : 0;
+        merged[key] = (
+          selected: current.selected + count('selected'),
+          paid: current.paid + count('paid'),
+          revenueCents: current.revenueCents + count('revenueCents'),
+        );
+      });
+    }
+    final result = [
+      for (final entry in merged.entries)
+        AcquisitionSourceSummary(
+          source: entry.key,
+          selected: entry.value.selected,
+          paid: entry.value.paid,
+          revenueCents: entry.value.revenueCents,
+        ),
+    ]..sort((a, b) {
+        final byRevenue = b.revenueCents.compareTo(a.revenueCents);
+        if (byRevenue != 0) return byRevenue;
+        final byPaid = b.paid.compareTo(a.paid);
+        return byPaid != 0 ? byPaid : a.source.compareTo(b.source);
+      });
+    return result;
+  }
 }

@@ -5,7 +5,10 @@ import { HttpsError, onCall } from "firebase-functions/v2/https";
 
 import { requireUid } from "./util";
 
-const CLAIM_WINDOW_MS = 15 * 60 * 1000;
+// Passwordless delivery is asynchronous. Keep the authorization short-lived,
+// but allow a realistic window for an inbox/provider delay. It remains bound
+// to the exact email hash and can be consumed by only one destination uid.
+const CLAIM_WINDOW_MS = 60 * 60 * 1000;
 const CLAIM_TOMBSTONE_MS = 24 * 60 * 60 * 1000;
 
 type PreparedClaim = {

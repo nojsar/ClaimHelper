@@ -1,4 +1,5 @@
 import 'package:claimhelper/models/appeal_case.dart';
+import 'package:claimhelper/models/case_tracker.dart';
 import 'package:claimhelper/models/follow_up.dart';
 import 'package:claimhelper/models/packet.dart';
 import 'package:claimhelper/services/accessible_html_service.dart';
@@ -47,6 +48,15 @@ void main() {
         createdAt: DateTime.utc(2026, 7, 12, 14, 30),
       ),
     ],
+    caseTracker: CaseTracker(
+      submittedDate: DateTime.utc(2026, 7, 1),
+      submissionMethod: SubmissionMethod.certifiedMail,
+      confirmationNumber: 'CONF-<123>',
+      expectedResponseDate: DateTime.utc(2026, 7, 31),
+      responseStatus: InsurerResponseStatus.underReview,
+      outcome: AppealOutcome.pending,
+      responseReminderEnabled: true,
+    ),
   );
 
   test('builds standalone semantic HTML with every packet section', () {
@@ -69,6 +79,7 @@ void main() {
       'Evidence checklist',
       'Insurer call script',
       'Deadlines and reminders',
+      'Submission tracker',
       'Important warnings',
       'Follow-up rounds',
       'Disclaimer',
@@ -86,6 +97,14 @@ void main() {
       html,
       contains('<time datetime="2026-07-12">Created 2026-07-12</time>'),
     );
+    expect(
+      html,
+      contains('<time datetime="2026-07-01">2026-07-01</time>'),
+    );
+    expect(html, contains('Certified mail'));
+    expect(html, contains('CONF-&lt;123&gt;'));
+    expect(html, contains('Under review'));
+    expect(html, contains('Email response reminder</dt><dd>Enabled'));
   });
 
   test('escapes generated and user-controlled content', () {
@@ -116,5 +135,23 @@ void main() {
       () => AccessibleHtmlService().buildPacketHtml(missing),
       throwsArgumentError,
     );
+  });
+
+  test('makes an unrecorded submission explicit instead of inventing one', () {
+    const withoutTracker = AppealCase(
+      id: 'case-without-tracker',
+      status: CaseStatus.generated,
+      paid: true,
+      packet: packet,
+    );
+
+    final html = AccessibleHtmlService().buildPacketHtml(withoutTracker);
+
+    expect(html, contains('<h2 id="submission-tracker-heading">'));
+    expect(
+      html,
+      contains('No appeal submission has been recorded for this case.'),
+    );
+    expect(html, isNot(contains('Submitted date</dt>')));
   });
 }

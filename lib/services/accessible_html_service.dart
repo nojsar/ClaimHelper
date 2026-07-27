@@ -62,7 +62,7 @@ class AccessibleHtmlService {
 
     out
       ..writeln(
-          '<p class="notice"><strong>Accessible version:</strong> This semantic HTML file contains every section of the on-screen appeal packet. Review all information before sending.</p>')
+          '<p class="notice"><strong>Accessible version:</strong> This semantic HTML file contains your generated packet, follow-up drafts, and saved submission tracker. Review all information before sending.</p>')
       ..writeln('</header>')
       ..writeln(_textSection(
           'summary', 'Plain-English summary', packet.plainEnglishSummary))
@@ -114,6 +114,7 @@ class AccessibleHtmlService {
     out
       ..writeln('</tbody></table>')
       ..writeln('</section>')
+      ..writeln(_trackerSection(appealCase))
       ..writeln('<section aria-labelledby="warnings-heading">')
       ..writeln('<h2 id="warnings-heading">Important warnings</h2>');
     if (packet.warnings.isEmpty) {
@@ -194,6 +195,44 @@ class AccessibleHtmlService {
       '<h2 id="$id-heading">${_escape(title)}</h2>'
       '<pre>${_escape(value)}</pre>'
       '</section>';
+
+  String _trackerSection(AppealCase appealCase) {
+    final tracker = appealCase.caseTracker;
+    if (tracker == null) {
+      return '<section aria-labelledby="submission-tracker-heading">'
+          '<h2 id="submission-tracker-heading">Submission tracker</h2>'
+          '<p>No appeal submission has been recorded for this case.</p>'
+          '</section>';
+    }
+
+    final confirmation = tracker.confirmationNumber?.trim();
+    return '<section aria-labelledby="submission-tracker-heading">'
+        '<h2 id="submission-tracker-heading">Submission tracker</h2>'
+        '<dl class="case-details">'
+        '${_dateDetail('Submitted date', tracker.submittedDate)}'
+        '<div><dt>Submission method</dt><dd>${_escape(tracker.submissionMethod.label)}</dd></div>'
+        '<div><dt>Confirmation or reference number</dt><dd>${_escape(
+      confirmation == null || confirmation.isEmpty
+          ? 'Not provided'
+          : confirmation,
+    )}</dd></div>'
+        '${_dateDetail('Expected response date', tracker.expectedResponseDate)}'
+        '${_dateDetail('Response received date', tracker.responseDate)}'
+        '<div><dt>Insurer status</dt><dd>${_escape(tracker.responseStatus.label)}</dd></div>'
+        '<div><dt>Current outcome</dt><dd>${_escape(tracker.outcome.label)}</dd></div>'
+        '<div><dt>Email response reminder</dt><dd>${tracker.responseReminderEnabled ? 'Enabled' : 'Not enabled'}</dd></div>'
+        '</dl>'
+        '</section>';
+  }
+
+  String _dateDetail(String label, DateTime? value) {
+    if (value == null) {
+      return '<div><dt>${_escape(label)}</dt><dd>Not set</dd></div>';
+    }
+    final date = value.toIso8601String().split('T').first;
+    return '<div><dt>${_escape(label)}</dt>'
+        '<dd><time datetime="${_escape(date)}">${_escape(date)}</time></dd></div>';
+  }
 
   String _escape(String value) => value
       .replaceAll('&', '&amp;')

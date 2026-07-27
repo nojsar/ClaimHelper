@@ -1,12 +1,16 @@
 {
     "name": "GetMyYes — Health-insurance denial appeal assistant",
     "short_name": "GetMyYes",
-    "start_url": ".",
+    "id": "/",
+    "start_url": "/#/account",
+    "scope": "/",
     "display": "standalone",
+    "lang": "en-US",
+    "dir": "ltr",
     "background_color": "#F3EDDF",
     "theme_color": "#F3EDDF",
     "description": "Turn a denied medication, prior-authorization, or 'not medically necessary' letter into a ready-to-review appeal packet in 15 minutes.",
-    "orientation": "portrait-primary",
+    "categories": ["health", "medical", "productivity", "utilities"],
     "prefer_related_applications": false,
     "icons": [
         {

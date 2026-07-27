@@ -87,6 +87,13 @@ class _StatsBodyState extends State<_StatsBody> {
         .collection('analytics_customer_daily')
         .where(FieldPath.documentId, isGreaterThanOrEqualTo: cutoff)
         .get();
+    // Model telemetry is a separate aggregate-only collection. It is merged
+    // under `model` solely for the dashboard's day-based view; it is never
+    // joined with a case, visitor, country, or traffic segment.
+    final modelFuture = FirebaseFirestore.instance
+        .collection('analytics_model_daily')
+        .where(FieldPath.documentId, isGreaterThanOrEqualTo: cutoff)
+        .get();
     // Prefix-range reads fetch only country documents (not every path or
     // referrer segment) and require no composite index.
     final segmentCollection = FirebaseFirestore.instance
@@ -105,9 +112,23 @@ class _StatsBodyState extends State<_StatsBody> {
             .get(),
     ]);
     final qs = await dailyFuture;
+    final modelQs = await modelFuture;
     final countrySnapshots = await countryFuture;
+    final modelByDay = {
+      for (final doc in modelQs.docs) doc.id: doc.data(),
+    };
+    final trafficByDay = {
+      for (final doc in qs.docs) doc.id: doc.data(),
+    };
     return AnalyticsSummary.fromDocuments(
-      qs.docs.map((doc) => AnalyticsDocument(doc.id, doc.data())),
+      [
+        for (final day in days)
+          if (trafficByDay.containsKey(day) || modelByDay.containsKey(day))
+            AnalyticsDocument(day, {
+              ...?trafficByDay[day],
+              if (modelByDay[day] != null) 'model': modelByDay[day],
+            }),
+      ],
       countrySketchDocuments: countrySnapshots
           .expand((snapshot) => snapshot.docs)
           .map((doc) => AnalyticsDocument(doc.id, doc.data())),
@@ -235,6 +256,7 @@ class AnalyticsDashboardContent extends StatefulWidget {
 class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
   AnalyticsMetric _metric = AnalyticsMetric.visits;
   String? _dayKey;
+  String? _acquisitionSource;
 
   @override
   void didUpdateWidget(covariant AnalyticsDashboardContent oldWidget) {
@@ -264,6 +286,17 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
     widget.onDayChanged?.call(null);
   }
 
+  void _selectAcquisitionSource(String source) {
+    setState(() {
+      _acquisitionSource = _acquisitionSource == source ? null : source;
+    });
+  }
+
+  void _clearAcquisitionSource() {
+    if (_acquisitionSource == null) return;
+    setState(() => _acquisitionSource = null);
+  }
+
   void _resetView() {
     final filter = widget.selectedFilter;
     final metricChanged = _metric != AnalyticsMetric.visits;
@@ -271,6 +304,7 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
     setState(() {
       _metric = AnalyticsMetric.visits;
       _dayKey = null;
+      _acquisitionSource = null;
     });
     if (metricChanged) {
       widget.onMetricChanged?.call(AnalyticsMetric.visits);
@@ -291,7 +325,9 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
     final dateLabel = _dayKey == null ? null : _displayDay(_dayKey!);
     final secondaryPeriod =
         _dayKey == null ? 'in last 7 days' : 'in all 30 days';
-    final hasLocalFocus = _metric != AnalyticsMetric.visits || _dayKey != null;
+    final hasLocalFocus = _metric != AnalyticsMetric.visits ||
+        _dayKey != null ||
+        _acquisitionSource != null;
     final hasActiveView = filter != null || hasLocalFocus;
 
     int secondaryValue(AnalyticsMetric metric) => _dayKey == null
@@ -329,7 +365,7 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
         const SizedBox(height: 8),
         const Text(
           'Select any total, graph bar, funnel step, reliability value, timing '
-          'row, country, referrer, campaign, or page. Statistics change the '
+          'row, country, referrer, campaign, page, or acquisition source. Statistics change the '
           'daily series, graph bars filter compatible totals to one UTC day, '
           'and breakdowns compare all traffic with that segment.',
           style: TextStyle(color: AppColors.textMuted, fontSize: 13),
@@ -345,11 +381,14 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
             hasError: widget.filterHasError,
             metric: _metric,
             dayKey: _dayKey,
+            acquisitionSource: _acquisitionSource,
             onClearFilter:
                 filter == null ? null : () => widget.onFilterSelect(filter),
             onClearMetric:
                 _metric == AnalyticsMetric.visits ? null : _clearMetric,
             onClearDay: _dayKey == null ? null : _clearDay,
+            onClearAcquisition:
+                _acquisitionSource == null ? null : _clearAcquisitionSource,
             onReset: _resetView,
           ),
         ],
@@ -515,6 +554,21 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
           emptyLabel: 'No tagged campaign visits yet.',
         ),
         const SizedBox(height: 28),
+        const _SectionTitle('Customer-reported acquisition'),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 10),
+          child: Text(
+            'Optional fixed choices collected before checkout. Rows show selected, paid, paid ÷ selected, and revenue. These are overall-only purchase aggregates, not a visitor profile or traffic cohort.',
+            style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+          ),
+        ),
+        _AcquisitionSourceCard(
+          entries: scopedOverall.acquisitionSources,
+          selectedSource: _acquisitionSource,
+          onSelect: _selectAcquisitionSource,
+          onClear: _clearAcquisitionSource,
+        ),
+        const SizedBox(height: 28),
         _SectionTitle(dateLabel == null
             ? 'Top page routes (pageviews)'
             : 'Page routes (pageviews) · $dateLabel'),
@@ -535,6 +589,40 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
           labelForKey: _pageRouteLabel,
           onSelect: widget.onFilterSelect,
           emptyLabel: 'No pageviews yet.',
+        ),
+        const SizedBox(height: 28),
+        const _SectionTitle('Monetization'),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 10),
+          child: Text(
+            'Server-confirmed, aggregate-only product counters. Net revenue is '
+            'paid amount less recorded refunds; Stripe remains authoritative for '
+            'an individual payment. These values are not traffic segments.',
+            style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+          ),
+        ),
+        _MonetizationCard(
+          summary: scopedOverall,
+          filterLabel: filter?.label,
+          selectedMetric: _metric,
+          onSelectMetric: _selectMetric,
+        ),
+        const SizedBox(height: 28),
+        const _SectionTitle('Model operations'),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 10),
+          child: Text(
+            'Aggregate operational telemetry only: no prompts, outputs, case '
+            'data, or customer identifiers are stored. Model metrics are '
+            'overall-only and are not attributed to traffic segments.',
+            style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+          ),
+        ),
+        _ModelOperationsCard(
+          summary: scopedOverall,
+          filterLabel: filter?.label,
+          selectedMetric: _metric,
+          onSelectMetric: _selectMetric,
         ),
       ],
     );
@@ -643,9 +731,11 @@ class _ActiveViewBanner extends StatelessWidget {
     required this.hasError,
     required this.metric,
     required this.dayKey,
+    required this.acquisitionSource,
     required this.onClearFilter,
     required this.onClearMetric,
     required this.onClearDay,
+    required this.onClearAcquisition,
     required this.onReset,
   });
 
@@ -655,9 +745,11 @@ class _ActiveViewBanner extends StatelessWidget {
   final bool hasError;
   final AnalyticsMetric metric;
   final String? dayKey;
+  final String? acquisitionSource;
   final VoidCallback? onClearFilter;
   final VoidCallback? onClearMetric;
   final VoidCallback? onClearDay;
+  final VoidCallback? onClearAcquisition;
   final VoidCallback onReset;
 
   @override
@@ -668,22 +760,25 @@ class _ActiveViewBanner extends StatelessWidget {
       'Metric: ${metric.label}',
       if (dayKey != null) 'UTC date: $dayKey',
       if (filter != null) 'Segment: ${filter.label}',
+      if (acquisitionSource != null) 'Acquisition: $acquisitionSource',
     ];
-    final detail = filter == null
-        ? 'Metric and date focus use aggregate daily counters only.'
-        : hasError
-            ? 'Segment totals could not be loaded. Clear the segment and try again.'
-            : loading
-                ? 'Loading segment totals…'
-                : !metric.supportsSegmentComparison
-                    ? '${metric.label} remains overall-only for ${filter.label}; '
-                        'no person-level attribution is stored.'
-                    : firstDay == null
-                        ? 'Historical ${filter.dimension.singularLabel} totals are '
-                            'shown where they already exist. Other combinations '
-                            'begin with newly recorded traffic.'
-                        : 'Cross-breakdowns include segment records from '
-                            '$firstDay. Missing historical days stay unavailable.';
+    final detail = acquisitionSource != null
+        ? 'Acquisition filters narrow only the customer-reported acquisition aggregate; they never infer traffic or person-level attribution.'
+        : filter == null
+            ? 'Metric and date focus use aggregate daily counters only.'
+            : hasError
+                ? 'Segment totals could not be loaded. Clear the segment and try again.'
+                : loading
+                    ? 'Loading segment totals…'
+                    : !metric.supportsSegmentComparison
+                        ? '${metric.label} remains overall-only for ${filter.label}; '
+                            'no person-level attribution is stored.'
+                        : firstDay == null
+                            ? 'Historical ${filter.dimension.singularLabel} totals are '
+                                'shown where they already exist. Other combinations '
+                                'begin with newly recorded traffic.'
+                            : 'Cross-breakdowns include segment records from '
+                                '$firstDay. Missing historical days stay unavailable.';
     return Semantics(
       container: true,
       liveRegion: true,
@@ -738,6 +833,12 @@ class _ActiveViewBanner extends StatelessWidget {
                 icon: const Icon(Icons.calendar_today_outlined, size: 18),
                 label: const Text('Clear date'),
               ),
+            if (onClearAcquisition != null)
+              OutlinedButton.icon(
+                onPressed: onClearAcquisition,
+                icon: const Icon(Icons.filter_alt_off_outlined, size: 18),
+                label: const Text('Clear acquisition'),
+              ),
             if (onClearFilter != null)
               OutlinedButton.icon(
                 key: const ValueKey('analytics-clear-segment'),
@@ -770,6 +871,107 @@ class _SectionTitle extends StatelessWidget {
           child: Text(text, style: Theme.of(context).textTheme.titleMedium),
         ),
       );
+}
+
+class _AcquisitionSourceCard extends StatelessWidget {
+  const _AcquisitionSourceCard({
+    required this.entries,
+    required this.selectedSource,
+    required this.onSelect,
+    required this.onClear,
+  });
+  final List<AcquisitionSourceSummary> entries;
+  final String? selectedSource;
+  final ValueChanged<String> onSelect;
+  final VoidCallback onClear;
+
+  static const _labels = {
+    'google': 'Google search',
+    'quora': 'Quora',
+    'social': 'Social media',
+    'friend_family': 'Friend or family',
+    'advocate_provider': 'Patient advocate or provider',
+    'other': 'Other',
+    'prefer_not_to_say': 'Prefer not to say',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final visible = selectedSource == null
+        ? entries
+        : entries.where((entry) => entry.source == selectedSource).toList();
+    if (visible.isEmpty) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Text('No customer-reported acquisition data for this view.'),
+        ),
+      );
+    }
+    final money = NumberFormat.simpleCurrency(decimalDigits: 2);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            if (selectedSource != null)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: onClear,
+                  icon: const Icon(Icons.filter_alt_off_outlined, size: 18),
+                  label: const Text('Show all acquisition sources'),
+                ),
+              ),
+            for (final entry in visible)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Semantics(
+                  button: true,
+                  selected: selectedSource == entry.source,
+                  label:
+                      '${_labels[entry.source] ?? entry.source}: ${entry.selected} selected, ${entry.paid} paid. Tap to filter this acquisition report.',
+                  child: InkWell(
+                    onTap: () => onSelect(entry.source),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: selectedSource == entry.source
+                              ? AppColors.primary
+                              : AppColors.border,
+                        ),
+                      ),
+                      child: Wrap(
+                        spacing: 14,
+                        runSpacing: 4,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 180,
+                            child: Text(_labels[entry.source] ?? entry.source),
+                          ),
+                          Text('${entry.selected} selected'),
+                          Text('${entry.paid} paid'),
+                          Text(entry.selected == 0
+                              ? 'Conversion —'
+                              : 'Conversion ${(entry.paid * 100 / entry.selected).toStringAsFixed(1)}%'),
+                          Text(
+                              'Revenue ${money.format(entry.revenueCents / 100)}'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _AnalyticsMeaningNotice extends StatelessWidget {
@@ -1274,6 +1476,230 @@ class _LegendSwatch extends StatelessWidget {
           ],
         ),
       );
+}
+
+class _MonetizationCard extends StatelessWidget {
+  const _MonetizationCard({
+    required this.summary,
+    required this.selectedMetric,
+    required this.onSelectMetric,
+    this.filterLabel,
+  });
+
+  final AnalyticsSummary summary;
+  final AnalyticsMetric selectedMetric;
+  final ValueChanged<AnalyticsMetric> onSelectMetric;
+  final String? filterLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    const groups = <(String, List<(String, AnalyticsMetric)>)>[
+      (
+        'Overall economics',
+        [
+          ('Estimated AI cost', AnalyticsMetric.modelEstimatedCostMicros),
+          (
+            'After AI cost (before Stripe, tax, and other costs)',
+            AnalyticsMetric.contributionAfterAiMicros
+          ),
+        ],
+      ),
+      (
+        'Appeal packet',
+        [
+          ('Selected', AnalyticsMetric.packetSelected),
+          ('Paid', AnalyticsMetric.packetPaid),
+          ('Refunded', AnalyticsMetric.packetRefunded),
+          ('Expired', AnalyticsMetric.packetCheckoutExpired),
+          ('Recovered', AnalyticsMetric.packetCheckoutRecovered),
+          ('Net revenue', AnalyticsMetric.packetNetRevenue),
+        ],
+      ),
+      (
+        'Full Case',
+        [
+          ('Selected', AnalyticsMetric.fullCaseSelected),
+          ('Paid', AnalyticsMetric.fullCasePaid),
+          ('Refunded', AnalyticsMetric.fullCaseRefunded),
+          ('Expired', AnalyticsMetric.fullCaseCheckoutExpired),
+          ('Recovered', AnalyticsMetric.fullCaseCheckoutRecovered),
+          ('Net revenue', AnalyticsMetric.fullCaseNetRevenue),
+        ],
+      ),
+      (
+        'Add-ons',
+        [
+          ('Follow-up rounds paid', AnalyticsMetric.followupRoundPaid),
+          ('Follow-up net revenue', AnalyticsMetric.followupRoundNetRevenue),
+          ('Full Case upgrades paid', AnalyticsMetric.fullCaseUpgradePaid),
+          (
+            'Full Case upgrade net revenue',
+            AnalyticsMetric.fullCaseUpgradeNetRevenue
+          ),
+        ],
+      ),
+    ];
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (filterLabel != null) ...[
+            Text(
+              'Overall only | — for $filterLabel. Payment and revenue events '
+              'are not attributed to traffic segments.',
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+            ),
+            const SizedBox(height: 12),
+          ],
+          for (var index = 0; index < groups.length; index++) ...[
+            if (index > 0) const Divider(height: 24),
+            Text(groups[index].$1,
+                style: const TextStyle(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 10,
+              runSpacing: 8,
+              children: [
+                for (final item in groups[index].$2)
+                  _MiniMetric(
+                    label: item.$1,
+                    metric: item.$2,
+                    value: item.$2.total(summary),
+                    selected: selectedMetric == item.$2,
+                    onTap: () => onSelectMetric(item.$2),
+                    filterLabel: filterLabel,
+                  ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ModelOperationsCard extends StatelessWidget {
+  const _ModelOperationsCard({
+    required this.summary,
+    required this.selectedMetric,
+    required this.onSelectMetric,
+    this.filterLabel,
+  });
+
+  final AnalyticsSummary summary;
+  final AnalyticsMetric selectedMetric;
+  final ValueChanged<AnalyticsMetric> onSelectMetric;
+  final String? filterLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    const overall = <(String, AnalyticsMetric)>[
+      ('Calls', AnalyticsMetric.modelCalls),
+      ('Errors', AnalyticsMetric.modelErrors),
+      ('Input tokens', AnalyticsMetric.modelInputTokens),
+      ('Output tokens', AnalyticsMetric.modelOutputTokens),
+      ('Total time', AnalyticsMetric.modelDurationMs),
+      ('Estimated cost', AnalyticsMetric.modelEstimatedCostMicros),
+    ];
+    const operations = <(String, List<(String, AnalyticsMetric)>)>[
+      (
+        'Extraction',
+        [
+          ('Calls', AnalyticsMetric.modelExtractionCalls),
+          ('Errors', AnalyticsMetric.modelExtractionErrors),
+          ('Input tokens', AnalyticsMetric.modelExtractionInputTokens),
+          ('Output tokens', AnalyticsMetric.modelExtractionOutputTokens),
+          ('Time', AnalyticsMetric.modelExtractionDurationMs),
+        ],
+      ),
+      (
+        'Preview',
+        [
+          ('Calls', AnalyticsMetric.modelPreviewCalls),
+          ('Errors', AnalyticsMetric.modelPreviewErrors),
+          ('Input tokens', AnalyticsMetric.modelPreviewInputTokens),
+          ('Output tokens', AnalyticsMetric.modelPreviewOutputTokens),
+          ('Time', AnalyticsMetric.modelPreviewDurationMs),
+        ],
+      ),
+      (
+        'Packet',
+        [
+          ('Calls', AnalyticsMetric.modelPacketCalls),
+          ('Errors', AnalyticsMetric.modelPacketErrors),
+          ('Input tokens', AnalyticsMetric.modelPacketInputTokens),
+          ('Output tokens', AnalyticsMetric.modelPacketOutputTokens),
+          ('Time', AnalyticsMetric.modelPacketDurationMs),
+        ],
+      ),
+      (
+        'Follow-up',
+        [
+          ('Calls', AnalyticsMetric.modelFollowupCalls),
+          ('Errors', AnalyticsMetric.modelFollowupErrors),
+          ('Input tokens', AnalyticsMetric.modelFollowupInputTokens),
+          ('Output tokens', AnalyticsMetric.modelFollowupOutputTokens),
+          ('Time', AnalyticsMetric.modelFollowupDurationMs),
+        ],
+      ),
+    ];
+    Widget metric(String label, AnalyticsMetric item) => _MiniMetric(
+          label: label,
+          metric: item,
+          value: item.total(summary),
+          selected: selectedMetric == item,
+          onTap: () => onSelectMetric(item),
+          filterLabel: filterLabel,
+        );
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (filterLabel != null) ...[
+            Text(
+              'Overall only | — for $filterLabel. Model telemetry is not '
+              'attributed to traffic segments.',
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+            ),
+            const SizedBox(height: 12),
+          ],
+          const Text('All operations',
+              style: TextStyle(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 10,
+            runSpacing: 8,
+            children: [for (final item in overall) metric(item.$1, item.$2)],
+          ),
+          for (final operation in operations) ...[
+            const Divider(height: 24),
+            Text(operation.$1,
+                style: const TextStyle(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 10,
+              runSpacing: 8,
+              children: [
+                for (final item in operation.$2) metric(item.$1, item.$2),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }
 
 class _FunnelCard extends StatelessWidget {

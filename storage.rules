@@ -17,7 +17,11 @@ service firebase.storage {
     // securely moved to an existing account.
     match /tempCases/{userId}/{caseId}/source/{fileName} {
       allow read, delete: if false;
-      allow create, update: if request.auth != null
+      // Uploads are immutable once created. A client must use a fresh,
+      // collision-resistant object name for every source document so an
+      // already-extracted denial cannot be replaced in place.
+      allow write: if resource == null
+        && request.auth != null
         && request.auth.uid == userId
         && ownsCase(caseId)
         && request.resource.size <= 20 * 1024 * 1024

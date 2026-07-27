@@ -360,6 +360,39 @@ void main() {
     });
 
     testWidgets(
+        'monetization and model values are accessible overall-only daily metrics',
+        (tester) async {
+      final selectedMetrics = <AnalyticsMetric>[];
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(
+        _dashboard(onMetricChanged: selectedMetrics.add),
+      );
+
+      const packetRevenueKey =
+          ValueKey('analytics-product:monetization.packet.netRevenueCents');
+      final packetRevenue = find.byKey(packetRevenueKey);
+      await _scrollTo(tester, packetRevenue);
+      await tester.tap(_tapTarget(packetRevenue));
+      await tester.pumpAndSettle();
+      expect(selectedMetrics.last, AnalyticsMetric.packetNetRevenue);
+      final revenueData = _semanticsData(tester, packetRevenue);
+      expect(revenueData.flagsCollection.isButton, isTrue);
+      expect(revenueData.flagsCollection.isSelected, Tristate.isTrue);
+
+      const extractionModelCallsKey =
+          ValueKey('analytics-product:model.operations.extraction.calls');
+      final extractionModelCalls = find.byKey(extractionModelCallsKey);
+      await _scrollTo(tester, extractionModelCalls);
+      await tester.tap(_tapTarget(extractionModelCalls));
+      await tester.pumpAndSettle();
+      expect(selectedMetrics.last, AnalyticsMetric.modelExtractionCalls);
+      final modelData = _semanticsData(tester, extractionModelCalls);
+      expect(modelData.flagsCollection.isButton, isTrue);
+      expect(modelData.flagsCollection.isSelected, Tristate.isTrue);
+      semantics.dispose();
+    });
+
+    testWidgets(
         'a segment never fabricates a revenue comparison or segment zero',
         (tester) async {
       final semantics = tester.ensureSemantics();

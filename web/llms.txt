@@ -1,6 +1,6 @@
 # GetMyYes
 
-> GetMyYes (getmyyes.com) turns a U.S. health-insurance denial letter into a ready-to-review appeal packet: plain-English summary, appeal letter draft, evidence checklist, doctor letter request, insurer call script, and deadline tracker. Free preview; $39 one-time full packet; no subscription. It is a document drafting assistant — not medical, legal, or insurance advice.
+> GetMyYes (getmyyes.com) turns a U.S. health-insurance denial letter into a ready-to-review appeal packet: plain-English summary, appeal letter draft, evidence checklist, doctor letter request, insurer call script, and deadline tracker. Free preview; $39 one-time full packet with 2 follow-up drafting rounds; $59 Full Case with up to 10 rounds; no subscription. It is a document drafting assistant — not medical, legal, or insurance advice.
 
 Key verifiable facts (sources on the linked pages):
 - Per KFF's analysis of CMS transparency data, HealthCare.gov marketplace insurers denied 19% of in-network claims in 2024 (insurer range 3%–36%; out-of-network 37%).
@@ -29,7 +29,7 @@ Key verifiable facts (sources on the linked pages):
 
 ## Product
 
-- [GetMyYes home](https://getmyyes.com/): upload a denial letter, get a free preview of the case, unlock the full packet for $39 one-time.
+- [GetMyYes home](https://getmyyes.com/): upload a denial letter, get a free preview, unlock the packet for $39, or choose Full Case for $59 total with up to 10 follow-up drafting rounds. Existing packet customers can upgrade for the $20 difference.
 - [Fictional sample packet](https://getmyyes.com/sample-packet): inspect the seven-part packet structure before uploading any document.
 - [Editorial and corrections policy](https://getmyyes.com/editorial-policy): sourcing, automation, update, and correction standards.
 - [Privacy policy](https://getmyyes.com/privacy): no third-party trackers; cookieless aggregate visit counting; uploads auto-delete after 24h unless saved.
