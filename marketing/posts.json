@@ -53,5 +53,10 @@
     "id": "mental-health-parity",
     "path": "/appeals/mental-health-therapy-denial",
     "text": "Therapy denied? Federal parity law limits how much stricter mental health rules can be than medical."
+  },
+  {
+    "id": "california-imr",
+    "path": "/appeals/health-insurance-appeal-california",
+    "text": "Denied in California? Free Independent Medical Review has overturned many denials — here's how to file."
   }
 ]
