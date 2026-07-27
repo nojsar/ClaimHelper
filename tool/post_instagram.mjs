@@ -30,9 +30,13 @@ import {
 const OFFSET = 5; // same guide as the Facebook Page — one audience, two surfaces
 const LIMIT = 2200;
 
+// Instagram never linkifies caption text, so a deep guide URL was decorative —
+// nobody retypes 45 characters from a phone. Point at the bio link (one tap)
+// and keep a short, typeable fallback that lands on the guide hub, from where
+// every guide is one click away.
 function compose(post) {
   return (
-    `${post.text}\n\nFull free guide: getmyyes.com${post.path}` +
+    `${post.text}\n\nFull guide → link in bio (getmyyes.com/appeals)` +
     `\n\n#HealthInsurance #InsuranceDenial #AppealDenial`
   );
 }
@@ -55,7 +59,10 @@ const meta = await guideMeta(post);
 // published the same guide twice. postForDay is deterministic, so the second
 // run picks the same guide; matching today's date against the guide URL in the
 // caption is enough to recognise our own post and stand down.
-const marker = `getmyyes.com${post.path}`;
+// Match on the guide's reviewed copy rather than its URL: the copy is unique
+// per guide and appears verbatim at the head of every caption, so the guard
+// survives changes to how the link line is worded.
+const marker = post.text;
 const today = new Date().toISOString().slice(0, 10);
 const recent = new URL(`${GRAPH}/${userId}/media`);
 recent.searchParams.set("fields", "id,caption,timestamp");
