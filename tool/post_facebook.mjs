@@ -29,17 +29,41 @@ if (dryRun) previewAndExit("facebook", compose, LIMIT, { offset: OFFSET, lengthO
 
 if (!configured("facebook", ["FACEBOOK_PAGE_ID", "FACEBOOK_PAGE_TOKEN"])) process.exit(0);
 
+const GRAPH = "https://graph.facebook.com/v23.0";
+const pageId = process.env.FACEBOOK_PAGE_ID;
+
+/**
+ * Writes to a Page feed must originate as the Page. A system user token — the
+ * one Instagram uses, and the obvious thing to paste into both secrets — has
+ * every required scope and still fails with a (#200) that reads like a missing
+ * permission. Rather than rely on the operator picking the right one of two
+ * near-identical strings, exchange whatever we were given for a Page token.
+ * A Page token asked for its own page returns itself, so this is a no-op when
+ * the secret was already correct, and any failure falls back to the configured
+ * value so a misconfigured exchange cannot be worse than not trying.
+ */
+async function asPageToken(configured) {
+  const url = new URL(`${GRAPH}/${pageId}`);
+  url.searchParams.set("fields", "access_token");
+  url.searchParams.set("access_token", configured);
+  try {
+    const page = await jsonRequest(url);
+    return page.access_token || configured;
+  } catch (error) {
+    console.warn(`[marketing] facebook: could not derive a Page token (${error.message}); using the configured token.`);
+    return configured;
+  }
+}
+
 const post = postForDay(OFFSET);
-const result = await jsonRequest(
-  `https://graph.facebook.com/v23.0/${process.env.FACEBOOK_PAGE_ID}/feed`,
-  {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      message: compose(post),
-      link: campaignUrl(post, "facebook"),
-      access_token: process.env.FACEBOOK_PAGE_TOKEN,
-    }),
-  },
-);
+const token = await asPageToken(process.env.FACEBOOK_PAGE_TOKEN);
+const result = await jsonRequest(`${GRAPH}/${pageId}/feed`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    message: compose(post),
+    link: campaignUrl(post, "facebook"),
+    access_token: token,
+  }),
+});
 console.log(`[marketing] facebook: published ${post.id}: ${result.id}`);
