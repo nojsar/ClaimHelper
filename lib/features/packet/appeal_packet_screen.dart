@@ -337,7 +337,8 @@ class _PacketTabsState extends ConsumerState<_PacketTabs> {
 /// the next move. Every packet includes [Pricing.freeFollowUpRounds] rounds —
 /// usable immediately, no waiting period. One round = one submission, so the
 /// start dialog warns the user to include everything before confirming. When
-/// rounds run out we offer a $19 single round or the capped Full Case bundle.
+/// rounds run out we offer a single round or the capped Full Case bundle. The
+/// prices come from the backend config, so they are not repeated here.
 class _FollowUpsTab extends ConsumerStatefulWidget {
   const _FollowUpsTab({required this.appealCase});
   final AppealCase appealCase;

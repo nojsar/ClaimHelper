@@ -164,7 +164,9 @@ abstract class Backend {
     required String notes,
   });
 
-  /// Checkout for extra follow-up capacity. kind: 'followup_round' ($19) or
-  /// 'full_case' (capped bundle). Returns the URL, or null when mocked.
+  /// Checkout for extra follow-up capacity. kind: 'followup_round' (one round)
+  /// or 'full_case' (capped bundle). Prices are set by the backend config, so
+  /// they are deliberately not restated here. Returns the URL, or null when
+  /// mocked.
   Future<String?> createFollowUpCheckout(String caseId, {required String kind});
 }

@@ -59,7 +59,7 @@ export const config = {
   },
   /** One additional follow-up round, USD cents. */
   get followUpRoundPriceCents(): number {
-    return Number(process.env.FOLLOWUP_ROUND_PRICE_CENTS || 1900);
+    return Number(process.env.FOLLOWUP_ROUND_PRICE_CENTS || 500);
   },
   /** Full Case upgrade (capped follow-up bundle), USD cents. */
   get fullCasePriceCents(): number {
