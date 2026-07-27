@@ -10,17 +10,25 @@ import {
   previewAndExit,
 } from "./social_core.mjs";
 
-// Instagram poster ("Instagram API with Instagram Login", graph.instagram.com):
-// links are not clickable on IG, so the post is the guide's branded OG card
-// (1200x630 — inside IG's 1.91:1 limit) with a caption naming the URL in
-// plain text. Skips politely when the guide has no generated card yet.
-// Secrets: INSTAGRAM_USER_ID, INSTAGRAM_ACCESS_TOKEN — professional-account
-// long-lived token with instagram_business_content_publish (60 days;
-// refresh via GET /refresh_access_token, see MARKETING_AUTOPILOT.md).
+// Instagram poster: links are not clickable on IG, so the post is the guide's
+// branded OG card (1200x630 — inside IG's 1.91:1 limit) with a caption naming
+// the URL in plain text. Skips politely when the guide has no generated card.
+//
+// Secrets: INSTAGRAM_USER_ID, INSTAGRAM_ACCESS_TOKEN. Meta offers two ways to
+// mint those, and the /media + /media_publish calls below are identical on
+// both — only the host differs, so we pick it from the token itself:
+//
+//   Instagram Login (graph.instagram.com) — token starts "IGAA", id is the
+//     Instagram-scoped user id. Expires in 60 days; refresh via
+//     GET graph.instagram.com/refresh_access_token.
+//   Facebook Login (graph.facebook.com) — Page token from the Graph API
+//     Explorer, id is the IG *Business Account* id read off the linked Page.
+//     Derived from a long-lived user token it does not expire.
+//
+// See MARKETING_AUTOPILOT.md for the setup steps behind each.
 
 const OFFSET = 5; // same guide as the Facebook Page — one audience, two surfaces
 const LIMIT = 2200;
-const GRAPH = "https://graph.instagram.com/v23.0";
 
 function compose(post) {
   return (
@@ -35,6 +43,9 @@ if (!configured("instagram", ["INSTAGRAM_USER_ID", "INSTAGRAM_ACCESS_TOKEN"])) p
 
 const token = process.env.INSTAGRAM_ACCESS_TOKEN;
 const userId = process.env.INSTAGRAM_USER_ID;
+const GRAPH = token.startsWith("IGAA")
+  ? "https://graph.instagram.com/v23.0"
+  : "https://graph.facebook.com/v23.0";
 const post = postForDay(OFFSET);
 const meta = await guideMeta(post);
 

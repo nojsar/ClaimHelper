@@ -76,11 +76,26 @@ The free API tier (~500 posts/month, 17/day) comfortably covers this cadence.
 
 ### Instagram
 
-1. Convert the GetMyYes Instagram account to a **Professional** account.
-2. Create (or extend) a Meta app with the **Instagram API with Instagram Login** use case and connect the account as a tester.
-3. Generate a long-lived token with `instagram_business_basic` + `instagram_business_content_publish`; note the IG user id.
+The account must be a **Professional** account either way. Meta offers two ways to mint the token; `tool/post_instagram.mjs` picks the matching API host from the token prefix, so both work with the same two secrets.
+
+**Route A — Facebook login (preferred: the token does not expire).** Use this when the Instagram account is managed through a Meta business portfolio and has no usable standalone Instagram password.
+
+1. Link the Instagram account to a Facebook Page (Page → Settings → Linked accounts).
+2. Reuse the Meta developer app; in the **Graph API Explorer** request a user token with `instagram_basic`, `instagram_content_publish`, `pages_show_list`, `pages_read_engagement`.
+3. Exchange it for a long-lived token, then `GET /me/accounts` for the Page `id` and its `access_token`.
+4. `GET /<page-id>?fields=instagram_business_account` — that `id` is the IG Business Account id.
+5. Secrets: `INSTAGRAM_USER_ID` = the IG Business Account id, `INSTAGRAM_ACCESS_TOKEN` = the Page token.
+
+**Route B — Instagram login.** Simpler when the account has its own password.
+
+1. Create (or extend) a Meta app with the **Instagram API with Instagram Login** use case; add the account under **App roles → Instagram Testers** and accept the invite at `instagram.com/accounts/manage_access/`.
+2. Add `instagram_business_basic` + `instagram_business_content_publish` on the Permissions and features page **before** generating the token — the token freezes whatever scopes are granted at generation time.
+3. **Generate token** re-authenticates as the Instagram account. If that login fails, log into instagram.com in the same browser profile first so the popup reuses the session, or fall back to Route A.
 4. Secrets: `INSTAGRAM_USER_ID`, `INSTAGRAM_ACCESS_TOKEN` (60 days — refresh via `GET https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token=<current>`).
-5. Instagram posts are the guide's branded card image with the link written in plain text (links are not clickable on IG); guides without a generated card are skipped.
+
+Neither route needs App Review or Tech Provider status: publishing to an account you own works with the app in Development mode. Review is only required to access *other people's* accounts.
+
+Instagram posts are the guide's branded card image with the link written in plain text (links are not clickable on IG); guides without a generated card are skipped.
 
 Edit `marketing/posts.json` to change the approved evergreen queue. The automation never invents health or insurance claims at runtime; it only rotates copy reviewed in the repository.
 
