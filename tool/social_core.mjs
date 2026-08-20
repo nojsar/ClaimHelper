@@ -62,11 +62,23 @@ export function weightedLength(text) {
   return graphemes(text.replace(/https?:\/\/[^\s]+/g, "x".repeat(23)));
 }
 
+/** Meta content is HTML-escaped on the page; every consumer wants the text. */
+export function decodeEntities(value) {
+  return value
+    .replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)))
+    .replace(/&#x([\da-f]+);/gi, (_, code) => String.fromCodePoint(Number.parseInt(code, 16)))
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
+}
+
 function meta(html, property) {
   const tag = html.match(
     new RegExp(`<meta\\s+(?:property|name)="${property}"\\s+content="([^"]+)"`, "i"),
   );
-  return tag?.[1] ?? null;
+  return tag?.[1] ? decodeEntities(tag[1]) : null;
 }
 
 /** OG title/description/image for a guide, read from its own page so posts

@@ -9,10 +9,13 @@ import {
   postForDay,
   previewAndExit,
 } from "./social_core.mjs";
+import { posterUrl, reachable, videoUrl } from "./social_video.mjs";
 
-// Instagram poster: links are not clickable on IG, so the post is the guide's
-// branded OG card (1200x630 — inside IG's 1.91:1 limit) with a caption naming
-// the URL in plain text. Skips politely when the guide has no generated card.
+// Instagram poster: links are not clickable on IG, so the post carries the
+// guide itself as media — the vertical Reel rendered by Remotion
+// (video/render.mjs, served from /media/social/) with a caption naming the
+// bio link. Falls back to the square still, then to the guide's OG card, then
+// skips politely, so a slot never depends on a render having shipped.
 //
 // Secrets: INSTAGRAM_USER_ID, INSTAGRAM_ACCESS_TOKEN. Meta offers two ways to
 // mint those, and the /media + /media_publish calls below are identical on
@@ -84,22 +87,46 @@ if (duplicate) {
   console.log(`[marketing] instagram: ${post.id} already posted today (media ${duplicate.id}); skipping safely.`);
   process.exit(0);
 }
-
-if (!meta?.image?.includes("/appeals/og/")) {
-  console.log(`[marketing] instagram: ${post.id} has no branded card yet; skipping this slot.`);
+// What to post, best first. Instagram is video-first and never linkifies a
+// caption, so a Reel of the guide card is strictly better than a still; the
+// still stands in while a fresh render is waiting to be deployed, and the
+// guide's own OG card remains the last resort.
+const reel = videoUrl(post.id, "vertical");
+const poster = posterUrl(post.id);
+let media = null;
+if (await reachable(reel)) {
+  media = { media_type: "REELS", video_url: reel, share_to_feed: "true" };
+} else if (await reachable(poster)) {
+  media = { image_url: poster };
+} else if (meta?.image?.includes("/appeals/og/")) {
+  console.log(`[marketing] instagram: no rendered media deployed for ${post.id} yet; using its OG card.`);
+  media = { image_url: meta.image };
+} else {
+  console.log(`[marketing] instagram: ${post.id} has no branded media yet; skipping this slot.`);
   process.exit(0);
 }
 
 const create = new URL(`${GRAPH}/${userId}/media`);
-create.searchParams.set("image_url", meta.image); // fetched by IG from the live site
+for (const [field, value] of Object.entries(media)) create.searchParams.set(field, value);
 create.searchParams.set("caption", compose(post));
 create.searchParams.set("access_token", token);
 const container = await jsonRequest(create, { method: "POST" });
 
-// IG fetches the image asynchronously; give the container time to be ready.
+// IG fetches and transcodes the media itself. An image container is ready
+// almost at once; a Reel takes appreciably longer, so ask the container
+// whether it is finished rather than hammering media_publish and hoping.
+for (let attempt = 1; attempt <= 18; attempt += 1) {
+  await sleep(attempt === 1 ? 5_000 : 10_000);
+  const status = new URL(`${GRAPH}/${container.id}`);
+  status.searchParams.set("fields", "status_code");
+  status.searchParams.set("access_token", token);
+  const { status_code: state } = await jsonRequest(status).catch(() => ({}));
+  if (state === "FINISHED") break;
+  if (state === "ERROR") throw new Error(`instagram: could not process the media for ${post.id}.`);
+}
+
 let published;
 for (let attempt = 1; ; attempt += 1) {
-  await sleep(10_000);
   try {
     const publish = new URL(`${GRAPH}/${userId}/media_publish`);
     publish.searchParams.set("creation_id", container.id);
@@ -108,6 +135,9 @@ for (let attempt = 1; ; attempt += 1) {
     break;
   } catch (error) {
     if (attempt >= 5) throw error;
+    await sleep(10_000);
   }
 }
-console.log(`[marketing] instagram: published ${post.id}: media ${published.id}`);
+console.log(
+  `[marketing] instagram: published ${post.id} as ${media.media_type === "REELS" ? "a reel" : "an image"}: media ${published.id}`,
+);

@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { decodeEntities } from "./social_core.mjs";
 
 const projectRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const posts = JSON.parse(
@@ -59,7 +60,7 @@ function meta(html, property) {
   const tag = html.match(
     new RegExp(`<meta\\s+(?:property|name)="${property}"\\s+content="([^"]+)"`, "i"),
   );
-  return tag?.[1] ?? null;
+  return tag?.[1] ? decodeEntities(tag[1]) : null;
 }
 
 /**

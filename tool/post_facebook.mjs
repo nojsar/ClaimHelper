@@ -8,9 +8,14 @@ import {
   postForDay,
   previewAndExit,
 } from "./social_core.mjs";
+import { reachable, videoUrl } from "./social_video.mjs";
 
-// Facebook Page poster: one POST /{page-id}/feed with message + link — the
-// card unfurls from OG tags. Public visibility requires the Meta app to be
+// Facebook Page poster: the day's guide as the Remotion-rendered square video
+// (POST /{page-id}/videos, which Facebook fetches from /media/social/ on the
+// live site), with the campaign link in the description so the post still
+// carries its click target. Falls back to the plain link post — POST
+// /{page-id}/feed with message + link, card unfurled from OG tags — whenever
+// the render has not been deployed yet. Public visibility requires the Meta app to be
 // LIVE with pages_manage_posts approved (dev-mode posts publish but are only
 // visible to app users). See MARKETING_AUTOPILOT.md for the review path.
 // Secrets: FACEBOOK_PAGE_ID, FACEBOOK_PAGE_TOKEN. FACEBOOK_PAGE_TOKEN must be
@@ -57,13 +62,34 @@ async function asPageToken(configured) {
 
 const post = postForDay(OFFSET);
 const token = await asPageToken(process.env.FACEBOOK_PAGE_TOKEN);
-const result = await jsonRequest(`${GRAPH}/${pageId}/feed`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    message: compose(post),
-    link: campaignUrl(post, "facebook"),
-    access_token: token,
-  }),
-});
-console.log(`[marketing] facebook: published ${post.id}: ${result.id}`);
+const url = campaignUrl(post, "facebook");
+const video = videoUrl(post.id, "square");
+
+let result;
+if (await reachable(video)) {
+  // A video post reaches further than a link post, and Facebook still
+  // linkifies the URL in the description, so nothing is lost by dropping the
+  // unfurled card.
+  result = await jsonRequest(`${GRAPH}/${pageId}/videos`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      file_url: video,
+      description: `${compose(post)}\n\n${url}`,
+      access_token: token,
+    }),
+  });
+  console.log(`[marketing] facebook: published ${post.id} as a video: ${result.id}`);
+} else {
+  console.log(`[marketing] facebook: no rendered video deployed for ${post.id} yet; posting the link.`);
+  result = await jsonRequest(`${GRAPH}/${pageId}/feed`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message: compose(post),
+      link: url,
+      access_token: token,
+    }),
+  });
+  console.log(`[marketing] facebook: published ${post.id}: ${result.id}`);
+}

@@ -24,7 +24,7 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 10 # Instagram/Threads publish steps include retry waits
+    timeout-minutes: 15 # Instagram transcodes the reel before it can publish
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -34,6 +34,10 @@ jobs:
         run: node tool/marketing_build.mjs
       - name: Check static accessibility regressions
         run: node tool/accessibility_check.mjs web
+      - name: Check every queue post has its rendered media
+        # The posters degrade gracefully, but a guide that reached the queue
+        # without a render should be loud here rather than quiet in the feed.
+        run: node tool/social_video.mjs --check
       - name: Publish the day's guide to every configured network
         env:
           # Each network activates the moment its secrets exist; missing ones

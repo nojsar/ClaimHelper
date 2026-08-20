@@ -28,6 +28,7 @@ Your job each run: publish exactly ONE new appeal guide, end to end, with no hum
 4. Generate, build, deploy (tools are NOT on default PATH; run from the claimhelper folder):
    - `python tools/og-image.py --all` (renders the branded 1200x630 OG/link-card image for every guide, including the new one, into web/appeals/og/ — needs Pillow, already installed; fallback: `uv run tools/og-image.py --all`)
    - `export PATH="/c/Users/Nojus/dev/node:$PATH" && node tool/marketing_build.mjs` (regenerates sitemap.xml + feed.xml and validates every guide AND posts.json — must pass)
+   - `export PATH="/c/Users/Nojus/dev/node:$PATH" && node tool/render_social_video.mjs` (renders the new guide's Remotion social video, reel, and poster into web/media/social/ — only out-of-date entries re-render, so this is quick; `node tool/social_video.mjs --check` must then pass, and the files must be committed AND deployed or Instagram/Facebook fall back to the older media)
    - `C:/Users/Nojus/dev/flutter/bin/flutter.bat build web`
    - `export PATH="/c/Users/Nojus/dev/node:$PATH" && firebase deploy --only hosting` (in PowerShell use firebase.cmd; firebase CLI already authenticated; project claimhelper-38152; its predeploy re-verifies the guides)
 
@@ -37,4 +38,4 @@ Your job each run: publish exactly ONE new appeal guide, end to end, with no hum
 
 7. Commit everything and push: `git add -A && git commit && git push` (repo origin is github.com/nojsar/ClaimHelper, push to main; end commit messages with the standard Claude co-author line). Pushing matters: the social-posting Action reads guide HTML, posts.json, and og/ images from the repo. NOTE: parallel sessions sometimes work in this repo — `git pull` before starting, and if unrelated uncommitted changes exist in the working tree, commit ONLY your own files rather than `git add -A`.
 
-Success = new guide live on getmyyes.com with its OG card, indexed via IndexNow, index/posts.json/queue updated, sitemap+feed regenerated, pushed to GitHub. If any step fails (build error, deploy auth expired, marketing_build validation failure you can't fix by correcting the guide), stop and report what a human needs to fix rather than force-pushing or retrying destructively.
+Success = new guide live on getmyyes.com with its OG card and its rendered social video, indexed via IndexNow, index/posts.json/queue updated, sitemap+feed regenerated, pushed to GitHub. If any step fails (build error, deploy auth expired, marketing_build validation failure you can't fix by correcting the guide), stop and report what a human needs to fix rather than force-pushing or retrying destructively.

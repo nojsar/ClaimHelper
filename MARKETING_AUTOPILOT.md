@@ -8,6 +8,7 @@ This is intentionally a small, durable acquisition system—not a mass-content o
 - Search engines can discover the guide hub from the homepage and every guide from the sitemap.
 - After a successful deploy, the script submits all sitemap URLs to IndexNow so participating search engines can recrawl changes. Google still uses the sitemap and Search Console.
 - GitHub Actions can publish one useful evergreen guide each Monday, Wednesday, and Friday to every network whose secrets are configured: Bluesky, Mastodon, X, Threads, LinkedIn, Facebook, and Instagram. Each network is offset through the queue so they post different guides on the same day, every post carries campaign tags, and a network with missing secrets is skipped with a log line instead of failing the run (`tool/post_all.mjs`).
+- Every post's media is a branded video rendered from the guide itself with Remotion (`video/`, output committed to `web/media/social/`). Instagram gets the vertical reel, Facebook and Mastodon get the square cut; Bluesky keeps its branded link card, and X, Threads, and LinkedIn are unchanged.
 - The private owner dashboard at `https://getmyyes.com/#/stats` reports visits, funnel conversion, top pages/referrers/countries, revenue, and campaign traffic without analytics cookies.
 
 ## One-time setup: search
@@ -127,6 +128,31 @@ Edit `marketing/posts.json` to change the approved evergreen queue. The automati
 `tools/guide-topics.md` is a researched publishing backlog, not an automatic medical-content generator. New guides still need authoritative-source review before they are added to `web/appeals/`; once added, the build automatically includes them in the sitemap and feed.
 
 When adding or renaming a guide, run `uv run tools/og-image.py --all`, then commit the generated `web/appeals/og/*.png` files. The script installs Pillow in uv's isolated cache; the build fails if a guide's branded social image is missing or too large for Bluesky.
+
+## Social video
+
+Post media is rendered by Remotion from the guide library itself — the headline is the guide's own `og:title`, the body line is its entry in `marketing/posts.json`, and the fixed lines live in `STATIC_COPY` in `tool/social_video.mjs`. Nothing is written at post time.
+
+When adding or renaming a guide, after the OG cards:
+
+```bash
+npm --prefix video install          # first time only
+node tool/render_social_video.mjs   # renders whatever is out of date
+```
+
+Commit the resulting `web/media/social/<id>-{square,vertical}.mp4` and `<id>-poster.png`, then **deploy hosting** — Instagram and Facebook fetch the file from the live site by URL, so an undeployed render is simply not used yet. `node tool/social_video.mjs --check` fails the workflow when a queue post has no render; the posters themselves fall back rather than skip a slot:
+
+| Network | With a deployed render | Fallback |
+| --- | --- | --- |
+| Instagram | vertical reel | square still → guide OG card → skip |
+| Facebook | square video, link in the description | link post with the unfurled card |
+| Mastodon | square video uploaded from the checkout | plain status with the link |
+| Bluesky | unchanged — branded link card | — |
+| X, Threads, LinkedIn | unchanged | — |
+
+Mastodon needs the `write:media` scope on its token as well as `write:statuses`; without it the upload is refused and the poster falls back to the status it always sent.
+
+Remotion is free for individuals and companies of up to three people; larger companies need a paid licence (https://remotion.dev/license). See `video/README.md` for the studio and rendering details.
 
 ## Normal deploy
 

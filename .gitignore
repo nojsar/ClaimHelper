@@ -55,6 +55,15 @@ firebase-debug.log
 firestore-debug.log
 ui-debug.log
 
+# Remotion social videos: dependencies and the headless browser it downloads.
+# The rendered output in web/media/social/ IS committed — publishing must not
+# depend on a render succeeding at post time.
+video/node_modules/
+video/out/
+video/public/
+video/src/queue.json
+.remotion/
+
 # Local code-graph analysis output
 graphify-out/
 

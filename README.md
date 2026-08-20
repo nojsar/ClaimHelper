@@ -108,12 +108,18 @@ claimhelper/
 │   │   ├── cleanup.ts            # scheduledCleanupExpiredFiles
 │   │   └── openai/               # client, prompts, JSON schemas
 │   └── .env.example
+├── video/                        # Remotion project: the social post media
+│   ├── src/GuidePost.tsx         # one composition, square + vertical
+│   └── render.mjs                # renders into web/media/social/ (committed)
 ├── firestore.rules
 ├── storage.rules
 ├── firestore.indexes.json
 ├── firebase.json
 └── test/                         # extraction parsing, guided validation, packet serialization, entitlement
 ```
+
+Marketing automation (guide library, social posting, and the Remotion videos
+those posts carry) is documented in `MARKETING_AUTOPILOT.md` and `video/README.md`.
 
 ---
 
