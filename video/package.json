@@ -20,7 +20,7 @@
     "typescript": "^7.0.2"
   },
   "scripts": {
-    "studio": "node ../tool/social_video.mjs --sync && remotion studio",
+    "studio": "node ../tool/social_video.mjs --sync && remotion studio src/index.ts --port 3010",
     "render": "node render.mjs",
     "typecheck": "tsc --noEmit"
   }
