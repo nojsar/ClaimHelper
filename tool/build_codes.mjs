@@ -65,6 +65,7 @@ function shell({ title, description, canonical, h1, crumb, body }) {
   <meta name="description" content="${esc(pageDescription)}">
   <link rel="canonical" href="${canonical}">
   <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
   <link rel="stylesheet" href="/fonts.css">
   <link rel="stylesheet" href="/appeals/guide.css">
   <meta property="og:type" content="article">

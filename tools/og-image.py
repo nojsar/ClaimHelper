@@ -36,7 +36,7 @@ NAVY_DARK = (16, 38, 59)
 TEAL = (47, 111, 98)
 TEAL_SOFT = (234, 243, 241)
 
-SERIF = FONTS / "Fraunces72pt-Bold.ttf"
+SERIF = FONTS / "Tinos-Bold.ttf"
 MONO = FONTS / "IBMPlexMono-SemiBold.ttf"
 SANS = FONTS / "IBMPlexSans-Regular.ttf"
 SANS_BOLD = FONTS / "IBMPlexSans-Bold.ttf"
@@ -69,7 +69,7 @@ def fit_title(
     text: str,
     max_width: int,
 ) -> tuple[ImageFont.FreeTypeFont, list[str]]:
-    """Return the largest Fraunces title that fits in at most three lines."""
+    """Return the largest serif title that fits in at most three lines."""
     for size in range(84, 43, -4):
         font = ImageFont.truetype(str(SERIF), size)
         lines = wrap_to_width(draw, text, font, max_width)
@@ -140,8 +140,23 @@ def render_icon(size: int, *, maskable: bool = False) -> Path:
 
 
 def render_favicon() -> Path:
-    img = Image.new("RGB", (64, 64), PAPER)
-    draw_brand_mark(ImageDraw.Draw(img), (5, 5, 59, 59))
+    """Tab-sized mark: full bleed, heavier check, transparent corners.
+
+    A favicon gets about 16 real pixels. The paper margin and inset rounding the
+    installed-app icons use were spending a quarter of them on padding, which
+    left the mark reading as a checkbox rather than a brand. Transparent corners
+    keep it correct on both light and dark tab strips.
+    """
+    size = 64
+    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rounded_rectangle((0, 0, size - 1, size - 1), radius=13, fill=(*TEAL, 255))
+    draw.line(
+        [(15, 34), (27, 45), (49, 20)],
+        fill=(255, 255, 255, 255),
+        width=9,
+        joint="curve",
+    )
     out = ROOT / "web" / "favicon.png"
     img.save(out, "PNG", optimize=True)
     return out

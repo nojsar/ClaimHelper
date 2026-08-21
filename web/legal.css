@@ -118,7 +118,7 @@ body.legal-page::before {
 .legal-page caption {
   padding: 16px 18px 12px;
   color: var(--ink);
-  font-family: "Fraunces", Georgia, serif;
+  font-family: "Times New Roman", Tinos, "Liberation Serif", Times, serif;
   font-size: 18px;
   font-weight: 650;
   text-align: left;

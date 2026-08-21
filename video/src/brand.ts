@@ -13,8 +13,8 @@ export const NAVY = "#17324D";
 export const NAVY_DARK = "#10263B";
 export const TEAL = "#2F6F62";
 
-export const SERIF = "Fraunces";
-export const SANS = "IBM Plex Sans";
+export const SERIF = "Tinos";
+export const SANS = "Inter";
 export const MONO = "IBM Plex Mono";
 
 export const FPS = 30;

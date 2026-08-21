@@ -32,14 +32,16 @@ const videoRoot = path.join(projectRoot, "video");
 const mediaRoot = path.join(projectRoot, "web", "media", "social");
 const siteOrigin = "https://getmyyes.com";
 
-/** Faces the compositions set type in; copied from the single source in assets/fonts. */
+/**
+ * Faces the compositions set type in. Inter comes from web/fonts rather than
+ * assets/fonts on purpose: it is the exact file the site serves, so a post and
+ * the page it links to are rendered by the same bytes.
+ */
 const FONT_FILES = [
-  "Fraunces72pt-Bold.ttf",
-  "IBMPlexSans-Regular.ttf",
-  "IBMPlexSans-Bold.ttf",
-  "IBMPlexMono-SemiBold.ttf",
+  { file: "Tinos-Bold.ttf", from: ["assets", "fonts"] },
+  { file: "inter-var.woff2", from: ["web", "fonts"] },
+  { file: "IBMPlexMono-SemiBold.ttf", from: ["assets", "fonts"] },
 ];
-
 export function slugOf(post) {
   return post.path.replace(/\/$/, "").split("/").pop();
 }
@@ -127,10 +129,10 @@ export async function videoModel() {
 export async function sync() {
   const guides = await videoModel();
   await mkdir(path.join(videoRoot, "public", "fonts"), { recursive: true });
-  for (const file of FONT_FILES) {
+  for (const entry of FONT_FILES) {
     await copyFile(
-      path.join(projectRoot, "assets", "fonts", file),
-      path.join(videoRoot, "public", "fonts", file),
+      path.join(projectRoot, ...entry.from, entry.file),
+      path.join(videoRoot, "public", "fonts", entry.file),
     );
   }
   await writeFile(
