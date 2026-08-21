@@ -1316,6 +1316,54 @@
       .packet-check { color: CanvasText; background: Canvas; border-color: CanvasText; }
       .brand-mark, .step-number { forced-color-adjust: none; }
     }
+
+    /* Effort expectation and the single-action hero. */
+    .hero-effort {
+      margin: 10px 0 0;
+      color: var(--text-soft);
+      font-size: 17px;
+    }
+    .hero-sample { margin: 12px 0 0; font-size: 17px; }
+
+    /* Deadline check: a one-field answer before anything is asked of the visitor. */
+    .deadline-check {
+      margin: 22px 0 0;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--teal);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+    .deadline-check-label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .deadline-check-row { display: flex; flex-wrap: wrap; gap: 10px; }
+    .deadline-check-input {
+      flex: 1 1 190px;
+      min-height: 52px;
+      padding: 10px 14px;
+      border: 1px solid var(--control-border, var(--border-strong));
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+      font-size: 17px;
+    }
+    .deadline-check-input[aria-invalid="true"] { border-color: var(--error); }
+    .deadline-check-button { flex: 0 0 auto; }
+    .deadline-check-result {
+      margin: 14px 0 0;
+      font-size: 17px;
+      line-height: 1.6;
+    }
+    .deadline-check-result strong { display: block; font-size: 20px; }
+    .deadline-check-result .caveat {
+      display: block;
+      margin-top: 6px;
+      color: var(--text-soft);
+      font-size: 16px;
+    }
   </style>
 </head>
 <body>
@@ -1386,10 +1434,24 @@
             <p class="hero-badge"><span class="shield" aria-hidden="true">◆</span> Secure appeal document service</p>
             <h1 id="hero-title"><span class="hero-title-line">Understand the denial.</span><span class="hero-title-line hero-accent">Build the appeal.</span></h1>
             <p class="lede">Upload your denial letter for a free plain-English summary. See what was denied, what to check, and whether a complete appeal packet is right for you.</p>
+            <p class="hero-effort">About two minutes. A clear phone photo of the letter works, and the letter is the only document you need to start.</p>
             <div class="hero-actions">
               <button type="button" class="button button-primary" data-boot="/upload" aria-describedby="hero-trust">See my free denial summary</button>
-              <a class="button button-secondary" href="/sample-packet">View a complete fictional packet</a>
             </div>
+            <p class="hero-sample"><a href="/sample-packet">Or read a complete fictional packet first</a></p>
+
+            <!-- Real, personal urgency instead of manufactured urgency: the 180-day
+                 internal-appeal window from tools/appeal-deadline-calculator, asked for
+                 one field at a time. It answers something useful on its own, which is
+                 why it earns its place above the fold. -->
+            <form class="deadline-check" id="hero-deadline-form" novalidate>
+              <label class="deadline-check-label" for="hero-denial-date">Not sure how long you have? Enter the date printed on your denial letter.</label>
+              <div class="deadline-check-row">
+                <input class="deadline-check-input" type="date" id="hero-denial-date" name="hero-denial-date" autocomplete="off">
+                <button type="submit" class="button button-secondary deadline-check-button">Check my deadline</button>
+              </div>
+              <p class="deadline-check-result" id="hero-deadline-result" role="status" hidden></p>
+            </form>
             <p class="hero-note" id="hero-trust"><strong>Preview $0; no credit card required.</strong> Full packet $39 or Full Case $59, each a one-time payment. Create an account only if you purchase. No subscription. U.S. health plans only.</p>
             <ul class="hero-trust">
               <li><span class="check" aria-hidden="true">✓</span><span>Encrypted. Never used to train AI.</span></li>
@@ -1922,6 +1984,76 @@
             && window.__isSecureEmailSignInAction())) {
         bootApp();
       }
+    })();
+  </script>
+  <script>
+    /**
+     * Hero deadline check.
+     *
+     * Same 180-day internal-appeal window as tools/appeal-deadline-calculator,
+     * deliberately: two different numbers for the same question on one site would
+     * cost more trust than the widget earns. It answers a real question before
+     * asking for anything, and an expired window routes to external review rather
+     * than dead-ending the visitor.
+     */
+    (function () {
+      var form = document.getElementById("hero-deadline-form");
+      if (!form) return;
+      var input = document.getElementById("hero-denial-date");
+      var result = document.getElementById("hero-deadline-result");
+      var DAY = 86400000;
+
+      function fmt(date) {
+        return date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+      }
+
+      function show(html) {
+        result.innerHTML = html;
+        result.hidden = false;
+      }
+
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        if (!input.value) {
+          input.setAttribute("aria-invalid", "true");
+          show("Enter the date printed on your denial letter.");
+          input.focus();
+          return;
+        }
+        input.removeAttribute("aria-invalid");
+
+        // Midday avoids the date shifting a day under timezone conversion.
+        var denial = new Date(input.value + "T12:00:00");
+        if (isNaN(denial.getTime())) {
+          show("That date could not be read. Use the date printed on the letter.");
+          return;
+        }
+        var today = new Date();
+        today.setHours(12, 0, 0, 0);
+        if (denial > today) {
+          show("That date is in the future. Check the date printed on the letter.");
+          return;
+        }
+
+        var fileBy = new Date(denial);
+        fileBy.setDate(fileBy.getDate() + 180);
+        var daysLeft = Math.round((fileBy - today) / DAY);
+
+        if (daysLeft > 0) {
+          show(
+            "<strong>About " + daysLeft + " day" + (daysLeft === 1 ? "" : "s") + " left to file your internal appeal.</strong>" +
+            "That is the usual 180-day window, ending around " + fmt(fileBy) + ". File well before then — gathering records takes weeks, not days." +
+            "<span class=\"caveat\">Estimate for commercial plans under common federal timeframes. The deadline printed on your own letter always controls.</span>"
+          );
+        } else {
+          show(
+            "<strong>The usual 180-day internal window has likely passed.</strong>" +
+            "It would have ended around " + fmt(fileBy) + ". That may not be the end of it — an independent " +
+            "<a href=\"/appeals/external-review\">external review</a> is often available for about four months after a final internal denial, and some plans allow late filing for good cause." +
+            "<span class=\"caveat\">Estimate for commercial plans under common federal timeframes. The deadline printed on your own letter always controls.</span>"
+          );
+        }
+      });
     })();
   </script>
 </body>
