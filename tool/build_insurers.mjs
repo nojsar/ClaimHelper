@@ -6,7 +6,8 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { insurers } from "./insurers_data.mjs";
+import { insurers } from "./insurers_data.mjs";
+import { articleAuthor, articlePublisher, defaultSocialImage } from "./site_identity.mjs";
 
 const projectRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const outRoot = path.join(projectRoot, "web", "insurers");
@@ -42,7 +43,7 @@ function shell({ title, description, canonical, h1, crumb, body }) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
   <title>${esc(pageTitle)}</title>
   <meta name="description" content="${esc(pageDescription)}">
   <link rel="canonical" href="${canonical}">
@@ -131,8 +132,9 @@ function insurerPage(entry) {
         description: entry.overview,
         url: canonical,
         inLanguage: "en-US",
-        author: { "@type": "Organization", name: "GetMyYes", url: `${siteOrigin}/` },
-        publisher: { "@type": "Organization", name: "GetMyYes", url: `${siteOrigin}/` },
+        image: defaultSocialImage,
+        author: articleAuthor(),
+        publisher: articlePublisher(),
         datePublished: publishedAt,
         dateModified: modifiedAt,
         mainEntityOfPage: { "@type": "WebPage", "@id": canonical },

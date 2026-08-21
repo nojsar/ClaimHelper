@@ -3,11 +3,17 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
+import { sameAs } from "./site_identity.mjs";
+
 const projectRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const webRoot = path.join(projectRoot, "web");
 const guidesRoot = path.join(webRoot, "appeals");
 const buildRoot = path.join(projectRoot, "build", "web");
 const siteOrigin = "https://getmyyes.com";
+// The reviewed social queue names the Remotion render each guide embeds.
+const socialPosts = JSON.parse(
+  await readFile(path.join(projectRoot, "marketing", "posts.json"), "utf8"),
+);
 const mode = process.argv[2] ?? "generate";
 const discoveryFiles = [
   "analytics.js",
@@ -145,6 +151,16 @@ function requireArticleIdentity(graphs, html, canonical, file) {
     ) {
       fail(`${file} has incomplete Article ${role} identity.`);
     }
+    // sameAs is how a search engine ties these pages to the brand entity.
+    const profiles = article[role].sameAs;
+    if (!Array.isArray(profiles) || sameAs.some((url) => !profiles.includes(url))) {
+      fail(`${file} Article ${role} is missing the verified sameAs profiles.`);
+    }
+  }
+  // Article rich results need an image; guides use their own card, the
+  // reference sections share the site-wide one.
+  if (!article.image?.startsWith(`${siteOrigin}/`) || !/\.(?:png|jpg|webp)$/.test(article.image)) {
+    fail(`${file} Article needs an absolute image URL on this origin.`);
   }
   const isoWithTimezone = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})$/;
   if (
@@ -165,6 +181,65 @@ function requireArticleIdentity(graphs, html, canonical, file) {
   }
 }
 
+
+/**
+ * Every guide carries a Remotion-rendered summary video. Google only shows a
+ * video rich result when the file is genuinely on the page, so the markup and
+ * the <video> element are checked together — and the referenced files must
+ * exist, because a VideoObject pointing at a 404 is a structured-data error
+ * rather than a soft miss.
+ */
+async function requireGuideVideo(graphs, html, slug, canonical, file) {
+  const post = socialPosts.find((entry) => entry.path.replace(/\/$/, "").endsWith(`/${slug}`));
+  if (!post) fail(`${file} has no marketing/posts.json entry to source its video from.`);
+  const video = schemaNodes(graphs).find((node) => node?.["@type"] === "VideoObject");
+  if (!video) fail(`${file} is missing VideoObject structured data.`);
+  const contentUrl = `${siteOrigin}/media/social/${post.id}-square.mp4`;
+  const thumbnailUrl = `${siteOrigin}/media/social/${post.id}-poster.png`;
+  if (
+    video["@id"] !== `${canonical}#video`
+    || video.contentUrl !== contentUrl
+    || video.thumbnailUrl !== thumbnailUrl
+  ) {
+    fail(`${file} VideoObject does not match its rendered media.`);
+  }
+  for (const field of ["name", "description", "uploadDate", "duration"]) {
+    if (!video[field]) fail(`${file} VideoObject is missing ${field}.`);
+  }
+  // Look at the markup only: the JSON-LD block already contains this URL, so
+  // searching the whole document would match the claim instead of the embed.
+  const markup = html.replace(/<script\s+type=["']application\/ld\+json["']>[\s\S]*?<\/script>/gi, "");
+  const embedded = /<video\b[\s\S]*?<\/video>/i.exec(markup)?.[0] ?? "";
+  if (!embedded.includes(`/media/social/${post.id}-square.mp4`)) {
+    fail(`${file} declares a VideoObject but never embeds the video on the page.`);
+  }
+  for (const asset of [`${post.id}-square.mp4`, `${post.id}-poster.png`]) {
+    if (!(await fileExists(path.join(webRoot, "media", "social", asset)))) {
+      fail(`${file} references web/media/social/${asset}, which does not exist.`);
+    }
+  }
+}
+
+/**
+ * Guides make claims about deadlines and rights, so each one has to show its
+ * work: the Article carries the authoritative sources the page already links,
+ * and every citation must be a link that genuinely appears in the body.
+ */
+function requireGuideCitations(graphs, html, file) {
+  const article = schemaNodes(graphs).find((node) => node?.["@type"] === "Article");
+  const citations = article?.citation;
+  if (!Array.isArray(citations) || citations.length === 0) {
+    fail(`${file} Article is missing its source citations.`);
+  }
+  for (const citation of citations) {
+    if (!citation?.url || !citation?.name) {
+      fail(`${file} has a citation without a name or url.`);
+    }
+    if (!html.includes(`href="${citation.url}"`)) {
+      fail(`${file} cites ${citation.url}, which the page does not link.`);
+    }
+  }
+}
 function requireStaticTracker(html, file) {
   if (!html.includes('<script src="/analytics.js" data-static></script>')) {
     fail(`${file} is missing the shared first-party visit counter.`);
@@ -366,6 +441,9 @@ async function guideModel() {
       fail(`${name} canonical is ${canonical}; expected ${expected}.`);
     }
     requireGuideBreadcrumb(graphs, canonical, name);
+    requireArticleIdentity(graphs, html, canonical, name);
+    await requireGuideVideo(graphs, html, slug, canonical, name);
+    requireGuideCitations(graphs, html, name);
     if (slugs.has(slug)) fail(`Duplicate guide slug: ${slug}.`);
     slugs.add(slug);
 
@@ -493,13 +571,28 @@ async function extraModel(guideSlugs) {
       modified: sitemapDateModified(html),
     });
   }
+  // The hub pages carry no Article dateModified of their own, so without this
+  // they would ship no lastmod at all.
+  for (const hub of [`${siteOrigin}/${codesRootName}/`, `${siteOrigin}/${insurersRootName}/`]) {
+    const entry = entries.find((item) => item.url === hub);
+    if (entry) {
+      entry.modified = newestModified(
+        entries.filter((item) => item.url.startsWith(hub) && item.url !== hub),
+      );
+    }
+  }
   return entries;
+}
+
+/** A section hub lists its children, so its freshness is the freshest child. */
+function newestModified(items) {
+  return items.map((item) => item.modified).filter(Boolean).sort().at(-1) ?? null;
 }
 
 function sitemapFor(pages, extraEntries = []) {
   const entries = [
     { url: `${siteOrigin}/`, modified: null },
-    { url: `${siteOrigin}/appeals/`, modified: null },
+    { url: `${siteOrigin}/appeals/`, modified: newestModified(pages) },
     ...pages.map((page) => ({ url: page.canonical, modified: page.modified })),
     ...extraEntries,
     { url: `${siteOrigin}/accessibility`, modified: null },

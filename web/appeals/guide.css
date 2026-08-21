@@ -273,3 +273,11 @@ footer.site a { color: var(--ink-soft); }
   :where(a, button, summary, input, select, textarea, [tabindex]:not([tabindex="-1"])):focus-visible { outline-color: Highlight; box-shadow: none; }
   .gcard, .keyfacts, .sources, details, .letter, .cta, .code-finder, .code-no-results { border: 1px solid CanvasText; }
 }
+
+/* Silent 10s guide summary rendered by Remotion (video/). preload="none"
+   keeps it off the critical path so it cannot affect LCP. */
+.guide-video { margin: 0 0 26px; }
+.guide-video video { display: block; width: 100%; max-width: 420px; height: auto;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--cream); }
+.guide-video figcaption { font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+  color: var(--muted); margin-top: 8px; max-width: 420px; line-height: 1.5; }
