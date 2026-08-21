@@ -1,24 +1,21 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:video_player/video_player.dart';
 
 import '../../core/theme.dart';
 import '../../models/appeal_case.dart';
 import '../../state/providers.dart';
 import '../../widgets/app_scaffold.dart';
 
-/// Landing page after Stripe checkout. Waits for the webhook to flip the case
-/// to paid, then generates the packet and routes to it. While the model works,
-/// the backend writes staged progress onto the case document and this screen
-/// renders it as a cinematic "packet assembly" with a real progress bar.
+/// Landing page after Stripe checkout. It observes the authoritative payment
+/// and packet-generation state, then opens the completed packet.
 class PurchaseSuccessScreen extends ConsumerStatefulWidget {
   const PurchaseSuccessScreen({
     super.key,
     required this.caseId,
     this.sessionId,
   });
+
   final String caseId;
   final String? sessionId;
 
@@ -47,9 +44,8 @@ class _PurchaseSuccessScreenState extends ConsumerState<PurchaseSuccessScreen> {
           .read(backendProvider)
           .confirmCheckoutSession(widget.caseId, sessionId);
     } catch (_) {
-      // Stripe's webhook and the scheduled reconciliation watchdog remain
-      // authoritative fallbacks. Keep observing the case instead of showing
-      // a false payment failure for a transient confirmation error.
+      // Stripe's webhook and scheduled reconciliation remain authoritative.
+      // Keep observing the case instead of showing a false payment failure.
     } finally {
       if (mounted) ref.invalidate(caseStreamProvider(widget.caseId));
     }
@@ -60,9 +56,9 @@ class _PurchaseSuccessScreenState extends ConsumerState<PurchaseSuccessScreen> {
     ref.invalidate(caseStreamProvider(widget.caseId));
   }
 
-  Future<void> _generateThenGo(AppealCase c) async {
-    if (_generating || c.packet != null) {
-      if (c.packet != null && mounted) {
+  Future<void> _generateThenGo(AppealCase appealCase) async {
+    if (_generating || appealCase.packet != null) {
+      if (appealCase.packet != null && mounted) {
         context.go('/case/${widget.caseId}/packet');
       }
       return;
@@ -80,13 +76,12 @@ class _PurchaseSuccessScreenState extends ConsumerState<PurchaseSuccessScreen> {
       if (message.contains('aborted') ||
           message.contains('already being prepared') ||
           message.contains('another case task')) {
-        // The payment-triggered background worker owns the generation lease.
-        // Keep observing the live case instead of presenting a false failure.
+        // A payment-triggered background worker already owns generation.
         return;
       }
       if (mounted) {
         setState(() {
-          _error = 'Your purchase is safe, but packet generation failed. '
+          _error = 'Your purchase is safe, but packet generation stopped. '
               'Please retry.';
           _generating = false;
         });
@@ -100,53 +95,60 @@ class _PurchaseSuccessScreenState extends ConsumerState<PurchaseSuccessScreen> {
 
     return AppScaffold(
       title: 'Thank you',
+      showPrimaryAction: false,
       child: caseAsync.when(
-        loading: () => const _GenerationTheater(
-            progress: null, stage: 'Loading your case…'),
-        error: (e, _) => ErrorRetry(
+        loading: () => const _GenerationStatusCard(
+          progress: null,
+          stage: 'Loading your case…',
+        ),
+        error: (_, __) => ErrorRetry(
           message: 'Could not load your case. Please refresh.',
           onRetry: () => ref.invalidate(caseStreamProvider(widget.caseId)),
         ),
-        data: (c) {
-          if (c == null) {
-            return const _GenerationTheater(progress: null, stage: 'Loading…');
+        data: (appealCase) {
+          if (appealCase == null) {
+            return const _GenerationStatusCard(
+              progress: null,
+              stage: 'Loading your case…',
+            );
           }
           if (_error != null) {
             return ErrorRetry(
               message: _error!,
-              onRetry: () => _generateThenGo(c),
+              onRetry: () => _generateThenGo(appealCase),
             );
           }
-          final generationFailed =
-              c.paid && c.packet == null && c.status == CaseStatus.error;
+          final generationFailed = appealCase.paid &&
+              appealCase.packet == null &&
+              appealCase.status == CaseStatus.error;
           if (generationFailed && !_generating) {
             return ErrorRetry(
               message: 'Your purchase is safe, but packet drafting stopped '
                   'before it finished. Try again to resume it.',
-              onRetry: () => _generateThenGo(c),
+              onRetry: () => _generateThenGo(appealCase),
             );
           }
-          if (c.paid) {
-            // Fire generation once the case is paid.
+          if (appealCase.paid) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              _generateThenGo(c);
+              _generateThenGo(appealCase);
             });
-            final done = c.packet != null;
-            return _GenerationTheater(
-              progress: done ? 1.0 : c.generationProgress,
+            final done = appealCase.packet != null;
+            return _GenerationStatusCard(
+              progress: done ? 1.0 : appealCase.generationProgress,
               stage: done
                   ? 'Ready — opening your packet…'
                   : generationFailed
                       ? 'Retrying packet generation…'
-                      : (c.generationStage ?? 'Starting the drafting engine…'),
+                      : (appealCase.generationStage ??
+                          'Preparing your appeal packet…'),
               paymentConfirmed: true,
               onOpenSavedCases: () => context.go('/account'),
             );
           }
-          return _GenerationTheater(
+          return _GenerationStatusCard(
             progress: null,
-            stage: 'Waiting for payment confirmation… this can take a few '
-                'seconds.',
+            stage:
+                'Waiting for payment confirmation. This can take a few seconds.',
             onRefresh: _refreshPaymentStatus,
             onOpenSavedCases: () => context.go('/account'),
           );
@@ -156,17 +158,16 @@ class _PurchaseSuccessScreenState extends ConsumerState<PurchaseSuccessScreen> {
   }
 }
 
-/// Dark cinematic progress card: a stack of document "sheets" flies in as the
-/// backend reports progress, a scan line sweeps while the model writes, and a
-/// gradient bar tracks the true generation progress (null = indeterminate).
-class _GenerationTheater extends StatefulWidget {
-  const _GenerationTheater({
+/// A light, stable status surface that distinguishes payment from drafting.
+class _GenerationStatusCard extends StatelessWidget {
+  const _GenerationStatusCard({
     required this.progress,
     required this.stage,
     this.paymentConfirmed = false,
     this.onRefresh,
     this.onOpenSavedCases,
   });
+
   final double? progress;
   final String stage;
   final bool paymentConfirmed;
@@ -174,421 +175,159 @@ class _GenerationTheater extends StatefulWidget {
   final VoidCallback? onOpenSavedCases;
 
   @override
-  State<_GenerationTheater> createState() => _GenerationTheaterState();
-}
-
-class _GenerationTheaterState extends State<_GenerationTheater>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _pulse;
-  VideoPlayerController? _video;
-  bool _videoReady = false;
-  bool _videoAttempted = false;
-  bool _reduceMotion = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulse = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 2200));
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _reduceMotion = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    if (_reduceMotion) {
-      _pulse
-        ..stop()
-        ..value = 0.5;
-      _video?.pause();
-      return;
-    }
-    if (!_pulse.isAnimating) _pulse.repeat();
-    if (_videoReady) {
-      _video?.play();
-    } else if (!_videoAttempted) {
-      _videoAttempted = true;
-      _initVideo();
-    }
-  }
-
-  /// Ambient AI-assembly clip (Seedance) behind the progress card. Served
-  /// from the site's own /media path on web; if it can't load (dev server,
-  /// offline, mobile builds) the gradient background simply shows instead.
-  Future<void> _initVideo() async {
-    if (!kIsWeb) return;
-    try {
-      final controller = VideoPlayerController.networkUrl(
-          Uri.base.resolve('media/packet_assembly.mp4'));
-      await controller.initialize();
-      await controller.setLooping(true);
-      await controller.setVolume(0);
-      await controller.play();
-      if (!mounted) {
-        controller.dispose();
-        return;
-      }
-      setState(() {
-        _video = controller;
-        _videoReady = true;
-      });
-    } catch (_) {
-      // Gradient fallback.
-    }
-  }
-
-  @override
-  void dispose() {
-    _pulse.dispose();
-    _video?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final target = widget.progress;
-    final progressValue = target == null
+    final normalizedProgress = progress?.clamp(0.0, 1.0);
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    final complete = normalizedProgress == 1.0;
+    final progressValue = normalizedProgress == null
         ? 'In progress'
-        : '${(target.clamp(0.0, 1.0) * 100).round()} percent';
+        : '${(normalizedProgress * 100).round()} percent';
     return Semantics(
       container: true,
       liveRegion: true,
-      label: widget.paymentConfirmed
-          ? 'Payment confirmed. ${widget.stage}'
-          : widget.stage,
+      label: paymentConfirmed ? 'Payment confirmed. $stage' : stage,
       value: progressValue,
-      hint: 'You may leave this page. Generation continues on your account.',
+      hint: paymentConfirmed
+          ? 'You may leave this page. Generation continues on your account.'
+          : 'Refresh checks the existing payment status.',
       child: ExcludeSemantics(
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
-              child: TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: (target ?? 0).clamp(0.0, 1.0)),
-                duration: _reduceMotion
-                    ? Duration.zero
-                    : const Duration(milliseconds: 900),
-                curve: Curves.easeOutCubic,
-                builder: (context, v, _) {
-                  final indeterminate = target == null;
-                  return Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x66B3202A),
-                          blurRadius: 46,
-                          offset: Offset(0, 18),
-                          spreadRadius: -18,
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
-                      child: Stack(
-                        children: [
-                          // Ambient Seedance clip of papers assembling; sits under
-                          // a dark scrim so the progress UI stays readable.
-                          if (!_reduceMotion && _videoReady && _video != null)
-                            Positioned.fill(
-                              child: FittedBox(
-                                fit: BoxFit.cover,
-                                clipBehavior: Clip.hardEdge,
-                                child: SizedBox(
-                                  width: _video!.value.size.width,
-                                  height: _video!.value.size.height,
-                                  child: VideoPlayer(_video!),
-                                ),
-                              ),
-                            ),
-                          Positioned.fill(
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: _videoReady
-                                      ? const [
-                                          Color(0xD91C160C),
-                                          Color(0xC62A2213)
-                                        ]
-                                      : const [
-                                          Color(0xFF1C160C),
-                                          Color(0xFF2A2213)
-                                        ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(28, 26, 28, 30),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (widget.paymentConfirmed) ...[
-                                  Wrap(
-                                    alignment: WrapAlignment.center,
-                                    crossAxisAlignment:
-                                        WrapCrossAlignment.center,
-                                    spacing: 7,
-                                    children: const [
-                                      Icon(Icons.verified_rounded,
-                                          color: Color(0xFF2FB380), size: 18),
-                                      Text('Payment confirmed',
-                                          style: TextStyle(
-                                              color: Color(0xFF2FB380),
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w700,
-                                              letterSpacing: 0.3)),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 18),
-                                ],
-                                FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: _PacketAssembly(
-                                    progress: indeterminate ? 0.0 : v,
-                                    pulse: _pulse,
-                                    reduceMotion: _reduceMotion,
-                                  ),
-                                ),
-                                const SizedBox(height: 22),
-                                if (!indeterminate)
-                                  Text('${(v * 100).round()}%',
-                                      style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 34,
-                                          fontWeight: FontWeight.w800,
-                                          letterSpacing: -1)),
-                                const SizedBox(height: 12),
-                                _ProgressBar(
-                                    value: indeterminate ? null : v,
-                                    pulse: _pulse),
-                                const SizedBox(height: 16),
-                                AnimatedSwitcher(
-                                  duration: _reduceMotion
-                                      ? Duration.zero
-                                      : const Duration(milliseconds: 350),
-                                  child: Text(
-                                    widget.stage,
-                                    key: ValueKey(widget.stage),
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 14.5,
-                                        height: 1.45,
-                                        fontWeight: FontWeight.w600),
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                const Text(
-                                  'This usually takes a minute or two. You may safely '
-                                  'leave this page — generation continues on your account.',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      color: Colors.white70, fontSize: 12),
-                                ),
-                                if (widget.onRefresh != null ||
-                                    widget.onOpenSavedCases != null) ...[
-                                  const SizedBox(height: 14),
-                                  Wrap(
-                                    alignment: WrapAlignment.center,
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: [
-                                      if (widget.onRefresh != null)
-                                        TextButton.icon(
-                                          onPressed: widget.onRefresh,
-                                          icon: const Icon(Icons.refresh,
-                                              size: 18),
-                                          label: const Text('Refresh status'),
-                                          style: TextButton.styleFrom(
-                                            foregroundColor: Colors.white,
-                                          ),
-                                        ),
-                                      if (widget.onOpenSavedCases != null)
-                                        OutlinedButton.icon(
-                                          onPressed: widget.onOpenSavedCases,
-                                          icon: const Icon(
-                                            Icons.folder_open_outlined,
-                                            size: 18,
-                                          ),
-                                          label: const Text('My saved cases'),
-                                          style: OutlinedButton.styleFrom(
-                                            foregroundColor: Colors.white,
-                                            side: const BorderSide(
-                                              color: Colors.white70,
-                                            ),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Sheets of the appeal packet assembling into a neat stack as progress rises.
-class _PacketAssembly extends StatelessWidget {
-  const _PacketAssembly({
-    required this.progress,
-    required this.pulse,
-    required this.reduceMotion,
-  });
-  final double progress;
-  final Animation<double> pulse;
-  final bool reduceMotion;
-
-  static const _sheetCount = 6;
-
-  @override
-  Widget build(BuildContext context) {
-    const width = 280.0;
-    const height = 168.0;
-    return SizedBox(
-      width: width,
-      height: height,
-      child: AnimatedBuilder(
-        animation: pulse,
-        builder: (context, _) {
-          final sweep = pulse.value;
-          return Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
-            children: [
-              // Ambient glow that breathes with the pulse.
-              Container(
-                width: 180 + 14 * (0.5 - (sweep - 0.5).abs()) * 2,
-                height: 120,
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(28),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(90),
-                  gradient: RadialGradient(colors: [
-                    const Color(0xFFB3202A)
-                        .withValues(alpha: 0.26 + 0.10 * sweep),
-                    Colors.transparent,
-                  ]),
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadii.lg),
+                  border: Border.all(color: AppColors.border),
+                  boxShadow: AppShadows.subtle,
                 ),
-              ),
-              // Document sheets fly in one by one.
-              for (var i = 0; i < _sheetCount; i++)
-                _sheet(i, progress >= (i + 1) / (_sheetCount + 1)),
-              // Scan line sweeps while assembling.
-              if (progress < 1)
-                Positioned(
-                  left: sweep * (width - 4),
-                  top: 10,
-                  bottom: 10,
-                  child: Container(
-                    width: 2.5,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE8C877).withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(2),
-                      boxShadow: const [
-                        BoxShadow(color: Color(0x88E8C877), blurRadius: 14),
-                      ],
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: paymentConfirmed
+                            ? AppColors.accentTint
+                            : AppColors.primaryTint,
+                        borderRadius: BorderRadius.circular(AppRadii.md),
+                      ),
+                      child: Icon(
+                        paymentConfirmed
+                            ? Icons.verified_user_outlined
+                            : Icons.receipt_long_outlined,
+                        size: 34,
+                        color: paymentConfirmed
+                            ? AppColors.accentBright
+                            : AppColors.primaryDark,
+                      ),
                     ),
-                  ),
-                ),
-              // Done badge.
-              AnimatedScale(
-                scale: progress >= 1 ? 1 : 0,
-                duration: reduceMotion
-                    ? Duration.zero
-                    : const Duration(milliseconds: 450),
-                curve: Curves.easeOutBack,
-                child: Container(
-                  width: 54,
-                  height: 54,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: AppGradients.brand,
-                    boxShadow: const [
-                      BoxShadow(color: Color(0x88B3202A), blurRadius: 22),
+                    const SizedBox(height: 18),
+                    Text(
+                      paymentConfirmed
+                          ? 'Payment confirmed'
+                          : 'Checking your payment',
+                      style: const TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      stage,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        height: 1.5,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    if (onRefresh != null || onOpenSavedCases != null) ...[
+                      const SizedBox(height: 18),
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: [
+                          if (onRefresh != null)
+                            FilledButton.icon(
+                              onPressed: onRefresh,
+                              icon: const Icon(Icons.refresh_rounded),
+                              label: const Text('Refresh status'),
+                            ),
+                          if (onOpenSavedCases != null)
+                            OutlinedButton.icon(
+                              onPressed: onOpenSavedCases,
+                              icon: const Icon(Icons.folder_open_outlined),
+                              label: const Text('My saved cases'),
+                            ),
+                        ],
+                      ),
                     ],
-                  ),
-                  child: const Icon(Icons.check_rounded,
-                      color: Colors.white, size: 32),
+                    const SizedBox(height: 22),
+                    if (normalizedProgress == null && reduceMotion)
+                      Container(
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: AppColors.border,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      )
+                    else
+                      LinearProgressIndicator(
+                        value: normalizedProgress,
+                        minHeight: 10,
+                        borderRadius: BorderRadius.circular(999),
+                        backgroundColor: AppColors.border,
+                        color: AppColors.accent,
+                      ),
+                    if (normalizedProgress != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        complete
+                            ? 'Packet ready'
+                            : '${(normalizedProgress * 100).round()}% complete',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 22),
+                    _StatusRow(
+                      complete: paymentConfirmed,
+                      active: !paymentConfirmed,
+                      label: 'Payment confirmation',
+                    ),
+                    _StatusRow(
+                      complete: complete,
+                      active: paymentConfirmed && !complete,
+                      label: 'Prepare appeal packet',
+                    ),
+                    _StatusRow(
+                      complete: complete,
+                      active: false,
+                      label: 'Open and review every page',
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      paymentConfirmed
+                          ? 'You may safely leave this page. Work continues on your account, and the packet will appear in My saved cases.'
+                          : 'Stripe confirmation can take a few seconds. Refreshing checks this payment; it does not start a new checkout.',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        height: 1.5,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _sheet(int i, bool visible) {
-    // Final resting position: a slightly fanned stack.
-    final restLeft = 86.0 + i * 3.5;
-    final restTop = 12.0 + i * 3.0;
-    final startLeft = i.isEven ? -150.0 : 340.0;
-    final startTop = 20.0 + (i * 37) % 90;
-    final angle = (i - _sheetCount / 2) * 0.028;
-    return AnimatedPositioned(
-      duration:
-          reduceMotion ? Duration.zero : const Duration(milliseconds: 550),
-      curve: Curves.easeOutCubic,
-      left: visible ? restLeft : startLeft,
-      top: visible ? restTop : startTop,
-      child: AnimatedOpacity(
-        duration:
-            reduceMotion ? Duration.zero : const Duration(milliseconds: 400),
-        opacity: visible ? 1 : 0,
-        child: Transform.rotate(
-          angle: angle,
-          child: Container(
-            width: 108,
-            height: 138,
-            padding: const EdgeInsets.fromLTRB(12, 14, 12, 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-              boxShadow: const [
-                BoxShadow(
-                    color: Color(0x33000000),
-                    blurRadius: 16,
-                    offset: Offset(0, 8)),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 44,
-                  height: 7,
-                  decoration: BoxDecoration(
-                    gradient: AppGradients.brand,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                for (var l = 0; l < 5; l++) ...[
-                  Container(
-                    width: l == 4 ? 52 : 84,
-                    height: 5,
-                    margin: const EdgeInsets.only(bottom: 7),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE2E8F0),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                ],
-              ],
             ),
           ),
         ),
@@ -597,63 +336,48 @@ class _PacketAssembly extends StatelessWidget {
   }
 }
 
-/// Gradient progress bar; sweeps a highlight segment when indeterminate.
-class _ProgressBar extends StatelessWidget {
-  const _ProgressBar({required this.value, required this.pulse});
-  final double? value;
-  final Animation<double> pulse;
+class _StatusRow extends StatelessWidget {
+  const _StatusRow({
+    required this.complete,
+    required this.active,
+    required this.label,
+  });
+
+  final bool complete;
+  final bool active;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(999),
-      child: SizedBox(
-        height: 10,
-        child: AnimatedBuilder(
-          animation: pulse,
-          builder: (context, _) {
-            return Stack(
-              children: [
-                Container(color: Colors.white.withValues(alpha: 0.10)),
-                if (value != null)
-                  FractionallySizedBox(
-                    alignment: Alignment.centerLeft,
-                    widthFactor: value!.clamp(0.02, 1.0),
-                    child: Container(
-                      // Denial red → paperwork gold → approval green.
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(colors: [
-                          Color(0xFFB3202A),
-                          Color(0xFFC99A3A),
-                          Color(0xFF1E9A6B),
-                        ]),
-                        boxShadow: [
-                          BoxShadow(color: Color(0x66B3202A), blurRadius: 10),
-                        ],
-                      ),
-                    ),
-                  )
-                else
-                  Align(
-                    alignment: Alignment((pulse.value * 2 - 1) * 1.4, 0),
-                    child: FractionallySizedBox(
-                      widthFactor: 0.28,
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(colors: [
-                            Colors.transparent,
-                            Color(0xFFB3202A),
-                            Color(0xFFE8C877),
-                            Colors.transparent,
-                          ]),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            );
-          },
-        ),
+    final color =
+        complete || active ? AppColors.accentBright : AppColors.textMuted;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            complete
+                ? Icons.check_circle_outline_rounded
+                : active
+                    ? Icons.radio_button_checked_rounded
+                    : Icons.radio_button_unchecked_rounded,
+            size: 22,
+            color: color,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight:
+                    active || complete ? FontWeight.w700 : FontWeight.w500,
+                color: color,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

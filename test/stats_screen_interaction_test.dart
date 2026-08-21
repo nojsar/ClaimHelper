@@ -19,10 +19,17 @@ void main() {
 
       const paidKey = ValueKey('analytics-metric:funnel.paid');
       const submittedKey = ValueKey('analytics-metric:product.case.submitted');
+      const startedKey =
+          ValueKey('analytics-metric:intent.start_appeal_clicked');
+      const documentKey = ValueKey('analytics-metric:intent.document_added');
       final paid = find.byKey(paidKey);
       final submitted = find.byKey(submittedKey);
       expect(paid, findsOneWidget);
       expect(submitted, findsOneWidget);
+      expect(find.byKey(startedKey), findsOneWidget);
+      expect(find.byKey(documentKey), findsOneWidget);
+      expect(find.text('Started appeal'), findsWidgets);
+      expect(find.text('Added document'), findsWidgets);
       expect(
         find.descendant(of: paid, matching: find.text('Paid packages')),
         findsOneWidget,
@@ -325,6 +332,7 @@ void main() {
       const paidKey = ValueKey('analytics-funnel:funnel.paid');
       final paid = find.byKey(paidKey);
       await _scrollTo(tester, paid);
+      expect(find.text('Started upload'), findsOneWidget);
       await tester.tap(_tapTarget(paid));
       await tester.pumpAndSettle();
       expect(selectedMetrics.last, AnalyticsMetric.paid);
@@ -531,7 +539,7 @@ Future<void> _scrollTo(WidgetTester tester, Finder finder) async {
     position.jumpTo(0);
     await tester.pump();
     for (var attempt = 0;
-        attempt < 40 && finder.evaluate().isEmpty;
+        attempt < 80 && finder.evaluate().isEmpty;
         attempt++) {
       final candidate = position.pixels + 420;
       final next = candidate > position.maxScrollExtent
@@ -618,6 +626,10 @@ AnalyticsSummary _overallSummary() => AnalyticsSummary.fromDocuments(
           'visits': 1,
           'pageviews': 2,
           'boots': 1,
+          'intent': {
+            'start_appeal_clicked': 1,
+            'document_added': 1,
+          },
           'revenueCents': 100,
           'funnel': {
             'upload': 1,
@@ -648,6 +660,10 @@ AnalyticsSummary _overallSummary() => AnalyticsSummary.fromDocuments(
           'visits': 2,
           'pageviews': 4,
           'boots': 3,
+          'intent': {
+            'start_appeal_clicked': 2,
+            'document_added': 1,
+          },
           'revenueCents': 200,
           'funnel': {
             'upload': 2,
@@ -697,6 +713,10 @@ AnalyticsSummary _filteredSummary() => AnalyticsSummary.fromDocuments(
           'visits': 1,
           'pageviews': 2,
           'boots': 1,
+          'intent': {
+            'start_appeal_clicked': 1,
+            'document_added': 1,
+          },
           'countries': {'FR': 1},
           'referrers': {'google.com': 1},
           'campaigns': {'launch': 1},

@@ -45,6 +45,8 @@ const checks = [
   ["node", ["tool/analytics_tracker_test.mjs"]],
   ["node", ["--test", "tool/email_link_boot_test.mjs"]],
   ["node", ["tool/code_finder_test.mjs"]],
+  ["node", ["tool/trust_design_test.mjs"]],
+  ["node", ["tool/normalize_trust_copy.mjs", "--check"]],
   ["node", ["tool/marketing_build.mjs"]],
   ["node", ["tool/accessibility_check.mjs", "web"]],
   ["npx", ["--yes", "html-validate@10.10.0", "web/**/*.html"]],

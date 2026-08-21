@@ -20,6 +20,7 @@ function trackerHarness({
   const fetches = [];
   const storage = new Map(storedOptOut ? [[optOutKey, "1"]] : []);
   const timers = new Map();
+  const listeners = new Map();
   let nextTimer = 1;
 
   const context = {
@@ -30,6 +31,9 @@ function trackerHarness({
     console,
     document: {
       referrer: "https://search.example/results",
+      addEventListener(type, callback) {
+        listeners.set(type, callback);
+      },
       currentScript: {
         hasAttribute: (name) => name === "data-static" && staticMode,
       },
@@ -63,7 +67,7 @@ function trackerHarness({
   context.window = context;
   context.globalThis = context;
   vm.runInNewContext(trackerSource, context, { filename: "web/analytics.js" });
-  return { context, beacons, fetches, storage, timers };
+  return { context, beacons, fetches, storage, timers, listeners };
 }
 
 function eventOf(beacon) {
@@ -96,6 +100,31 @@ test("Flutter landing queues traffic until auth resolves", () => {
   assert.equal(result.beacons.length, 2);
 });
 
+test("static start links emit only the fixed appeal-intent event", () => {
+  const result = trackerHarness({ pathname: "/appeals/", staticMode: true });
+  result.listeners.get("click")({
+    target: {
+      closest: () => ({ getAttribute: () => "/#/upload" }),
+    },
+  });
+
+  assert.deepEqual(eventOf(result.beacons[1]), {
+    t: "start_appeal_clicked",
+    path: "/appeals/",
+    ref: "https://search.example/results",
+  });
+});
+
+test("non-upload links never emit an appeal-intent event", () => {
+  const result = trackerHarness({ pathname: "/privacy", staticMode: true });
+  result.listeners.get("click")({
+    target: {
+      closest: () => ({ getAttribute: () => "/sample-packet" }),
+    },
+  });
+  assert.equal(result.beacons.length, 1);
+});
+
 test("app readiness keeps only a rounded timing for server-side bucketing", () => {
   const result = trackerHarness();
   result.context.__track("app_ready", "/upload", 1234.4);
@@ -112,6 +141,11 @@ test("app readiness keeps only a rounded timing for server-side bucketing", () =
 test("persisted owner opt-out suppresses all traffic", () => {
   const result = trackerHarness({ storedOptOut: true, staticMode: true });
   result.context.__track("pageview", "/appeals/step-therapy-denial");
+  result.listeners.get("click")({
+    target: {
+      closest: () => ({ getAttribute: () => "/#/upload" }),
+    },
+  });
   assert.equal(result.beacons.length, 0);
   assert.equal(result.fetches.length, 0);
   assert.equal(result.timers.size, 0);
@@ -184,6 +218,7 @@ test("every tracked page uses the shared tracker contract", () => {
     if (path.basename(file) === "index.html" && path.dirname(file) === webRoot) {
       assert.match(html, /<script src="\/analytics\.js"><\/script>/);
       assert.match(html, /typeof window\.__track === 'function'/);
+      assert.match(html, /window\.__track\('start_appeal_clicked'/);
     } else {
       assert.match(html, /<script src="\/analytics\.js" data-static><\/script>/);
     }

@@ -80,6 +80,7 @@ function validateSearchMetadata(html, file) {
   if (description.length > 170) {
     fail(`${file} meta description is ${description.length} characters; keep it at 170 or fewer.`);
   }
+  validateCleanInternalLinks(html, file);
   return { title, description };
 }
 
@@ -264,6 +265,39 @@ function requireSharePreview(html, file) {
     || socialMetaContent(html, "name", "twitter:image:alt", file) !== ogImageAlt
   ) {
     fail(`${file} has mismatched Open Graph and Twitter preview metadata.`);
+  }
+}
+
+/**
+ * Internal links should point straight at the canonical HTTPS URL. Firebase's
+ * cleanUrls feature intentionally redirects .html and directory aliases, but
+ * publishing those variants creates avoidable "Page with redirect" discoveries
+ * in Search Console and wastes crawler work.
+ */
+function validateCleanInternalLinks(html, file) {
+  for (const found of html.matchAll(/<a\b[^>]*\bhref=(["'])([^"']+)\1/gi)) {
+    const href = decodeHtml(found[2]).trim();
+    if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:")) {
+      continue;
+    }
+
+    let url;
+    try {
+      url = new URL(href, siteOrigin);
+    } catch {
+      continue;
+    }
+    if (!["getmyyes.com", "www.getmyyes.com"].includes(url.hostname)) continue;
+
+    if (url.protocol !== "https:" || url.hostname !== "getmyyes.com") {
+      fail(`${file} links to redirecting origin ${href}; use ${siteOrigin}${url.pathname}${url.search}${url.hash}.`);
+    }
+    if (url.pathname === "/index.html" || url.pathname.endsWith(".html")) {
+      fail(`${file} links to redirecting .html URL ${href}; use the clean URL.`);
+    }
+    if (["/appeals", "/codes", "/insurers"].includes(url.pathname)) {
+      fail(`${file} links to redirecting directory URL ${href}; add the trailing slash.`);
+    }
   }
 }
 
@@ -565,16 +599,44 @@ async function generate() {
   if (/three\.min\.js|window\.THREE|new\s+THREE\./.test(index)) {
     fail("The homepage reintroduced the retired Three.js landing dependency.");
   }
-  const tickerSets = index.match(/class=["']set["']/g) ?? [];
-  if (tickerSets.length !== 2 || !/animation:\s*ticker-marquee\b/.test(index) || !/@keyframes\s+ticker-marquee\b/.test(index)) {
-    fail("The homepage ticker must contain two synchronized sets and the marquee animation.");
+  if (/ticker-marquee|ticker-motion-toggle|class=["'][^"']*\bticker\b|[\u2715\u2716]/i.test(index)) {
+    fail("The homepage must not reintroduce the alarming denial ticker or cross symbols.");
   }
-  if (!/id=["']ticker-motion-toggle["'][^>]*data-animation-control/.test(index)
-      || !/\.ticker\.is-paused\s+\.track\s*\{[^}]*animation-play-state:\s*paused\b/s.test(index)) {
-    fail("The homepage ticker is missing its accessible pause control.");
+  if (/\b(?:gsap|lenis)\b/i.test(index)) {
+    fail("The calm homepage must not reintroduce motion libraries.");
   }
-  if (!/\.actuary\s+\.num\s*\{[^}]*white-space:\s*nowrap\b/s.test(index)) {
-    fail("Homepage statistics must stay on one line.");
+  if (!/id=["']hero-trust["']/.test(index)
+      || !/data-boot=["']\/upload["'][^>]*aria-describedby=["']hero-trust["']/.test(index)) {
+    fail("The primary homepage action must be linked to its no-card trust disclosure.");
+  }
+  if (!/class=["'][^"']*\breassurance-list\b[^"']*["']/.test(index)
+      || !/No card required/i.test(index)
+      || !/No subscription/i.test(index)
+      || !/support@getmyyes\.com/i.test(index)
+      || !/Stripe processes payments/i.test(index)) {
+    fail("The homepage is missing the required reassurance and support details.");
+  }
+  if (!/\.evidence-number\s*\{[^}]*white-space:\s*nowrap\b/s.test(index)) {
+    fail("Homepage evidence values must stay on one line.");
+  }
+  if (/class=["'][^"']*\bvoices\b/.test(index)) {
+    fail("The homepage must not publish unverified outcome testimonials.");
+  }
+  if (!/<section\b[^>]*data-proof-carousel[^>]*aria-roledescription=["']carousel["']/.test(index)
+      || (index.match(/<article\b[^>]*\bdata-proof-slide\b/g) ?? []).length !== 4
+      || !/data-proof-prev[^>]*aria-label=["']Show previous proof["']/.test(index)
+      || !/data-proof-next[^>]*aria-label=["']Show next proof["']/.test(index)
+      || !/event\.key === ["']ArrowRight["']/.test(index)
+      || !/toggleAttribute\(["']inert["']/.test(index)
+      || !/pendingAnnouncement\s*=\s*announce/.test(index)
+      || !/prefers-reduced-motion:\s*reduce/.test(index)) {
+    fail("The homepage proof carousel is missing its manual, keyboard, or focus-safe controls.");
+  }
+  if (/setInterval\s*\(/.test(index)) {
+    fail("The homepage proof carousel must never autoplay.");
+  }
+  if (/\.proof-slide \.proof-action\s*\{[^}]*padding(?:-top)?\s*:/s.test(index)) {
+    fail("The homepage proof CTA must preserve centered button padding.");
   }
   if (!index.includes('href="/appeals/"')) fail("The homepage has no crawlable link to /appeals/.");
   if (!index.includes('href="/codes/"')) fail("The homepage has no crawlable link to /codes/.");

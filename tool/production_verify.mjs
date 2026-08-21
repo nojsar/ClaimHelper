@@ -92,7 +92,7 @@ function checkHeader(response, key, expected) {
   }
 }
 
-function checkHtml(url, html) {
+function checkHtml(url, html, expectedCanonical = null) {
   if (!/<html\b[^>]*\blang=["'][^"']+["']/i.test(html)) {
     fail(`${url} is missing the document language.`);
   }
@@ -111,19 +111,41 @@ function checkHtml(url, html) {
   if (/user-scalable\s*=\s*no|maximum-scale\s*=\s*1(?:\.0)?/i.test(html)) {
     fail(`${url} disables browser zoom.`);
   }
+  if (expectedCanonical) {
+    const canonicalTag = html.match(
+      /<link\b[^>]*\brel=["'][^"']*\bcanonical\b[^"']*["'][^>]*>/i,
+    )?.[0];
+    const canonical = canonicalTag?.match(/\bhref=(["'])([^"']+)\1/i)?.[2];
+    if (canonical !== expectedCanonical) {
+      fail(
+        `${url} canonical is ${canonical ?? "missing"}; expected ${expectedCanonical}.`,
+      );
+    }
+    if (/<meta\b[^>]*\bname=["']robots["'][^>]*\bcontent=["'][^"']*\bnoindex\b/i.test(html)) {
+      fail(`${url} is a public canonical page but declares noindex.`);
+    }
+  }
 }
 
 async function fetchOnce(route, { allowErrorStatus = false } = {}) {
   const url = `${origin}${route}`;
   const response = await fetch(url, {
     headers: { "cache-control": "no-cache" },
-    redirect: "follow",
+    // Canonical public URLs must answer directly. Following redirects here
+    // would let a sitemap or internal-link regression pass unnoticed.
+    redirect: "manual",
   });
+  if (response.status >= 300 && response.status < 400) {
+    fail(
+      `${url} returned HTTP ${response.status} and redirects to `
+      + `${response.headers.get("location") ?? "an unspecified URL"}.`,
+    );
+  }
   if (!response.ok && !allowErrorStatus) {
     fail(`${url} returned HTTP ${response.status}.`);
   }
-  if (new URL(response.url).origin !== new URL(origin).origin) {
-    fail(`${url} unexpectedly redirected to ${response.url}.`);
+  if (response.url !== url) {
+    fail(`${url} unexpectedly resolved as ${response.url}.`);
   }
   checkHeader(response, "x-content-type-options", (value) => value.toLowerCase() === "nosniff");
   checkHeader(response, "x-frame-options", (value) => value.toUpperCase() === "SAMEORIGIN");
@@ -144,6 +166,22 @@ async function fetchOnce(route, { allowErrorStatus = false } = {}) {
     checkHeader(response, "strict-transport-security", (value) => /max-age=\d+/.test(value));
   }
   return { response, bytes: Buffer.from(await response.arrayBuffer()) };
+}
+
+async function verifyPermanentRedirect(from, to) {
+  const response = await fetch(from, {
+    headers: { "cache-control": "no-cache" },
+    redirect: "manual",
+  });
+  if (![301, 308].includes(response.status)) {
+    fail(`${from} returned HTTP ${response.status}; expected a permanent redirect.`);
+  }
+  const location = response.headers.get("location");
+  const destination = location ? new URL(location, from).href : null;
+  if (destination !== to) {
+    fail(`${from} redirects to ${destination ?? "an unspecified URL"}; expected ${to}.`);
+  }
+  console.log(`[production] OK ${from} -> ${to} (HTTP ${response.status})`);
 }
 
 async function verifyResource(route, file, checkDocument) {
@@ -174,7 +212,7 @@ async function verifyResource(route, file, checkDocument) {
         if (!type.toLowerCase().includes("text/html")) {
           fail(`${response.url} has unexpected content type ${type || "missing"}.`);
         }
-        checkHtml(response.url, bytes.toString("utf8"));
+        checkHtml(response.url, bytes.toString("utf8"), `${origin}${route}`);
       }
       if (file === "flutter_bootstrap.js"
           && !/canvasKitBaseUrl\s*:\s*["']canvaskit\//.test(bytes.toString("utf8"))) {
@@ -251,6 +289,13 @@ for (const page of pages) {
 }
 for (const file of bundles) {
   await verifyResource(`/${file}`, file, false);
+}
+// Search Console reports the insecure homepage as "Page with redirect". That is
+// expected: only the canonical HTTPS origin should be indexed. Keep both known
+// aliases as permanent, single-hop redirects and fail any accidental change.
+await verifyPermanentRedirect(`http://${new URL(origin).host}/`, `${origin}/`);
+if (new URL(origin).hostname === "getmyyes.com") {
+  await verifyPermanentRedirect("https://www.getmyyes.com/", `${origin}/`);
 }
 // GET is deliberately a no-op in trackEvent, so this proves the Hosting
 // rewrite and deployed function are live without modifying analytics data.

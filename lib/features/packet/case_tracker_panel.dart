@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/constants.dart';
 import '../../core/theme.dart';
 import '../../models/appeal_case.dart';
 import '../../models/case_tracker.dart';
 import '../../state/providers.dart';
 
-const _externalReviewUrl = 'https://getmyyes.com/appeals/external-review';
+const _externalReviewUrl = AppUrls.externalReview;
 
 /// Accessible, owner-only progress tracker shown inside the paid case packet.
 class CaseTrackerPanel extends ConsumerStatefulWidget {

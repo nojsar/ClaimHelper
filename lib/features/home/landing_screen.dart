@@ -6,8 +6,8 @@ import '../../core/theme.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/ui.dart';
 
-/// Award-quality marketing landing: gradient hero with a product preview,
-/// how-it-works, what's-included, trust, pricing, and a closing CTA + footer.
+/// Calm marketing landing with a product preview, plain-language steps,
+/// trust details, pricing, and a closing action.
 class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});
 
@@ -84,8 +84,8 @@ class _Hero extends StatelessWidget {
           wide ? CrossAxisAlignment.start : CrossAxisAlignment.center,
       children: [
         const PillBadge(
-          label: 'Denied medication & prior-auth appeals',
-          icon: Icons.bolt_rounded,
+          label: 'Secure health-insurance appeal help',
+          icon: Icons.shield_outlined,
         ),
         const SizedBox(height: 22),
         Semantics(
@@ -100,16 +100,16 @@ class _Hero extends StatelessWidget {
                 color: AppColors.textPrimary,
               ),
               children: [
-                const TextSpan(text: 'Turn a denial letter into a '),
+                const TextSpan(text: 'Understand your denial. Build a '),
                 TextSpan(
-                  text: 'ready-to-send appeal',
+                  text: 'clear appeal packet',
                   style: TextStyle(
                     foreground: Paint()
                       ..shader = AppGradients.accentText
                           .createShader(const Rect.fromLTWH(0, 0, 420, 60)),
                   ),
                 ),
-                const TextSpan(text: ' in 15 minutes.'),
+                const TextSpan(text: ' you review and control.'),
               ],
             ),
             textAlign: wide ? TextAlign.start : TextAlign.center,
@@ -133,8 +133,8 @@ class _Hero extends StatelessWidget {
           children: [
             FilledButton.icon(
               onPressed: () => context.go('/upload'),
-              icon: const Icon(Icons.auto_awesome_rounded, size: 20),
-              label: const Text('Start your appeal packet'),
+              icon: const Icon(Icons.description_outlined, size: 20),
+              label: const Text('See my free denial summary'),
             ),
             OutlinedButton.icon(
               onPressed: () => context.go('/account'),
@@ -152,7 +152,8 @@ class _Hero extends StatelessWidget {
             _TrustPoint(
                 icon: Icons.lock_outline_rounded, text: 'Private & encrypted'),
             _TrustPoint(
-                icon: Icons.schedule_rounded, text: 'Auto-deletes in 24h'),
+                icon: Icons.schedule_rounded,
+                text: 'Guest files delete in 24h'),
             _TrustPoint(
                 icon: Icons.description_outlined,
                 text: 'You review before sending'),
@@ -194,7 +195,7 @@ class _TrustPoint extends StatelessWidget {
         const SizedBox(width: 7),
         Text(text,
             style: const TextStyle(
-                fontSize: 13.5,
+                fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textSecondary)),
       ],
@@ -202,7 +203,7 @@ class _TrustPoint extends StatelessWidget {
   }
 }
 
-/// A stylized preview of the generated appeal packet — sells the outcome.
+/// A fictional, clearly labeled preview of the generated appeal packet.
 class _PacketPreview extends StatelessWidget {
   const _PacketPreview();
 
@@ -236,7 +237,7 @@ class _PacketPreview extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                            fontSize: 12.5, color: AppColors.textMuted)),
+                            fontSize: 15, color: AppColors.textMuted)),
                   ],
                 ),
               ),
@@ -270,7 +271,7 @@ class _PacketPreview extends StatelessWidget {
                     const SizedBox(width: 10),
                     Text(t,
                         style: const TextStyle(
-                            fontSize: 13.5,
+                            fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: AppColors.textPrimary)),
                   ],
@@ -291,11 +292,11 @@ class _PacketPreview extends StatelessWidget {
                     style: TextStyle(
                         fontWeight: FontWeight.w800,
                         color: AppColors.accent,
-                        fontSize: 13.5)),
+                        fontSize: 16)),
                 Spacer(),
                 Text('PDF ready',
                     style: TextStyle(
-                        fontSize: 12.5, color: AppColors.textSecondary)),
+                        fontSize: 15, color: AppColors.textSecondary)),
               ],
             ),
           ),
@@ -368,10 +369,10 @@ class _StatChip extends StatelessWidget {
             style: const TextStyle(
                 fontWeight: FontWeight.w800,
                 color: AppColors.textPrimary,
-                fontSize: 14.5)),
+                fontSize: 16)),
         const SizedBox(width: 6),
         Text(label,
-            style: const TextStyle(color: AppColors.textMuted, fontSize: 14.5)),
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 16)),
       ],
     );
   }
@@ -468,7 +469,7 @@ class _HowItWorks extends StatelessWidget {
                           const SizedBox(height: 8),
                           Text(_steps[i].$4,
                               style: const TextStyle(
-                                  fontSize: 13.5,
+                                  fontSize: 16,
                                   height: 1.5,
                                   color: AppColors.textSecondary)),
                         ],
@@ -561,7 +562,7 @@ class _WhatsIncluded extends StatelessWidget {
                           const SizedBox(height: 7),
                           Text(it.$3,
                               style: const TextStyle(
-                                  fontSize: 13.5,
+                                  fontSize: 16,
                                   height: 1.5,
                                   color: AppColors.textSecondary)),
                         ],
@@ -791,7 +792,7 @@ class _PriceCard extends StatelessWidget {
             children: [
               Text(title,
                   style: TextStyle(
-                      fontSize: 15,
+                      fontSize: 16,
                       fontWeight: FontWeight.w700,
                       color: highlighted
                           ? Colors.white.withValues(alpha: 0.9)
@@ -822,7 +823,7 @@ class _PriceCard extends StatelessWidget {
                 child: Text(blurb,
                     maxLines: 2,
                     style: TextStyle(
-                        fontSize: 13.5,
+                        fontSize: 16,
                         color: highlighted
                             ? Colors.white.withValues(alpha: 0.85)
                             : AppColors.textMuted)),
@@ -841,7 +842,7 @@ class _PriceCard extends StatelessWidget {
                     Expanded(
                       child: Text(f,
                           style: TextStyle(
-                              fontSize: 14.5,
+                              fontSize: 16,
                               color: highlighted
                                   ? Colors.white
                                   : AppColors.textPrimary)),
@@ -859,11 +860,11 @@ class _PriceCard extends StatelessWidget {
                       backgroundColor: Colors.white,
                       foregroundColor: AppColors.primaryDark,
                     ),
-                    child: const Text('Start your appeal'),
+                    child: const Text('See my free denial summary'),
                   )
                 : OutlinedButton(
                     onPressed: () => context.go('/upload'),
-                    child: const Text('Upload for free'),
+                    child: const Text('See my free denial summary'),
                   ),
           ),
         ],
@@ -888,7 +889,7 @@ class _ClosingCta extends StatelessWidget {
         ),
         child: Column(
           children: [
-            const Text('Denied doesn\'t mean the end.',
+            const Text('A clear next step, at your pace.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                     fontSize: 30,
@@ -896,7 +897,7 @@ class _ClosingCta extends StatelessWidget {
                     letterSpacing: -0.7,
                     color: Colors.white)),
             const SizedBox(height: 12),
-            Text('Most denials can be appealed. Start yours in minutes.',
+            Text('Review the free summary before deciding whether to continue.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                     fontSize: 16,
@@ -911,8 +912,8 @@ class _ClosingCta extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 30, vertical: 18),
               ),
-              icon: const Icon(Icons.auto_awesome_rounded),
-              label: const Text('Start appeal packet'),
+              icon: const Icon(Icons.description_outlined),
+              label: const Text('See my free denial summary'),
             ),
           ],
         ),
@@ -953,7 +954,7 @@ class _Footer extends StatelessWidget {
                 Text(
                   AppCopy.disclaimer,
                   style: TextStyle(
-                      fontSize: 12.5,
+                      fontSize: 15,
                       height: 1.6,
                       color: Colors.white.withValues(alpha: 0.65)),
                 ),
@@ -969,11 +970,12 @@ class _Footer extends StatelessWidget {
                     Text(
                         '© ${DateTime.now().year} GetMyYes · U.S. only at launch',
                         style: TextStyle(
-                            fontSize: 12.5,
+                            fontSize: 15,
                             color: Colors.white.withValues(alpha: 0.55))),
                     _FooterLink('Privacy', () => context.go('/settings')),
                     _FooterLink('My cases', () => context.go('/account')),
-                    _FooterLink('Start appeal', () => context.go('/upload')),
+                    _FooterLink(
+                        'See my free denial summary', () => context.go('/upload')),
                   ],
                 ),
               ],
@@ -996,8 +998,8 @@ class _FooterLink extends StatelessWidget {
       style: TextButton.styleFrom(
         foregroundColor: Colors.white.withValues(alpha: 0.8),
         padding: const EdgeInsets.symmetric(horizontal: 4),
-        minimumSize: Size.zero,
-        textStyle: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+        minimumSize: const Size(48, 48),
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
       child: Text(label),
     );

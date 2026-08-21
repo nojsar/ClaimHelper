@@ -313,6 +313,30 @@ test("public traffic fields discard arbitrary keys, counts, and overflow", () =>
   assert.equal(JSON.stringify(filtered).includes("example.com"), false);
 });
 
+test("public intent fields accept only the two fixed one-count steps", () => {
+  assert.deepEqual(
+    filterTrafficCounterFields({
+      "intent.start_appeal_clicked": 1,
+      "intent.document_added": 1,
+      "intent.file_name": 1,
+      "intent.document_added.extra": 1,
+      "intent.start_appeal_clicked.extra": 1,
+    }),
+    {
+      "intent.start_appeal_clicked": 1,
+      "intent.document_added": 1,
+    },
+  );
+  assert.deepEqual(
+    filterTrafficCounterFields({ "intent.document_added": 99 }),
+    {},
+  );
+  assert.deepEqual(
+    filterTrafficCounterFields({ "intent.document_added": 1 }),
+    { "intent.document_added": 1 },
+  );
+});
+
 test("normal traffic produces a bounded write plan", () => {
   const event = normalizeTrafficEvent(
     {
@@ -346,6 +370,31 @@ test("normal traffic produces a bounded write plan", () => {
   });
   assert.equal(JSON.stringify(event).includes("user@example.com"), false);
   assert.equal(JSON.stringify(event).includes("secret"), false);
+});
+
+test("fixed intent events remain aggregate and segmentable", () => {
+  assert.deepEqual(
+    normalizeTrafficEvent({ t: "start_appeal_clicked", path: "/" }, {}),
+    {
+      type: "start_appeal_clicked",
+      country: null,
+      fields: { "intent.start_appeal_clicked": 1 },
+      segments: [{ type: "path", key: "/" }],
+    },
+  );
+  assert.deepEqual(
+    normalizeTrafficEvent({ t: "document_added", path: "/upload" }, {}),
+    {
+      type: "document_added",
+      country: null,
+      fields: { "intent.document_added": 1 },
+      segments: [{ type: "path", key: "/upload" }],
+    },
+  );
+  assert.equal(
+    normalizeTrafficEvent({ t: "document_added", path: "/stats" }, {}),
+    null,
+  );
 });
 
 test("poisoning attempts can reach only shared other buckets", () => {

@@ -8,9 +8,11 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants.dart';
 import '../../core/theme.dart';
+import '../../services/analytics.dart';
 import '../../services/backend.dart';
 import '../../state/intake_controller.dart';
 import '../../widgets/app_scaffold.dart';
+import '../../widgets/ui.dart';
 import 'file_drop.dart';
 import 'upload_validation.dart';
 
@@ -31,6 +33,7 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
   bool _busy = false;
   bool _dragging = false;
   bool _hovering = false;
+  bool _documentAddedTracked = false;
   final FileDrop _fileDrop = FileDrop();
 
   @override
@@ -88,6 +91,10 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
           _files.add(candidates[index]);
         }
       });
+      if (!_documentAddedTracked) {
+        _documentAddedTracked = true;
+        trackDocumentAdded();
+      }
     }
     if (plan.rejections.isNotEmpty) {
       _showSelectionIssues(plan.rejections);
@@ -197,6 +204,7 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
 
     return AppScaffold(
       title: 'Upload your denial',
+      showPrimaryAction: false,
       child: Column(
         children: [
           Expanded(
@@ -205,12 +213,14 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const WorkflowProgress(currentStep: 0),
+                  const SizedBox(height: 18),
                   Semantics(
                     header: true,
                     child: const Text(
-                      'Add your documents',
+                      'Upload your denial letter',
                       style: TextStyle(
-                        fontSize: 24,
+                        fontSize: 28,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.5,
                       ),
@@ -218,23 +228,24 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Upload the denial letter, EOB, or prior-authorization denial. '
-                    'Add every page so the appeal can address the full decision.',
-                    style:
-                        TextStyle(color: AppColors.textSecondary, fontSize: 15),
+                    'Choose the denial letter, Explanation of Benefits (EOB), or '
+                    'prior-authorization notice. Include every page. A clear photo is okay.',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 17,
+                      height: 1.5,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'PDF, JPG, PNG, HEIC, or WebP - 20 MB each, 45 MB total.',
+                    'Accepted: PDF, JPG, PNG, HEIC, or WebP · 20 MB each · 45 MB total.',
                     style: TextStyle(
                       color: AppColors.textSecondary,
-                      fontSize: 13,
+                      fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const _UploadTrustPanel(),
-                  const SizedBox(height: 20),
                   Semantics(
                     button: true,
                     enabled: !_busy,
@@ -305,8 +316,14 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
                   const SizedBox(height: 4),
                   const Text(
                     'On supported phones, this opens the rear camera. Otherwise, choose a photo from your device.',
-                    style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+                    style: TextStyle(
+                      fontSize: 16,
+                      height: 1.45,
+                      color: AppColors.textMuted,
+                    ),
                   ),
+                  const SizedBox(height: 18),
+                  const _UploadTrustPanel(),
                   const SizedBox(height: 20),
                   _ConsentBox(
                     value: _consent,
@@ -360,42 +377,65 @@ class _UploadTrustPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.accentTint,
+    return Material(
+      color: AppColors.accentTint,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadii.md),
-        border: Border.all(color: AppColors.accent.withValues(alpha: 0.28)),
+        side: BorderSide(color: AppColors.accent.withValues(alpha: 0.32)),
       ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final twoColumns = constraints.maxWidth >= 560 &&
-              MediaQuery.textScalerOf(context).scale(13) <= 18;
-          final width = twoColumns
-              ? (constraints.maxWidth - 14) / 2
-              : constraints.maxWidth;
-          return Semantics(
-            container: true,
-            label: 'Upload privacy and security',
-            explicitChildNodes: true,
-            child: Wrap(
-              spacing: 14,
-              runSpacing: 12,
-              children: [
-                for (final item in _items)
-                  SizedBox(
-                    width: width,
-                    child: _TrustItem(
-                      icon: item.$1,
-                      title: item.$2,
-                      text: item.$3,
-                    ),
-                  ),
-              ],
+      clipBehavior: Clip.antiAlias,
+      child: ExpansionTile(
+        maintainState: true,
+        tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+        leading: const Icon(Icons.lock_outline_rounded,
+            color: AppColors.accentBright, size: 26),
+        title: const Text(
+          'Your documents stay private',
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+        ),
+        subtitle: const Padding(
+          padding: EdgeInsets.only(top: 4),
+          child: Text(
+            'Encrypted in transit. Never used to train AI. No card is required for the free summary.',
+            style: TextStyle(
+              fontSize: 16,
+              height: 1.45,
+              color: AppColors.textSecondary,
             ),
-          );
-        },
+          ),
+        ),
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final twoColumns = constraints.maxWidth >= 560 &&
+                  MediaQuery.textScalerOf(context).scale(16) <= 23;
+              final width = twoColumns
+                  ? (constraints.maxWidth - 16) / 2
+                  : constraints.maxWidth;
+              return Semantics(
+                container: true,
+                label: 'Document privacy and security details',
+                explicitChildNodes: true,
+                child: Wrap(
+                  spacing: 16,
+                  runSpacing: 14,
+                  children: [
+                    for (final item in _items)
+                      SizedBox(
+                        width: width,
+                        child: _TrustItem(
+                          icon: item.$1,
+                          title: item.$2,
+                          text: item.$3,
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -424,8 +464,8 @@ class _TrustItem extends StatelessWidget {
             TextSpan(
               style: const TextStyle(
                 color: AppColors.textSecondary,
-                fontSize: 12.5,
-                height: 1.4,
+                fontSize: 16,
+                height: 1.5,
               ),
               children: [
                 TextSpan(
@@ -482,30 +522,28 @@ class _UploadActionBar extends StatelessWidget {
           children: [
             SizedBox(
               width: double.infinity,
-              child: FilledButton.icon(
+              child: FilledButton(
                 onPressed: canSubmit ? onSubmit : null,
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(52),
                 ),
-                icon: busy
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.auto_awesome_rounded),
-                label: Text(
-                    busy ? 'Reading your document...' : 'Read my document'),
+                child: Text(
+                  busy
+                      ? 'Creating your free summary...'
+                      : 'Create my free summary',
+                  textAlign: TextAlign.center,
+                ),
               ),
             ),
             const SizedBox(height: 6),
             Text(
               hint,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+              style: const TextStyle(
+                fontSize: 16,
+                height: 1.4,
+                color: AppColors.textMuted,
+              ),
             ),
           ],
         ),
@@ -530,8 +568,7 @@ class _DropZone extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final active = dragging || hovering;
-    final browseHint =
-        kIsWeb && !compact ? 'or click to browse' : 'or tap to browse';
+    final browseLabel = hasFiles ? 'Choose more files' : 'Choose files';
     final reduceMotion =
         MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     return AnimatedContainer(
@@ -588,15 +625,50 @@ class _DropZone extends StatelessWidget {
           Text(
             dragging
                 ? 'Drop your files to add them'
-                : (hasFiles
-                    ? 'Drag & drop more files'
-                    : 'Drag & drop your files here'),
-            style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700),
+                : compact
+                    ? (hasFiles
+                        ? 'Add another denial document'
+                        : 'Choose a denial document')
+                    : (hasFiles
+                        ? 'Drag & drop more files'
+                        : 'Drag & drop your files here'),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
           ),
-          const SizedBox(height: 4),
-          Text('$browseHint - PDF, JPG, PNG, HEIC, or WebP',
-              style: const TextStyle(
-                  fontSize: 13, color: AppColors.textSecondary)),
+          const SizedBox(height: 10),
+          Container(
+            constraints: const BoxConstraints(minHeight: 52),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+              border: Border.all(color: AppColors.primary),
+            ),
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 9,
+              runSpacing: 4,
+              children: [
+                const Icon(Icons.folder_open_outlined,
+                    size: 22, color: AppColors.primaryDark),
+                Text(
+                  browseLabel,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.primaryDark,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (kIsWeb && !compact) ...[
+            const SizedBox(height: 8),
+            const Text(
+              'You can also drag files into this area.',
+              style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+            ),
+          ],
         ],
       ),
     );
@@ -625,13 +697,13 @@ class _FileRow extends StatelessWidget {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: (isPdf ? AppColors.error : AppColors.primary)
+              color: (isPdf ? AppColors.accent : AppColors.primary)
                   .withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               isPdf ? Icons.picture_as_pdf_rounded : Icons.image_rounded,
-              color: isPdf ? AppColors.error : AppColors.primary,
+              color: isPdf ? AppColors.accent : AppColors.primary,
               size: 20,
             ),
           ),
@@ -644,10 +716,10 @@ class _FileRow extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 14)),
+                        fontWeight: FontWeight.w700, fontSize: 16)),
                 Text(formatUploadBytes(file.bytes.length),
                     style: const TextStyle(
-                        fontSize: 12, color: AppColors.textMuted)),
+                        fontSize: 14, color: AppColors.textMuted)),
               ],
             ),
           ),
@@ -683,14 +755,13 @@ class _ConsentBox extends StatelessWidget {
       child: CheckboxListTile(
         value: value,
         onChanged: onChanged,
-        dense: true,
         controlAffinity: ListTileControlAffinity.leading,
-        contentPadding: const EdgeInsets.fromLTRB(8, 6, 12, 6),
+        contentPadding: const EdgeInsets.fromLTRB(10, 10, 14, 10),
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.md)),
         title: const Text(
           'I consent to secure document processing',
-          style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
         ),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4),
@@ -700,16 +771,16 @@ class _ConsentBox extends StatelessWidget {
               const Text(
                 AppCopy.consentText,
                 style: TextStyle(
-                  fontSize: 12,
-                  height: 1.4,
+                  fontSize: 16,
+                  height: 1.5,
                   color: AppColors.textSecondary,
                 ),
               ),
               Wrap(
                 spacing: 10,
                 children: [
-                  _legalLink('Privacy Policy', 'https://getmyyes.com/privacy'),
-                  _legalLink('Terms of Service', 'https://getmyyes.com/terms'),
+                  _legalLink('Privacy Policy', AppUrls.privacy),
+                  _legalLink('Terms of Service', AppUrls.terms),
                 ],
               ),
             ],
@@ -735,7 +806,7 @@ class _ConsentBox extends StatelessWidget {
             child: Text(
               label,
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 16,
                 color: AppColors.primaryDark,
                 decoration: TextDecoration.underline,
               ),

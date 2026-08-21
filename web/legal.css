@@ -1,8 +1,8 @@
-/* GetMyYes legal pages — the same paper "case file" system used by the site and guides. */
+/* GetMyYes legal pages — the same calm document system used by the site and guides. */
 body.legal-page {
   background:
-    radial-gradient(circle at 8% 2%, rgba(179, 32, 42, 0.055), transparent 31rem),
-    radial-gradient(circle at 92% 28%, rgba(20, 114, 79, 0.045), transparent 34rem),
+    radial-gradient(circle at 8% 2%, rgba(23, 50, 77, 0.055), transparent 31rem),
+    radial-gradient(circle at 92% 28%, rgba(47, 111, 98, 0.05), transparent 34rem),
     var(--paper);
 }
 
@@ -49,7 +49,7 @@ body.legal-page::before {
   display: block;
   margin-bottom: 10px;
   color: var(--carmine);
-  content: "GETMYYES · PUBLIC RECORD";
+  content: "GETMYYES - SERVICE INFORMATION";
   font-family: "IBM Plex Mono", monospace;
   font-size: 10.5px;
   font-weight: 600;
@@ -65,7 +65,7 @@ body.legal-page::before {
 }
 
 .legal-page .lede {
-  font-size: 17px;
+  font-size: 18px;
 }
 
 .legal-page h2 {
@@ -81,7 +81,7 @@ body.legal-page::before {
   border-left: 5px solid var(--carmine);
   border-radius: 4px;
   background: var(--letter);
-  box-shadow: 0 8px 24px -8px rgba(60, 46, 18, 0.16);
+  box-shadow: 0 8px 24px -8px rgba(16, 38, 59, 0.16);
 }
 
 .legal-page .card p:last-child,
@@ -104,14 +104,14 @@ body.legal-page::before {
   border: 1.5px solid var(--border-strong);
   border-radius: 4px;
   background: var(--letter);
-  box-shadow: 0 8px 24px -8px rgba(60, 46, 18, 0.16);
+  box-shadow: 0 8px 24px -8px rgba(16, 38, 59, 0.16);
 }
 
 .legal-page table {
   width: 100%;
   min-width: 680px;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.55;
 }
 
@@ -128,7 +128,7 @@ body.legal-page::before {
 .legal-page td {
   padding: 12px 14px;
   border-top: 1px solid var(--border);
-  color: #2A2213;
+  color: var(--ink);
   text-align: left;
   vertical-align: top;
 }
@@ -137,13 +137,13 @@ body.legal-page::before {
   background: var(--cream);
   color: var(--ink);
   font-family: "IBM Plex Mono", monospace;
-  font-size: 11px;
+  font-size: 14px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .legal-page tbody tr:nth-child(even) {
-  background: rgba(234, 225, 204, 0.28);
+  background: rgba(234, 243, 241, 0.58);
 }
 
 .legal-page .legal-cta {
@@ -172,6 +172,53 @@ body.legal-page::before {
   .legal-page .cta {
     padding: 24px 20px;
   }
+
+  .legal-page .table-wrap {
+    overflow: visible;
+  }
+
+  .legal-page table,
+  .legal-page tbody,
+  .legal-page tr,
+  .legal-page td {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .legal-page thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .legal-page tbody tr {
+    padding: 12px 14px;
+    border-top: 1px solid var(--border-strong);
+  }
+
+  .legal-page td {
+    padding: 9px 0;
+    border-top: 0;
+  }
+
+  .legal-page td::before {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--navy-dark, var(--ink));
+    font-size: 15px;
+    font-weight: 800;
+  }
+
+  .legal-page td:nth-child(1)::before { content: "Data"; }
+  .legal-page td:nth-child(2)::before { content: "When"; }
+  .legal-page td:nth-child(3)::before { content: "Why"; }
+  .legal-page td:nth-child(4)::before { content: "Legal basis"; }
 }
 
 @media (prefers-reduced-motion: reduce) {

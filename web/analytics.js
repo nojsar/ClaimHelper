@@ -139,6 +139,19 @@
   window.__resolveAnalyticsAuth = resolveAnalyticsAuth;
   window.__excludeAdminAnalytics = excludeAdminAnalytics;
 
+  // Static guides use ordinary same-origin links to open the upload route.
+  // Count only that fixed intent; never include link text or arbitrary URLs.
+  if (document.addEventListener) {
+    document.addEventListener('click', function (event) {
+      var target = event.target;
+      var link = target && target.closest ? target.closest('a[href]') : null;
+      if (!link) return;
+      var href = link.getAttribute('href') || '';
+      if (href !== '/#/upload' && href.indexOf('/#/upload?') !== 0) return;
+      track('start_appeal_clicked', currentPath());
+    });
+  }
+
   // Every page that loads this script records one visit, unless it is the
   // dashboard or this browser has already been marked as the owner's device.
   track('visit');

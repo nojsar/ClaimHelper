@@ -15,7 +15,7 @@ const publishedAt = "2026-07-12T00:00:00Z";
 const modifiedAt = "2026-07-27T00:00:00Z";
 const modifiedLabel = "JULY 27, 2026";
 const socialImage = `${siteOrigin}/og-image.png`;
-const socialImageAlt = "GetMyYes graphic: The insurer stamped no. We draft the comeback. Free preview, $39 full packet, no subscription.";
+const socialImageAlt = "GetMyYes graphic: Health insurance appeal help, step by step. Free preview, no card, and no subscription.";
 
 const guideTitles = {
   "not-medically-necessary": "“Not medically necessary” denials",
@@ -92,7 +92,7 @@ function shell({ title, description, canonical, h1, crumb, body }) {
       <nav aria-label="Primary">
         <a class="navlink" href="/appeals/">Appeal guides</a>
         <a class="navlink" href="/codes/">Denial codes</a>
-        <a class="btn-start" href="/#/upload">Start my appeal — free</a>
+        <a class="btn-start" href="/#/upload">See my free denial summary</a>
       </nav>
     </div>
   </header>
@@ -176,10 +176,10 @@ ${officialCodeSources()}
         <p>GetMyYes reads the actual letter — codes, fine print, deadlines — and drafts your appeal letter, evidence checklist, doctor letter request, and call script. Free preview first.</p>
         <p class="cta-trust" id="preview-trust">No card is required for the preview. Unsaved guest uploads normally auto-delete after 24 hours. <a href="/privacy">Read the retention details</a>.</p>
         <div class="cta-actions">
-          <a class="go" href="/#/upload" aria-describedby="preview-trust">Start my appeal — free preview</a>
+          <a class="go" href="/#/upload" aria-describedby="preview-trust">See my free denial summary</a>
           <a class="sample" href="/sample-packet">See a sample packet first</a>
         </div>
-        <p class="sub">FREE PREVIEW · $39 FULL PACKET · NO SUBSCRIPTION. EVER.</p>
+        <p class="sub">Free preview · $39 full packet · No subscription</p>
       </div>
 
       <div class="related">
@@ -255,15 +255,15 @@ ${rows}
 ${officialCodeSources()}
 
       <div class="cta">
-        <div class="kicker">Skip the decoding</div>
-        <h2>Upload the letter. We read the codes for you.</h2>
-        <p>GetMyYes identifies the denial type from your actual letter and drafts the right response: appeal letter, evidence checklist, doctor letter request, call script, deadlines.</p>
+        <div class="kicker">Help with the code</div>
+        <h2>Upload the letter. We explain the code and prepare a draft.</h2>
+        <p>GetMyYes identifies the denial type from your letter, explains it in plain language, and prepares documents for you to review.</p>
         <p class="cta-trust" id="preview-trust">No card is required for the preview. Unsaved guest uploads normally auto-delete after 24 hours. <a href="/privacy">Read the retention details</a>.</p>
         <div class="cta-actions">
-          <a class="go" href="/#/upload" aria-describedby="preview-trust">Start my appeal — free preview</a>
+          <a class="go" href="/#/upload" aria-describedby="preview-trust">See my free denial summary</a>
           <a class="sample" href="/sample-packet">See a sample packet first</a>
         </div>
-        <p class="sub">FREE PREVIEW · $39 FULL PACKET · NO SUBSCRIPTION. EVER.</p>
+        <p class="sub">Free preview · $39 full packet · No subscription</p>
       </div>`;
   return shell({
     title: "Insurance Denial Codes Explained | GetMyYes",

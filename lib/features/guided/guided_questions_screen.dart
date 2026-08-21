@@ -9,6 +9,7 @@ import '../../core/theme.dart';
 import '../../models/guided_answers.dart';
 import '../../state/intake_controller.dart';
 import '../../widgets/app_scaffold.dart';
+import '../../widgets/ui.dart';
 
 /// Guided intake. Tailors the appeal: who it's for, state, insurance type,
 /// desired outcome, urgency, alternatives tried, documents on hand, and prior
@@ -195,6 +196,8 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const WorkflowProgress(currentStep: 2),
+            const SizedBox(height: 18),
             Semantics(
               header: true,
               child: Text('Tailor your appeal',
@@ -215,7 +218,7 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
               child: Text(
                 saveStatus,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 16,
                   color: _saveError == null
                       ? AppColors.textMuted
                       : AppColors.warning,
@@ -297,8 +300,7 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
               const Text(
                 'If applicable, add drugs or treatments that failed, were not '
                 'tolerated, or were not safe for you. Leave this blank if none.',
-                style:
-                    TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+                style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
               ),
               const SizedBox(height: 8),
               _AlternativesEditor(

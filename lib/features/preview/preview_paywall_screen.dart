@@ -377,10 +377,10 @@ class _PreviewPaywallScreenState extends ConsumerState<PreviewPaywallScreen> {
         child: Center(
           child: CaseLoader(
             messages: [
-              'Reading the fine print…',
-              'Weighing the denial reason…',
-              'Citing their words back…',
-              'Opening your appeal letter…',
+              'Reviewing your denial document…',
+              'Checking the denial reason and deadline…',
+              'Preparing your plain-English summary…',
+              'Opening your review screen…',
             ],
           ),
         ),
@@ -402,6 +402,8 @@ class _PreviewPaywallScreenState extends ConsumerState<PreviewPaywallScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const WorkflowProgress(currentStep: 3),
+            const SizedBox(height: 18),
             Semantics(
               header: true,
               child: Text(
@@ -437,8 +439,6 @@ class _PreviewPaywallScreenState extends ConsumerState<PreviewPaywallScreen> {
             const SizedBox(height: 20),
             _PaywallCard(
               recommended: p.recommendedPacketType,
-              amountAtStake: p.amountAtStake,
-              daysToDeadline: days,
               purchasing: _purchasing,
               selectedKind: _selectedKind,
               onSelectKind: (k) => setState(() => _selectedKind = k),
@@ -538,18 +538,18 @@ class _PreviewCard extends StatelessWidget {
               ),
             const SizedBox(height: 12),
             const Text('What happened',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
             const SizedBox(height: 6),
             Text(preview.denialSummary),
             const SizedBox(height: 16),
             const Text('Your likely appeal path',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
             const SizedBox(height: 6),
             Text(preview.likelyAppealPath),
             if (preview.missingInfo.isNotEmpty) ...[
               const SizedBox(height: 16),
               const Text('What we still need',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
               const SizedBox(height: 6),
               for (final m in preview.missingInfo)
                 Padding(
@@ -618,7 +618,7 @@ class _LetterTeaserCard extends StatelessWidget {
                         opening,
                         style: const TextStyle(
                             fontFamily: AppFonts.serif,
-                            fontSize: 15.5,
+                            fontSize: 16,
                             height: 1.65),
                       ),
                       const SizedBox(height: 14),
@@ -678,7 +678,7 @@ class _LetterTeaserCard extends StatelessWidget {
                             'The full letter is in your packet',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                                fontSize: 12.5,
+                                fontSize: 16,
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.textSecondary),
                           ),
@@ -764,8 +764,7 @@ class _MissingPiecesCard extends StatelessWidget {
                 children: [
                   for (final f in files)
                     Chip(
-                      label:
-                          Text(f.name, style: const TextStyle(fontSize: 12.5)),
+                      label: Text(f.name, style: const TextStyle(fontSize: 16)),
                       onDeleted: updating ? null : () => onRemoveFile(f),
                     ),
                 ],
@@ -792,7 +791,7 @@ class _MissingPiecesCard extends StatelessWidget {
                           fileError!,
                           style: const TextStyle(
                             color: AppColors.error,
-                            fontSize: 13,
+                            fontSize: 16,
                             height: 1.4,
                           ),
                         ),
@@ -827,7 +826,7 @@ class _MissingPiecesCard extends StatelessWidget {
             const SizedBox(height: 6),
             const Text(
               'PDF, JPG, PNG, HEIC, or WebP — 20 MB each, 45 MB total.',
-              style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+              style: TextStyle(fontSize: 16, color: AppColors.textMuted),
             ),
           ],
         ),
@@ -839,8 +838,6 @@ class _MissingPiecesCard extends StatelessWidget {
 class _PaywallCard extends StatelessWidget {
   const _PaywallCard({
     required this.recommended,
-    required this.amountAtStake,
-    required this.daysToDeadline,
     required this.purchasing,
     required this.selectedKind,
     required this.onSelectKind,
@@ -849,8 +846,6 @@ class _PaywallCard extends StatelessWidget {
     required this.onBuy,
   });
   final String recommended;
-  final String? amountAtStake;
-  final int? daysToDeadline;
   final bool purchasing;
   final String selectedKind;
   final ValueChanged<String> onSelectKind;
@@ -878,38 +873,43 @@ class _PaywallCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // The anchor: their number vs. ours.
-            if (amountAtStake != null) ...[
-              Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                decoration: BoxDecoration(
-                  color: AppColors.accentTint,
-                  borderRadius: BorderRadius.circular(AppRadii.sm),
-                ),
-                child: Text.rich(
-                  TextSpan(
-                    style: const TextStyle(fontSize: 14.5, height: 1.5),
-                    children: [
-                      const TextSpan(text: 'On the table: '),
-                      TextSpan(
-                          text: amountAtStake!,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.accentBright)),
-                      TextSpan(
-                          text:
-                              '. The complete appeal packet costs \$$price — once, ever.'),
-                    ],
-                  ),
+            Semantics(
+              header: true,
+              child: const Text(
+                'Choose your packet',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'You can keep the free summary without buying. If you continue, '
+              'you make one payment through Stripe — there is no subscription.',
+              style: TextStyle(
+                fontSize: 17,
+                height: 1.5,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.accentTint,
+                borderRadius: BorderRadius.circular(AppRadii.sm),
+                border:
+                    Border.all(color: AppColors.accent.withValues(alpha: 0.28)),
+              ),
+              child: Text(
+                'Suggested from your answers: $recommended',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 16),
-            ],
-            Text('Recommended: $recommended',
-                style: const TextStyle(color: AppColors.textSecondary)),
-            const SizedBox(height: 14),
+            ),
+            const SizedBox(height: 16),
             _TierOption(
               selected: !plus,
               title: 'Full Appeal Packet',
@@ -934,6 +934,11 @@ class _PaywallCard extends StatelessWidget {
               onTap: purchasing ? null : () => onSelectKind('packet_plus'),
             ),
             const Divider(height: 26),
+            const Text(
+              'Both options include',
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 8),
             for (final i in _includes)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 3),
@@ -947,31 +952,6 @@ class _PaywallCard extends StatelessWidget {
                 ),
               ),
             const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              initialValue: acquisitionSource,
-              isExpanded: true,
-              decoration: const InputDecoration(
-                labelText: 'How did you hear about us? (optional)',
-                helperText:
-                    'A fixed category only — never a link, name, or case detail.',
-              ),
-              items: const [
-                DropdownMenuItem(value: 'google', child: Text('Google search')),
-                DropdownMenuItem(value: 'quora', child: Text('Quora')),
-                DropdownMenuItem(value: 'social', child: Text('Social media')),
-                DropdownMenuItem(
-                    value: 'friend_family', child: Text('Friend or family')),
-                DropdownMenuItem(
-                    value: 'advocate_provider',
-                    child: Text('Patient advocate or provider')),
-                DropdownMenuItem(value: 'other', child: Text('Other')),
-                DropdownMenuItem(
-                    value: 'prefer_not_to_say',
-                    child: Text('Prefer not to say')),
-              ],
-              onChanged: purchasing ? null : onSelectAcquisitionSource,
-            ),
-            const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
@@ -982,12 +962,20 @@ class _PaywallCard extends StatelessWidget {
                         height: 18,
                         child: CircularProgressIndicator(
                             strokeWidth: 2, color: Colors.white))
-                    : const Icon(Icons.lock_open),
+                    : const Icon(Icons.lock_outline_rounded),
                 label: Text(purchasing
                     ? 'Starting checkout…'
-                    : plus
-                        ? 'Unlock full case — \$${Pricing.fullCaseUsd}'
-                        : 'Unlock full packet — \$${Pricing.fullPacketUsd}'),
+                    : 'Continue to secure Stripe checkout — \$$price'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'An account is required only when you continue to checkout, so '
+              'your packet can be saved securely.',
+              style: TextStyle(
+                fontSize: 16,
+                height: 1.45,
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 12),
@@ -1001,39 +989,78 @@ class _PaywallCard extends StatelessWidget {
                   child: Text(
                     '14-day guarantee: if your packet doesn\'t accurately '
                     'address your denial, email us for a full refund.',
-                    style: TextStyle(fontSize: 12.5, height: 1.45),
+                    style: TextStyle(fontSize: 16, height: 1.45),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             const Text(
-              'Published marketplace data: roughly 4 in 10 appealed denials '
-              'are overturned. Fewer than 1 in 100 people ever appeal. '
-              'One-time payment · no subscription.',
-              style: TextStyle(fontSize: 12.5, color: AppColors.textMuted),
+              'Stripe processes the payment. GetMyYes never receives or stores your full card number.',
+              style: TextStyle(
+                fontSize: 16,
+                height: 1.45,
+                color: AppColors.textMuted,
+              ),
             ),
             const SizedBox(height: 6),
-            const Text(
-              'Secure Stripe checkout - GetMyYes never sees or stores your card number.',
-              style: TextStyle(fontSize: 12.5, color: AppColors.textMuted),
-            ),
-            const SizedBox(height: 4),
             const Wrap(
               spacing: 10,
               runSpacing: 0,
               children: [
                 _PricingLink(
                   label: 'Guarantee details',
-                  url: 'https://getmyyes.com/terms#accuracy-guarantee',
+                  url: AppUrls.accuracyGuarantee,
                 ),
                 _PricingLink(
                   label: 'Terms of Service',
-                  url: 'https://getmyyes.com/terms',
+                  url: AppUrls.terms,
                 ),
-                _PricingLink(
-                  label: 'Federal-data source',
-                  url: 'https://getmyyes.com/insurer-denial-rates',
+              ],
+            ),
+            const Divider(height: 28),
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              childrenPadding: EdgeInsets.only(bottom: 8),
+              title: Text(
+                'Optional: tell us how you found GetMyYes',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              ),
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    'This is a fixed category only — never a link, name, or case detail.',
+                    style: TextStyle(
+                      fontSize: 16,
+                      height: 1.45,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+                DropdownButtonFormField<String>(
+                  initialValue: acquisitionSource,
+                  isExpanded: true,
+                  decoration:
+                      InputDecoration(labelText: 'How did you hear about us?'),
+                  items: [
+                    DropdownMenuItem(
+                        value: 'google', child: Text('Google search')),
+                    DropdownMenuItem(value: 'quora', child: Text('Quora')),
+                    DropdownMenuItem(
+                        value: 'social', child: Text('Social media')),
+                    DropdownMenuItem(
+                        value: 'friend_family',
+                        child: Text('Friend or family')),
+                    DropdownMenuItem(
+                        value: 'advocate_provider',
+                        child: Text('Patient advocate or provider')),
+                    DropdownMenuItem(value: 'other', child: Text('Other')),
+                    DropdownMenuItem(
+                        value: 'prefer_not_to_say',
+                        child: Text('Prefer not to say')),
+                  ],
+                  onChanged: purchasing ? null : onSelectAcquisitionSource,
                 ),
               ],
             ),
@@ -1063,13 +1090,13 @@ class _PricingLink extends StatelessWidget {
         onTap: open,
         borderRadius: BorderRadius.circular(4),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(minWidth: 48, minHeight: 44),
+          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
           child: Align(
             alignment: Alignment.centerLeft,
             child: Text(
               label,
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 16,
                 color: AppColors.primaryDark,
                 fontWeight: FontWeight.w600,
                 decoration: TextDecoration.underline,
@@ -1118,7 +1145,7 @@ class _TierOption extends StatelessWidget {
         child: AnimatedContainer(
           duration:
               reduceMotion ? Duration.zero : const Duration(milliseconds: 180),
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: selected ? AppColors.primaryTint : AppColors.surface,
             borderRadius: BorderRadius.circular(AppRadii.md),
@@ -1145,7 +1172,7 @@ class _TierOption extends StatelessWidget {
                   children: [
                     Text(title,
                         style: const TextStyle(
-                            fontWeight: FontWeight.w800, fontSize: 15)),
+                            fontWeight: FontWeight.w800, fontSize: 17)),
                     const SizedBox(height: 6),
                     Wrap(
                       spacing: 8,
@@ -1162,8 +1189,8 @@ class _TierOption extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(caption,
                         style: const TextStyle(
-                            fontSize: 12.5,
-                            height: 1.45,
+                            fontSize: 16,
+                            height: 1.5,
                             color: AppColors.textSecondary)),
                   ],
                 ),
@@ -1235,7 +1262,7 @@ class _ReminderCard extends StatelessWidget {
                 Expanded(
                   child: Text('Save a private link to this preview',
                       style:
-                          TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                          TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
                 ),
               ],
             ),
@@ -1250,7 +1277,7 @@ class _ReminderCard extends StatelessWidget {
                       'then send transactional deadline reminders. Your unpaid case '
                       'is retained for up to 14 days; this is not marketing.',
               style: const TextStyle(
-                  color: AppColors.textSecondary, height: 1.45, fontSize: 13),
+                  color: AppColors.textSecondary, height: 1.5, fontSize: 16),
             ),
             const SizedBox(height: 12),
             LayoutBuilder(

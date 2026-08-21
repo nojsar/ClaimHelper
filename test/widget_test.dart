@@ -21,7 +21,7 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('Start appeal packet'), findsOneWidget);
+    expect(find.text('See my free denial summary'), findsWidgets);
     expect(find.textContaining('appeal packet'), findsWidgets);
   });
 }

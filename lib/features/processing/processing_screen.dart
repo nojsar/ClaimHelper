@@ -208,12 +208,15 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen> {
               CaseLoader(
                 progress: progress,
                 messages: uploading
-                    ? const ['Filing your documents…', 'Sealing the envelope…']
+                    ? const [
+                        'Uploading your documents securely…',
+                        'Confirming the upload…',
+                      ]
                     : const [
-                        'Reading the fine print…',
-                        'Finding the denial reason…',
-                        'Extracting every date and number…',
-                        'Checking the appeal deadline…',
+                        'Reviewing the document pages…',
+                        'Identifying the denial reason…',
+                        'Checking important dates…',
+                        'Preparing facts for your review…',
                       ],
               ),
               const SizedBox(height: 22),

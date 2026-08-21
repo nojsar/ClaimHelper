@@ -76,6 +76,8 @@ void main() {
         AnalyticsMetric.visits: 2,
         AnalyticsMetric.pageviews: 3,
         AnalyticsMetric.appOpens: 4,
+        AnalyticsMetric.startAppealClicked: 5,
+        AnalyticsMetric.documentAdded: 6,
         AnalyticsMetric.revenue: 505,
         AnalyticsMetric.uploadedDenial: 5,
         AnalyticsMetric.extractedFacts: 6,
@@ -192,6 +194,10 @@ void main() {
 
       expect(AnalyticsMetric.visits.total(summary), 3);
       expect(AnalyticsMetric.visits.week(summary), 2);
+      expect(AnalyticsMetric.startAppealClicked.total(summary), 6);
+      expect(AnalyticsMetric.startAppealClicked.week(summary), 5);
+      expect(AnalyticsMetric.documentAdded.total(summary), 7);
+      expect(AnalyticsMetric.documentAdded.week(summary), 6);
       expect(AnalyticsMetric.uploadedDenial.total(summary), 6);
       expect(AnalyticsMetric.uploadedDenial.week(summary), 5);
       expect(AnalyticsMetric.extractionStarted.total(summary), 13);
@@ -226,6 +232,8 @@ void main() {
           AnalyticsMetric.visits,
           AnalyticsMetric.pageviews,
           AnalyticsMetric.appOpens,
+          AnalyticsMetric.startAppealClicked,
+          AnalyticsMetric.documentAdded,
         },
       );
       expect(AnalyticsMetric.revenue.supportsSegmentComparison, isFalse);
@@ -672,6 +680,10 @@ AnalyticsSummary _metricSummary() => AnalyticsSummary.fromDocuments(
           'visits': 1,
           'pageviews': 1,
           'boots': 1,
+          'intent': {
+            'start_appeal_clicked': 1,
+            'document_added': 1,
+          },
           'revenueCents': 195,
           'funnel': {
             'upload': 1,
@@ -732,6 +744,10 @@ AnalyticsSummary _metricSummary() => AnalyticsSummary.fromDocuments(
           'visits': 2,
           'pageviews': 3,
           'boots': 4,
+          'intent': {
+            'start_appeal_clicked': 5,
+            'document_added': 6,
+          },
           'revenueCents': 505,
           'funnel': {
             'upload': 5,

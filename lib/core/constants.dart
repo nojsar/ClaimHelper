@@ -4,12 +4,13 @@ abstract final class AppCopy {
   static const appName = 'GetMyYes';
 
   static const tagline =
-      'Turn your denied medication or treatment letter into a ready-to-send '
-      'appeal packet in 15 minutes.';
+      'Understand your health-insurance denial and prepare a clear appeal '
+      'packet you review and control.';
 
   static const subTagline =
       'Upload your denial letter, EOB, or prior-authorization denial. '
-      'GetMyYes drafts the appeal paperwork — you review and send it.';
+      'Review a free plain-English summary before deciding whether to build '
+      'the complete paperwork.';
 
   static const consentText =
       'I give explicit consent for GetMyYes and its AI service to process the '
@@ -34,6 +35,18 @@ abstract final class AppCopy {
 
   static const notMedicalAdviceShort =
       'Not medical, legal, or insurance advice. Review before sending.';
+}
+
+/// Canonical public URLs. Keep app links aligned with sitemap/canonical tags so
+/// users and crawlers never take an avoidable Firebase clean-URL redirect.
+abstract final class AppUrls {
+  static const origin = 'https://getmyyes.com';
+  static const terms = '$origin/terms';
+  static const accuracyGuarantee = '$terms#accuracy-guarantee';
+  static const privacy = '$origin/privacy';
+  static const accessibility = '$origin/accessibility';
+  static const insurerDenialRates = '$origin/insurer-denial-rates';
+  static const externalReview = '$origin/appeals/external-review';
 }
 
 abstract final class UsStates {

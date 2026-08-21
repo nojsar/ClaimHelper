@@ -6,6 +6,7 @@ import '../../core/theme.dart';
 import '../../models/extraction.dart';
 import '../../state/intake_controller.dart';
 import '../../widgets/app_scaffold.dart';
+import '../../widgets/ui.dart';
 
 /// Editable review of the AI-extracted fields. Everything is correctable so
 /// the packet is built from facts the user confirmed. Missing fields are
@@ -166,6 +167,8 @@ class _ExtractionReviewScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const WorkflowProgress(currentStep: 1),
+            const SizedBox(height: 18),
             Semantics(
               header: true,
               child: Text('Check the details',

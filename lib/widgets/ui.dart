@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/theme.dart';
 
-/// The ClaimHelper brand mark: a rounded gradient shield with a check.
+/// The GetMyYes brand mark: a calm navy-to-teal tile with a check.
 class BrandMark extends StatelessWidget {
   const BrandMark({super.key, this.size = 34});
   final double size;
@@ -17,7 +17,7 @@ class BrandMark extends StatelessWidget {
         borderRadius: BorderRadius.circular(size * 0.30),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x552563EB),
+            color: Color(0x382F6F62),
             blurRadius: 14,
             offset: Offset(0, 6),
             spreadRadius: -3,
@@ -29,7 +29,7 @@ class BrandMark extends StatelessWidget {
   }
 }
 
-/// Wordmark: brand mark + "ClaimHelper".
+/// Wordmark: brand mark + "GetMyYes".
 class Wordmark extends StatelessWidget {
   const Wordmark({super.key, this.markSize = 32, this.fontSize = 20});
   final double markSize;
@@ -108,7 +108,7 @@ class PillBadge extends StatelessWidget {
           ],
           Text(label,
               style: TextStyle(
-                  fontSize: 12.5,
+                  fontSize: 15,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.1,
                   color: color)),
@@ -138,11 +138,11 @@ class SectionHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: align,
       children: [
-        Text(eyebrow.toUpperCase(),
+        Text(eyebrow,
             style: const TextStyle(
-              fontSize: 12.5,
+              fontSize: 15,
               fontWeight: FontWeight.w800,
-              letterSpacing: 1.4,
+              letterSpacing: 0.2,
               color: AppColors.primary,
             )),
         const SizedBox(height: 10),
@@ -229,8 +229,6 @@ class _HoverCardState extends State<HoverCard> {
                 ? Duration.zero
                 : const Duration(milliseconds: 200),
             curve: Curves.easeOut,
-            transform: Matrix4.translationValues(
-                0, active && !reduceMotion ? -4 : 0, 0),
             padding: widget.padding,
             decoration: BoxDecoration(
               color: AppColors.surface,
@@ -241,7 +239,7 @@ class _HoverCardState extends State<HoverCard> {
                     : AppColors.border,
                 width: _focused ? 2 : 1,
               ),
-              boxShadow: active ? AppShadows.lifted : widget.baseShadow,
+              boxShadow: widget.baseShadow,
             ),
             child: widget.child,
           ),
@@ -321,6 +319,84 @@ class ResponsiveActions extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+/// A calm, shared orientation cue for the document-to-summary workflow.
+/// It intentionally uses a single current-stage label rather than a cramped
+/// horizontal stepper so it remains readable on small screens and at 200% zoom.
+class WorkflowProgress extends StatelessWidget {
+  const WorkflowProgress({
+    super.key,
+    required this.currentStep,
+  }) : assert(currentStep >= 0 && currentStep < 4);
+
+  final int currentStep;
+
+  static const stages = [
+    'Add document',
+    'Check facts',
+    'Answer questions',
+    'Review summary',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final current = stages[currentStep];
+    final next =
+        currentStep + 1 < stages.length ? stages[currentStep + 1] : null;
+    return Semantics(
+      container: true,
+      label: 'Step ${currentStep + 1} of ${stages.length}: $current'
+          '${next == null ? '' : '. Next: $next'}',
+      excludeSemantics: true,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.primaryTint,
+          borderRadius: BorderRadius.circular(AppRadii.md),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'STEP ${currentStep + 1} OF ${stages.length}',
+              style: const TextStyle(
+                color: AppColors.accentBright,
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              current,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 10),
+            LinearProgressIndicator(
+              value: (currentStep + 1) / stages.length,
+              minHeight: 8,
+              borderRadius: BorderRadius.circular(999),
+              backgroundColor: AppColors.border,
+              color: AppColors.accent,
+            ),
+            if (next != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Next: $next',
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

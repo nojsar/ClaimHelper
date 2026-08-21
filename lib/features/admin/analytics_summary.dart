@@ -111,8 +111,10 @@ enum AnalyticsMetric {
   visits('visits', 'Visits'),
   pageviews('pageviews', 'Pageviews'),
   appOpens('boots', 'App opens'),
+  startAppealClicked('intent.start_appeal_clicked', 'Started appeal'),
+  documentAdded('intent.document_added', 'Added document'),
   revenue('revenueCents', 'Revenue'),
-  uploadedDenial('funnel.upload', 'Uploaded denial'),
+  uploadedDenial('funnel.upload', 'Started upload'),
   extractedFacts('product.extraction.completed', 'Extracted facts'),
   sawPreview('funnel.preview', 'Saw preview'),
   startedCheckout('funnel.checkout_started', 'Started checkout'),
@@ -232,7 +234,11 @@ enum AnalyticsMetric {
   /// Only public traffic counters exist inside country/referrer/campaign/path
   /// segment documents. All other metrics must remain overall-only.
   bool get supportsSegmentComparison =>
-      this == visits || this == pageviews || this == appOpens;
+      this == visits ||
+      this == pageviews ||
+      this == appOpens ||
+      this == startAppealClicked ||
+      this == documentAdded;
 
   String format(int value) => isMicrosMoney
       ? '\$${(value / 1000000).toStringAsFixed(4)}'
@@ -246,6 +252,8 @@ enum AnalyticsMetric {
         visits => day.count('visits'),
         pageviews => day.count('pageviews'),
         appOpens => day.count('boots'),
+        startAppealClicked => day.pathCount('intent.start_appeal_clicked'),
+        documentAdded => day.pathCount('intent.document_added'),
         revenue => day.count('revenueCents'),
         uploadedDenial => day.funnelCount('upload'),
         extractedFacts => day.pathCount('product.extraction.completed'),

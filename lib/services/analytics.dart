@@ -16,6 +16,10 @@ import 'analytics_stub.dart' if (dart.library.js_interop) 'analytics_web.dart'
 
 void trackPageview(String path) => impl.trackPageview(path);
 
+/// Counts only that a valid first document was accepted by the upload screen.
+/// No filename, type, size, contents, user ID, or case ID is sent.
+void trackDocumentAdded() => impl.trackDocumentAdded();
+
 /// Releases queued traffic after Firebase Auth confirms this is not the owner.
 void resolveAnalyticsAuth() => impl.resolveAnalyticsAuth();
 

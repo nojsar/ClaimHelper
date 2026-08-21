@@ -7,9 +7,9 @@
     "display": "standalone",
     "lang": "en-US",
     "dir": "ltr",
-    "background_color": "#F3EDDF",
-    "theme_color": "#F3EDDF",
-    "description": "Turn a denied medication, prior-authorization, or 'not medically necessary' letter into a ready-to-review appeal packet in 15 minutes.",
+    "background_color": "#F6F8F7",
+    "theme_color": "#17324D",
+    "description": "Understand a U.S. health-insurance denial and prepare a clear appeal packet you review and control.",
     "categories": ["health", "medical", "productivity", "utilities"],
     "prefer_related_applications": false,
     "icons": [

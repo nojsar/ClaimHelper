@@ -271,12 +271,19 @@ for (const file of files) {
     checkContrastToken(file, css, "carmine", "paper");
     checkContrastToken(file, css, "green", "paper");
     checkContrastToken(file, css, "green-on-dark", "panel-dark");
+    checkContrastToken(file, css, "control-border", "letter", 3);
   } else if (path.basename(file) === "index.html") {
-    must(file, /gsap\.from\(['"]\.doc-list li['"],\s*\{\s*y\s*:/i.test(html), "document-list entrance must use a vertical transform to avoid horizontal overflow.");
-    must(file, /gsap\.from\(['"]\.receipt \.r-stamp['"],\s*\{\s*y\s*:/i.test(html), "receipt-stamp entrance must use a vertical transform to avoid horizontal overflow.");
-    checkContrastToken(file, css, "ink-faint", "paper");
-    checkContrastToken(file, css, "red", "paper");
-    checkContrastToken(file, css, "green-bright", "ink");
+    for (const token of ["background", "surface", "navy", "navy-dark", "teal-dark", "text", "text-soft", "muted", "error"]) {
+      must(file, new RegExp(`--${token}\\s*:\\s*#[0-9a-f]{6}\\b`, "i").test(css), `homepage is missing the required --${token} color token.`);
+    }
+    must(file, /body\s*\{[^}]*font-size:\s*18px\b[^}]*line-height:\s*1\.6[05]\b/s.test(css), "homepage body copy must retain an older-adult-friendly 18px size and generous line height.");
+    must(file, /\.button\s*\{[^}]*min-height:\s*(?:4[89]|[5-9]\d)px\b/s.test(css), "homepage buttons must retain at least a 48px target height.");
+    must(file, /id=["']hero-trust["']/.test(html), "homepage primary action needs a visible trust disclosure.");
+    must(file, !/ticker-marquee|ticker-motion-toggle|[\u2715\u2716]/i.test(html), "homepage must not use an alarming cross ticker.");
+    checkContrastToken(file, css, "text-soft", "background");
+    checkContrastToken(file, css, "muted", "background");
+    checkContrastToken(file, css, "navy", "background");
+    checkContrastToken(file, css, "teal-dark", "background");
   } else {
     checkContrastToken(file, css, "dim", "bg");
     checkContrastToken(file, css, "blue", "bg");

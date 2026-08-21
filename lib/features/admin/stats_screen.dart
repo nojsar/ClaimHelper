@@ -401,6 +401,8 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
               AnalyticsMetric.visits,
               AnalyticsMetric.pageviews,
               AnalyticsMetric.appOpens,
+              AnalyticsMetric.startAppealClicked,
+              AnalyticsMetric.documentAdded,
               AnalyticsMetric.revenue,
               AnalyticsMetric.paid,
               AnalyticsMetric.submittedAppeal,
@@ -457,7 +459,10 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
         const Padding(
           padding: EdgeInsets.only(bottom: 10),
           child: Text(
-            'Page traffic is not a case milestone. Paid packages are counted '
+            'Started appeal counts the free-preview action; added document '
+            'counts only the first valid file accepted on an upload screen. '
+            'Neither counter stores file details or identifies a person. '
+            'Paid packages are counted '
             'only after Stripe confirms a completed checkout; submitted '
             'appeals are counted only when a customer records the case as '
             'sent.',
@@ -1719,8 +1724,10 @@ class _FunnelCard extends StatelessWidget {
   Widget build(BuildContext context) {
     const steps = <(String, AnalyticsMetric)>[
       ('Visits', AnalyticsMetric.visits),
-      ('Opened app', AnalyticsMetric.appOpens),
-      ('Uploaded denial', AnalyticsMetric.uploadedDenial),
+      ('Started appeal', AnalyticsMetric.startAppealClicked),
+      ('Opened workspace', AnalyticsMetric.appOpens),
+      ('Added document', AnalyticsMetric.documentAdded),
+      ('Started upload', AnalyticsMetric.uploadedDenial),
       ('Extracted facts', AnalyticsMetric.extractedFacts),
       ('Saw preview', AnalyticsMetric.sawPreview),
       ('Started checkout', AnalyticsMetric.startedCheckout),

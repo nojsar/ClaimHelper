@@ -8,51 +8,49 @@ abstract final class AppFonts {
   static const mono = 'IBMPlexMono';
 }
 
-/// THE CASE FILE — the app wears the same paper world as getmyyes.com:
-/// bone paper, warm ink, carmine stamp red, approval green, letterpress type.
+/// Calm, familiar healthcare-document colors shared with getmyyes.com.
+/// Brand navy/teal are deliberately separate from destructive/error red.
 abstract final class AppColors {
-  // Stamp carmine (brand / emphasis)
-  static const primary = Color(0xFFB3202A); // carmine — spinners, accents
-  static const primaryDark = Color(0xFF8F1922); // deep carmine for links/text
-  static const primaryDeep = Color(0xFF6E1219); // darkest red (gradients)
-  static const primaryTint = Color(0xFFF3E2DE); // red-tinted paper wash
+  // Trustworthy navy (brand / navigation / primary actions)
+  static const primary = Color(0xFF17324D);
+  static const primaryDark = Color(0xFF10263B);
+  static const primaryDeep = Color(0xFF0B1D2D);
+  static const primaryTint = Color(0xFFEDF3F8);
 
-  // Approval green (success / progress)
-  static const accent = Color(0xFF14724F);
-  // Light enough to retain the brighter accent character, but dark enough to
-  // meet WCAG AA for normal text on [accentTint] (4.55:1).
-  static const accentBright = Color(0xFF177852);
-  static const accentTint = Color(0xFFE4EDE0);
+  // Calm teal (trust / progress / positive emphasis)
+  static const accent = Color(0xFF2F6F62);
+  static const accentBright = Color(0xFF24594F);
+  static const accentTint = Color(0xFFEAF3F1);
 
-  // Paper & ink neutrals
-  static const background = Color(0xFFF3EDDF); // bone paper
-  static const surface = Color(0xFFFBF7EC); // letter paper
-  static const surfaceAlt = Color(0xFFEAE1CC); // deeper cream
-  static const textPrimary = Color(0xFF1C160C); // warm ink
-  static const textSecondary = Color(0xFF57503F);
+  // Clear, high-contrast neutrals
+  static const background = Color(0xFFF6F8F7);
+  static const surface = Color(0xFFFFFFFF);
+  static const surfaceAlt = Color(0xFFEAF0EE);
+  static const textPrimary = Color(0xFF1F2B37);
+  static const textSecondary = Color(0xFF4A5865);
   // Meets WCAG AA for normal text on both [background] and [surface].
-  static const textMuted = Color(0xFF746A52);
-  static const border = Color(0xFFDCD2BA);
-  static const borderStrong = Color(0xFFB9AC8F);
+  static const textMuted = Color(0xFF5F6E78);
+  static const border = Color(0xFFC9D6D2);
+  static const borderStrong = Color(0xFF95AAA3);
   // Persistent boundaries for form fields and other interactive controls.
   // Meets WCAG 1.4.11's 3:1 non-text contrast requirement on paper surfaces.
   static const controlBorder = textMuted;
 
-  // Ink (buttons, footer, dark panels)
-  static const ink = Color(0xFF1C160C);
-  static const inkSoft = Color(0xFF2A2213);
+  // Dark panels and primary buttons
+  static const ink = primary;
+  static const inkSoft = primaryDark;
 
   // Status
-  static const warning = Color(0xFF8C5A08);
-  static const warningTint = Color(0xFFF4E8CB);
-  static const error = Color(0xFFB3202A);
-  static const errorTint = Color(0xFFF5DFDD);
+  static const warning = Color(0xFF805600);
+  static const warningTint = Color(0xFFF8EDCE);
+  static const error = Color(0xFFA3262F);
+  static const errorTint = Color(0xFFF7E7E8);
 }
 
 /// Gradients used sparingly for hero washes, CTA bands, and brand marks.
 abstract final class AppGradients {
   static const brand = LinearGradient(
-    colors: [AppColors.primary, Color(0xFFD92632)],
+    colors: [AppColors.primary, AppColors.accent],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -64,22 +62,22 @@ abstract final class AppGradients {
   );
 
   static const heroWash = LinearGradient(
-    colors: [Color(0xFFF7F1E3), Color(0xFFF3EDDF), Color(0xFFF3EDDF)],
+    colors: [Color(0xFFFFFFFF), AppColors.background, AppColors.background],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
 
-  /// NO-red into YES-green — the whole product in one gradient.
+  /// Navy into teal keeps emphasized text calm and recognizable.
   static const accentText = LinearGradient(
     colors: [AppColors.primary, AppColors.accent],
   );
 }
 
-/// Warm paper shadows — graphite on a desk, never cold blue.
+/// Soft neutral shadows for familiar document cards.
 abstract final class AppShadows {
   static const soft = [
     BoxShadow(
-      color: Color(0x1F3C2E12),
+      color: Color(0x1F17324D),
       blurRadius: 24,
       offset: Offset(0, 8),
       spreadRadius: -6,
@@ -88,7 +86,7 @@ abstract final class AppShadows {
 
   static const lifted = [
     BoxShadow(
-      color: Color(0x333C2E12),
+      color: Color(0x2917324D),
       blurRadius: 40,
       offset: Offset(0, 18),
       spreadRadius: -10,
@@ -97,7 +95,7 @@ abstract final class AppShadows {
 
   static const subtle = [
     BoxShadow(
-      color: Color(0x143C2E12),
+      color: Color(0x1417324D),
       blurRadius: 12,
       offset: Offset(0, 4),
       spreadRadius: -4,
@@ -151,14 +149,25 @@ ThemeData buildAppTheme() {
         color: AppColors.textPrimary,
         letterSpacing: -0.4,
       );
-  final textTheme = body.copyWith(
-    displayLarge: serif(body.displayLarge, weight: FontWeight.w700),
-    displayMedium: serif(body.displayMedium, weight: FontWeight.w700),
-    displaySmall: serif(body.displaySmall, weight: FontWeight.w700),
-    headlineLarge: serif(body.headlineLarge, weight: FontWeight.w700),
-    headlineMedium: serif(body.headlineMedium),
-    headlineSmall: serif(body.headlineSmall),
-    titleLarge: serif(body.titleLarge),
+  final readableBody = body.copyWith(
+    bodyLarge: body.bodyLarge?.copyWith(fontSize: 18, height: 1.55),
+    bodyMedium: body.bodyMedium?.copyWith(fontSize: 16, height: 1.55),
+    bodySmall: body.bodySmall?.copyWith(fontSize: 14.5, height: 1.5),
+    labelLarge: body.labelLarge?.copyWith(
+      fontSize: 16,
+      fontWeight: FontWeight.w700,
+    ),
+    labelMedium: body.labelMedium?.copyWith(fontSize: 15),
+    labelSmall: body.labelSmall?.copyWith(fontSize: 14),
+  );
+  final textTheme = readableBody.copyWith(
+    displayLarge: serif(readableBody.displayLarge, weight: FontWeight.w700),
+    displayMedium: serif(readableBody.displayMedium, weight: FontWeight.w700),
+    displaySmall: serif(readableBody.displaySmall, weight: FontWeight.w700),
+    headlineLarge: serif(readableBody.headlineLarge, weight: FontWeight.w700),
+    headlineMedium: serif(readableBody.headlineMedium),
+    headlineSmall: serif(readableBody.headlineSmall),
+    titleLarge: serif(readableBody.titleLarge),
   );
 
   final base = ThemeData(
@@ -199,23 +208,22 @@ ThemeData buildAppTheme() {
       ),
       margin: EdgeInsets.zero,
     ),
-    // Primary actions are ink-black documents stamps — like the landing.
+    // Large, conventional controls remain easy to read and target.
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         backgroundColor: AppColors.ink,
-        foregroundColor: AppColors.background,
+        foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 18),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadii.sm),
+          borderRadius: BorderRadius.circular(AppRadii.md),
         ),
         textStyle: const TextStyle(
-          fontFamily: AppFonts.mono,
-          fontWeight: FontWeight.w600,
-          fontSize: 14,
-          letterSpacing: 0.8,
+          fontFamily: AppFonts.sans,
+          fontWeight: FontWeight.w700,
+          fontSize: 16,
         ),
         elevation: 0,
-        minimumSize: const Size(48, 48),
+        minimumSize: const Size(52, 52),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
@@ -225,15 +233,14 @@ ThemeData buildAppTheme() {
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
         side: const BorderSide(color: AppColors.ink, width: 1.3),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadii.sm),
+          borderRadius: BorderRadius.circular(AppRadii.md),
         ),
         textStyle: const TextStyle(
-          fontFamily: AppFonts.mono,
-          fontWeight: FontWeight.w600,
-          fontSize: 13.5,
-          letterSpacing: 0.8,
+          fontFamily: AppFonts.sans,
+          fontWeight: FontWeight.w700,
+          fontSize: 16,
         ),
-        minimumSize: const Size(48, 48),
+        minimumSize: const Size(52, 52),
       ),
     ),
     textButtonTheme: TextButtonThemeData(

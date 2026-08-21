@@ -197,7 +197,7 @@ void main() {
           RegExp(r'Choose (denial documents|files)', caseSensitive: false)),
       findsOneWidget,
     );
-    expect(find.text('Choose files'), findsNothing);
+    expect(find.text('Choose files'), findsOneWidget);
     final dropZone = tester
         .getSemantics(find.bySemanticsLabel('Choose denial documents'))
         .getSemanticsData();
@@ -205,18 +205,18 @@ void main() {
     expect(dropZone.hasAction(SemanticsAction.tap), isTrue);
     expect(
       tester
-          .getSemantics(find.text('Add your documents'))
+          .getSemantics(find.text('Upload your denial letter'))
           .getSemanticsData()
           .flagsCollection
           .isHeader,
       isTrue,
     );
     expect(find.text('Take a photo'), findsOneWidget);
-    expect(find.textContaining('20 MB each, 45 MB total'), findsOneWidget);
+    expect(find.textContaining('20 MB each'), findsOneWidget);
     expect(find.textContaining('No card is required'), findsOneWidget);
     expect(
         find.text('I consent to secure document processing'), findsOneWidget);
-    final primaryAction = tester.getRect(find.text('Read my document'));
+    final primaryAction = tester.getRect(find.text('Create my free summary'));
     expect(primaryAction.bottom, lessThanOrEqualTo(900));
     expect(primaryAction.top, greaterThanOrEqualTo(0));
     semantics.dispose();

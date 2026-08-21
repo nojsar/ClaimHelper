@@ -675,6 +675,12 @@ function isAllowedTrafficCounterPath(path: string): boolean {
   if (path === "visits" || path === "pageviews" || path === "boots") {
     return true;
   }
+  if (
+    path === "intent.start_appeal_clicked" ||
+    path === "intent.document_added"
+  ) {
+    return true;
+  }
   if (path.startsWith("performance.app_ready.")) {
     return appReadyBucketNames.has(path.slice("performance.app_ready.".length));
   }
@@ -1747,7 +1753,9 @@ export type PublicTrafficEventType =
   | "visit"
   | "boot"
   | "pageview"
-  | "app_ready";
+  | "app_ready"
+  | "start_appeal_clicked"
+  | "document_added";
 
 export interface NormalizedTrafficEvent {
   type: PublicTrafficEventType;
@@ -1778,7 +1786,9 @@ export function normalizeTrafficEvent(
     type !== "visit" &&
     type !== "boot" &&
     type !== "pageview" &&
-    type !== "app_ready"
+    type !== "app_ready" &&
+    type !== "start_appeal_clicked" &&
+    type !== "document_added"
   ) {
     return null;
   }
@@ -1818,6 +1828,10 @@ export function normalizeTrafficEvent(
   } else if (type === "pageview") {
     fields.pageviews = 1;
     fields[`paths.${path}`] = 1;
+  } else if (type === "start_appeal_clicked") {
+    fields["intent.start_appeal_clicked"] = 1;
+  } else if (type === "document_added") {
+    fields["intent.document_added"] = 1;
   } else if (readyBucket) {
     fields[`performance.app_ready.${readyBucket}`] = 1;
   }

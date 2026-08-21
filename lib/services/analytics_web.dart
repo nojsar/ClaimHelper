@@ -17,6 +17,12 @@ void trackPageview(String path) {
   } catch (_) {}
 }
 
+void trackDocumentAdded() {
+  try {
+    _jsTrack('document_added', '/upload');
+  } catch (_) {}
+}
+
 void resolveAnalyticsAuth() {
   try {
     _jsResolveAnalyticsAuth();

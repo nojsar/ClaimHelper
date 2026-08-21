@@ -46,34 +46,34 @@
   </script>
   <script src="/analytics.js" data-static></script>
   <style>
-    .calc { border: 1.5px solid var(--border-strong); border-radius: 16px; background: var(--letter); padding: 24px; margin: 24px 0; box-shadow: 0 12px 30px -8px rgba(60,46,18,.15); }
+    .calc { border: 1.5px solid var(--control-border); border-radius: 16px; background: var(--letter); padding: 24px; margin: 24px 0; box-shadow: 0 12px 30px -8px rgba(23,50,77,.13); }
     .calc .row { margin-bottom: 16px; }
-    .calc label { display: block; font-weight: 700; font-size: 14.5px; margin-bottom: 6px; }
+    .calc label { display: block; font-weight: 700; font-size: 16px; margin-bottom: 7px; }
     .calc input[type="date"], .calc select {
-      width: 100%; max-width: 320px; padding: 11px 12px; font: inherit; font-size: 15px;
-      border: 1px solid var(--border-strong); border-radius: 10px; background: #fff; color: var(--ink); min-height: 44px;
+      width: 100%; max-width: 320px; padding: 12px 14px; font: inherit; font-size: 16px;
+      border: 1px solid var(--control-border); border-radius: 10px; background: #fff; color: var(--ink); min-height: 52px;
     }
-    .calc .hint { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+    .calc .hint { font-size: 15px; color: var(--muted); margin-top: 6px; }
     .calc .field-error {
-      margin: 6px 0 0; color: var(--carmine-dark); font-size: 13px; font-weight: 700;
+      margin: 6px 0 0; color: #A3262F; font-size: 15px; font-weight: 700;
     }
     .calc button.go {
-      background: var(--carmine); color: #fff; border: 0; padding: 13px 26px; border-radius: 12px;
-      font: inherit; font-weight: 800; font-size: 15.5px; cursor: pointer; min-height: 44px;
+      background: var(--green); color: #fff; border: 0; padding: 13px 26px; border-radius: 12px;
+      font: inherit; font-weight: 800; font-size: 16px; cursor: pointer; min-height: 52px;
     }
-    .calc button.go:hover { background: #D92632; }
+    .calc button.go:hover { background: var(--green-bright); }
     #results { margin-top: 8px; }
     #results:empty { margin-top: 0; }
     .results-heading { margin: 18px 0 2px; font-size: 16px; }
     .deadlines { margin: 0; }
     .deadline { display: flex; gap: 14px; align-items: baseline; border-bottom: 1px dashed var(--border-strong); padding: 12px 0; }
     .deadline .date { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 15px; color: var(--carmine-dark); min-width: 130px; overflow-wrap: anywhere; }
-    .deadline .what strong { display: block; font-size: 15px; }
+    .deadline .what strong { display: block; font-size: 16px; }
     .deadline .what { margin: 0; }
-    .deadline .what span { font-size: 13px; color: var(--ink-soft); }
+    .deadline .what span { font-size: 15px; color: var(--ink-soft); }
     button.ics {
-      margin-top: 16px; border: 1px solid var(--border-strong); background: var(--letter); color: var(--ink);
-      font-family: 'IBM Plex Mono', monospace; font-size: 13px; padding: 11px 18px; border-radius: 10px; cursor: pointer; min-height: 44px;
+      margin-top: 16px; border: 1px solid var(--control-border); background: var(--letter); color: var(--ink);
+      font-family: 'IBM Plex Mono', monospace; font-size: 15px; padding: 11px 18px; border-radius: 10px; cursor: pointer; min-height: 48px;
     }
     button.ics:hover { border-color: var(--green); color: var(--green); }
     @media (max-width: 560px) {
@@ -91,7 +91,7 @@
       <nav aria-label="Primary">
         <a class="navlink" href="/appeals/">Appeal guides</a>
         <a class="navlink" href="/codes/">Denial codes</a>
-        <a class="btn-start" href="/#/upload">Start my appeal — free</a>
+        <a class="btn-start" href="/#/upload">See my free denial summary</a>
       </nav>
     </div>
   </header>
@@ -140,11 +140,11 @@
       </ul>
 
       <div class="cta">
-        <div class="kicker">Deadlines are half the battle</div>
+        <div class="kicker">Deadlines deserve a clear plan</div>
         <h2>The other half is the paperwork. We draft it.</h2>
         <p>Upload your denial letter — GetMyYes drafts the appeal letter, evidence checklist, doctor letter request, and call script around your case, with your deadlines tracked automatically.</p>
-        <a class="go" href="/#/upload">Start my appeal — free preview</a>
-        <p class="sub">FREE PREVIEW · $39 FULL PACKET · NO SUBSCRIPTION. EVER.</p>
+        <a class="go" href="/#/upload">See my free denial summary</a>
+        <p class="sub">Free preview · $39 full packet · No subscription</p>
       </div>
 
       <div class="related">
