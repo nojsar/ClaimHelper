@@ -65,6 +65,35 @@ const Rule: React.FC = () => {
   );
 };
 
+/**
+ * The rail connecting the step dots, drawing downward as each step lands. It is
+ * the same device the guide pages use for their journey map, so a post and the
+ * page it links to read as one system rather than two.
+ */
+const StepRail: React.FC<{ dot: number }> = ({ dot }) => {
+  const frame = useCurrentFrame();
+  const drawn = interpolate(frame, [104, 140], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.out(Easing.cubic),
+  });
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: dot / 2 - 1,
+        top: dot,
+        bottom: dot,
+        width: 2,
+        background: INK_FAINT,
+        transform: `scaleY(${drawn})`,
+        transformOrigin: "top center",
+      }}
+    />
+  );
+};
+
 export const GuidePost: React.FC<GuidePostProps> = ({
   format,
   title,
@@ -175,12 +204,21 @@ export const GuidePost: React.FC<GuidePostProps> = ({
             </div>
           </Reveal>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: layout.gap * 0.55 }}>
+          <div
+            style={{
+              position: "relative",
+              display: "flex",
+              flexDirection: "column",
+              gap: layout.gap * 0.55,
+            }}
+          >
+            <StepRail dot={layout.stepDot} />
             {steps.map((step, index) => (
               <Reveal key={step} at={100 + index * 12}>
                 <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
                   <div
                     style={{
+                      position: "relative",
                       width: layout.stepDot,
                       height: layout.stepDot,
                       borderRadius: layout.stepDot,
