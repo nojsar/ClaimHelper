@@ -125,6 +125,35 @@ function isFirstPartyAnalyticsOrigin(raw: string): boolean {
  * authentication mechanism, so the bounded taxonomies below remain the main
  * protection against forged server requests and unbounded database writes.
  */
+
+/**
+ * Automated clients that reach the tracker.
+ *
+ * Only agents that execute JavaScript can post here at all, which rules out
+ * most crawlers but not the ones that matter: Googlebot and Bingbot both
+ * render, and headless Chrome is what scrapers and auditing tools drive. A
+ * freshly indexed site that pings IndexNow after every deploy invites exactly
+ * this traffic, and counting it makes every downstream rate meaningless.
+ *
+ * A real browser always sends a User-Agent, so a missing one is automation.
+ * The bare "bot" substring is deliberate — "Googlebot" and "bingbot" have no
+ * word boundary before it — and costs one known false positive, the Cubot
+ * phone brand, which is excluded explicitly.
+ */
+const AUTOMATED_USER_AGENTS =
+  /bot|crawler|crawling|spider|scraper|slurp|headless|phantomjs|puppeteer|playwright|selenium|webdriver|lighthouse|pagespeed|gtmetrix|pingdom|uptimerobot|curl|wget|python-requests|node-fetch|axios|go-http-client|okhttp|java\/|libwww|httpclient|scrapy|ahrefs|semrush|mj12|dotbot|dataforseo|serpstat|screaming frog|applebot|petalbot|yandex|baiduspider|duckduckbot|ia_archiver|facebookexternalhit|whatsapp|telegram|slackbot|discordbot|twitterbot|linkedinbot|embedly|preview/i;
+
+/** Phone brands and product names that collide with the patterns above. */
+const AUTOMATED_FALSE_POSITIVES = /cubot|robot vacuum/i;
+
+export function isAutomatedAnalyticsClient(raw: unknown): boolean {
+  if (typeof raw !== "string") return true;
+  const agent = raw.trim();
+  if (!agent) return true;
+  if (AUTOMATED_FALSE_POSITIVES.test(agent)) return false;
+  return AUTOMATED_USER_AGENTS.test(agent);
+}
+
 export function isTrustedAnalyticsRequest(
   headers: AnalyticsProvenanceHeaders,
 ): boolean {
@@ -1946,6 +1975,13 @@ export const trackEvent = onRequest(
       return;
     }
     if (!isTrustedAnalyticsRequest(req.headers)) {
+      res.status(204).send("");
+      return;
+    }
+    // Crawlers and headless auditors render pages and would otherwise be
+    // counted as visitors. 204 keeps the response indistinguishable from a
+    // recorded event, so nothing changes its behaviour on being filtered.
+    if (isAutomatedAnalyticsClient(req.headers["user-agent"])) {
       res.status(204).send("");
       return;
     }

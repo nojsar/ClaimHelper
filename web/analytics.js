@@ -23,6 +23,18 @@
   var disabled = false;
   var fallbackTimer = null;
 
+  // Automation drivers (Selenium, Puppeteer, Playwright) set this flag, so a
+  // scripted browser can be dropped before it costs a request. The server
+  // filters crawlers by User-Agent as well; this is the half that catches
+  // headless drivers presenting an ordinary Chrome agent string.
+  function isAutomatedClient() {
+    try {
+      return window.navigator.webdriver === true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   function isLocalHost() {
     return /^(localhost|127\.|192\.168\.)/.test(location.hostname);
   }
@@ -61,7 +73,8 @@
   }
 
   function send(event) {
-    if (disabled || isLocalHost() || isAdminRoute(event.path)) return;
+    if (disabled || isLocalHost() || isAutomatedClient() ||
+        isAdminRoute(event.path)) return;
     try {
       var payload = JSON.stringify(event);
       if (navigator.sendBeacon) {
@@ -95,7 +108,8 @@
     var route = currentPath(path);
     // The private dashboard is never acquisition/product traffic. Suppress it
     // synchronously, even before Firebase Auth has restored the owner session.
-    if (disabled || isLocalHost() || isAdminRoute(route)) return;
+    if (disabled || isLocalHost() || isAutomatedClient() ||
+        isAdminRoute(route)) return;
     var event = {
       t: String(type || ''),
       path: route,
