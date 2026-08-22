@@ -398,3 +398,55 @@ footer.site a { color: var(--ink-soft); }
 @media (forced-colors: active) {
   .guide-motion { border: 1px solid CanvasText; }
 }
+
+/* ---------------------------------------------------------------------
+   Data visuals (insurer-denial-rates).
+
+   Both are decorative amplification of figures the prose and the table
+   already state, so nothing is encoded only in a graphic and the aria-hidden
+   marks are honest. Drawn in CSS rather than SVG or a charting library: the
+   numbers stay real text, so they reflow, translate, and are selectable.
+   --------------------------------------------------------------------- */
+
+/* Share-of-denials bars, scaled against a round 40% axis so the widths stay
+   comparable if a future year's figures shift. */
+.pct { white-space: nowrap; }
+.pct-value { display: inline-block; min-width: 3.2em; font-variant-numeric: tabular-nums; }
+.pct-bar {
+  display: block;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: var(--green);
+  opacity: 0.55;
+  width: calc(var(--v) * 2.5%);
+  min-width: 4px;
+}
+
+/* One square per denied claim; the single teal one is the appeal. */
+.waffle { margin: 4px 0 26px; }
+.waffle-grid {
+  display: grid;
+  grid-template-columns: repeat(20, 1fr);
+  gap: 4px;
+  max-width: 460px;
+}
+.waffle-grid span {
+  aspect-ratio: 1;
+  border-radius: 2px;
+  background: var(--border);
+}
+.waffle-grid span.on { background: var(--green); }
+.waffle figcaption {
+  margin-top: 10px;
+  max-width: 460px;
+  color: var(--ink-soft);
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+@media (forced-colors: active) {
+  .pct-bar { background: CanvasText; }
+  .waffle-grid span { border: 1px solid CanvasText; }
+  .waffle-grid span.on { background: Highlight; }
+}
