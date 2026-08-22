@@ -154,35 +154,6 @@
             }
           }
         ]
-      },
-      {
-        "@type": "VideoObject",
-        "@id": "https://getmyyes.com/appeals/how-to-appeal-health-insurance-denial#video",
-        "name": "How to Appeal a Health Insurance Denial — Step-by-Step",
-        "description": "Deadlines, supporting documents, a free letter template, and the internal and external review process.",
-        "thumbnailUrl": "https://getmyyes.com/media/social/appeal-step-by-step-poster.png",
-        "contentUrl": "https://getmyyes.com/media/social/appeal-step-by-step-square.mp4",
-        "uploadDate": "2026-08-20T00:00:00Z",
-        "duration": "PT10S",
-        "inLanguage": "en-US",
-        "isFamilyFriendly": true,
-        "publisher": {
-          "@type": "Organization",
-          "name": "GetMyYes",
-          "url": "https://getmyyes.com/",
-          "sameAs": [
-            "https://mastodon.social/@getmyyes",
-            "https://bsky.app/profile/getmyyes.com",
-            "https://x.com/get_my_yes",
-            "https://www.instagram.com/getmyyes/"
-          ],
-          "logo": {
-            "@type": "ImageObject",
-            "url": "https://getmyyes.com/icons/Icon-512.png",
-            "width": 512,
-            "height": 512
-          }
-        }
       }
     ]
   }
@@ -211,14 +182,27 @@
 
       <p class="lede">A denial is not necessarily the last word. Internal appeal and, for eligible disputes, external review let you ask for a documented reconsideration. The governing rules depend on your plan type, so start with the denial notice and protect every stated deadline.</p>
 
-      <figure class="guide-video">
-        <video controls muted playsinline preload="none" width="1080" height="1080"
-               poster="/media/social/appeal-step-by-step-poster.png"
-               aria-describedby="guide-video-note">
-          <source src="/media/social/appeal-step-by-step-square.mp4" type="video/mp4">
-        </video>
-        <figcaption id="guide-video-note">A 10-second silent summary of this guide. Everything it shows is written out in full below.</figcaption>
-      </figure>
+      <!-- Ambient motion, not information. Decorative and aria-hidden: the
+           guide says everything in text, so this carries no meaning a reader
+           could miss. SVG rather than a video file because ~2KB of shapes
+           scales to any viewport and carries no player chrome. -->
+      <div class="guide-motion" aria-hidden="true">
+        <svg viewBox="0 0 1200 140" preserveAspectRatio="none" focusable="false" aria-hidden="true">
+          <g class="gm-lines">
+            <path d="M-40 104 C 240 52, 430 132, 660 84 S 1010 34, 1240 72"/>
+            <path d="M-40 64 C 270 116, 500 30, 730 70 S 1050 118, 1240 44"/>
+            <path d="M-40 30 C 310 84, 570 4, 810 44 S 1090 86, 1240 22"/>
+          </g>
+          <g class="gm-dots">
+            <circle class="gm-dot" cx="140" cy="96" r="6"/>
+            <circle class="gm-dot" cx="330" cy="58" r="4"/>
+            <circle class="gm-dot" cx="515" cy="114" r="3.5"/>
+            <circle class="gm-dot" cx="700" cy="36" r="5"/>
+            <circle class="gm-dot" cx="885" cy="78" r="3"/>
+            <circle class="gm-dot" cx="1055" cy="22" r="4.5"/>
+          </g>
+        </svg>
+      </div>
       <!-- Journey map: the shape of the process before the precise, caveated
            numbers in the benchmarks box below it. -->
       <figure class="flow" aria-labelledby="flow-caption">

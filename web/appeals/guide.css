@@ -274,14 +274,6 @@ footer.site a { color: var(--ink-soft); }
   .gcard, .keyfacts, .sources, details, .letter, .cta, .code-finder, .code-no-results { border: 1px solid CanvasText; }
 }
 
-/* Silent 10s guide summary rendered by Remotion (video/). preload="none"
-   keeps it off the critical path so it cannot affect LCP. */
-.guide-video { margin: 0 0 26px; }
-.guide-video video { display: block; width: 100%; max-width: 420px; height: auto;
-  border: 1px solid var(--border); border-radius: 10px; background: var(--cream); }
-.guide-video figcaption { font-family: 'IBM Plex Mono', monospace; font-size: 12px;
-  color: var(--muted); margin-top: 8px; max-width: 420px; line-height: 1.5; }
-
 /* ---------------------------------------------------------------------
    Journey map.
 
@@ -352,4 +344,57 @@ footer.site a { color: var(--ink-soft); }
 @media (forced-colors: active) {
   .flow-marker { border: 1px solid CanvasText; }
   .flow-when { border: 1px solid CanvasText; }
+}
+
+/* ---------------------------------------------------------------------
+   Ambient band.
+
+   Decoration, not information — aria-hidden, because the guide states
+   everything in text. Shapes rather than a video file: about 2KB against
+   675KB, sharp at any viewport, and with no player chrome, so it reads as
+   part of the page instead of something embedded in it.
+
+   Every dot starts off-canvas at cx=-40 and is distributed around the cycle
+   by a negative delay. Under reduced motion they simply stay off-canvas and
+   the band settles into its static line texture, which is a deliberate
+   resting state rather than a broken one.
+   --------------------------------------------------------------------- */
+.guide-motion {
+  height: 140px;
+  margin: 0 0 26px;
+  border-radius: 12px;
+  background: var(--cream);
+  overflow: hidden;
+}
+.guide-motion svg { display: block; width: 100%; height: 100%; }
+.gm-lines path { fill: none; stroke: var(--green); stroke-width: 1.5; opacity: 0.16; }
+.gm-dot { fill: var(--green); opacity: 0.30; }
+.gm-dot:nth-child(2n) { fill: var(--carmine); opacity: 0.24; }
+
+/* Finite on purpose. WCAG 2.2.2 exempts motion of five seconds or less, so a
+   settle needs no pause control — and a pause button is exactly the player
+   chrome that made the old embed read as a video. Longest dot finishes at
+   4.4s. The resting arrangement is the composition; the motion is how it
+   assembles. */
+@media (prefers-reduced-motion: no-preference) {
+  .gm-dot { animation: gm-settle 3.2s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+  .gm-dot:nth-child(1) { animation-delay: 0.05s; }
+  .gm-dot:nth-child(2) { animation-delay: 0.45s; }
+  .gm-dot:nth-child(3) { animation-delay: 0.25s; }
+  .gm-dot:nth-child(4) { animation-delay: 0.95s; }
+  .gm-dot:nth-child(5) { animation-delay: 0.65s; }
+  .gm-dot:nth-child(6) { animation-delay: 1.20s; }
+}
+@keyframes gm-settle {
+  from { transform: translateX(-340px); }
+  to { transform: translateX(0); }
+}
+}
+
+@media (max-width: 640px) {
+  .guide-motion { height: 96px; }
+}
+
+@media (forced-colors: active) {
+  .guide-motion { border: 1px solid CanvasText; }
 }

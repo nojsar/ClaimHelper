@@ -10,10 +10,6 @@ const webRoot = path.join(projectRoot, "web");
 const guidesRoot = path.join(webRoot, "appeals");
 const buildRoot = path.join(projectRoot, "build", "web");
 const siteOrigin = "https://getmyyes.com";
-// The reviewed social queue names the Remotion render each guide embeds.
-const socialPosts = JSON.parse(
-  await readFile(path.join(projectRoot, "marketing", "posts.json"), "utf8"),
-);
 const mode = process.argv[2] ?? "generate";
 const discoveryFiles = [
   "analytics.js",
@@ -182,49 +178,6 @@ function requireArticleIdentity(graphs, html, canonical, file) {
 }
 
 
-/**
- * Every guide carries a Remotion-rendered summary video. Google only shows a
- * video rich result when the file is genuinely on the page, so the markup and
- * the <video> element are checked together — and the referenced files must
- * exist, because a VideoObject pointing at a 404 is a structured-data error
- * rather than a soft miss.
- */
-async function requireGuideVideo(graphs, html, slug, canonical, file) {
-  const post = socialPosts.find((entry) => entry.path.replace(/\/$/, "").endsWith(`/${slug}`));
-  if (!post) fail(`${file} has no marketing/posts.json entry to source its video from.`);
-  const video = schemaNodes(graphs).find((node) => node?.["@type"] === "VideoObject");
-  if (!video) fail(`${file} is missing VideoObject structured data.`);
-  const contentUrl = `${siteOrigin}/media/social/${post.id}-square.mp4`;
-  const thumbnailUrl = `${siteOrigin}/media/social/${post.id}-poster.png`;
-  if (
-    video["@id"] !== `${canonical}#video`
-    || video.contentUrl !== contentUrl
-    || video.thumbnailUrl !== thumbnailUrl
-  ) {
-    fail(`${file} VideoObject does not match its rendered media.`);
-  }
-  for (const field of ["name", "description", "uploadDate", "duration"]) {
-    if (!video[field]) fail(`${file} VideoObject is missing ${field}.`);
-  }
-  // Look at the markup only: the JSON-LD block already contains this URL, so
-  // searching the whole document would match the claim instead of the embed.
-  const markup = html.replace(/<script\s+type=["']application\/ld\+json["']>[\s\S]*?<\/script>/gi, "");
-  const embedded = /<video\b[\s\S]*?<\/video>/i.exec(markup)?.[0] ?? "";
-  if (!embedded.includes(`/media/social/${post.id}-square.mp4`)) {
-    fail(`${file} declares a VideoObject but never embeds the video on the page.`);
-  }
-  for (const asset of [`${post.id}-square.mp4`, `${post.id}-poster.png`]) {
-    if (!(await fileExists(path.join(webRoot, "media", "social", asset)))) {
-      fail(`${file} references web/media/social/${asset}, which does not exist.`);
-    }
-  }
-}
-
-/**
- * Guides make claims about deadlines and rights, so each one has to show its
- * work: the Article carries the authoritative sources the page already links,
- * and every citation must be a link that genuinely appears in the body.
- */
 function requireGuideCitations(graphs, html, file) {
   const article = schemaNodes(graphs).find((node) => node?.["@type"] === "Article");
   const citations = article?.citation;
@@ -442,7 +395,6 @@ async function guideModel() {
     }
     requireGuideBreadcrumb(graphs, canonical, name);
     requireArticleIdentity(graphs, html, canonical, name);
-    await requireGuideVideo(graphs, html, slug, canonical, name);
     requireGuideCitations(graphs, html, name);
     if (slugs.has(slug)) fail(`Duplicate guide slug: ${slug}.`);
     slugs.add(slug);

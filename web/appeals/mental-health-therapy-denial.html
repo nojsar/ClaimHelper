@@ -131,35 +131,6 @@
             }
           }
         ]
-      },
-      {
-        "@type": "VideoObject",
-        "@id": "https://getmyyes.com/appeals/mental-health-therapy-denial#video",
-        "name": "Therapy or Mental Health Treatment Denied? Parity Rules Help You Appeal",
-        "description": "Plans generally can't apply stricter limits to mental health and substance-use care than to medical care. Free template inside.",
-        "thumbnailUrl": "https://getmyyes.com/media/social/mental-health-parity-poster.png",
-        "contentUrl": "https://getmyyes.com/media/social/mental-health-parity-square.mp4",
-        "uploadDate": "2026-08-20T00:00:00Z",
-        "duration": "PT10S",
-        "inLanguage": "en-US",
-        "isFamilyFriendly": true,
-        "publisher": {
-          "@type": "Organization",
-          "name": "GetMyYes",
-          "url": "https://getmyyes.com/",
-          "sameAs": [
-            "https://mastodon.social/@getmyyes",
-            "https://bsky.app/profile/getmyyes.com",
-            "https://x.com/get_my_yes",
-            "https://www.instagram.com/getmyyes/"
-          ],
-          "logo": {
-            "@type": "ImageObject",
-            "url": "https://getmyyes.com/icons/Icon-512.png",
-            "width": 512,
-            "height": 512
-          }
-        }
       }
     ]
   }
@@ -214,14 +185,27 @@
 
       <p class="lede">Denials for therapy, residential treatment, or other mental health and substance-use care often turn on a "not medically necessary" finding or a visit limit — the same reasons used for medical claims. But a federal law called the <strong>Mental Health Parity and Addiction Equity Act (MHPAEA)</strong> generally bars plans from applying <em>stricter</em> rules to mental health and substance-use benefits than they apply to comparable medical and surgical benefits. If your denial feels harder to clear than a similar medical claim would be, parity may be the argument that wins your appeal.</p>
 
-      <figure class="guide-video">
-        <video controls muted playsinline preload="none" width="1080" height="1080"
-               poster="/media/social/mental-health-parity-poster.png"
-               aria-describedby="guide-video-note">
-          <source src="/media/social/mental-health-parity-square.mp4" type="video/mp4">
-        </video>
-        <figcaption id="guide-video-note">A 10-second silent summary of this guide. Everything it shows is written out in full below.</figcaption>
-      </figure>
+      <!-- Ambient motion, not information. Decorative and aria-hidden: the
+           guide says everything in text, so this carries no meaning a reader
+           could miss. SVG rather than a video file because ~2KB of shapes
+           scales to any viewport and carries no player chrome. -->
+      <div class="guide-motion" aria-hidden="true">
+        <svg viewBox="0 0 1200 140" preserveAspectRatio="none" focusable="false" aria-hidden="true">
+          <g class="gm-lines">
+            <path d="M-40 104 C 240 52, 430 132, 660 84 S 1010 34, 1240 72"/>
+            <path d="M-40 64 C 270 116, 500 30, 730 70 S 1050 118, 1240 44"/>
+            <path d="M-40 30 C 310 84, 570 4, 810 44 S 1090 86, 1240 22"/>
+          </g>
+          <g class="gm-dots">
+            <circle class="gm-dot" cx="140" cy="96" r="6"/>
+            <circle class="gm-dot" cx="330" cy="58" r="4"/>
+            <circle class="gm-dot" cx="515" cy="114" r="3.5"/>
+            <circle class="gm-dot" cx="700" cy="36" r="5"/>
+            <circle class="gm-dot" cx="885" cy="78" r="3"/>
+            <circle class="gm-dot" cx="1055" cy="22" r="4.5"/>
+          </g>
+        </svg>
+      </div>
 
       <div class="keyfacts">
         <div class="kicker">Where a parity problem often hides</div>
