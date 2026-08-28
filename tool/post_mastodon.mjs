@@ -10,7 +10,7 @@ import {
   previewAndExit,
   weightedLength,
 } from "./social_core.mjs";
-import { altText, readVideo } from "./social_video.mjs";
+import { altText, readPoster, readVideo } from "./social_video.mjs";
 
 // Mastodon poster: the day's guide as the Remotion-rendered square video,
 // uploaded from the checkout rather than fetched by URL, with the campaign
@@ -63,6 +63,12 @@ if (video) {
     const form = new FormData();
     form.append("file", new Blob([video], { type: "video/mp4" }), `${post.id}.mp4`);
     form.append("description", altText(meta?.title ?? post.text, post.text));
+    // Same reason as Instagram: the first frame is the card mid-animation, so
+    // an attachment without a thumbnail previews as a blank page.
+    const poster = await readPoster(post.id);
+    if (poster) {
+      form.append("thumbnail", new Blob([poster], { type: "image/png" }), `${post.id}.png`);
+    }
     const uploaded = await jsonRequest(`${server}/api/v2/media`, {
       method: "POST",
       headers: auth,

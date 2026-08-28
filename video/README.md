@@ -34,6 +34,16 @@ posting slot** for a new render to be used; until then the posters fall back
   existing binary: `REMOTION_BROWSER_EXECUTABLE=/path/to/chrome-headless-shell`.
 - Fonts are the repo's own files from `assets/fonts`, copied in by
   `node tool/social_video.mjs --sync`. Nothing is fetched from a font CDN.
+- The card animates in from an empty page, so **frame 0 is blank** — a
+  network left to pick its own cover fills a profile grid with white tiles.
+  The poster is the settled last frame and is passed explicitly as the cover
+  (`cover_url` on Instagram, `thumbnail` on Mastodon). Facebook's `/videos`
+  only takes `thumb` as multipart binary, not a URL, so it still picks its
+  own; change that call to multipart if it ever matters.
+- Frames are handed to the encoder as **PNG at CRF 16**, not JPEG. These are
+  flat type cards, so JPEG's chroma subsampling blurs the text edges before
+  h264 ever sees them — the two lossy passes together are what made earlier
+  renders look soft.
 - The brand tokens in `src/brand.ts` mirror `tools/og-image.py`. Keep the media
   calm: navy, teal, paper, no error red, no dramatic motion — the same rule
   `tool/trust_design_test.mjs` enforces on the product surfaces.

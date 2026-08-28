@@ -96,6 +96,10 @@ const poster = posterUrl(post.id);
 let media = null;
 if (await reachable(reel)) {
   media = { media_type: "REELS", video_url: reel, share_to_feed: "true" };
+  // Given no cover, Instagram takes the reel's first frame — and the card
+  // animates in from an empty page, so the profile grid fills with blank white
+  // tiles. The poster is that same card fully settled, which is what it is for.
+  if (await reachable(poster)) media.cover_url = poster;
 } else if (await reachable(poster)) {
   media = { image_url: poster };
 } else if (meta?.image?.includes("/appeals/og/")) {

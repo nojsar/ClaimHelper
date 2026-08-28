@@ -150,6 +150,12 @@ Commit the resulting `web/media/social/<id>-{square,vertical}.mp4` and `<id>-pos
 | Bluesky | unchanged — branded link card | — |
 | X, Threads, LinkedIn | unchanged | — |
 
+The card animates in from an empty page, so the first frame of every render
+is blank. Instagram and Mastodon are therefore handed the poster as an
+explicit cover; without it a profile grid fills with white tiles. Facebook
+still chooses its own frame — its `thumb` parameter needs a multipart upload
+rather than a URL.
+
 Mastodon needs the `write:media` scope on its token as well as `write:statuses`; without it the upload is refused and the poster falls back to the status it always sent.
 
 Remotion is free for individuals and companies of up to three people; larger companies need a paid licence (https://remotion.dev/license). See `video/README.md` for the studio and rendering details.

@@ -150,11 +150,14 @@ for (const job of jobs) {
     serveUrl,
     browserExecutable,
     codec: "h264",
-    crf: 23,
-    imageFormat: "jpeg",
+    crf: 16,
+    imageFormat: "png",
     // Instagram and Facebook reject some silent files outright; a muted track
     // is cheaper than debugging a rejected upload.
     enforceAudioTrack: true,
+    // Silence does not need the default bitrate.
+    audioCodec: "aac",
+    audioBitrate: "64k",
     outputLocation: job.output,
     onProgress: ({ progress }) => {
       if (!live) return;

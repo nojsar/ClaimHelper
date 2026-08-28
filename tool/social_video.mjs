@@ -102,6 +102,19 @@ export async function readVideo(id, format, maxBytes = Number.POSITIVE_INFINITY)
   return buffer;
 }
 
+/**
+ * The rendered poster, for networks whose upload can carry its own cover. Null
+ * when it has not been rendered yet, which every caller treats as "let the
+ * network choose" rather than as a failure.
+ */
+export async function readPoster(id) {
+  try {
+    return await readFile(posterFile(id));
+  } catch {
+    return null;
+  }
+}
+
 /** Alt text for the media, so the video carries the same words as the post. */
 export function altText(title, summary) {
   return `A GetMyYes appeal guide card: ${title}. ${summary}`;
