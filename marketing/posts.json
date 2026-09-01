@@ -58,5 +58,15 @@
     "id": "california-imr",
     "path": "/appeals/health-insurance-appeal-california",
     "text": "Denied in California? Free Independent Medical Review has overturned many denials — here's how to file."
+  },
+  {
+    "id": "glp1-denial",
+    "path": "/appeals/glp1-weight-loss-medication-denial",
+    "text": "GLP-1 denied? Check whether it is a plan exclusion or a criteria review — they need different appeals."
+  },
+  {
+    "id": "imaging-denial",
+    "path": "/appeals/insurance-denied-mri",
+    "text": "MRI or CT denied? The fastest route back is usually a peer-to-peer your doctor can request."
   }
 ]
