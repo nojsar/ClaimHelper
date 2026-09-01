@@ -122,6 +122,23 @@ try {
     "--exit",
     ...(chromedriverPath ? ["--chromedriver-path", chromedriverPath] : []),
   ]);
+  // axe exits 1 for real violations and 2 when it could not drive a browser at
+  // all. Those need different reactions from whoever is reading the log, and the
+  // second one is usually just Chrome having auto-updated past ChromeDriver —
+  // which says nothing about the pages and blocks the release all the same.
+  if (exitCode === 2) {
+    for (const line of [
+      "[accessibility] axe could not start a browser (exit 2). This is a toolchain",
+      "  problem, not a page problem — most often Chrome updated and ChromeDriver did not.",
+      "  Install a driver matching the Chrome version named above, then re-run:",
+      "",
+      "    npx @puppeteer/browsers install chromedriver@<that.version>",
+      "    AXE_CHROMEDRIVER_PATH=<path to chromedriver.exe> node tool/rendered_accessibility_check.mjs build/web",
+      "",
+      "  Prefer that over `browser-driver-manager install chrome`, which also replaces",
+      "  the Chrome you browse with.",
+    ]) console.error(line);
+  }
   if (exitCode !== 0) process.exitCode = exitCode;
 } finally {
   await new Promise((resolve, reject) => {
