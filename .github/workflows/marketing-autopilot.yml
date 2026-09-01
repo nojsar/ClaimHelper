@@ -35,9 +35,15 @@ jobs:
       - name: Check static accessibility regressions
         run: node tool/accessibility_check.mjs web
       - name: Check every queue post has its rendered media
-        # The posters degrade gracefully, but a guide that reached the queue
-        # without a render should be loud here rather than quiet in the feed.
-        run: node tool/social_video.mjs --check
+        # Loud, but never fatal. This sat before the publish step as a hard
+        # gate, so a single unrendered guide silenced all seven networks —
+        # exactly what the weekly generator produces when it adds a queue
+        # entry. The posters already fall back to a still or a link card.
+        shell: bash
+        run: |
+          if ! node tool/social_video.mjs --check; then
+            echo "::warning title=Unrendered social media::A queue post has no Remotion render, so its network will fall back to a still or link card. Run node tool/render_social_video.mjs and commit the output."
+          fi
       - name: Publish the day's guide to every configured network
         env:
           # Each network activates the moment its secrets exist; missing ones
