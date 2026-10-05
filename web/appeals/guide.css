@@ -1,5 +1,14 @@
 /* GetMyYes public pages — calm, high-contrast document theme. */
 :root {
+  /* Shape scale: controls 10px, cards 14px, panels 20px. Two deliberate
+     exceptions: the letter template keeps 4px so it reads as paper, and
+     the waffle cells keep 2px. Pills stay pill. */
+  --radius-control: 10px;
+  --radius-card: 14px;
+  --radius-panel: 20px;
+  /* Elevation tinted with the navy ink, lit from above. Never black. */
+  --shadow-1: 0 1px 2px rgba(16, 38, 59, 0.06), 0 4px 12px -4px rgba(16, 38, 59, 0.10);
+  --shadow-2: 0 1px 2px rgba(16, 38, 59, 0.05), 0 22px 44px -26px rgba(16, 38, 59, 0.38);
   --paper: #F6F8F7;
   --letter: #FFFFFF;
   --cream: #EAF0EE;
@@ -32,7 +41,7 @@ body {
 .wrap { max-width: var(--max); margin: 0 auto; padding: 0 22px; }
 .skip-link {
   position: fixed; top: 8px; left: 8px; z-index: 100;
-  padding: 11px 16px; border: 2px solid var(--ink); border-radius: 8px;
+  padding: 11px 16px; border: 2px solid var(--ink); border-radius: var(--radius-control);
   background: var(--letter); color: var(--ink); font-weight: 800;
   transform: translateY(-160%);
 }
@@ -61,7 +70,7 @@ header.site .bar {
 }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); font-family: 'Times New Roman', Tinos, 'Liberation Serif', Times, serif; font-weight: 800; font-size: 21px; letter-spacing: -0.3px; }
 .brand .mark {
-  width: 36px; height: 36px; border-radius: 9px; display: grid; place-items: center;
+  width: 36px; height: 36px; border-radius: var(--radius-control); display: grid; place-items: center;
   background: linear-gradient(135deg, var(--carmine), var(--green)); color: #fff; font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 20px;
   box-shadow: 0 4px 12px rgba(47, 111, 98, 0.2);
 }
@@ -72,7 +81,7 @@ header.site nav a {
 }
 header.site nav a:hover { color: var(--carmine-dark); }
 a.btn-start {
-  background: var(--ink); color: var(--paper) !important; padding: 10px 18px; border-radius: 10px;
+  background: var(--ink); color: var(--paper) !important; padding: 10px 18px; border-radius: var(--radius-control);
   font-weight: 800; font-size: 16px; text-decoration: none; min-height: 48px;
 }
 a.btn-start:hover { background: var(--carmine-dark); }
@@ -99,7 +108,7 @@ strong { color: var(--ink); }
 
 /* Key-facts stamp card */
 .keyfacts {
-  border: 1.5px solid var(--border-strong); border-radius: 14px; background: var(--letter);
+  border: 1.5px solid var(--border-strong); border-radius: var(--radius-card); background: var(--letter);
   padding: 18px 22px; margin: 22px 0;
   box-shadow: 0 8px 24px -6px rgba(16, 38, 59, 0.12);
 }
@@ -126,7 +135,7 @@ strong { color: var(--ink); }
 .letterblock .lb-bar .kicker { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--green); }
 button.copybtn {
   margin-left: auto; border: 1px solid var(--control-border); background: var(--letter); color: var(--ink);
-  font-family: 'IBM Plex Mono', monospace; font-size: 15px; padding: 8px 14px; border-radius: 9px; cursor: pointer;
+  font-family: 'IBM Plex Mono', monospace; font-size: 15px; padding: 8px 14px; border-radius: var(--radius-control); cursor: pointer;
   min-height: 48px;
 }
 button.copybtn:hover { border-color: var(--green); color: var(--green); }
@@ -146,7 +155,7 @@ button.copybtn:hover { border-color: var(--green); color: var(--green); }
 /* Progressive denial-code finder */
 .code-finder {
   margin: 30px 0 14px; padding: 20px 22px;
-  border: 1px solid var(--border-strong); border-radius: 14px; background: var(--letter);
+  border: 1px solid var(--border-strong); border-radius: var(--radius-card); background: var(--letter);
 }
 .code-finder label {
   display: block; color: var(--ink); font-weight: 800; font-size: 17px;
@@ -159,7 +168,7 @@ button.copybtn:hover { border-color: var(--green); color: var(--green); }
 }
 .code-finder input,
 .code-finder button {
-  min-height: 48px; border: 1px solid var(--control-border); border-radius: 10px;
+  min-height: 48px; border: 1px solid var(--control-border); border-radius: var(--radius-control);
   font: inherit;
 }
 .code-finder input {
@@ -183,7 +192,7 @@ button.copybtn:hover { border-color: var(--green); color: var(--green); }
 
 /* FAQ */
 details {
-  border: 1px solid var(--border); border-radius: 12px; background: var(--letter);
+  border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--letter);
   padding: 14px 18px; margin-bottom: 10px;
 }
 details summary {
@@ -194,7 +203,7 @@ details p { margin: 10px 0 2px; font-size: 16px; }
 
 /* CTA panel */
 .cta {
-  margin: 44px 0 10px; border-radius: 18px; padding: 30px 30px;
+  margin: 44px 0 10px; border-radius: var(--radius-panel); padding: 30px 30px;
   background: linear-gradient(135deg, var(--ink), var(--panel-dark)); color: var(--paper);
   box-shadow: 0 18px 40px -10px rgba(11, 29, 45, 0.4);
 }
@@ -209,7 +218,7 @@ details p { margin: 10px 0 2px; font-size: 16px; }
 .cta .cta-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
 .cta a.go {
   display: inline-flex; align-items: center; min-height: 48px; background: var(--green); color: #fff; text-decoration: none;
-  padding: 13px 26px; border-radius: 12px; font-weight: 800; font-size: 16px;
+  padding: 13px 26px; border-radius: var(--radius-card); font-weight: 800; font-size: 16px;
 }
 .cta a.go:hover { background: var(--green-bright); }
 .cta a.sample {
@@ -234,7 +243,7 @@ footer.site a { color: var(--ink-soft); }
 /* Guide-hub cards */
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 14px; margin: 26px 0; }
 .gcard {
-  display: block; border: 1px solid var(--border-strong); border-radius: 14px; background: var(--letter);
+  display: block; border: 1px solid var(--border-strong); border-radius: var(--radius-card); background: var(--letter);
   padding: 20px 22px; text-decoration: none; color: var(--ink);
   box-shadow: 0 8px 22px -8px rgba(16, 38, 59, 0.14); transition: transform .15s ease, box-shadow .15s ease;
 }
@@ -362,7 +371,7 @@ footer.site a { color: var(--ink-soft); }
 .guide-motion {
   height: 140px;
   margin: 0 0 26px;
-  border-radius: 12px;
+  border-radius: var(--radius-card);
   background: var(--cream);
   overflow: hidden;
 }
@@ -450,3 +459,47 @@ footer.site a { color: var(--ink-soft); }
   .waffle-grid span { border: 1px solid CanvasText; }
   .waffle-grid span.on { background: Highlight; }
 }
+
+/* =====================================================================
+   Redesign layer (redesign-skill + taste-skill, Redesign-Preserve).
+   Shared by the guides, code pages, insurer pages, tools, data and legal
+   pages, so every change here reaches about 70 pages at once.
+   ===================================================================== */
+
+/* Reading measure: 36em is ~70 characters of Inter. Not `ch`: a ch is the
+   width of a zero, wider than average text, so 68ch at 18px came out at the
+   full 736px column and changed nothing. Playwright caught that. Boxes, tables and
+   letter templates keep the full column. Body copy steps up to 18px to
+   match the older-adult standard the homepage already enforces. */
+article > p,
+article > ul,
+article > ol { max-width: 36em; }
+article > p { font-size: 18px; }
+/* Metadata and labels are not prose: they keep the full column. */
+article > p.updated { max-width: none; font-size: 13px; }
+p, li { text-wrap: pretty; }
+h1, h2, h3 { text-wrap: balance; }
+
+/* Small labels were 11-12px all-caps monospace. 13px minimum, and the
+   breadcrumb drops the all-caps it does not need. */
+.crumbs { font-size: 13px; text-transform: none; letter-spacing: 0.01em; }
+.updated { font-size: 13px; }
+.keyfacts .kicker,
+.letterblock .lb-bar .kicker { font-size: 12.5px; }
+
+/* The one warm tone on an otherwise cool page: template placeholders now use
+   a teal wash, still clearly marked as fields to fill. */
+.letter em { background: rgba(47, 111, 98, 0.14); }
+
+/* The ambient band read as an empty placeholder box. As a borderless strip
+   it is an ornamental divider between the lede and the body instead. */
+.guide-motion {
+  height: 64px;
+  margin: 2px 0 30px;
+  border-radius: 0;
+  background: none;
+}
+.gm-lines path { opacity: 0.24; }
+/* Where a journey map follows, the map is the visual. Two ornaments in a row
+   is one too many. */
+.guide-motion:has(+ .flow) { display: none; }

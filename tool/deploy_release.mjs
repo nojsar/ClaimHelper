@@ -56,6 +56,12 @@ const checks = [
   ["node", ["tool/marketing_build.mjs", "--verify-build"]],
   ["node", ["tool/accessibility_check.mjs", "build/web"]],
   ["node", ["tool/rendered_accessibility_check.mjs", "build/web"]],
+  // Drives the built artifact in Chromium and WebKit: no sideways scroll from
+  // 320px up, no wrapped CTAs at desktop, the hero action above the fold, and
+  // the deadline check working. It caught three regressions the screenshots
+  // missed, so it gates the deploy rather than living in a folder nobody runs.
+  ["npm", ["ci", "--prefix", "e2e", "--no-audit", "--no-fund"]],
+  ["npm", ["--prefix", "e2e", "test"]],
 ];
 
 for (const [command, args] of checks) run(command, args);

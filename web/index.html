@@ -489,28 +489,9 @@
       font-size: 15px;
       font-weight: 800;
     }
-    .hero-badge .shield { font-size: 18px; }
     .hero .lede { margin-top: 18px; }
     .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
     .hero-note { margin-top: 14px; color: var(--muted); font-size: 16px; }
-    .hero-trust {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr);
-      gap: 11px;
-      max-width: 630px;
-      margin: 26px 0 0;
-      padding: 0;
-      list-style: none;
-    }
-    .hero-trust li {
-      display: flex;
-      gap: 9px;
-      align-items: center;
-      color: var(--text-soft);
-      font-size: 16px;
-      font-weight: 650;
-    }
-    .hero-trust a { color: inherit; font-weight: 800; }
     .check {
       flex: 0 0 24px;
       width: 24px;
@@ -676,29 +657,11 @@
     .evidence-label { display: block; margin-top: 12px; color: var(--text-soft); font-size: 16px; line-height: 1.5; }
     .source-note { margin-top: 16px; color: var(--muted); font-size: 14px; }
 
-    .steps-grid, .price-grid, .trust-grid {
+    .price-grid, .trust-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 18px;
     }
-    .info-card {
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      background: var(--surface);
-      padding: 26px;
-    }
-    .step-number {
-      width: 42px;
-      height: 42px;
-      display: grid;
-      place-items: center;
-      margin-bottom: 18px;
-      border-radius: 10px;
-      background: var(--navy);
-      color: #FFFFFF;
-      font-weight: 900;
-    }
-    .info-card p { margin-top: 9px; color: var(--text-soft); font-size: 17px; }
 
     .mobile-section-summary { display: none; }
     .packet-section {
@@ -907,14 +870,6 @@
       font-size: 16px;
       line-height: 1.5;
     }
-    .packet-number {
-      color: #8BA49D;
-      font-family: var(--serif);
-      font-size: 19px;
-      font-weight: 700;
-      line-height: 1.35;
-      text-align: right;
-    }
     .packet-manifest-footer {
       min-height: 66px;
       display: flex;
@@ -987,14 +942,6 @@
       font-weight: 850;
       letter-spacing: 0.04em;
       text-transform: uppercase;
-    }
-    .proof-index {
-      min-width: 44px;
-      padding: 5px 9px;
-      border: 1px solid var(--border-strong);
-      border-radius: 999px;
-      color: var(--navy-dark);
-      text-align: center;
     }
     .proof-slide h3 {
       max-width: 16ch;
@@ -1235,7 +1182,7 @@
       .reassurance-list li { border-right: 0; border-bottom: 1px solid var(--border); padding: 16px 12px; }
       .reassurance-list li:last-child { grid-column: 1 / -1; border-bottom: 0; }
       .evidence-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .steps-grid, .price-grid { grid-template-columns: 1fr; }
+      .price-grid { grid-template-columns: 1fr; }
       .price-card { max-width: 700px; }
       .closing-inner { grid-template-columns: 1fr; }
     }
@@ -1250,7 +1197,6 @@
       h1 { font-size: 42px; }
       .hero { padding-top: 36px; }
       .hero-grid { grid-template-columns: minmax(0, 1fr); gap: 32px; }
-      .hero-trust { grid-template-columns: 1fr; }
       .section-heading { padding-inline-start: 16px; border-inline-start-width: 3px; }
       .reassurance { margin-top: -30px; padding-inline: 16px; }
       .reassurance-list { grid-template-columns: 1fr; padding: 8px 16px; }
@@ -1258,14 +1204,6 @@
       .reassurance-list li:last-child { grid-column: auto; }
       .evidence-card { padding: 20px; }
       .hero-actions .button { width: 100%; }
-      .steps-grid .info-card {
-        display: grid;
-        grid-template-columns: 42px minmax(0, 1fr);
-        column-gap: 14px;
-        padding: 20px;
-      }
-      .steps-grid .step-number { grid-row: 1 / span 2; margin-bottom: 0; }
-      .steps-grid .info-card p { grid-column: 2; }
       .mobile-section-summary {
         min-height: 54px;
         display: flex;
@@ -1313,17 +1251,12 @@
 
     @media (forced-colors: active) {
       :where(a, button, summary):focus-visible { outline-color: Highlight; box-shadow: none; }
-      .button, .preview-card, .info-card, .packet-shell, .packet-manifest, .packet-item, .price-card, .operator-card, .faq details, .resource-links a, .evidence-grid, .proof-slide, .proof-arrow { border: 1px solid CanvasText; }
+      .button, .preview-card, .packet-shell, .packet-manifest, .packet-item, .price-card, .operator-card, .faq details, .resource-links a, .evidence-grid, .proof-slide, .proof-arrow { border: 1px solid CanvasText; }
       .packet-check { color: CanvasText; background: Canvas; border-color: CanvasText; }
-      .brand-mark, .step-number { forced-color-adjust: none; }
+      .brand-mark { forced-color-adjust: none; }
     }
 
     /* Effort expectation and the single-action hero. */
-    .hero-effort {
-      margin: 10px 0 0;
-      color: var(--text-soft);
-      font-size: 17px;
-    }
     .hero-sample { margin: 12px 0 0; font-size: 17px; }
 
     /* Deadline check: a one-field answer before anything is asked of the visitor. */
@@ -1364,6 +1297,196 @@
       margin-top: 6px;
       color: var(--text-soft);
       font-size: 16px;
+    }
+
+    /* =====================================================================
+       Redesign layer (redesign-skill + taste-skill, Redesign-Preserve).
+       Design read: trust-first consumer health site, calm editorial-document
+       language. Dials VARIANCE 4 / MOTION 3 / DENSITY 4.
+       Overrides sit here, after the rules they refine, so every locked rule
+       in trust_design_test stays byte-for-byte where it was.
+       ===================================================================== */
+    :root {
+      /* Shape: one documented scale. Controls 10px, cards 14px, panels 20px,
+         chips pill. Nothing else. */
+      --radius-control: 10px;
+      --radius-card: 14px;
+      --radius-panel: 20px;
+      /* Elevation: tinted with the navy ink and lit from above. Never black. */
+      --shadow-1: 0 1px 2px rgba(16, 38, 59, 0.06), 0 4px 12px -4px rgba(16, 38, 59, 0.10);
+      --shadow-2: 0 1px 2px rgba(16, 38, 59, 0.05), 0 22px 44px -26px rgba(16, 38, 59, 0.38);
+    }
+
+    /* Typography: balanced headings, no orphaned last words, tighter display. */
+    h1 { letter-spacing: -0.02em; }
+    h3 { text-wrap: balance; }
+    p, li, .lede { text-wrap: pretty; }
+    .price, .rail-marker, .packet-cover-count strong { font-variant-numeric: tabular-nums; }
+
+    /* Buttons feel physical: a 1px press, 200ms colour shifts. */
+    .button { transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.12s ease; }
+    .button:active { transform: translateY(1px); }
+
+    /* Hero: one eyebrow, set as text rather than a pill. */
+    .hero-badge {
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: none;
+      font-size: 15px;
+      letter-spacing: 0.01em;
+    }
+    .preview-card { box-shadow: var(--shadow-2); }
+
+    /* Trust strip: four proofs in one band instead of two competing lists. */
+    .reassurance-list {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-2);
+    }
+    .reassurance-list li { padding-inline: 18px; }
+
+    /* Deadline band: the one-field answer gets its own section. */
+    .deadline-band { padding-block: clamp(96px, 9vw, 124px) clamp(56px, 6vw, 80px); }
+    .deadline-band-inner {
+      display: grid;
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+      gap: clamp(28px, 5vw, 72px);
+      align-items: start;
+    }
+    .deadline-band-copy h2 { font-size: clamp(30px, 3.2vw, 40px); }
+    .deadline-band-copy p { margin-top: 12px; max-width: 44ch; color: var(--text-soft); }
+    .deadline-band .deadline-check {
+      margin: 0;
+      padding: clamp(20px, 2.4vw, 28px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      background: var(--surface);
+      box-shadow: var(--shadow-1);
+    }
+    .deadline-band .deadline-check-input { border-radius: var(--radius-control); }
+
+    /* Section headings: the teal bar repeated on six sections was the page's
+       one repeated motif. The headline now stands on its own. */
+    .section-heading { padding-inline-start: 0; border-inline-start: 0; }
+
+    /* How it works: a rail, not three identical cards. Same marker and line
+       language as the journey map on the guides, so the site reads as one system. */
+    .steps-rail {
+      --rail-gap: clamp(28px, 4vw, 56px);
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      column-gap: var(--rail-gap);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .rail-step { position: relative; }
+    .rail-marker {
+      position: relative;
+      z-index: 1;
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--teal);
+      color: #FFFFFF;
+      font-weight: 700;
+    }
+    .rail-step:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      top: 21px;
+      left: 58px;
+      right: calc(14px - var(--rail-gap));
+      height: 2px;
+      background: var(--border-strong);
+    }
+    .rail-step h3 { margin-top: 22px; }
+    .rail-step p { margin-top: 8px; max-width: 32ch; color: var(--text-soft); font-size: 17px; }
+
+    /* Packet: rows fill the panel instead of leaving a dead band at the foot. */
+    .packet-shell { box-shadow: var(--shadow-2); }
+    .packet-manifest { display: flex; flex-direction: column; }
+    .packet-list { flex: 1; grid-auto-rows: 1fr; }
+    .packet-item { min-height: 0; grid-template-columns: 32px minmax(0, 1fr); }
+
+    /* Proof: one light theme for the page. The closing band stays the single
+       deliberate dark block. */
+    .proof-section { background: var(--surface-soft); color: var(--text); }
+    .proof-copy .eyebrow { color: var(--teal-dark); }
+    .proof-copy h2 { color: var(--navy-dark); }
+    .proof-copy .lede { color: var(--text-soft); }
+    .proof-promise {
+      border-inline-start-color: var(--teal);
+      background: var(--surface);
+      color: var(--text);
+    }
+    .proof-viewport { border-radius: var(--radius-panel); box-shadow: var(--shadow-2); }
+    .proof-slide { min-height: 0; }
+    .proof-arrow { border-color: var(--navy); background: var(--surface); color: var(--navy); }
+    .proof-arrow:hover { border-color: var(--navy); background: var(--navy); color: #FFFFFF; }
+    .proof-status { color: var(--text-soft); }
+
+    /* Pricing: alternate background with its neighbours, and keep the label on
+       one line at desktop. */
+    .section-blue { background: var(--background); }
+    .price-card { border-radius: var(--radius-card); }
+    .price-card .button { padding-inline: 12px; font-size: 17px; }
+    @media (max-width: 1120px) {
+      .price-grid { grid-template-columns: 1fr; }
+      .price-card { max-width: 700px; }
+    }
+
+    /* Footer: headings no longer sit on top of their first link. */
+    .footer-grid h2 { margin-bottom: 12px; }
+
+    /* Second pass, from looking at the render rather than the code. */
+    /* Hero copy sits at the top of its column instead of floating ~210px below
+       the nav while the taller example card sets the row height. */
+    .hero-grid { align-items: start; }
+    .hero-copy { padding-top: clamp(8px, 2vw, 28px); }
+    .preview-card-foot { flex-wrap: wrap; row-gap: 6px; }
+    .preview-card-foot a { white-space: nowrap; }
+    /* Trust strip titles share one top line even when a subline wraps. */
+    .reassurance-list li { justify-content: flex-start; }
+    /* Packet rows: spare height is shared above and below, not pooled under. */
+    .packet-item { align-content: center; }
+    /* Proof: give the headline room so it is not a four-line column. */
+    /* Scoped to desktop: unscoped, these beat the earlier mobile rules and left
+       the proof section two columns wide on a 320px phone. */
+    @media (min-width: 981px) {
+      .proof-layout { grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); }
+      .proof-copy { max-width: 500px; }
+      .packet-shell { grid-template-columns: minmax(330px, 0.85fr) minmax(0, 1.15fr); }
+    }
+    /* The carousel status may wrap; the arrows must never be pushed off-screen. */
+    .proof-controls { grid-template-columns: 54px minmax(0, 1fr) 54px; }
+    /* Full Case: the subline sits under the price like the other two tiers. */
+    /* The Full Case tier puts its price lines in <span>s inside a <summary>, so they
+       flowed inline; the other tiers use blocks. Match them. */
+    .optional-price-summary .price-label,
+    .optional-price-summary .price,
+    .optional-price-summary .price-sub { display: block; }
+    @media (max-width: 980px) {
+      .reassurance-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .reassurance-list li { border-right: 0; border-bottom: 1px solid var(--border); }
+      .reassurance-list li:nth-child(odd) { border-right: 1px solid var(--border); }
+      .reassurance-list li:last-child { grid-column: auto; }
+      .reassurance-list li:nth-last-child(-n + 2) { border-bottom: 0; }
+      .deadline-band-inner { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 760px) {
+      .steps-rail { grid-template-columns: 1fr; row-gap: 30px; }
+      .rail-step { padding-left: 64px; }
+      .rail-marker { position: absolute; top: 0; left: 0; }
+      .rail-step h3 { margin-top: 9px; }
+      .rail-step:not(:last-child)::after { top: 50px; bottom: -26px; left: 21px; right: auto; width: 2px; height: auto; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .button { transition: none; }
     }
   </style>
 </head>
@@ -1432,33 +1555,14 @@
       <section class="hero" aria-labelledby="hero-title">
         <div class="wrap hero-grid">
           <div class="hero-copy">
-            <p class="hero-badge"><span class="shield" aria-hidden="true">◆</span> Secure appeal document service</p>
+            <p class="hero-badge">Secure appeal document service</p>
             <h1 id="hero-title"><span class="hero-title-line">Understand the denial.</span><span class="hero-title-line hero-accent">Build the appeal.</span></h1>
-            <p class="lede">Upload your denial letter for a free plain-English summary. See what was denied, what to check, and whether a complete appeal packet is right for you.</p>
-            <p class="hero-effort">About two minutes. A clear phone photo of the letter works, and the letter is the only document you need to start.</p>
+            <p class="lede">Upload your denial letter, or a clear phone photo of it, for a free plain-English summary. It takes about two minutes.</p>
             <div class="hero-actions">
               <button type="button" class="button button-primary" data-boot="/upload" aria-describedby="hero-trust">See my free denial summary</button>
             </div>
-            <p class="hero-sample"><a href="/sample-packet">Or read a complete fictional packet first</a></p>
-
-            <!-- Real, personal urgency instead of manufactured urgency: the 180-day
-                 internal-appeal window from tools/appeal-deadline-calculator, asked for
-                 one field at a time. It answers something useful on its own, which is
-                 why it earns its place above the fold. -->
-            <form class="deadline-check" id="hero-deadline-form" novalidate>
-              <label class="deadline-check-label" for="hero-denial-date">Not sure how long you have? Enter the date printed on your denial letter.</label>
-              <div class="deadline-check-row">
-                <input class="deadline-check-input" type="date" id="hero-denial-date" name="hero-denial-date" autocomplete="off">
-                <button type="submit" class="button button-secondary deadline-check-button">Check my deadline</button>
-              </div>
-              <p class="deadline-check-result" id="hero-deadline-result" role="status" hidden></p>
-            </form>
+            <p class="hero-sample"><a href="/sample-packet">Or read the sample packet first</a></p>
             <p class="hero-note" id="hero-trust"><strong>Preview $0; no credit card required.</strong> Full packet $39 or Full Case $59, each a one-time payment. Create an account only if you purchase. No subscription. U.S. health plans only.</p>
-            <ul class="hero-trust">
-              <li><span class="check" aria-hidden="true">✓</span><span>Encrypted. Never used to train AI.</span></li>
-              <li><span class="check" aria-hidden="true">✓</span><span>Guest files normally delete in 24 hours.</span></li>
-              <li><span class="check" aria-hidden="true">✓</span><span>Questions? <a href="mailto:support@getmyyes.com">Email support@getmyyes.com.</a></span></li>
-            </ul>
           </div>
 
           <details class="preview-card mobile-collapsible" aria-labelledby="preview-card-title" open>
@@ -1485,7 +1589,7 @@
                 </ul>
               </div>
             </div>
-            <div class="preview-card-foot"><span><strong>Fictional example.</strong> No patient data.</span><a href="/sample-packet">View full sample →</a></div>
+            <div class="preview-card-foot"><span><strong>Fictional example.</strong> No patient data.</span><a href="/sample-packet">Read the sample packet →</a></div>
           </details>
         </div>
       </section>
@@ -1493,25 +1597,45 @@
       <aside class="reassurance" aria-label="Service reassurance">
         <div class="wrap">
           <ul class="reassurance-list">
-            <li><strong>Preview $0</strong><span>No card required</span></li>
+            <li><strong>Never used to train AI</strong><span>Encrypted in transit</span></li>
+            <li><strong>Short-lived uploads</strong><span>Guest files normally delete in 24 hours</span></li>
             <li><strong>One-time pricing</strong><span>No subscription</span></li>
-            <li><strong>Private and controlled by you</strong><span>Nothing is sent automatically</span></li>
+            <li><strong>You send it</strong><span>Nothing is sent automatically</span></li>
           </ul>
         </div>
       </aside>
 
+      <!-- Real urgency rather than manufactured urgency: the 180-day internal-appeal
+           window from tools/appeal-deadline-calculator. Moved out of the hero so the
+           hero carries one message and one action; here it has a section of its own. -->
+      <section class="deadline-band" aria-labelledby="deadline-band-title">
+        <div class="wrap deadline-band-inner">
+          <div class="deadline-band-copy">
+            <h2 id="deadline-band-title">How long do you have?</h2>
+            <p>Many plans allow about 180 days from the date on the notice. Your own letter sets the real deadline.</p>
+          </div>
+          <form class="deadline-check" id="hero-deadline-form" novalidate>
+            <label class="deadline-check-label" for="hero-denial-date">Date printed on your denial letter</label>
+            <div class="deadline-check-row">
+              <input class="deadline-check-input" type="date" id="hero-denial-date" name="hero-denial-date" autocomplete="off">
+              <button type="submit" class="button button-secondary deadline-check-button">Check my deadline</button>
+            </div>
+            <p class="deadline-check-result" id="hero-deadline-result" role="status" hidden></p>
+          </form>
+        </div>
+      </section>
+
       <section class="section section-soft" id="how-it-works" aria-labelledby="how-title">
         <div class="wrap">
           <div class="section-heading">
-            <p class="eyebrow">How it works</p>
             <h2 id="how-title">Three clear steps.</h2>
             <p class="lede">No insurance expertise needed. We explain each step and ask only for the details needed for your appeal.</p>
           </div>
-          <div class="steps-grid">
-            <article class="info-card"><span class="step-number" aria-hidden="true">1</span><h3>Upload your denial letter</h3><p>Use a PDF or clear photo of the notice.</p></article>
-            <article class="info-card"><span class="step-number" aria-hidden="true">2</span><h3>Confirm the details</h3><p>Check the denial reason, deadline, names, and dates.</p></article>
-            <article class="info-card"><span class="step-number" aria-hidden="true">3</span><h3>Review your packet</h3><p>Check every page, download the PDF, and send it yourself.</p></article>
-          </div>
+          <ol class="steps-rail">
+            <li class="rail-step"><span class="rail-marker" aria-hidden="true">1</span><h3>Upload your denial letter</h3><p>Use a PDF or clear photo of the notice.</p></li>
+            <li class="rail-step"><span class="rail-marker" aria-hidden="true">2</span><h3>Confirm the details</h3><p>Check the denial reason, deadline, names, and dates.</p></li>
+            <li class="rail-step"><span class="rail-marker" aria-hidden="true">3</span><h3>Review your packet</h3><p>Check every page, download the PDF, and send it yourself.</p></li>
+          </ol>
         </div>
       </section>
 
@@ -1519,46 +1643,46 @@
         <div class="wrap">
           <div class="packet-shell">
             <div class="packet-cover">
-              <div class="packet-cover-top"><span class="packet-file-tab">Your appeal kit</span><span>Case 01</span></div>
-              <p class="packet-cover-count"><strong>06</strong><span>documents</span></p>
+              <div class="packet-cover-top"><span class="packet-file-tab">Your appeal kit</span></div>
+              <p class="packet-cover-count"><strong>6</strong><span>documents</span></p>
               <h2 id="included-title">One clear appeal kit.</h2>
               <p class="packet-cover-copy">Built from your denial. Uncertain details are marked for review.</p>
               <div class="packet-cover-actions">
-                <button class="button button-primary" type="button" data-boot="/upload">Start with my denial — free</button>
-                <a class="packet-sample-link" href="/sample-packet">View a finished sample →</a>
+                <button class="button button-primary" type="button" data-boot="/upload">See my free denial summary</button>
+                <a class="packet-sample-link" href="/sample-packet">Read the sample packet →</a>
               </div>
-              <p class="packet-assurance">$0 preview · no card · nothing sent automatically</p>
+              <p class="packet-assurance">Free preview, no card, and nothing is sent automatically.</p>
             </div>
 
             <article class="packet-manifest" aria-labelledby="packet-manifest-title">
-              <header class="packet-manifest-header"><p id="packet-manifest-title">Inside the case file</p><span>01—06</span></header>
+              <header class="packet-manifest-header"><p id="packet-manifest-title">Inside the case file</p></header>
               <ul class="packet-list">
                 <li class="packet-item">
                   <span class="packet-check" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5.5 12.5l4.2 4.2 9.5-9.2" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-                  <div class="packet-item-copy"><h3>Plain-English summary</h3><p>The denial, translated.</p></div><span class="packet-number" aria-hidden="true">01</span>
+                  <div class="packet-item-copy"><h3>Plain-English summary</h3><p>The denial, translated.</p></div>
                 </li>
                 <li class="packet-item">
                   <span class="packet-check" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5.5 12.5l4.2 4.2 9.5-9.2" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-                  <div class="packet-item-copy"><h3>Appeal letter draft</h3><p>Ready for your review.</p></div><span class="packet-number" aria-hidden="true">02</span>
+                  <div class="packet-item-copy"><h3>Appeal letter draft</h3><p>Ready for your review.</p></div>
                 </li>
                 <li class="packet-item">
                   <span class="packet-check" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5.5 12.5l4.2 4.2 9.5-9.2" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-                  <div class="packet-item-copy"><h3>Evidence checklist</h3><p>What may help and why.</p></div><span class="packet-number" aria-hidden="true">03</span>
+                  <div class="packet-item-copy"><h3>Evidence checklist</h3><p>What may help and why.</p></div>
                 </li>
                 <li class="packet-item">
                   <span class="packet-check" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5.5 12.5l4.2 4.2 9.5-9.2" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-                  <div class="packet-item-copy"><h3>Doctor letter request</h3><p>A clear note to share.</p></div><span class="packet-number" aria-hidden="true">04</span>
+                  <div class="packet-item-copy"><h3>Doctor letter request</h3><p>A clear note to share.</p></div>
                 </li>
                 <li class="packet-item">
                   <span class="packet-check" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5.5 12.5l4.2 4.2 9.5-9.2" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-                  <div class="packet-item-copy"><h3>Insurer call script</h3><p>What to ask and record.</p></div><span class="packet-number" aria-hidden="true">05</span>
+                  <div class="packet-item-copy"><h3>Insurer call script</h3><p>What to ask and record.</p></div>
                 </li>
                 <li class="packet-item">
                   <span class="packet-check" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5.5 12.5l4.2 4.2 9.5-9.2" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-                  <div class="packet-item-copy"><h3>Deadline tracker + PDF</h3><p>Key dates. One clean file.</p></div><span class="packet-number" aria-hidden="true">06</span>
+                  <div class="packet-item-copy"><h3>Deadline tracker + PDF</h3><p>Key dates. One clean file.</p></div>
                 </li>
               </ul>
-              <footer class="packet-manifest-footer"><span><strong>Plus:</strong> a follow-up plan</span><span>7-part packet</span></footer>
+              <footer class="packet-manifest-footer"><span><strong>Plus:</strong> a follow-up plan</span></footer>
             </article>
           </div>
         </div>
@@ -1576,25 +1700,25 @@
             <div class="proof-viewport" id="proof-viewport" data-proof-viewport tabindex="0" aria-describedby="proof-live-status">
               <div class="proof-track">
                 <article class="proof-slide" data-proof-slide role="group" aria-roledescription="slide" aria-label="1 of 4: Complete fictional packet">
-                  <div class="proof-slide-kicker"><span>Product proof</span><span class="proof-index">01</span></div>
+                  <div class="proof-slide-kicker"><span>Product proof</span></div>
                   <h3>A complete fictional packet</h3>
                   <p>Read the summary, appeal-letter structure, evidence checklist, doctor-request draft, call script, deadline tracker, and follow-up plan. No upload and no account.</p>
-                  <a class="proof-action" href="/sample-packet">Read the complete sample →</a>
+                  <a class="proof-action" href="/sample-packet">Read the sample packet →</a>
                 </article>
                 <article class="proof-slide" data-proof-slide role="group" aria-roledescription="slide" aria-label="2 of 4: Free summary from your document">
-                  <div class="proof-slide-kicker"><span>Try it first</span><span class="proof-index">02</span></div>
+                  <div class="proof-slide-kicker"><span>Try it first</span></div>
                   <h3>Your own summary is $0</h3>
                   <p>Upload the denial, check the extracted facts, and see a plain-English explanation before deciding whether a paid packet is right for you.</p>
                   <button type="button" class="proof-action button button-primary" data-boot="/upload">See my free denial summary</button>
                 </article>
                 <article class="proof-slide" data-proof-slide role="group" aria-roledescription="slide" aria-label="3 of 4: Named operator and published terms">
-                  <div class="proof-slide-kicker"><span>Accountability</span><span class="proof-index">03</span></div>
+                  <div class="proof-slide-kicker"><span>Accountability</span></div>
                   <h3>A named operator and published terms</h3>
                   <p>GetMyYes lists its registered operator, support address, privacy and deletion practices, Stripe payment handling, and accuracy-guarantee terms.</p>
                   <a class="proof-action" href="#trust">Review business and privacy details →</a>
                 </article>
                 <article class="proof-slide" data-proof-slide role="group" aria-roledescription="slide" aria-label="4 of 4: Published Marketplace research">
-                  <div class="proof-slide-kicker"><span>Independent context</span><span class="proof-index">04</span></div>
+                  <div class="proof-slide-kicker"><span>Independent context</span></div>
                   <h3>Public data, not a promise</h3>
                   <p>Marketplace research shows why an appeal can deserve a closer look. These figures are not GetMyYes results and do not predict any individual outcome.</p>
                   <div class="proof-stats" role="group" aria-label="Published Marketplace appeal statistics">
@@ -1617,7 +1741,6 @@
       <section class="section section-blue" id="pricing" aria-labelledby="pricing-title">
         <div class="wrap">
           <div class="section-heading">
-            <p class="eyebrow">Simple, one-time pricing</p>
             <h2 id="pricing-title">See the free preview before deciding.</h2>
             <p class="lede">There is no subscription, and the price does not change after you upload your denial.</p>
           </div>
@@ -1705,7 +1828,6 @@
       <section class="section section-soft" aria-labelledby="faq-title">
         <div class="wrap">
           <div class="section-heading">
-            <p class="eyebrow">Common questions</p>
             <h2 id="faq-title">Know what to expect before you begin.</h2>
           </div>
           <div class="faq">
@@ -1722,7 +1844,6 @@
       <section class="section" aria-labelledby="resources-title">
         <div class="wrap">
           <div class="section-heading">
-            <p class="eyebrow">Free information · no upload required</p>
             <h2 id="resources-title">Not ready to open a case?</h2>
             <p class="lede">Read a guide, check a denial code, or use the deadline calculator first.</p>
           </div>
