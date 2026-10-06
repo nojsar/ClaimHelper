@@ -147,7 +147,8 @@ function crossing(y: number): number {
   }
   return f(T.scanTo);
 }
-const MARK_AT = MARKED.map((line) => crossing(line.y));
+/** Frames at which each reason line is highlighted; the soundtrack ticks on them. */
+export const MARK_AT = MARKED.map((line) => crossing(line.y));
 
 const Letter: React.FC<{ frame: number; pose: Pose }> = ({ frame, pose }) => {
   const bracketsIn = settle(frame, T.brackets, 0.55);

@@ -17,6 +17,7 @@ import {
 import { Backdrop } from "./Backdrop";
 import { T, glide, settle } from "./motion";
 import { MaskLine, Reveal } from "./Reveal";
+import { Soundtrack } from "./Soundtrack";
 import { Stage } from "./Stage";
 import { StepRail } from "./StepRail";
 import "./fonts";
@@ -31,6 +32,8 @@ export type GuidePostProps = {
   steps: string[];
   url: string;
   chip: string;
+  /** Library track id from video/library/music.json, or null for silence. */
+  music: string | null;
 };
 
 const BrandMark: React.FC<{ size: number }> = ({ size }) => (
@@ -108,6 +111,7 @@ export const GuidePost: React.FC<GuidePostProps> = ({
   steps,
   url,
   chip,
+  music,
 }) => {
   const layout = LAYOUTS[format];
   const contentWidth = layout.width - layout.padding * 2;
@@ -115,6 +119,7 @@ export const GuidePost: React.FC<GuidePostProps> = ({
 
   return (
     <AbsoluteFill>
+      <Soundtrack music={music} />
       <Backdrop inset={layout.padding / 2.6} />
 
       <AbsoluteFill

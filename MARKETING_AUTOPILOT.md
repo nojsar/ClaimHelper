@@ -7,8 +7,8 @@ This is intentionally a small, durable acquisition system—not a mass-content o
 - Every deploy validates every appeal-guide link, generates `sitemap.xml` and `feed.xml`, and refuses to deploy if the crawlable guide copy in `build/web` is missing or stale.
 - Search engines can discover the guide hub from the homepage and every guide from the sitemap.
 - After a successful deploy, the script submits all sitemap URLs to IndexNow so participating search engines can recrawl changes. Google still uses the sitemap and Search Console.
-- GitHub Actions can publish one useful evergreen guide each Monday, Wednesday, and Friday to every network whose secrets are configured: Bluesky, Mastodon, X, Threads, LinkedIn, Facebook, and Instagram. Each network is offset through the queue so they post different guides on the same day, every post carries campaign tags, and a network with missing secrets is skipped with a log line instead of failing the run (`tool/post_all.mjs`).
-- Every post's media is a branded 12-second, 60fps motion video rendered from the guide itself with Remotion (`video/`, output committed to `web/media/social/`). Instagram gets the vertical reel; Facebook, Mastodon, X, and Bluesky get the square cut. Threads and LinkedIn are unchanged.
+- GitHub Actions can publish one useful evergreen guide each Monday, Wednesday, and Friday to every network whose secrets are configured: Bluesky, Mastodon, X, Threads, LinkedIn, Facebook, Instagram, and YouTube (as a Short). Each network is offset through the queue so they post different guides on the same day, every post carries campaign tags, and a network with missing secrets is skipped with a log line instead of failing the run (`tool/post_all.mjs`).
+- Every post's media is a branded 12-second, 60fps motion video rendered from the guide itself with Remotion (`video/`, output committed to `web/media/social/`), scored with a licensed music excerpt matched to the guide's mood and sound effects timed to the animation. Instagram and YouTube get the vertical reel; Facebook, Mastodon, X, and Bluesky get the square cut. Threads and LinkedIn are unchanged.
 - The private owner dashboard at `https://getmyyes.com/#/stats` reports visits, funnel conversion, top pages/referrers/countries, revenue, and campaign traffic without analytics cookies.
 
 ## One-time setup: search
@@ -129,6 +129,23 @@ Edit `marketing/posts.json` to change the approved evergreen queue. The automati
 
 When adding or renaming a guide, run `uv run tools/og-image.py --all`, then commit the generated `web/appeals/og/*.png` files. The script installs Pillow in uv's isolated cache; the build fails if a guide's branded social image is missing or too large for Bluesky.
 
+### YouTube (Shorts)
+
+`tool/post_youtube.mjs` uploads the guide's vertical reel, soundtrack included, as a Short through the YouTube Data API v3 (a vertical video under three minutes is a Short automatically). One upload per posting slot costs a small fraction of the default 10,000-unit daily quota.
+
+1. Create the channel yourself: sign in to YouTube with the Google account that should own it → **Create a channel** (a brand account named GetMyYes keeps it separate from the personal profile).
+2. [Google Cloud console](https://console.cloud.google.com/) → new project `getmyyes-youtube` → **APIs & Services → Library** → enable **YouTube Data API v3**.
+3. **OAuth consent screen**: user type External, app name GetMyYes, support email, then **Publishing status → In production**. Left in *Testing*, the refresh token dies after 7 days. Google will call the app unverified; for an app only you sign in to, that is expected — click **Advanced → Go to GetMyYes** at consent time.
+4. **Credentials → Create credentials → OAuth client ID → Desktop app.** Copy the client ID and secret.
+5. On your machine: `YOUTUBE_CLIENT_ID=... YOUTUBE_CLIENT_SECRET=... node tool/youtube_auth.mjs`, open the printed URL, choose the GetMyYes channel, allow. It prints the refresh token once.
+6. Secrets: `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, `YOUTUBE_REFRESH_TOKEN`.
+
+**Uploads stay private until YouTube audits the API project.** Every project created after July 2020 has its API uploads locked to private until it passes the [YouTube API Services audit](https://support.google.com/youtube/contact/yt_api_form) (free; it asks how the app uses the API and for its privacy policy). The poster uploads anyway and raises a workflow warning, so you can publish each Short in YouTube Studio by hand until the audit clears.
+
+Links in Shorts descriptions are not clickable, so the description writes the guide URL out and the title carries the search terms. The background music is Mixkit's free licence (see Social video); if Content ID ever claims a track, reply with the licence and forward the claim to team@mixkit.co.
+
+TikTok is deliberately not automated: its API keeps every post private until the app passes TikTok's audit.
+
 ## Social video
 
 Post media is rendered by Remotion from the guide library itself — the headline is the guide's own `og:title`, the body line is its entry in `marketing/posts.json`, and the fixed lines live in `STATIC_COPY` in `tool/social_video.mjs`. Nothing is written at post time.
@@ -149,6 +166,7 @@ Commit the resulting `web/media/social/<id>-{square,vertical}.mp4` and `<id>-pos
 | Mastodon | square video uploaded from the checkout | plain status with the link |
 | X | square video, chunked v2 media upload from the checkout | link post with the unfurled card |
 | Bluesky | square video, pre-processed by video.bsky.app | branded link card → plain text |
+| YouTube | vertical reel as a Short, uploaded from the checkout | skip the slot |
 | Threads, LinkedIn | unchanged | — |
 
 A video attachment replaces the unfurled link card on every network; the link
@@ -171,6 +189,16 @@ post itself.
 Mastodon needs the `write:media` scope on its token as well as `write:statuses`; without it the upload is refused and the poster falls back to the status it always sent.
 
 Remotion is free for individuals and companies of up to three people; larger companies need a paid licence (https://remotion.dev/license). See `video/README.md` for the studio and rendering details.
+
+### Music and sound effects
+
+Each video is scored with a 12.6-second excerpt from a library of 50 Mixkit tracks (`video/library/music/`, catalogued with source, excerpt start, and gain in `video/library/music.json`) plus eleven Mixkit sound effects (`video/library/sfx/`, `sfx.json`). The library was chosen for calm, hopeful, instrumental moods; anything tagged sad, dark, dramatic, or similar, and anything likely to have vocals, was left out. Each excerpt starts where its track is steady and has a musical accent as the letter lands, and is loudness-matched so every guide sounds equally loud.
+
+`MUSIC_MOOD` in `tool/social_video.mjs` gives each guide a temperament (gentle, hopeful, or steady); the sync step assigns it an unused track of that mood once and records it in `video/library/assignments.json`, which only ever grows, so a new guide never reshuffles the others. The cues in `video/src/Soundtrack.tsx` read their times from the animation's storyboard.
+
+Licence (Mixkit Stock Music Free License / Sound Effects Free License): fine in social posts, YouTube videos, and ads, commercially, with no attribution. Not allowed: redistributing the files on their own, registering them with Content ID or any rights service, or remixing the music into a music-only track. That is why the library lives in `video/` (committed, never deployed) and only finished videos are served.
+
+No generated music, ever: the owner rejected synthesised scores. Change the library only with real, licensed tracks.
 
 ## Normal deploy
 

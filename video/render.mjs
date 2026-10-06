@@ -4,7 +4,7 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { bundle } from "@remotion/bundler";
 import { ensureBrowser, renderMedia, renderStill, selectComposition } from "@remotion/renderer";
-import { FORMATS, posterFile, sync, videoFile } from "../tool/social_video.mjs";
+import { FORMATS, musicFile, posterFile, sync, videoFile } from "../tool/social_video.mjs";
 
 /**
  * Renders the marketing autopilot's social media with Remotion.
@@ -63,7 +63,11 @@ async function inputsChangedAt(guide) {
       path.join(projectRoot, "tool", "social_video.mjs"),
       path.join(projectRoot, "marketing", "posts.json"),
       path.join(projectRoot, "web", "appeals", `${guide.slug}.html`),
-    ].map(mtime),
+      path.join(here, "library", "sfx.json"),
+      await musicFile(guide.id),
+    ]
+      .filter(Boolean)
+      .map(mtime),
   );
   return Math.max(...times.filter((value) => value !== null));
 }
@@ -152,12 +156,12 @@ for (const job of jobs) {
     codec: "h264",
     crf: 16,
     imageFormat: "png",
-    // Instagram and Facebook reject some silent files outright; a muted track
-    // is cheaper than debugging a rejected upload.
+    // The score is licensed music plus timed sound effects. The track stays
+    // enforced so a guide without a music assignment still uploads cleanly:
+    // Instagram and Facebook reject some silent files outright.
     enforceAudioTrack: true,
-    // Silence does not need the default bitrate.
     audioCodec: "aac",
-    audioBitrate: "64k",
+    audioBitrate: "192k",
     outputLocation: job.output,
     onProgress: ({ progress }) => {
       if (!live) return;

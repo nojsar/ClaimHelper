@@ -30,6 +30,7 @@ export const RemotionRoot: React.FC = () => (
             steps: queue.steps,
             url: queue.url,
             chip: queue.chip,
+            music: guide.music ?? null,
           }}
         />
       )),

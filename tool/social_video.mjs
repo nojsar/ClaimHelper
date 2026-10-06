@@ -1,4 +1,4 @@
-import { copyFile, mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { copyFile, cp, mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
@@ -29,7 +29,84 @@ export const STATIC_COPY = {
 };
 
 const videoRoot = path.join(projectRoot, "video");
+const libraryRoot = path.join(videoRoot, "library");
 const mediaRoot = path.join(projectRoot, "web", "media", "social");
+
+/**
+ * Each guide's musical temperament, matched to what its reader is going
+ * through: gentle where the denial is about a crisis or mental health,
+ * steady for the procedural how-tos, hopeful (the default, so a new guide
+ * needs no entry) for the rest. Moods come from video/library/music.json.
+ */
+export const MUSIC_MOOD = {
+  "appeal-step-by-step": "steady",
+  "appeal-letter-template": "steady",
+  "prior-authorization": "steady",
+  "step-therapy": "steady",
+  "formulary-exclusion": "steady",
+  "out-of-network": "steady",
+  "experimental-denial": "gentle",
+  "er-denial": "gentle",
+  "mental-health-parity": "gentle",
+};
+
+/** FNV-1a: a stable, dependency-free spread for picking a starting track. */
+function hash(text) {
+  let value = 0x811c9dc5;
+  for (const char of text) {
+    value ^= char.codePointAt(0);
+    value = Math.imul(value, 0x01000193) >>> 0;
+  }
+  return value;
+}
+
+async function readJson(file, fallback) {
+  try {
+    return JSON.parse(await readFile(file, "utf8"));
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * One track per guide, chosen once and then kept. assignments.json is
+ * append-only, so a new guide never reshuffles (and silently re-scores) the
+ * ones already published. Within the guide's mood the search starts at a hash
+ * of its id, and a track no other guide uses wins over a repeat.
+ */
+async function assignMusic(guides) {
+  const library = await readJson(path.join(libraryRoot, "music.json"), { tracks: [] });
+  const file = path.join(libraryRoot, "assignments.json");
+  const assigned = await readJson(file, {});
+  const known = new Set(library.tracks.map((track) => track.id));
+  const used = new Set(Object.values(assigned));
+  let changed = false;
+  for (const guide of guides) {
+    if (known.has(assigned[guide.id])) continue;
+    const mood = MUSIC_MOOD[guide.id] ?? "hopeful";
+    const pool = library.tracks
+      .filter((track) => track.mood === mood)
+      .map((track) => track.id)
+      .sort();
+    if (!pool.length) continue;
+    const start = hash(guide.id) % pool.length;
+    const order = pool.map((_, index) => pool[(start + index) % pool.length]);
+    assigned[guide.id] = order.find((id) => !used.has(id)) ?? order[0];
+    used.add(assigned[guide.id]);
+    changed = true;
+  }
+  if (changed) {
+    const sorted = Object.fromEntries(Object.entries(assigned).sort(([a], [b]) => a.localeCompare(b)));
+    await writeFile(file, `${JSON.stringify(sorted, null, 2)}\n`);
+  }
+  return assigned;
+}
+
+/** The excerpt a guide's video is scored with, for render staleness checks. */
+export async function musicFile(id) {
+  const assigned = await readJson(path.join(libraryRoot, "assignments.json"), {});
+  return assigned[id] ? path.join(libraryRoot, "music", `${assigned[id]}.mp3`) : null;
+}
 const siteOrigin = "https://getmyyes.com";
 
 /**
@@ -156,6 +233,13 @@ export async function sync() {
       path.join(videoRoot, "public", "fonts", entry.file),
     );
   }
+  // The licensed audio lives in video/library (committed, never deployed) and
+  // is copied into the bundle's public folder like the fonts.
+  for (const kind of ["music", "sfx"]) {
+    await cp(path.join(libraryRoot, kind), path.join(videoRoot, "public", "audio", kind), { recursive: true });
+  }
+  const music = await assignMusic(guides);
+  for (const guide of guides) guide.music = music[guide.id] ?? null;
   await writeFile(
     path.join(videoRoot, "src", "queue.json"),
     `${JSON.stringify({ ...STATIC_COPY, guides }, null, 2)}\n`,

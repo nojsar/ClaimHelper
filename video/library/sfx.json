@@ -1,0 +1,104 @@
+{
+ "note": "Mixkit sound effects used inside the social videos. Free licence: use within a larger work; never redistribute on their own or register with Content ID.",
+ "effects": [
+  {
+   "name": "paper-slide",
+   "title": "Paper slide",
+   "id": "1530",
+   "seconds": 1.08,
+   "source": "https://assets.mixkit.co/active_storage/sfx/1530/1530-preview.mp3",
+   "license": "Mixkit Sound Effects Free License (https://mixkit.co/license/#sfxFree)",
+   "downloaded": "2026-10-06"
+  },
+  {
+   "name": "shutter",
+   "title": "Camera shutter click",
+   "id": "1133",
+   "seconds": 0.25,
+   "source": "https://assets.mixkit.co/active_storage/sfx/1133/1133-preview.mp3",
+   "license": "Mixkit Sound Effects Free License (https://mixkit.co/license/#sfxFree)",
+   "downloaded": "2026-10-06"
+  },
+  {
+   "name": "scan-sweep",
+   "title": "Slow sweeping swoosh",
+   "id": "163",
+   "seconds": 1.5,
+   "source": "https://assets.mixkit.co/active_storage/sfx/163/163-preview.mp3",
+   "license": "Mixkit Sound Effects Free License (https://mixkit.co/license/#sfxFree)",
+   "downloaded": "2026-10-06"
+  },
+  {
+   "name": "tick",
+   "title": "Interface click hover",
+   "id": "1127",
+   "seconds": 0.22,
+   "source": "https://assets.mixkit.co/active_storage/sfx/1127/1127-preview.mp3",
+   "license": "Mixkit Sound Effects Free License (https://mixkit.co/license/#sfxFree)",
+   "downloaded": "2026-10-06"
+  },
+  {
+   "name": "card-swoosh",
+   "title": "Fast small sweep transition",
+   "id": "166",
+   "seconds": 0.72,
+   "source": "https://assets.mixkit.co/active_storage/sfx/166/166-preview.mp3",
+   "license": "Mixkit Sound Effects Free License (https://mixkit.co/license/#sfxFree)",
+   "downloaded": "2026-10-06"
+  },
+  {
+   "name": "fly-swoosh",
+   "title": "Quick swoosh accent",
+   "id": "1464",
+   "seconds": 0.8,
+   "source": "https://assets.mixkit.co/active_storage/sfx/1464/1464-preview.mp3",
+   "license": "Mixkit Sound Effects Free License (https://mixkit.co/license/#sfxFree)",
+   "downloaded": "2026-10-06"
+  },
+  {
+   "name": "check",
+   "title": "Modern click box check",
+   "id": "1120",
+   "seconds": 0.14,
+   "source": "https://assets.mixkit.co/active_storage/sfx/1120/1120-preview.mp3",
+   "license": "Mixkit Sound Effects Free License (https://mixkit.co/license/#sfxFree)",
+   "downloaded": "2026-10-06"
+  },
+  {
+   "name": "regroup-swoosh",
+   "title": "Short wind swoosh",
+   "id": "1461",
+   "seconds": 1.0,
+   "source": "https://assets.mixkit.co/active_storage/sfx/1461/1461-preview.mp3",
+   "license": "Mixkit Sound Effects Free License (https://mixkit.co/license/#sfxFree)",
+   "downloaded": "2026-10-06"
+  },
+  {
+   "name": "node-pop",
+   "title": "Bubble pop up alert notification",
+   "id": "2357",
+   "seconds": 0.38,
+   "source": "https://assets.mixkit.co/active_storage/sfx/2357/2357-preview.mp3",
+   "license": "Mixkit Sound Effects Free License (https://mixkit.co/license/#sfxFree)",
+   "downloaded": "2026-10-06"
+  },
+  {
+   "name": "arrive-tone",
+   "title": "Click melodic tone",
+   "id": "1129",
+   "seconds": 0.36,
+   "source": "https://assets.mixkit.co/active_storage/sfx/1129/1129-preview.mp3",
+   "license": "Mixkit Sound Effects Free License (https://mixkit.co/license/#sfxFree)",
+   "downloaded": "2026-10-06"
+  },
+  {
+   "name": "done-chime",
+   "title": "Correct positive notification",
+   "id": "957",
+   "seconds": 1.6,
+   "source": "https://assets.mixkit.co/active_storage/sfx/957/957-preview.mp3",
+   "license": "Mixkit Sound Effects Free License (https://mixkit.co/license/#sfxFree)",
+   "downloaded": "2026-10-06"
+  }
+ ]
+}

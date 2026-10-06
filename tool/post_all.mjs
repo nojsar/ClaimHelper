@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 // A single network failing must not silence the others — failures are
 // collected and reported at the end.
 
-const platforms = ["bluesky", "mastodon", "x", "threads", "linkedin", "facebook", "instagram"];
+const platforms = ["bluesky", "mastodon", "x", "threads", "linkedin", "facebook", "instagram", "youtube"];
 const args = process.argv.slice(2);
 const failed = [];
 
