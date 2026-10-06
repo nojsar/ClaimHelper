@@ -115,9 +115,17 @@ export async function readPoster(id) {
   }
 }
 
-/** Alt text for the media, so the video carries the same words as the post. */
+/**
+ * Alt text for the media: the same words as the post, plus what the wordless
+ * animation shows, so a screen-reader user is not told less than a viewer.
+ */
 export function altText(title, summary) {
-  return `A GetMyYes appeal guide card: ${title}. ${summary}`;
+  return (
+    `A GetMyYes appeal guide: ${title}. ${summary} ` +
+    "Animation: a denial letter is scanned, its reason lifts into a plain-English " +
+    "summary, and the summary branches to three next steps: an appeal letter, a " +
+    "deadline, and an independent review."
+  );
 }
 
 /** One entry per queue post, or null for guides whose page has no OG tags. */

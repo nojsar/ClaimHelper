@@ -1,5 +1,5 @@
 import React from "react";
-import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, useCurrentFrame } from "remotion";
 import {
   Format,
   INK,
@@ -9,13 +9,16 @@ import {
   LETTER,
   MONO,
   NAVY,
-  PAPER,
   SANS,
   SERIF,
   TEAL,
   fitTitle,
 } from "./brand";
-import { Reveal } from "./Reveal";
+import { Backdrop } from "./Backdrop";
+import { T, glide, settle } from "./motion";
+import { MaskLine, Reveal } from "./Reveal";
+import { Stage } from "./Stage";
+import { StepRail } from "./StepRail";
 import "./fonts";
 
 export type GuidePostProps = {
@@ -47,12 +50,7 @@ const BrandMark: React.FC<{ size: number }> = ({ size }) => (
 /** The hairline under the masthead draws itself in, left to right. */
 const Rule: React.FC = () => {
   const frame = useCurrentFrame();
-  const width = interpolate(frame, [8, 34], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-    easing: Easing.out(Easing.cubic),
-  });
-
+  const width = settle(frame, T.rule, 0.9);
   return (
     <div
       style={{
@@ -65,32 +63,40 @@ const Rule: React.FC = () => {
   );
 };
 
-/**
- * The rail connecting the step dots, drawing downward as each step lands. It is
- * the same device the guide pages use for their journey map, so a post and the
- * page it links to read as one system rather than two.
- */
-const StepRail: React.FC<{ dot: number }> = ({ dot }) => {
+/** The call to action, with one slow glint across it once the story lands. */
+const Chip: React.FC<{ text: string; size: number }> = ({ text, size }) => {
   const frame = useCurrentFrame();
-  const drawn = interpolate(frame, [104, 140], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-    easing: Easing.out(Easing.cubic),
-  });
-
+  const sweep = glide(frame, T.finale + 0.2, T.finale + 1.1);
   return (
     <div
       style={{
-        position: "absolute",
-        left: dot / 2 - 1,
-        top: dot,
-        bottom: dot,
-        width: 2,
-        background: INK_FAINT,
-        transform: `scaleY(${drawn})`,
-        transformOrigin: "top center",
+        position: "relative",
+        overflow: "hidden",
+        fontFamily: MONO,
+        fontWeight: 600,
+        fontSize: size,
+        letterSpacing: 1.2,
+        color: LETTER,
+        background: TEAL,
+        borderRadius: 10,
+        padding: `${size * 0.55}px ${size}px`,
       }}
-    />
+    >
+      {text}
+      {sweep > 0 && sweep < 1 && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            bottom: 0,
+            width: "45%",
+            left: `${-50 + sweep * 160}%`,
+            background:
+              "linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.28) 50%, rgba(255,255,255,0) 100%)",
+          }}
+        />
+      )}
+    </div>
   );
 };
 
@@ -108,14 +114,8 @@ export const GuidePost: React.FC<GuidePostProps> = ({
   const heading = fitTitle(title, contentWidth, layout);
 
   return (
-    <AbsoluteFill style={{ backgroundColor: PAPER }}>
-      {/* The same quiet document border the OG cards carry. */}
-      <AbsoluteFill
-        style={{
-          margin: layout.padding / 2.6,
-          border: `2px solid ${INK_FAINT}`,
-        }}
-      />
+    <AbsoluteFill>
+      <Backdrop inset={layout.padding / 2.6} />
 
       <AbsoluteFill
         style={{
@@ -127,131 +127,89 @@ export const GuidePost: React.FC<GuidePostProps> = ({
           gap: layout.gap,
         }}
       >
-        <Reveal at={0} rise={0}>
-          <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
-            <BrandMark size={layout.markSize} />
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <div
-                style={{
-                  fontFamily: MONO,
-                  fontWeight: 600,
-                  fontSize: layout.wordmark,
-                  letterSpacing: 1.5,
-                  color: INK,
-                }}
-              >
-                GETMYYES
-              </div>
-              <div
-                style={{
-                  fontFamily: MONO,
-                  fontWeight: 600,
-                  fontSize: layout.kicker,
-                  letterSpacing: 1.2,
-                  color: TEAL,
-                }}
-              >
-                {kicker}
-              </div>
+        {/* Present from the very first frame, so no cover a network picks
+            for itself can come out as an empty page. */}
+        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+          <BrandMark size={layout.markSize} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            <div
+              style={{
+                fontFamily: MONO,
+                fontWeight: 600,
+                fontSize: layout.wordmark,
+                letterSpacing: 1.5,
+                color: INK,
+              }}
+            >
+              GETMYYES
+            </div>
+            <div
+              style={{
+                fontFamily: MONO,
+                fontWeight: 600,
+                fontSize: layout.kicker,
+                letterSpacing: 1.2,
+                color: TEAL,
+              }}
+            >
+              {kicker}
             </div>
           </div>
-        </Reveal>
+        </div>
 
         <Rule />
 
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            gap: layout.gap,
-          }}
-        >
-          <div>
-            {heading.lines.map((line, index) => (
-              <Reveal key={line + index} at={24 + index * 6}>
-                <div
-                  style={{
-                    fontFamily: SERIF,
-                    fontWeight: 700,
-                    fontSize: heading.size,
-                    lineHeight: 1.14,
-                    color: INK,
-                    // Lines are measured to fit; nowrap keeps a sub-pixel
-                    // rounding difference from silently adding a fourth line.
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {line}
-                </div>
-              </Reveal>
-            ))}
-          </div>
+        <div>
+          {heading.lines.map((line, index) => (
+            <MaskLine
+              key={line + index}
+              at={T.title + index * T.titleStagger}
+              style={{
+                fontFamily: SERIF,
+                fontWeight: 700,
+                fontSize: heading.size,
+                lineHeight: 1.1,
+                color: INK,
+                // Lines are measured to fit; nowrap keeps a sub-pixel
+                // rounding difference from silently adding another line.
+                whiteSpace: "nowrap",
+              }}
+            >
+              {line}
+            </MaskLine>
+          ))}
+        </div>
 
-          <Reveal at={66}>
+        {layout.showSummary && (
+          <Reveal at={T.summary}>
             <div
               style={{
                 fontFamily: SANS,
                 fontWeight: 400,
                 fontSize: layout.summary,
-                lineHeight: 1.44,
+                lineHeight: 1.42,
                 color: INK_SOFT,
-                maxWidth: contentWidth * 0.94,
+                maxWidth: contentWidth * 0.96,
+                textWrap: "pretty",
               }}
             >
               {summary}
             </div>
           </Reveal>
+        )}
 
-          <div
-            style={{
-              position: "relative",
-              display: "flex",
-              flexDirection: "column",
-              gap: layout.gap * 0.55,
-            }}
-          >
-            <StepRail dot={layout.stepDot} />
-            {steps.map((step, index) => (
-              <Reveal key={step} at={100 + index * 12}>
-                <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-                  <div
-                    style={{
-                      position: "relative",
-                      width: layout.stepDot,
-                      height: layout.stepDot,
-                      borderRadius: layout.stepDot,
-                      background: TEAL,
-                      color: LETTER,
-                      fontFamily: SANS,
-                      fontWeight: 700,
-                      fontSize: layout.stepDot * 0.48,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {index + 1}
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: SANS,
-                      fontWeight: 400,
-                      fontSize: layout.step,
-                      color: INK,
-                    }}
-                  >
-                    {step}
-                  </div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
+        <div style={{ flex: 1, minHeight: 0 }}>
+          <Stage format={format} />
         </div>
 
-        <Reveal at={150} rise={10}>
+        <StepRail
+          steps={steps}
+          width={contentWidth}
+          dot={layout.railDot}
+          label={layout.railLabel}
+        />
+
+        <Reveal at={T.footer} rise={10}>
           <div
             style={{
               display: "flex",
@@ -272,20 +230,7 @@ export const GuidePost: React.FC<GuidePostProps> = ({
             >
               {url}
             </div>
-            <div
-              style={{
-                fontFamily: MONO,
-                fontWeight: 600,
-                fontSize: layout.footer,
-                letterSpacing: 1.2,
-                color: LETTER,
-                background: TEAL,
-                borderRadius: 10,
-                padding: `${layout.footer * 0.55}px ${layout.footer}px`,
-              }}
-            >
-              {chip}
-            </div>
+            <Chip text={chip} size={layout.footer} />
           </div>
         </Reveal>
       </AbsoluteFill>

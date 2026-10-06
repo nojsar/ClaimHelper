@@ -17,8 +17,8 @@ export const SERIF = "Tinos";
 export const SANS = "Inter";
 export const MONO = "IBM Plex Mono";
 
-export const FPS = 30;
-export const DURATION_IN_FRAMES = 300; // 10s — long enough to read, short enough to loop
+export const FPS = 60;
+export const DURATION_IN_FRAMES = 12 * FPS; // long enough to play the three acts and hold the card
 
 export type Format = "square" | "vertical";
 
@@ -35,9 +35,14 @@ export type Layout = {
   /** Title sizes tried largest-first, exactly like og-image.py's fit_title. */
   titleSizes: number[];
   titleMaxLines: number;
+  /**
+   * The square cut leaves the one-liner to the post text it always travels
+   * with, so the illustration gets the room; the reel has height to spare.
+   */
+  showSummary: boolean;
   summary: number;
-  step: number;
-  stepDot: number;
+  railDot: number;
+  railLabel: number;
   footer: number;
   gap: number;
 };
@@ -49,16 +54,17 @@ export const LAYOUTS: Record<Format, Layout> = {
     padding: 72,
     safeTop: 0,
     safeBottom: 0,
-    markSize: 68,
-    wordmark: 32,
-    kicker: 22,
-    titleSizes: [76, 68, 62, 56, 50, 46],
-    titleMaxLines: 4,
-    summary: 29,
-    step: 27,
-    stepDot: 42,
-    footer: 25,
-    gap: 34,
+    markSize: 60,
+    wordmark: 28,
+    kicker: 19,
+    titleSizes: [64, 58, 54, 50, 46],
+    titleMaxLines: 3,
+    showSummary: false,
+    summary: 28,
+    railDot: 34,
+    railLabel: 21,
+    footer: 23,
+    gap: 26,
   },
   vertical: {
     width: 1080,
@@ -68,16 +74,17 @@ export const LAYOUTS: Record<Format, Layout> = {
     // audio, and action rail across the bottom; nothing readable goes there.
     safeTop: 40,
     safeBottom: 230,
-    markSize: 78,
-    wordmark: 36,
-    kicker: 25,
-    titleSizes: [96, 86, 78, 70, 62, 56],
-    titleMaxLines: 5,
-    summary: 34,
-    step: 31,
-    stepDot: 50,
-    footer: 28,
-    gap: 56,
+    markSize: 76,
+    wordmark: 34,
+    kicker: 23,
+    titleSizes: [84, 78, 72, 66, 60],
+    titleMaxLines: 4,
+    showSummary: true,
+    summary: 32,
+    railDot: 42,
+    railLabel: 25,
+    footer: 27,
+    gap: 44,
   },
 };
 

@@ -1,8 +1,10 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { decodeEntities } from "./social_core.mjs";
+import { altText, readVideo } from "./social_video.mjs";
 
 const projectRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const posts = JSON.parse(
@@ -13,6 +15,7 @@ const service = (process.env.BLUESKY_SERVICE || "https://bsky.social").replace(/
 const identifier = process.env.BLUESKY_HANDLE;
 const password = process.env.BLUESKY_APP_PASSWORD;
 const marker = "#GetMyYesGuide";
+const videoService = "https://video.bsky.app";
 
 async function jsonRequest(url, options = {}) {
   const response = await fetch(url, options);
@@ -91,6 +94,72 @@ async function cardFor(post) {
   }
 }
 
+/**
+ * The guide's Remotion square video as an app.bsky.embed.video, processed by
+ * Bluesky's video service BEFORE the post exists. Uploading straight to the
+ * PDS would publish first and process after, so followers would see a broken
+ * player for the first seconds. Returns null whenever video cannot be used
+ * (no render, an unverified account email, a refused or failed job), and the
+ * caller falls back to the link card. A video embed replaces the card; the
+ * link stays a clickable facet in the text.
+ */
+async function videoFor(post, session, title) {
+  const video = await readVideo(post.id, "square", 50_000_000);
+  if (!video) return null;
+  const auth = { Authorization: `Bearer ${session.accessJwt}` };
+
+  // Bluesky-hosted accounts must verify their email before uploading video.
+  const me = await jsonRequest(`${service}/xrpc/com.atproto.server.getSession`, { headers: auth });
+  if (me.emailConfirmed === false) {
+    console.log("[marketing] bluesky: account email is not verified, which video upload requires; using the link card.");
+    return null;
+  }
+
+  // The service token's audience is the account's own PDS, named in its DID
+  // document. The video service stores the processed file there on our behalf.
+  const pds = (session.didDoc?.service || []).find((entry) => entry.id?.endsWith("#atproto_pds"))?.serviceEndpoint;
+  if (!pds) throw new Error("no PDS endpoint in the session's DID document");
+  const serviceAuth = new URL(`${pds.replace(/\/$/, "")}/xrpc/com.atproto.server.getServiceAuth`);
+  serviceAuth.searchParams.set("aud", `did:web:${new URL(pds).host}`);
+  serviceAuth.searchParams.set("lxm", "com.atproto.repo.uploadBlob");
+  serviceAuth.searchParams.set("exp", String(Math.floor(Date.now() / 1000) + 30 * 60));
+  const { token } = await jsonRequest(serviceAuth, { headers: auth });
+
+  const upload = new URL(`${videoService}/xrpc/app.bsky.video.uploadVideo`);
+  upload.searchParams.set("did", session.did);
+  upload.searchParams.set("name", `${post.id}-square.mp4`);
+  const response = await fetch(upload, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "video/mp4" },
+    body: video,
+  });
+  const body = await response.json().catch(() => ({}));
+  // A file the service has processed before comes back as an error that still
+  // carries its blob (or a job to read it from), so look for those first.
+  let job = body.jobStatus ?? body;
+  let blob = job.blob;
+  for (let polls = 0; !blob; polls += 1) {
+    if (!job.jobId) throw new Error(`upload refused: ${response.status} ${JSON.stringify(body).slice(0, 300)}`);
+    if (polls >= 90) throw new Error("processing did not finish within the time allowed");
+    await sleep(2000);
+    const status = await jsonRequest(
+      `${videoService}/xrpc/app.bsky.video.getJobStatus?jobId=${encodeURIComponent(job.jobId)}`,
+    );
+    job = status.jobStatus ?? {};
+    blob = job.blob;
+    if (!blob && job.state === "JOB_STATE_FAILED") {
+      throw new Error(`processing failed: ${job.error ?? job.message ?? "no reason given"}`);
+    }
+  }
+
+  return {
+    $type: "app.bsky.embed.video",
+    video: blob,
+    alt: altText(title ?? post.text, post.text),
+    aspectRatio: { width: 1080, height: 1080 },
+  };
+}
+
 function historyFrom(feed) {
   return (feed.feed || [])
     .map((entry) => entry?.post?.record)
@@ -137,6 +206,15 @@ if (dryRun) {
       ? `[marketing] Missing link cards (would post as plain text): ${cards.join(", ")}`
       : "[marketing] Every post has a link card ready.",
   );
+  const videos = [];
+  for (const post of posts) {
+    if (!(await readVideo(post.id, "square", 50_000_000))) videos.push(post.id);
+  }
+  console.log(
+    videos.length
+      ? `[marketing] Missing videos (would post with the link card): ${videos.join(", ")}`
+      : "[marketing] Every post has its video ready.",
+  );
   console.log(`\nNext-post preview:\n\n${previews[0].text}`);
   process.exit(0);
 }
@@ -167,11 +245,17 @@ if (!selected) {
 
 const composed = compose(selected);
 
-// Attach the link card when the guide's OG assets are available; a failed
-// upload downgrades to a plain-text post rather than skipping the slot.
+// Prefer the video; then the link card when the guide's OG assets are
+// available; then plain text. Each failure downgrades one step rather than
+// skipping the slot.
 let embed;
 const card = await cardFor(selected);
-if (card) {
+try {
+  embed = (await videoFor(selected, session, card?.title)) ?? undefined;
+} catch (error) {
+  console.warn(`[marketing] Video unavailable, using the link card: ${error.message}`);
+}
+if (!embed && card) {
   try {
     const uploaded = await jsonRequest(`${service}/xrpc/com.atproto.repo.uploadBlob`, {
       method: "POST",
@@ -213,4 +297,5 @@ const result = await jsonRequest(`${service}/xrpc/com.atproto.repo.createRecord`
     },
   }),
 });
-console.log(`[marketing] Published ${selected.id}${embed ? " with link card" : ""}: ${result.uri}`);
+const attached = embed?.$type === "app.bsky.embed.video" ? " with video" : embed ? " with link card" : "";
+console.log(`[marketing] Published ${selected.id}${attached}: ${result.uri}`);

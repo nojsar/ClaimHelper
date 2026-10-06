@@ -8,7 +8,7 @@ This is intentionally a small, durable acquisition system—not a mass-content o
 - Search engines can discover the guide hub from the homepage and every guide from the sitemap.
 - After a successful deploy, the script submits all sitemap URLs to IndexNow so participating search engines can recrawl changes. Google still uses the sitemap and Search Console.
 - GitHub Actions can publish one useful evergreen guide each Monday, Wednesday, and Friday to every network whose secrets are configured: Bluesky, Mastodon, X, Threads, LinkedIn, Facebook, and Instagram. Each network is offset through the queue so they post different guides on the same day, every post carries campaign tags, and a network with missing secrets is skipped with a log line instead of failing the run (`tool/post_all.mjs`).
-- Every post's media is a branded video rendered from the guide itself with Remotion (`video/`, output committed to `web/media/social/`). Instagram gets the vertical reel, Facebook and Mastodon get the square cut; Bluesky keeps its branded link card, and X, Threads, and LinkedIn are unchanged.
+- Every post's media is a branded 12-second, 60fps motion video rendered from the guide itself with Remotion (`video/`, output committed to `web/media/social/`). Instagram gets the vertical reel; Facebook, Mastodon, X, and Bluesky get the square cut. Threads and LinkedIn are unchanged.
 - The private owner dashboard at `https://getmyyes.com/#/stats` reports visits, funnel conversion, top pages/referrers/countries, revenue, and campaign traffic without analytics cookies.
 
 ## One-time setup: search
@@ -147,14 +147,26 @@ Commit the resulting `web/media/social/<id>-{square,vertical}.mp4` and `<id>-pos
 | Instagram | vertical reel | square still → guide OG card → skip |
 | Facebook | square video, link in the description | link post with the unfurled card |
 | Mastodon | square video uploaded from the checkout | plain status with the link |
-| Bluesky | unchanged — branded link card | — |
-| X, Threads, LinkedIn | unchanged | — |
+| X | square video, chunked v2 media upload from the checkout | link post with the unfurled card |
+| Bluesky | square video, pre-processed by video.bsky.app | branded link card → plain text |
+| Threads, LinkedIn | unchanged | — |
 
-The card animates in from an empty page, so the first frame of every render
-is blank. Instagram and Mastodon are therefore handed the poster as an
-explicit cover; without it a profile grid fills with white tiles. Facebook
-still chooses its own frame — its `thumb` parameter needs a multipart upload
-rather than a URL.
+A video attachment replaces the unfurled link card on every network; the link
+stays clickable in the post text. That is the trade: video travels further in
+feeds, a card is one tap to the guide. To put one network back on cards, have
+its poster skip the video call.
+
+Only the masthead is on the first frame; the title and the illustration
+animate in. Instagram and Mastodon are therefore handed the poster (the
+settled last frame) as an explicit cover; without it a profile grid fills
+with near-empty tiles. Facebook still chooses its own frame — its `thumb`
+parameter needs a multipart upload rather than a URL.
+
+Bluesky only accepts video from an account whose email is verified, and caps
+video posts per day (far above our three a week). The poster checks
+`emailConfirmed` first and uses the link card if it is false. X bills media
+upload requests on the pay-per-use tier: a few cents a post, on top of the
+post itself.
 
 Mastodon needs the `write:media` scope on its token as well as `write:statuses`; without it the upload is refused and the poster falls back to the status it always sent.
 
