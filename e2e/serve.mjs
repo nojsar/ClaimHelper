@@ -8,8 +8,14 @@ import { createServer } from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const root = path.resolve(fileURLToPath(new URL("../build/web", import.meta.url)));
-const port = Number(process.env.PORT || 4317);
+// `--root web --port 4318` previews the source folder instead of the build.
+const arg = (name) => {
+  const index = process.argv.indexOf(name);
+  return index === -1 ? null : process.argv[index + 1];
+};
+const projectRoot = fileURLToPath(new URL("..", import.meta.url));
+const root = path.resolve(projectRoot, arg("--root") ?? "build/web");
+const port = Number(arg("--port") ?? process.env.PORT ?? 4317);
 const types = {
   ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript",
   ".mjs": "text/javascript", ".json": "application/json", ".svg": "image/svg+xml",

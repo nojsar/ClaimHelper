@@ -123,3 +123,128 @@ test.describe("guides", () => {
     expect(anim).toBe("none");
   });
 });
+
+/**
+ * WCAG contrast of every visible text node whose background resolves to solid
+ * colours. Text over a gradient panel is skipped rather than guessed at; the
+ * panels are fixed brand values, checked by hand once in the design notes.
+ */
+const lowContrastText = (page) => page.evaluate(() => {
+  const parse = (c) => {
+    const m = c.match(/rgba?\(([^)]+)\)/);
+    if (!m) return null;
+    const p = m[1].split(/[ ,/]+/).filter(Boolean).map(Number);
+    return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+  };
+  const lin = (v) => (v /= 255) <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  const lum = (c) => 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
+  const over = (t, b) => ({ r: t.r * t.a + b.r * (1 - t.a), g: t.g * t.a + b.g * (1 - t.a), b: t.b * t.a + b.b * (1 - t.a), a: 1 });
+  const backdrop = (el) => {
+    const layers = [];
+    for (let n = el; n; n = n.parentElement) {
+      const cs = getComputedStyle(n);
+      if (cs.backgroundImage.includes("gradient")) return null;
+      const c = parse(cs.backgroundColor);
+      if (c && c.a > 0) { layers.push(c); if (c.a === 1) break; }
+    }
+    return layers.reverse().reduce((acc, c) => over(c, acc), { r: 255, g: 255, b: 255, a: 1 });
+  };
+  const failures = [];
+  const seen = new Set();
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  while (walker.nextNode()) {
+    const el = walker.currentNode.parentElement;
+    if (!walker.currentNode.textContent.trim() || seen.has(el)) continue;
+    seen.add(el);
+    if (!el.getClientRects().length || el.closest("[aria-hidden='true'], .skip-link, #app-loader")) continue;
+    const cs = getComputedStyle(el);
+    if (cs.visibility === "hidden" || Number(cs.opacity) === 0) continue;
+    const bg = backdrop(el);
+    if (!bg) continue;
+    const fg = over(parse(cs.color), bg);
+    const [hi, lo] = [lum(fg), lum(bg)].sort((x, y) => y - x);
+    const ratio = (hi + 0.05) / (lo + 0.05);
+    const size = parseFloat(cs.fontSize);
+    const large = size >= 24 || (size >= 18.66 && Number(cs.fontWeight) >= 700);
+    if (ratio < (large ? 3 : 4.5)) failures.push(`${walker.currentNode.textContent.trim().slice(0, 40)} (${ratio.toFixed(2)}:1)`);
+  }
+  return failures;
+});
+
+test.describe("appearance follows the system (dark mode)", () => {
+  test.use({ colorScheme: "dark" });
+  for (const route of ["/", "/appeals/external-review", "/tools/appeal-deadline-calculator", "/insurer-denial-rates", "/privacy", "/codes/co-50"]) {
+    test(`text stays readable in dark mode on ${route}`, async ({ page }) => {
+      await page.goto(route);
+      // Open every collapsible so hidden copy is checked too.
+      await page.evaluate(() => document.querySelectorAll("details").forEach((d) => { d.open = true; }));
+      expect(await lowContrastText(page)).toEqual([]);
+    });
+  }
+
+  test("the page itself turns dark, not just the text", async ({ page }) => {
+    for (const route of ["/", "/appeals/external-review"]) {
+      await page.goto(route);
+      const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+      const [r, g, b] = bg.match(/\d+/g).map(Number);
+      expect(r + g + b, `${route} background ${bg}`).toBeLessThan(120);
+    }
+  });
+});
+
+test("text stays readable in light mode on the homepage and a guide", async ({ page }) => {
+  for (const route of ["/", "/appeals/external-review"]) {
+    await page.goto(route);
+    await page.evaluate(() => document.querySelectorAll("details").forEach((d) => { d.open = true; }));
+    expect(await lowContrastText(page), route).toEqual([]);
+  }
+});
+
+test.describe("glass header (functional layer only)", () => {
+  test("clear over the hero, glass once content scrolls beneath it", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 860 });
+    await page.goto("/");
+    const header = page.locator(".site-header");
+    await expect(header).toHaveAttribute("data-at-top", "");
+    await page.mouse.wheel(0, 900);
+    await expect(header).not.toHaveAttribute("data-at-top", "");
+    const filter = await header.evaluate((h) => getComputedStyle(h).backdropFilter || getComputedStyle(h).webkitBackdropFilter);
+    expect(filter).toContain("blur");
+  });
+
+  test("no content card uses the material", async ({ page }) => {
+    await page.goto("/");
+    const glassy = await page.evaluate(() =>
+      [...document.querySelectorAll("main *")]
+        .filter((el) => /blur/.test(getComputedStyle(el).backdropFilter || ""))
+        .map((el) => el.className.toString()));
+    expect(glassy).toEqual([]);
+  });
+
+  test("increased contrast gets an opaque bar", async ({ browser }) => {
+    const context = await browser.newContext({ contrast: "more" });
+    const page = await context.newPage();
+    await page.goto("/");
+    await page.mouse.wheel(0, 900);
+    const filter = await page.locator(".site-header").evaluate((h) => getComputedStyle(h).backdropFilter);
+    expect(filter === "none" || filter === "").toBe(true);
+    await context.close();
+  });
+});
+
+test("standalone links are at least 44px tall on a phone", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const [route, selector] of [
+    ["/", ".footer-links a, .proof-action, .preview-card-foot a, .resource-links a, .brand"],
+    ["/appeals/external-review", ".related a, .brand"],
+  ]) {
+    await page.goto(route);
+    await page.evaluate(() => document.querySelectorAll("details").forEach((d) => { d.open = true; }));
+    const short = await page.evaluate((sel) =>
+      [...document.querySelectorAll(sel)]
+        .filter((a) => a.getClientRects().length)
+        .filter((a) => a.getBoundingClientRect().height < 43.5)
+        .map((a) => `${a.textContent.trim().slice(0, 30)} ${Math.round(a.getBoundingClientRect().height)}px`), selector);
+    expect(short, route).toEqual([]);
+  }
+});

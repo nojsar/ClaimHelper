@@ -81,6 +81,14 @@
       .deadline { display: block; }
       .deadline .date { display: block; min-width: 0; margin-bottom: 4px; }
     }
+
+    @media (prefers-color-scheme: dark) {
+      .calc input[type="date"], .calc select { background: var(--paper); }
+      .calc .field-error { color: #F08A92; }
+      .calc button.go { background: #A9DED2; color: #0E1922; }
+      .calc button.go:hover { background: #C3EADF; }
+      .calc { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 12px 30px -8px rgba(0, 0, 0, 0.6); }
+    }
   </style>
 </head>
 <body>

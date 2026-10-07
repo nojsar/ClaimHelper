@@ -503,3 +503,125 @@ h1, h2, h3 { text-wrap: balance; }
 /* Where a journey map follows, the map is the visual. Two ornaments in a row
    is one too many. */
 .guide-motion:has(+ .flow) { display: none; }
+
+/* ==================================================================
+   Apple design layer: Human Interface Guidelines, applied to the web
+   (apple-design skill: liquid-glass.md, dark-mode.md, color.md,
+   accessibility.md, typography.md). Shared by every guide, code,
+   insurer, tool and legal page.
+   ================================================================== */
+
+:root { color-scheme: light dark; }
+
+/* Glass on the functional layer only: the sticky bar. Content stays opaque.
+   Below 560px the bar wraps and is no longer sticky, so it simply sits on
+   the paper. */
+header.site {
+  position: sticky;
+  border-bottom-color: rgba(16, 38, 59, 0.10);
+  background: rgba(246, 248, 247, 0.76);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  backdrop-filter: blur(24px) saturate(1.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+/* Scroll edge effect instead of a hard line where content meets the bar. */
+header.site::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 100%;
+  height: 14px;
+  background: linear-gradient(to bottom, rgba(16, 38, 59, 0.06), rgba(16, 38, 59, 0));
+  pointer-events: none;
+}
+@media (max-width: 560px) {
+  header.site { position: static; }
+  header.site::after { display: none; }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  header.site { background: rgba(246, 248, 247, 0.97); }
+}
+
+/* One size for every small label, and none below 12.5px. */
+.keyfacts .kicker,
+.sources .kicker,
+.letterblock .lb-bar .kicker,
+.cta .kicker,
+.related .kicker { font-size: 12.5px; }
+
+/* The template field sample in the lede uses the same mark as the letter. */
+.field-sample { padding: 0 3px; border-radius: 3px; background: rgba(47, 111, 98, 0.14); font-style: normal; }
+
+/* Touch targets: 44px for standalone links on phones and touch screens.
+   The breadcrumb grows its hit area with padding that does not move the
+   layout; the related-guides list gets real rows. */
+@media (max-width: 760px), (pointer: coarse) {
+  .crumbs a { padding-block: 13px; }
+  .related li { margin-bottom: 0; }
+  .related a { min-height: 44px; display: inline-flex; align-items: center; }
+  .brand { min-height: 44px; }
+}
+
+/* Dark appearance, following the system setting. Navy and green are text
+   roles here, so they turn light; surfaces that were painted with them get
+   their own values. Contrast on the darkest surface: body 15:1, secondary
+   10:1, muted 6.8:1, links 13:1. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.40), 0 4px 12px -4px rgba(0, 0, 0, 0.50);
+    --shadow-2: 0 1px 2px rgba(0, 0, 0, 0.35), 0 22px 44px -26px rgba(0, 0, 0, 0.70);
+    --paper: #0E1922;
+    --letter: #15222D;
+    --cream: #162B2C;
+    --ink: #E7EDF0;
+    --ink-soft: #BAC6CD;
+    --muted: #93A2AC;
+    --carmine: #CFE0EE;
+    --carmine-dark: #DCE9F4;
+    --green: #7CCBB8;
+    --green-bright: #A9DED2;
+    --border: #2A3A46;
+    --border-strong: #5E7382;
+    --control-border: #93A2AC;
+  }
+  header.site {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+    background: rgba(14, 25, 34, 0.72);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+  header.site::after { background: linear-gradient(to bottom, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0)); }
+  .brand .mark { background: linear-gradient(135deg, #1C3A55, #2F6F62); }
+  .cta {
+    background: linear-gradient(135deg, #182B3B, #10263B);
+    color: #F2F6F8;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 18px 40px -10px rgba(0, 0, 0, 0.6);
+  }
+  .cta h2,
+  .cta .cta-trust,
+  .cta a.sample { color: #F2F6F8; }
+  /* The one tinted primary action: mint on ink, 11.9:1. */
+  .cta a.go { background: #A9DED2; color: #0E1922; }
+  .cta a.go:hover { background: #C3EADF; }
+  .flow-marker { background: #2F6F62; }
+  .letter em,
+  .field-sample { background: rgba(143, 211, 194, 0.16); }
+}
+
+/* Increase Contrast and Reduce Transparency: opaque bar, stronger lines. */
+@media (prefers-contrast: more) {
+  :root {
+    --muted: var(--ink-soft);
+    --ink-soft: var(--ink);
+    --border: var(--border-strong);
+  }
+  a { text-decoration-thickness: 2px; }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  header.site {
+    border-bottom-color: var(--border-strong);
+    background: var(--paper);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  header.site::after { display: none; }
+}

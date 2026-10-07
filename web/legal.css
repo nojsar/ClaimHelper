@@ -236,3 +236,11 @@ body.legal-page::before {
     box-shadow: none;
   }
 }
+
+/* Dark appearance. The tokens come from guide.css; only the striping and the
+   page wash here are literal light colours, and this file loads after it. */
+@media (prefers-color-scheme: dark) {
+  body.legal-page { background: var(--paper); }
+  body.legal-page::before { background-image: none; }
+  .legal-page tbody tr:nth-child(even) { background: rgba(255, 255, 255, 0.03); }
+}
