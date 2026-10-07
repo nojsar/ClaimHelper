@@ -12,11 +12,12 @@ import { MARK_AT } from "./Stage";
  *
  * The excerpts are loudness-matched to -20 dBFS and the effects
  * peak-normalised to -3 dBFS, so the relative volumes below are the mix and
- * MASTER sets the overall level: about -19 dBFS RMS with peaks near -1.5
- * dBFS. Feeds rarely turn a quiet video up, so headroom past that is wasted.
+ * MASTER sets the overall level. At 1.45 the loudest guide touched 0 dBFS
+ * (an effect landing on a music peak), so 1.2 keeps every render at or
+ * below about -1.5 dBFS, which AAC encoding needs to stay clean.
  */
 
-const MASTER = 1.45;
+const MASTER = 1.2;
 const MUSIC_LEVEL = 0.72 * MASTER;
 
 type Cue = { at: number; sfx: string; volume: number };
