@@ -212,13 +212,16 @@ test.describe("glass header (functional layer only)", () => {
     expect(filter).toContain("blur");
   });
 
-  test("no content card uses the material", async ({ page }) => {
+  test("glass stays on its few floating surfaces", async ({ page }) => {
+    // The owner chose more visible glass than Apple's controls-only rule:
+    // the hero card's frame, the reassurance strip and the motion control
+    // float over the aurora. Anything else picking up the material is drift.
     await page.goto("/");
     const glassy = await page.evaluate(() =>
       [...document.querySelectorAll("main *")]
         .filter((el) => /blur/.test(getComputedStyle(el).backdropFilter || ""))
         .map((el) => el.className.toString()));
-    expect(glassy).toEqual([]);
+    expect(glassy.sort()).toEqual(["glass-stage", "motion-toggle", "reassurance-list"]);
   });
 
   test("increased contrast gets an opaque bar", async ({ browser }) => {
@@ -247,4 +250,44 @@ test("standalone links are at least 44px tall on a phone", async ({ page }) => {
         .map((a) => `${a.textContent.trim().slice(0, 30)} ${Math.round(a.getBoundingClientRect().height)}px`), selector);
     expect(short, route).toEqual([]);
   }
+});
+
+test.describe("glass motion", () => {
+  test.use({ reducedMotion: "no-preference" });
+
+  test("the drifting light can be paused, and the choice is kept", async ({ page }) => {
+    await page.goto("/");
+    const toggle = page.locator("[data-animation-control]");
+    await expect(toggle).toHaveAttribute("aria-pressed", "false");
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-pressed", "true");
+    await expect(toggle).toHaveText("Play motion");
+    const state = () => page.locator(".hero-aurora span").first().evaluate((el) => getComputedStyle(el).animationPlayState);
+    expect(await state()).toBe("paused");
+    await page.reload();
+    expect(await state()).toBe("paused");
+    await page.locator("[data-animation-control]").click();
+    expect(await state()).toBe("running");
+  });
+
+  test("below-the-fold sections come into focus as they arrive", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 860 });
+    await page.goto("/");
+    const waiting = await page.locator("[data-reveal]:not(.is-revealed)").count();
+    expect(waiting, "nothing was set up to reveal").toBeGreaterThan(0);
+    // Nothing on the first screen ever starts hidden.
+    const hiddenOnArrival = await page.evaluate(() =>
+      [...document.querySelectorAll("[data-reveal]")].filter((el) => el.getBoundingClientRect().top < innerHeight).length);
+    expect(hiddenOnArrival).toBe(0);
+    for (let y = 0; y < 12; y += 1) await page.mouse.wheel(0, 900);
+    await expect(page.locator("[data-reveal]:not(.is-revealed)")).toHaveCount(0, { timeout: 5000 });
+  });
+});
+
+test("reduced motion hides nothing and stills the light", async ({ page }) => {
+  // The suite's default context asks for reduced motion.
+  await page.goto("/");
+  expect(await page.evaluate(() => document.documentElement.classList.contains("reveal-ready"))).toBe(false);
+  expect(await page.locator(".hero-aurora span").first().evaluate((el) => getComputedStyle(el).animationName)).toBe("none");
+  await expect(page.locator("[data-animation-control]")).toBeHidden();
 });
