@@ -200,6 +200,10 @@ Licence (Mixkit Stock Music Free License / Sound Effects Free License): fine in 
 
 No generated music, ever: the owner rejected synthesised scores. Change the library only with real, licensed tracks.
 
+### One-off posts
+
+`marketing/one-off.json` holds posts that go out once, by hand, never on the schedule (the first is `intro-film`, the narrated product film from the homepage). To publish one: Actions → Marketing autopilot → Run workflow, untick **dry_run**, and enter its id in **one_off**. Every network then posts it instead of the day's guide, with its own media and alt text, its own `utm_campaign`, and its own tag (so Bluesky's guide spacing ignores it). Each poster stops if the one-off's text is already on that account, so a second dispatch is safe. On YouTube it is declared as altered or synthetic content, because the film has generated stills and narration. Dry runs validate every one-off's length on every network, so an over-long entry fails the scheduled preview first.
+
 ## Normal deploy
 
 Run `deploy_claimhelper.bat`. It generates the marketing assets before Flutter builds, stages them into the deploy artifact, Firebase verifies them again before publishing, and then notifies IndexNow.

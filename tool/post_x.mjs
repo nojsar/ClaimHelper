@@ -6,6 +6,7 @@ import {
   configured,
   dryRun,
   guideMeta,
+  isOneOff,
   jsonRequest,
   postForDay,
   previewAndExit,
@@ -135,7 +136,7 @@ async function uploadVideo(post) {
       headers: { ...signed(metadataUrl), "Content-Type": "application/json" },
       body: JSON.stringify({
         id,
-        metadata: { alt_text: { text: altText(meta?.title ?? post.text, post.text).slice(0, 1000) } },
+        metadata: { alt_text: { text: altText(meta?.title ?? post.text, post.text, post).slice(0, 1000) } },
       }),
     });
   } catch (error) {
@@ -158,9 +159,10 @@ const marker = post.text.slice(0, 60);
 const today = new Date().toISOString().slice(0, 10);
 // Same text AND same day: the rotation legitimately repeats a guide every
 // nine days (~4 posting slots), so matching text alone would false-positive.
+// A one-off goes out once, so its text on any recent day is a duplicate.
 if (
   (timeline.data || []).some(
-    (tweet) => tweet.text?.includes(marker) && tweet.created_at?.slice(0, 10) === today,
+    (tweet) => tweet.text?.includes(marker) && (isOneOff(post) || tweet.created_at?.slice(0, 10) === today),
   )
 ) {
   console.log("[marketing] x: today's post already exists; skipping safely.");

@@ -2,7 +2,7 @@ import { copyFile, cp, mkdir, readFile, stat, writeFile } from "node:fs/promises
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-import { guideMeta, posts, projectRoot } from "./social_core.mjs";
+import { guideMeta, oneOffs, posts, projectRoot } from "./social_core.mjs";
 
 /**
  * The bridge between the reviewed guide library and the Remotion project in
@@ -123,20 +123,45 @@ export function slugOf(post) {
   return post.path.replace(/\/$/, "").split("/").pop();
 }
 
+/**
+ * A one-off (marketing/one-off.json) names its own already-deployed files under
+ * web/; a guide's live in /media/social/ by naming convention. `format` is the
+ * feed cut ("square") or the reel ("vertical"), whatever its real shape.
+ */
+function oneOffMedia(id, format) {
+  return oneOffs.find((post) => post.id === id)?.media?.[format] ?? null;
+}
+
 export function videoFile(id, format) {
+  const custom = oneOffMedia(id, format);
+  if (custom) return path.join(projectRoot, "web", custom.video);
   return path.join(mediaRoot, `${id}-${format}.mp4`);
 }
 
 export function videoUrl(id, format) {
+  const custom = oneOffMedia(id, format);
+  if (custom) return `${siteOrigin}/${custom.video}`;
   return `${siteOrigin}/media/social/${id}-${format}.mp4`;
 }
 
-export function posterFile(id) {
+/** A guide has one square poster for both cuts; a one-off has one per cut. */
+export function posterFile(id, format = "square") {
+  const custom = oneOffMedia(id, format);
+  if (custom) return path.join(projectRoot, "web", custom.poster);
   return path.join(mediaRoot, `${id}-poster.png`);
 }
 
-export function posterUrl(id) {
+export function posterUrl(id, format = "square") {
+  const custom = oneOffMedia(id, format);
+  if (custom) return `${siteOrigin}/${custom.poster}`;
   return `${siteOrigin}/media/social/${id}-poster.png`;
+}
+
+/** Pixel size of a cut, for embeds that reserve space before the video loads. */
+export function videoSize(id, format) {
+  const custom = oneOffMedia(id, format);
+  if (custom) return { width: custom.width, height: custom.height };
+  return format === "vertical" ? { width: 1080, height: 1920 } : { width: 1080, height: 1080 };
 }
 
 /**
@@ -184,9 +209,11 @@ export async function readVideo(id, format, maxBytes = Number.POSITIVE_INFINITY)
  * when it has not been rendered yet, which every caller treats as "let the
  * network choose" rather than as a failure.
  */
-export async function readPoster(id) {
+export async function readPoster(id, format = "square") {
+  const file = posterFile(id, format);
   try {
-    return await readFile(posterFile(id));
+    const bytes = await readFile(file);
+    return { bytes, type: file.endsWith(".jpg") ? "image/jpeg" : "image/png", name: path.basename(file) };
   } catch {
     return null;
   }
@@ -196,7 +223,9 @@ export async function readPoster(id) {
  * Alt text for the media: the same words as the post, plus what the wordless
  * animation shows, so a screen-reader user is not told less than a viewer.
  */
-export function altText(title, summary) {
+export function altText(title, summary, post) {
+  // A one-off carries its own description, because it is not the guide card.
+  if (post?.alt) return post.alt;
   return (
     `A GetMyYes appeal guide: ${title}. ${summary} ` +
     "Animation: a denial letter is scanned, its reason lifts into a plain-English " +

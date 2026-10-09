@@ -5,6 +5,7 @@ import {
   dryRun,
   graphemes,
   guideMeta,
+  isOneOff,
   jsonRequest,
   postForDay,
   previewAndExit,
@@ -35,7 +36,8 @@ const API = "https://www.googleapis.com/youtube/v3";
 const UPLOAD = "https://www.googleapis.com/upload/youtube/v3/videos";
 
 function describe(post) {
-  return `${post.text}\n\nFree plain-English guide: ${campaignUrl(post, "youtube")}\n\n#Shorts #HealthInsurance #InsuranceAppeal`;
+  const label = isOneOff(post) ? "Free preview" : "Free plain-English guide";
+  return `${post.text}\n\n${label}: ${campaignUrl(post, "youtube")}\n\n#Shorts #HealthInsurance #InsuranceAppeal`;
 }
 
 if (dryRun) previewAndExit("youtube", describe, DESCRIPTION_LIMIT, { offset: OFFSET, lengthOf: graphemes });
@@ -71,7 +73,9 @@ const recent = await jsonRequest(
 const today = new Date().toISOString().slice(0, 10);
 if (
   (recent.items ?? []).some(
-    (item) => item.snippet?.title === title && String(item.snippet?.publishedAt ?? "").slice(0, 10) === today,
+    (item) =>
+      item.snippet?.title === title &&
+      (isOneOff(post) || String(item.snippet?.publishedAt ?? "").slice(0, 10) === today),
   )
 ) {
   console.log(`[marketing] youtube: ${post.id} was already uploaded today; skipping safely.`);
@@ -107,8 +111,9 @@ const session = await fetch(`${UPLOAD}?uploadType=resumable&part=snippet,status`
     status: {
       privacyStatus: "public",
       selfDeclaredMadeForKids: false,
-      // An animated explainer card, not realistic synthetic media.
-      containsSyntheticMedia: false,
+      // A guide is an animated explainer card, not realistic synthetic media.
+      // A one-off says for itself (the film has generated stills and voice).
+      containsSyntheticMedia: Boolean(post.syntheticMedia),
     },
   }),
 });

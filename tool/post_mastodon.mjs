@@ -5,6 +5,7 @@ import {
   configured,
   dryRun,
   guideMeta,
+  isOneOff,
   jsonRequest,
   postForDay,
   previewAndExit,
@@ -25,7 +26,7 @@ const OFFSET = 1;
 const LIMIT = 500; // Mastodon default; URLs count as 23 characters.
 
 function compose(post) {
-  return `${post.text}\n\n${campaignUrl(post, "mastodon")}\n\n#GetMyYesGuide #HealthInsurance`;
+  return `${post.text}\n\n${campaignUrl(post, "mastodon")}\n\n${post.tag ?? "#GetMyYesGuide"} #HealthInsurance`;
 }
 
 if (dryRun) previewAndExit("mastodon", compose, LIMIT, { offset: OFFSET, lengthOf: weightedLength });
@@ -48,7 +49,13 @@ const recent = await jsonRequest(
   `${server}/api/v1/accounts/${me.id}/statuses?limit=10&exclude_replies=true&exclude_reblogs=true`,
 );
 const today = new Date().toISOString().slice(0, 10);
-if (recent.some((s) => (s.created_at || "").slice(0, 10) === today && s.content?.includes("GetMyYesGuide"))) {
+if (isOneOff(post)) {
+  // A one-off may share its day with a guide, so look for its own words.
+  if (recent.some((s) => s.content?.includes(post.text.slice(0, 40)))) {
+    console.log(`[marketing] mastodon: ${post.id} is already posted; skipping safely.`);
+    process.exit(0);
+  }
+} else if (recent.some((s) => (s.created_at || "").slice(0, 10) === today && s.content?.includes("GetMyYesGuide"))) {
   console.log("[marketing] mastodon: today's campaign post already exists; skipping safely.");
   process.exit(0);
 }
@@ -62,12 +69,12 @@ if (video) {
     const meta = await guideMeta(post);
     const form = new FormData();
     form.append("file", new Blob([video], { type: "video/mp4" }), `${post.id}.mp4`);
-    form.append("description", altText(meta?.title ?? post.text, post.text));
+    form.append("description", altText(meta?.title ?? post.text, post.text, post));
     // Same reason as Instagram: the first frame is the card mid-animation, so
     // an attachment without a thumbnail previews as a blank page.
     const poster = await readPoster(post.id);
     if (poster) {
-      form.append("thumbnail", new Blob([poster], { type: "image/png" }), `${post.id}.png`);
+      form.append("thumbnail", new Blob([poster.bytes], { type: poster.type }), poster.name);
     }
     const uploaded = await jsonRequest(`${server}/api/v2/media`, {
       method: "POST",

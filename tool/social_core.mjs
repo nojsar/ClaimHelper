@@ -13,11 +13,23 @@ export const posts = JSON.parse(
 );
 export const dryRun = process.argv.includes("--dry-run");
 
+// Hand-dispatched posts (marketing/one-off.json), chosen by the workflow's
+// one_off input. When one is named, every network posts it instead of the
+// day's guide; the schedule never sets it.
+export const oneOffs = JSON.parse(
+  await readFile(path.join(projectRoot, "marketing", "one-off.json"), "utf8"),
+).posts;
+const oneOffId = (process.env.MARKETING_ONE_OFF || "").trim();
+export const oneOff = oneOffId ? oneOffs.find((post) => post.id === oneOffId) : null;
+if (oneOffId && !oneOff) {
+  throw new Error(`MARKETING_ONE_OFF="${oneOffId}" is not in marketing/one-off.json.`);
+}
+
 export function campaignUrl(post, source) {
   const url = new URL(post.path, "https://getmyyes.com");
   url.searchParams.set("utm_source", source);
   url.searchParams.set("utm_medium", "organic_social");
-  url.searchParams.set("utm_campaign", "evergreen_guides");
+  url.searchParams.set("utm_campaign", post.campaign ?? "evergreen_guides");
   return url.toString();
 }
 
@@ -27,10 +39,21 @@ export function campaignUrl(post, source) {
  * offset staggers WHICH guide it posts so the networks don't mirror each
  * other. The Mon/Wed/Fri cadence steps the day number by 2,2,3 — coprime
  * with any queue size not divisible by 7 — so every guide still cycles.
+ * A dispatched one-off overrides the rotation on every network.
  */
 export function postForDay(offset = 0) {
+  if (oneOff) return oneOff;
   const day = Math.floor(Date.now() / 86_400_000);
   return posts[(day + offset) % posts.length];
+}
+
+/**
+ * Guides legitimately repeat every few weeks, so the posters' duplicate
+ * guards only match them on the same UTC day. A one-off goes out once ever,
+ * so a match on any day means it is already published.
+ */
+export function isOneOff(post) {
+  return oneOffs.includes(post);
 }
 
 /** Log-and-skip when a network's secrets are absent, so one workflow can
@@ -84,6 +107,8 @@ function meta(html, property) {
 /** OG title/description/image for a guide, read from its own page so posts
  * always match the reviewed copy. Returns null when anything is missing. */
 export async function guideMeta(post) {
+  // A one-off is not a guide page; its reviewed title travels with it.
+  if (isOneOff(post)) return { title: post.title, description: post.text, image: null };
   try {
     const slug = post.path.replace(/\/$/, "").split("/").pop();
     const html = await readFile(
@@ -104,7 +129,9 @@ export async function guideMeta(post) {
 /** Validate every queue entry against a per-network composer + length cap,
  * print the next post, and exit — the shared --dry-run implementation. */
 export function previewAndExit(platform, composeText, limit, { offset = 0, lengthOf = graphemes } = {}) {
-  const previews = posts.map((post) => ({ id: post.id, text: composeText(post) }));
+  // One-offs are validated on every dry run, so an over-long one fails the
+  // scheduled preview long before anyone dispatches it.
+  const previews = [...posts, ...oneOffs].map((post) => ({ id: post.id, text: composeText(post) }));
   for (const preview of previews) {
     const length = lengthOf(preview.text);
     if (length > limit) {

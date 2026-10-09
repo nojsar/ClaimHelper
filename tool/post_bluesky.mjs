@@ -3,8 +3,8 @@ import path from "node:path";
 import process from "node:process";
 import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
-import { decodeEntities } from "./social_core.mjs";
-import { altText, readVideo } from "./social_video.mjs";
+import { decodeEntities, oneOff, oneOffs } from "./social_core.mjs";
+import { altText, readVideo, videoSize } from "./social_video.mjs";
 
 const projectRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const posts = JSON.parse(
@@ -30,13 +30,16 @@ function campaignUrl(post) {
   const url = new URL(post.path, "https://getmyyes.com");
   url.searchParams.set("utm_source", "bluesky");
   url.searchParams.set("utm_medium", "organic_social");
-  url.searchParams.set("utm_campaign", "evergreen_guides");
+  url.searchParams.set("utm_campaign", post.campaign ?? "evergreen_guides");
   return url.toString();
 }
 
 function compose(post) {
   const url = campaignUrl(post);
-  const text = `${post.text}\n\n${url}\n\n${marker}`;
+  // A one-off carries its own tag, which also keeps it out of historyFrom()
+  // and so out of the guide rotation's spacing.
+  const tag = post.tag ?? marker;
+  const text = `${post.text}\n\n${url}\n\n${tag}`;
   const graphemes = typeof Intl.Segmenter === "function"
     ? [...new Intl.Segmenter("en", { granularity: "grapheme" }).segment(text)].length
     : [...text].length;
@@ -45,7 +48,7 @@ function compose(post) {
   const facets = [];
   for (const [needle, feature] of [
     [url, { $type: "app.bsky.richtext.facet#link", uri: url }],
-    [marker, { $type: "app.bsky.richtext.facet#tag", tag: marker.slice(1) }],
+    [tag, { $type: "app.bsky.richtext.facet#tag", tag: tag.slice(1) }],
   ]) {
     const start = text.indexOf(needle);
     facets.push({
@@ -75,6 +78,15 @@ function meta(html, property) {
  */
 async function cardFor(post) {
   try {
+    if (oneOffs.includes(post) && post.path === "/") {
+      // The homepage's own OG card, for a one-off whose video cannot be used.
+      const html = await readFile(path.join(projectRoot, "web", "index.html"), "utf8");
+      const title = meta(html, "og:title");
+      const description = meta(html, "og:description");
+      const image = await readFile(path.join(projectRoot, "web", "og-image.png"));
+      if (!title || !description || image.byteLength > 950_000) return null;
+      return { title, description, image };
+    }
     const slug = post.path.replace(/\/$/, "").split("/").pop();
     const html = await readFile(
       path.join(projectRoot, "web", "appeals", `${slug}.html`),
@@ -155,8 +167,8 @@ async function videoFor(post, session, title) {
   return {
     $type: "app.bsky.embed.video",
     video: blob,
-    alt: altText(title ?? post.text, post.text),
-    aspectRatio: { width: 1080, height: 1080 },
+    alt: altText(title ?? post.text, post.text, post),
+    aspectRatio: videoSize(post.id, "square"),
   };
 }
 
@@ -192,6 +204,12 @@ function choosePost(history) {
 }
 
 if (dryRun) {
+  // compose() throws on an over-long post, so this validates the one-offs too.
+  for (const post of oneOffs) compose(post);
+  if (oneOff) {
+    console.log(`[marketing] One-off preview:\n\n${compose(oneOff).text}`);
+    process.exit(0);
+  }
   const previews = posts.map((post) => ({ id: post.id, ...compose(post) }));
   const longest = previews.reduce((a, b) =>
     [...a.text].length >= [...b.text].length ? a : b,
@@ -236,7 +254,17 @@ feedUrl.searchParams.set("actor", session.did);
 feedUrl.searchParams.set("limit", "100");
 feedUrl.searchParams.set("filter", "posts_no_replies");
 const feed = await jsonRequest(feedUrl);
-const selected = choosePost(historyFrom(feed));
+
+// A one-off skips the rotation's 36-hour spacing (it may share a day with a
+// guide) but goes out only once, so any earlier copy of its text stops it.
+if (
+  oneOff &&
+  (feed.feed || []).some((entry) => entry?.post?.record?.text?.includes(oneOff.text.slice(0, 60)))
+) {
+  console.log(`[marketing] ${oneOff.id} is already posted; skipping safely.`);
+  process.exit(0);
+}
+const selected = oneOff ?? choosePost(historyFrom(feed));
 
 if (!selected) {
   console.log("[marketing] A campaign post was published within 36 hours; skipping safely.");

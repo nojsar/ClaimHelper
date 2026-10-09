@@ -5,6 +5,7 @@ import {
   dryRun,
   graphemes,
   guideMeta,
+  isOneOff,
   jsonRequest,
   postForDay,
   previewAndExit,
@@ -38,10 +39,10 @@ const LIMIT = 2200;
 // and keep a short, typeable fallback that lands on the guide hub, from where
 // every guide is one click away.
 function compose(post) {
-  return (
-    `${post.text}\n\nFull guide → link in bio (getmyyes.com/appeals)` +
-    `\n\n#HealthInsurance #InsuranceDenial #AppealDenial`
-  );
+  const pointer = isOneOff(post)
+    ? "Free preview → link in bio (getmyyes.com)"
+    : "Full guide → link in bio (getmyyes.com/appeals)";
+  return `${post.text}\n\n${pointer}\n\n#HealthInsurance #InsuranceDenial #AppealDenial`;
 }
 
 if (dryRun) previewAndExit("instagram", compose, LIMIT, { offset: OFFSET, lengthOf: graphemes });
@@ -81,7 +82,7 @@ const duplicate = (recentMedia?.data ?? []).find(
   (item) =>
     typeof item.caption === "string" &&
     item.caption.includes(marker) &&
-    String(item.timestamp ?? "").slice(0, 10) === today,
+    (isOneOff(post) || String(item.timestamp ?? "").slice(0, 10) === today),
 );
 if (duplicate) {
   console.log(`[marketing] instagram: ${post.id} already posted today (media ${duplicate.id}); skipping safely.`);
@@ -92,7 +93,7 @@ if (duplicate) {
 // still stands in while a fresh render is waiting to be deployed, and the
 // guide's own OG card remains the last resort.
 const reel = videoUrl(post.id, "vertical");
-const poster = posterUrl(post.id);
+const poster = posterUrl(post.id, "vertical");
 let media = null;
 if (await reachable(reel)) {
   media = { media_type: "REELS", video_url: reel, share_to_feed: "true" };

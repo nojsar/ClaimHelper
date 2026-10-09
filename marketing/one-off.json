@@ -1,0 +1,29 @@
+{
+  "note": "Posts published once, by hand, through the Marketing autopilot workflow's one_off input (never by the schedule). Each reuses the per-network posters: `media.square` is whatever the feed networks get (X, Bluesky, Mastodon, Facebook) and `media.vertical` the reel (Instagram, YouTube). Copy follows the same review rules as posts.json: only claims the site already makes.",
+  "posts": [
+    {
+      "id": "intro-film",
+      "path": "/",
+      "campaign": "intro_film",
+      "tag": "#GetMyYes",
+      "syntheticMedia": true,
+      "title": "Understand the denial. Build the appeal.",
+      "text": "Got a health insurance denial? Snap the letter for a free plain-English summary of what happened and how to appeal. GetMyYes drafts the packet; you review it and send it yourself.",
+      "alt": "A 26-second narrated GetMyYes film. A hand holds a health insurance denial letter, and a phone photographs it. The GetMyYes app turns the letter into a plain-English summary: what happened, what is at stake, and how to appeal. It then drafts the appeal packet: an appeal letter, an evidence checklist, a doctor letter request and a deadline tracker. It ends on: Understand the denial. Build the appeal. Free preview, no card, you send it yourself.",
+      "media": {
+        "square": {
+          "video": "media/film/product-film-v1-landscape.mp4",
+          "poster": "media/film/product-film-v1-poster.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        "vertical": {
+          "video": "media/film/product-film-v1-vertical.mp4",
+          "poster": "media/film/product-film-v1-poster-vertical.jpg",
+          "width": 1080,
+          "height": 1920
+        }
+      }
+    }
+  ]
+}

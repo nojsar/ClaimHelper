@@ -4,6 +4,7 @@ import {
   configured,
   dryRun,
   graphemes,
+  isOneOff,
   jsonRequest,
   postForDay,
   previewAndExit,
@@ -63,6 +64,23 @@ async function asPageToken(configured) {
 const post = postForDay(OFFSET);
 const token = await asPageToken(process.env.FACEBOOK_PAGE_TOKEN);
 const url = campaignUrl(post, "facebook");
+
+// A one-off is dispatched by hand, so a second dispatch is the likely way it
+// would double-post. Fail open: a read blip must not cost the post.
+if (isOneOff(post)) {
+  const feed = new URL(`${GRAPH}/${pageId}/posts`);
+  feed.searchParams.set("fields", "message");
+  feed.searchParams.set("limit", "25");
+  feed.searchParams.set("access_token", token);
+  const recent = await jsonRequest(feed).catch((error) => {
+    console.warn(`[marketing] facebook: duplicate check unavailable (${error.message}); publishing anyway.`);
+    return null;
+  });
+  if ((recent?.data ?? []).some((item) => item.message?.includes(post.text.slice(0, 60)))) {
+    console.log(`[marketing] facebook: ${post.id} is already posted; skipping safely.`);
+    process.exit(0);
+  }
+}
 const video = videoUrl(post.id, "square");
 
 let result;

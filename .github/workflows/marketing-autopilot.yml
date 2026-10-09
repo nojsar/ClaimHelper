@@ -13,6 +13,11 @@ on:
         required: false
         default: true
         type: boolean
+      one_off:
+        description: "Post this id from marketing/one-off.json instead of the day's guide (blank = normal rotation)"
+        required: false
+        default: ""
+        type: string
 
 permissions:
   contents: read
@@ -48,6 +53,8 @@ jobs:
         env:
           # Each network activates the moment its secrets exist; missing ones
           # are skipped with a log line (see tool/post_all.mjs).
+          # Empty on the schedule; a manual dispatch may name a one-off.
+          MARKETING_ONE_OFF: ${{ inputs.one_off }}
           BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
           BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
           MASTODON_SERVER: ${{ secrets.MASTODON_SERVER }}
