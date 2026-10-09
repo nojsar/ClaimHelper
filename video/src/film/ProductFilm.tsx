@@ -12,6 +12,7 @@ import {
 } from "remotion";
 import { INK, LETTER, NAVY, SANS, SERIF, TEAL } from "../brand";
 import { clamp01, f, glide, mix, pop, settle } from "../motion";
+import voiceover from "../../library/voiceover.json";
 import "../fonts";
 
 /**
@@ -29,19 +30,20 @@ import "../fonts";
  */
 
 export type FilmFormat = "landscape" | "vertical";
-export const FILM_SECONDS = 25;
+export const FILM_SECONDS = 26.5;
 
+// Scenes follow the narration (video/library/voiceover.json), which leads.
 const S = {
   hook: 0,
-  phone: 3.4,
-  shutter: 5.45,
-  app: 6.2,
-  processing: 7.5,
-  summary: 8.7,
-  scrollFrom: 10.6,
-  scrollTo: 12.6,
-  packet: 14.6,
-  end: 20.6,
+  phone: 3.0,
+  shutter: 4.75,
+  app: 5.4,
+  processing: 6.4,
+  summary: 7.3,
+  scrollFrom: 9.6,
+  scrollTo: 11.8,
+  packet: 13.6,
+  end: 20.4,
 };
 
 const INK_DARK = "#0E1922";
@@ -323,8 +325,11 @@ const Page: React.FC<{ spec: PageSpec; w: number }> = ({ spec, w }) => {
 
 /* ---------------------------------------------------------------- film */
 
-const SCORE_LEVEL = 0.88;
-const SFX_GAIN = 1.15;
+// The voice carries the film, so the score sits well under it (about 9 dB
+// below the narration) and the effects are kept small.
+const SCORE_LEVEL = 0.34;
+const SFX_GAIN = 0.8;
+const VOICE_LEVEL = 1;
 
 const SFX: { at: number; sfx: string; volume: number }[] = [
   { at: 0.15, sfx: "paper-slide", volume: 0.35 },
@@ -380,6 +385,18 @@ export const ProductFilm: React.FC<{ format: FilmFormat }> = ({ format }) => {
           SCORE_LEVEL * interpolate(fr, [0, f(0.8), durationInFrames - f(1.4), durationInFrames - 1], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
         }
       />
+      {/* Narration: one ElevenLabs take, cut into its lines, each placed on
+          its scene. */}
+      {voiceover.lines.map((line) => (
+        <Sequence key={line.text} from={f(line.at)} durationInFrames={f(line.clipTo - line.clipFrom) + 1} layout="none">
+          <Html5Audio
+            src={staticFile("film/voice.mp3")}
+            trimBefore={f(line.clipFrom)}
+            trimAfter={f(line.clipTo)}
+            volume={VOICE_LEVEL}
+          />
+        </Sequence>
+      ))}
       {SFX.map((cue, i) => (
         <Sequence key={`${cue.sfx}-${i}`} from={f(cue.at)} layout="none">
           <Html5Audio src={staticFile(`audio/sfx/${cue.sfx}.mp3`)} volume={cue.volume * SFX_GAIN} />

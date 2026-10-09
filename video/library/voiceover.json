@@ -1,11 +1,46 @@
 {
-  "note": "Narration for the product film, timed to its scenes (seconds). Every claim matches the site's reviewed copy: free preview, no card, about two minutes, you send it yourself. Calm, warm, unhurried; about 2.5 words a second. These lines become the film's captions word for word.",
+  "note": "Narration for the product film. Recorded on ElevenLabs as one take (film/voice.mp3); each line is cut from that take (clipFrom-clipTo, seconds) and placed at `at` in the film. start/end are when the line is heard, used for captions. Every claim matches the site's reviewed copy.",
   "voice": "Warm, calm, natural American English. Reassuring, not salesy.",
   "lines": [
-    { "start": 0.3, "end": 3.2, "text": "Got a denial letter from your health insurer?" },
-    { "start": 3.6, "end": 6.0, "text": "Snap a photo of it." },
-    { "start": 6.6, "end": 14.2, "text": "In about two minutes, you get a free summary in plain English: what happened, what's at stake, and how to appeal." },
-    { "start": 14.8, "end": 20.2, "text": "Then GetMyYes drafts your full appeal packet. You review every page, and you send it yourself." },
-    { "start": 20.8, "end": 24.5, "text": "Free preview. No card. Understand the denial. Build the appeal." }
+    {
+      "start": 0.12,
+      "end": 2.4,
+      "text": "Got a denial letter from your health insurer?",
+      "clipFrom": 0.0,
+      "clipTo": 2.6,
+      "at": 0.0
+    },
+    {
+      "start": 3.15,
+      "end": 4.3,
+      "text": "Snap a photo of it.",
+      "clipFrom": 2.9,
+      "clipTo": 4.5,
+      "at": 2.9
+    },
+    {
+      "start": 6.15,
+      "end": 12.85,
+      "text": "In about two minutes, you get a free summary in plain English: what happened, what's at stake, and how to appeal.",
+      "clipFrom": 4.7,
+      "clipTo": 11.85,
+      "at": 5.9
+    },
+    {
+      "start": 13.95,
+      "end": 20.3,
+      "text": "Then GetMyYes drafts your full appeal packet. You review every page, and you send it yourself.",
+      "clipFrom": 12.2,
+      "clipTo": 19.0,
+      "at": 13.7
+    },
+    {
+      "start": 20.85,
+      "end": 25.96,
+      "text": "Free preview. No card. Understand the denial. Build the appeal.",
+      "clipFrom": 19.4,
+      "clipTo": 24.96,
+      "at": 20.6
+    }
   ]
 }

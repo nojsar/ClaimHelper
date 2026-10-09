@@ -15,5 +15,15 @@
     "length": 26.0,
     "gainDb": 4.78,
     "license": "Mixkit Stock Music Free License (https://mixkit.co/license/#musicFree)"
+  },
+  "voice": {
+    "file": "film/voice.mp3",
+    "provider": "ElevenLabs",
+    "model": "eleven_v4",
+    "voice": "Carolyn - Warm Grounded Narrator (4rgssJ1pg3E9c0U78Iid)",
+    "generation": "0abBeqhGZoeOjeefQHpL",
+    "flow": "Kc7AiNDfKw0tw3AGqIva",
+    "generated": "2026-10-09",
+    "note": "One take of the whole script; the film cuts it into lines (clip ranges below, seconds into this file) and places each on its scene."
   }
 }

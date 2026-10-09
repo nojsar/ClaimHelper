@@ -74,10 +74,20 @@ async function inputsChangedAt(guide) {
 
 // `--film` renders the product film (both cuts and a poster) instead of the
 // guide posts. Output lands in web/media/film/ so the site can embed it.
+// /media is served immutable for a year, so a re-render must not reuse a file
+// name: bump FILM_VERSION, then update the references in web/index.html.
+const FILM_VERSION = "v1";
+
 if (args.includes("--film")) {
   await sync();
   const filmRoot = path.join(projectRoot, "web", "media", "film");
   await mkdir(filmRoot, { recursive: true });
+  const { readFile, writeFile } = await import("node:fs/promises");
+  // Captions straight from the narration script, so they always match it.
+  const voiceover = JSON.parse(await readFile(path.join(here, "library", "voiceover.json"), "utf8"));
+  const stamp = (seconds) => new Date(seconds * 1000).toISOString().slice(11, 23);
+  const vtt = ["WEBVTT", "", ...voiceover.lines.flatMap((line, i) => [String(i + 1), `${stamp(line.start)} --> ${stamp(line.end)}`, line.text, ""])].join("\n");
+  await writeFile(path.join(filmRoot, `product-film-${FILM_VERSION}.vtt`), vtt);
   const browserExecutable = process.env.REMOTION_BROWSER_EXECUTABLE || null;
   if (!browserExecutable) await ensureBrowser();
   const serveUrl = await bundle({ entryPoint: path.join(here, "src", "index.ts"), publicDir: path.join(here, "public") });
@@ -88,10 +98,10 @@ if (args.includes("--film")) {
     // Poster: the opening shot with its caption, shown on the site before play.
     // Cover: the settled end card, handed to networks that take a thumbnail.
     for (const [name, frame] of [["poster", Math.round(2.2 * composition.fps)], ["cover", composition.durationInFrames - 1]]) {
-      await renderStill({ composition, serveUrl, browserExecutable, frame, imageFormat: "jpeg", jpegQuality: 88, output: path.join(filmRoot, `product-film-${name}${suffix}.jpg`) });
+      await renderStill({ composition, serveUrl, browserExecutable, frame, imageFormat: "jpeg", jpegQuality: 88, output: path.join(filmRoot, `product-film-${FILM_VERSION}-${name}${suffix}.jpg`) });
     }
     if (stillsOnly) continue;
-    const outputLocation = path.join(filmRoot, `product-film-${cut}.mp4`);
+    const outputLocation = path.join(filmRoot, `product-film-${FILM_VERSION}-${cut}.mp4`);
     await renderMedia({
       composition, serveUrl, browserExecutable, codec: "h264", crf: 18, imageFormat: "png",
       enforceAudioTrack: true, audioCodec: "aac", audioBitrate: "192k", outputLocation,

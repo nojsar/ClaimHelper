@@ -118,7 +118,20 @@ for (const file of files) {
   // reduced-motion, and contrast tokens (appeals, codes, tools, data pages).
   const isGuide = path.basename(path.dirname(file)) === "appeals"
     || /appeals\/guide\.css/.test(html);
-  const css = `${html}\n${isGuide ? guideCss : ""}`;
+  // The page's own linked stylesheets count as its CSS too, so moving styles
+  // out of the HTML can never hide an animation or a missing focus style.
+  const linkedCss = [];
+  for (const link of html.matchAll(/<link\b[^>]*\brel=["']stylesheet["'][^>]*>/gi)) {
+    const href = attribute(link[0], "href");
+    if (!href || /^(?:https?:)?\/\//i.test(href)) continue;
+    const target = href.startsWith("/") ? path.join(siteRoot, href) : path.join(path.dirname(file), href);
+    try {
+      linkedCss.push(await readFile(target, "utf8"));
+    } catch {
+      fail(file, `linked stylesheet is missing: ${href}`);
+    }
+  }
+  const css = `${html}\n${isGuide ? guideCss : ""}\n${linkedCss.join("\n")}`;
   const semanticHtml = withoutEmbeddedCode(html);
   const title = html.match(/<title>\s*([^<]+?)\s*<\/title>/i)?.[1]?.trim();
   const previousTitleFile = title && pageTitles.get(title);

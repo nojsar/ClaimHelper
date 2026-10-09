@@ -300,6 +300,8 @@ test.describe("product film", () => {
     await expect(video).not.toHaveAttribute("autoplay", /.*/);
     const described = await video.getAttribute("aria-describedby");
     await expect(page.locator(`#${described}`)).toContainText("fictional");
+    // Narration means captions, straight from the script.
+    await expect(page.locator(".film-video track[kind='captions']")).toHaveAttribute("src", /product-film-v\d+\.vtt$/);
     await video.scrollIntoViewIfNeeded();
     await page.waitForTimeout(600);
     expect(await video.evaluate((v) => v.paused)).toBe(true);
@@ -315,7 +317,7 @@ test.describe("product film", () => {
       await expect.poll(() => video.evaluate((v) => !v.paused && v.muted), { timeout: 8000 }).toBe(true);
       await page.setViewportSize({ width: 390, height: 844 });
       await page.goto("/");
-      expect(await page.locator(".film-video").evaluate((v) => v.currentSrc || v.src)).toContain("product-film-vertical");
+      expect(await page.locator(".film-video").evaluate((v) => v.currentSrc || v.src)).toMatch(/product-film-v\d+-vertical\.mp4$/);
     });
   });
 });
