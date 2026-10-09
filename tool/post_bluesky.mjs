@@ -283,6 +283,10 @@ try {
 } catch (error) {
   console.warn(`[marketing] Video unavailable, using the link card: ${error.message}`);
 }
+if (!embed && selected.requireVideo) {
+  console.log(`[marketing] ${selected.id} only goes out with its video; skipping, so a later dispatch can still post it.`);
+  process.exit(0);
+}
 if (!embed && card) {
   try {
     const uploaded = await jsonRequest(`${service}/xrpc/com.atproto.repo.uploadBlob`, {

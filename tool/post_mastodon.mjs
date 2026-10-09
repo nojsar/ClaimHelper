@@ -93,6 +93,10 @@ if (video) {
     console.warn(`[marketing] mastodon: could not attach the video (${error.message}); posting the link alone.`);
   }
 }
+if (!mediaIds && post.requireVideo) {
+  console.log(`[marketing] mastodon: ${post.id} only goes out with its video; skipping, so a later dispatch can still post it.`);
+  process.exit(0);
+}
 
 const result = await jsonRequest(`${server}/api/v1/statuses`, {
   method: "POST",

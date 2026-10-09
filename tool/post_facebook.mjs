@@ -98,6 +98,8 @@ if (await reachable(video)) {
     }),
   });
   console.log(`[marketing] facebook: published ${post.id} as a video: ${result.id}`);
+} else if (post.requireVideo) {
+  console.log(`[marketing] facebook: ${post.id} only goes out with its video, which is not reachable; skipping.`);
 } else {
   console.log(`[marketing] facebook: no rendered video deployed for ${post.id} yet; posting the link.`);
   result = await jsonRequest(`${GRAPH}/${pageId}/feed`, {

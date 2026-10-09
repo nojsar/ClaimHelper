@@ -101,6 +101,9 @@ if (await reachable(reel)) {
   // animates in from an empty page, so the profile grid fills with blank white
   // tiles. The poster is that same card fully settled, which is what it is for.
   if (await reachable(poster)) media.cover_url = poster;
+} else if (post.requireVideo) {
+  console.log(`[marketing] instagram: ${post.id} only goes out as its reel, which is not reachable; skipping.`);
+  process.exit(0);
 } else if (await reachable(poster)) {
   media = { image_url: poster };
 } else if (meta?.image?.includes("/appeals/og/")) {

@@ -7,6 +7,7 @@
       "campaign": "intro_film",
       "tag": "#GetMyYes",
       "syntheticMedia": true,
+      "requireVideo": true,
       "title": "Understand the denial. Build the appeal.",
       "text": "Got a health insurance denial? Snap the letter for a free plain-English summary of what happened and how to appeal. GetMyYes drafts the packet; you review it and send it yourself.",
       "alt": "A 26-second narrated GetMyYes film. A hand holds a health insurance denial letter, and a phone photographs it. The GetMyYes app turns the letter into a plain-English summary: what happened, what is at stake, and how to appeal. It then drafts the appeal packet: an appeal letter, an evidence checklist, a doctor letter request and a deadline tracker. It ends on: Understand the denial. Build the appeal. Free preview, no card, you send it yourself.",

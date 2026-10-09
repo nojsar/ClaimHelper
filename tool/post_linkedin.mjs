@@ -36,6 +36,10 @@ if (dryRun) previewAndExit("linkedin", compose, LIMIT, { offset: OFFSET, lengthO
 if (!configured("linkedin", ["LINKEDIN_ACCESS_TOKEN", "LINKEDIN_ORG_ID"])) process.exit(0);
 
 const post = postForDay(OFFSET);
+if (post.requireVideo) {
+  console.log(`[marketing] linkedin: ${post.id} only goes out with its video, which this poster does not attach; skipping.`);
+  process.exit(0);
+}
 const meta = await guideMeta(post);
 const url = campaignUrl(post, "linkedin");
 

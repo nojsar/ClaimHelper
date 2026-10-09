@@ -147,14 +147,35 @@ async function uploadVideo(post) {
 
 const post = postForDay(OFFSET);
 
+/**
+ * X's pay-per-use tier answers 402 at zero balance on EVERY call, reads
+ * included, with a body like {"title":"Payment Required","detail":"credits
+ * depleted"}. That is a billing state, not a code failure: surface it as a
+ * workflow warning instead of failing the whole run every slot until the
+ * account is topped up (or the X secrets are removed to stop trying).
+ */
+function exitIfCreditsDepleted(error) {
+  if (!/credits[ -]?depleted/i.test(error.message)) return;
+  console.log(`::warning title=X credits depleted::${error.message.slice(0, 300)}`);
+  console.log("[marketing] x: no API credits — top up in the X dev console (Billing → Credits) or remove the X_* secrets.");
+  process.exit(0);
+}
+
 // Read-before-write: the pay-per-use API happily accepts duplicate content,
 // so a same-day re-run must detect today's post itself. Two GET requests
 // (fractions of a cent) against posting twice is an easy trade.
-const me = await apiGet("https://api.x.com/2/users/me");
-const timeline = await apiGet(`https://api.x.com/2/users/${me.data.id}/tweets`, {
-  max_results: "5",
-  "tweet.fields": "created_at",
-});
+let me;
+let timeline;
+try {
+  me = await apiGet("https://api.x.com/2/users/me");
+  timeline = await apiGet(`https://api.x.com/2/users/${me.data.id}/tweets`, {
+    max_results: "5",
+    "tweet.fields": "created_at",
+  });
+} catch (error) {
+  exitIfCreditsDepleted(error);
+  throw error;
+}
 const marker = post.text.slice(0, 60);
 const today = new Date().toISOString().slice(0, 10);
 // Same text AND same day: the rotation legitimately repeats a guide every
@@ -178,6 +199,10 @@ try {
 } catch (error) {
   console.log(`[marketing] x: video upload failed, posting the link without it: ${error.message.slice(0, 300)}`);
 }
+if (!mediaId && post.requireVideo) {
+  console.log(`[marketing] x: ${post.id} only goes out with its video; skipping, so a later dispatch can still post it.`);
+  process.exit(0);
+}
 
 let result;
 try {
@@ -193,15 +218,7 @@ try {
     }),
   });
 } catch (error) {
-  // X's pay-per-use tier returns 402 CreditsDepleted at zero balance. That's
-  // a billing state, not a code failure — surface it as a workflow warning
-  // instead of failing the whole run every slot until the account is topped
-  // up (or the X secrets are removed to stop trying).
-  if (error.message.includes("CreditsDepleted")) {
-    console.log(`::warning title=X credits depleted::${error.message}`);
-    console.log("[marketing] x: no API credits — top up in the X dev console (Billing → Credits) or remove the X_* secrets.");
-    process.exit(0);
-  }
+  exitIfCreditsDepleted(error);
   // Same-day re-runs compose identical text, which X rejects as a duplicate.
   // That means today's post already exists — a safe skip, not a failure.
   if (/duplicate/i.test(error.message)) {

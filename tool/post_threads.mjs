@@ -33,6 +33,10 @@ const userId =
   (await jsonRequest(`${GRAPH}/me?fields=id&access_token=${encodeURIComponent(token)}`)).id;
 
 const post = postForDay(OFFSET);
+if (post.requireVideo) {
+  console.log(`[marketing] threads: ${post.id} only goes out with its video, which this poster does not attach; skipping.`);
+  process.exit(0);
+}
 const create = new URL(`${GRAPH}/${userId}/threads`);
 create.searchParams.set("media_type", "TEXT");
 create.searchParams.set("text", compose(post));
