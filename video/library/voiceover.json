@@ -1,0 +1,11 @@
+{
+  "note": "Narration for the product film, timed to its scenes (seconds). Every claim matches the site's reviewed copy: free preview, no card, about two minutes, you send it yourself. Calm, warm, unhurried; about 2.5 words a second. These lines become the film's captions word for word.",
+  "voice": "Warm, calm, natural American English. Reassuring, not salesy.",
+  "lines": [
+    { "start": 0.3, "end": 3.2, "text": "Got a denial letter from your health insurer?" },
+    { "start": 3.6, "end": 6.0, "text": "Snap a photo of it." },
+    { "start": 6.6, "end": 14.2, "text": "In about two minutes, you get a free summary in plain English: what happened, what's at stake, and how to appeal." },
+    { "start": 14.8, "end": 20.2, "text": "Then GetMyYes drafts your full appeal packet. You review every page, and you send it yourself." },
+    { "start": 20.8, "end": 24.5, "text": "Free preview. No card. Understand the denial. Build the appeal." }
+  ]
+}
