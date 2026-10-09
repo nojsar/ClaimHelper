@@ -1,0 +1,17 @@
+{
+  "note": "Illustrative stills for the product film, generated for GetMyYes on Higgsfield (model z_image). No real people, documents or data: hands only, letter text deliberately unreadable.",
+  "stills": [
+    {
+      "file": "stills/letter-hands.jpg",
+      "job": "fa645e91-502b-4f2f-8e45-b97538ab5b05",
+      "generated": "2026-10-09",
+      "use": "hook: hands holding a letter at a kitchen table"
+    },
+    {
+      "file": "stills/letter-phone.jpg",
+      "job": "f91a9eca-5f4d-4719-9ed8-4587cd86c0b5",
+      "generated": "2026-10-09",
+      "use": "photographing the letter with a phone"
+    }
+  ]
+}

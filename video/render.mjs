@@ -72,6 +72,37 @@ async function inputsChangedAt(guide) {
   return Math.max(...times.filter((value) => value !== null));
 }
 
+// `--film` renders the product film (both cuts and a poster) instead of the
+// guide posts. Output lands in web/media/film/ so the site can embed it.
+if (args.includes("--film")) {
+  await sync();
+  const filmRoot = path.join(projectRoot, "web", "media", "film");
+  await mkdir(filmRoot, { recursive: true });
+  const browserExecutable = process.env.REMOTION_BROWSER_EXECUTABLE || null;
+  if (!browserExecutable) await ensureBrowser();
+  const serveUrl = await bundle({ entryPoint: path.join(here, "src", "index.ts"), publicDir: path.join(here, "public") });
+  const stillsOnly = args.includes("--stills-only");
+  for (const cut of ["landscape", "vertical"]) {
+    const composition = await selectComposition({ serveUrl, id: `product-film-${cut}`, browserExecutable });
+    const suffix = cut === "landscape" ? "" : "-vertical";
+    // Poster: the opening shot with its caption, shown on the site before play.
+    // Cover: the settled end card, handed to networks that take a thumbnail.
+    for (const [name, frame] of [["poster", Math.round(2.2 * composition.fps)], ["cover", composition.durationInFrames - 1]]) {
+      await renderStill({ composition, serveUrl, browserExecutable, frame, imageFormat: "jpeg", jpegQuality: 88, output: path.join(filmRoot, `product-film-${name}${suffix}.jpg`) });
+    }
+    if (stillsOnly) continue;
+    const outputLocation = path.join(filmRoot, `product-film-${cut}.mp4`);
+    await renderMedia({
+      composition, serveUrl, browserExecutable, codec: "h264", crf: 18, imageFormat: "png",
+      enforceAudioTrack: true, audioCodec: "aac", audioBitrate: "192k", outputLocation,
+      onProgress: ({ progress }) => { if (process.stdout.isTTY) process.stdout.write(`
+[film] ${cut} ${Math.round(progress * 100)}%   `); },
+    });
+    console.log(`[film] ${cut} done`);
+  }
+  process.exit(0);
+}
+
 const guides = (await sync()).filter((guide) => !only || guide.id === only);
 if (!guides.length) throw new Error(only ? `No queue entry with id ${only}.` : "The post queue is empty.");
 await mkdir(mediaRoot, { recursive: true });

@@ -1,0 +1,19 @@
+{
+  "note": "Screens of the real GetMyYes app captured from a mock-mode release build (USE_MOCKS=true: canned fictional case, no Firebase, no AI call). Fictional member Jordan Sample, Sample Health Plan, Wegovy step-therapy denial. Re-capture after UI changes so the film never shows an out-of-date product.",
+  "captured": "2026-10-09",
+  "screens": [
+    "film/app-upload.png",
+    "film/app-processing.png",
+    "film/app-summary.png (stitched scroll, 2x)"
+  ],
+  "score": {
+    "file": "film/score.mp3",
+    "source": "https://assets.mixkit.co/music/708/708.mp3",
+    "title": "Classical 1",
+    "artist": "Jonny S.",
+    "sourceStart": 52.25,
+    "length": 26.0,
+    "gainDb": 4.78,
+    "license": "Mixkit Stock Music Free License (https://mixkit.co/license/#musicFree)"
+  }
+}

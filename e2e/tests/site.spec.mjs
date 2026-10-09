@@ -291,3 +291,31 @@ test("reduced motion hides nothing and stills the light", async ({ page }) => {
   expect(await page.locator(".hero-aurora span").first().evaluate((el) => getComputedStyle(el).animationName)).toBe("none");
   await expect(page.locator("[data-animation-control]")).toBeHidden();
 });
+
+test.describe("product film", () => {
+  test("has controls, a transcript, and waits under reduced motion", async ({ page }) => {
+    await page.goto("/");
+    const video = page.locator(".film-video");
+    await expect(video).toHaveAttribute("controls", "");
+    await expect(video).not.toHaveAttribute("autoplay", /.*/);
+    const described = await video.getAttribute("aria-describedby");
+    await expect(page.locator(`#${described}`)).toContainText("fictional");
+    await video.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(600);
+    expect(await video.evaluate((v) => v.paused)).toBe(true);
+  });
+
+  test.describe("with motion welcome", () => {
+    test.use({ reducedMotion: "no-preference" });
+    test("starts muted once in view, and phones get the vertical cut", async ({ page, browserName }) => {
+      test.skip(browserName === "webkit", "Playwright's WebKit build ships without H.264 playback.");
+      await page.goto("/");
+      const video = page.locator(".film-video");
+      await video.scrollIntoViewIfNeeded();
+      await expect.poll(() => video.evaluate((v) => !v.paused && v.muted), { timeout: 8000 }).toBe(true);
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto("/");
+      expect(await page.locator(".film-video").evaluate((v) => v.currentSrc || v.src)).toContain("product-film-vertical");
+    });
+  });
+});

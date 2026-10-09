@@ -1951,6 +1951,35 @@
       .reassurance-list,
       .motion-toggle { background: var(--surface); }
     }
+
+    /* ==================================================================
+       Product film section.
+       ================================================================== */
+    .film-section { padding-block: clamp(72px, 8vw, 112px) clamp(24px, 4vw, 48px); }
+    .film-inner { display: grid; justify-items: center; gap: clamp(24px, 3vw, 36px); text-align: center; }
+    .film-frame { width: min(100%, 1040px); text-align: left; }
+    .film-copy h2 { font-size: clamp(34px, 3.6vw, 48px); line-height: 1.08; letter-spacing: -0.01em; }
+    .film-copy p { margin-top: 14px; color: var(--text-soft); }
+    .film-frame { margin: 0; }
+    .film-copy p { margin-inline: auto; }
+    .film-video {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      border-radius: var(--radius-panel, 20px);
+      background: #0E1922;
+      box-shadow: 0 40px 90px -46px rgba(16, 38, 59, 0.55), 0 0 0 1px rgba(16, 38, 59, 0.08);
+    }
+    /* Phones: the vertical cut, as wide as the column allows without
+       outgrowing the screen's height. */
+    .film-video.is-vertical { aspect-ratio: 9 / 16; width: min(100%, calc(82vh * 9 / 16)); height: auto; margin-inline: auto; }
+    .film-transcript { margin-top: 14px; color: var(--text-soft); font-size: 15px; }
+    .film-transcript summary { min-height: 44px; display: inline-flex; align-items: center; color: var(--navy); font-weight: 700; cursor: pointer; }
+    .film-transcript p { margin-top: 8px; max-width: 70ch; }
+    @media (prefers-color-scheme: dark) {
+      .film-video { box-shadow: 0 40px 90px -46px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08); }
+    }
   </style>
 </head>
 <body>
@@ -2089,6 +2118,39 @@
           </ul>
         </div>
       </aside>
+
+      <!-- The product film: the service working, before any explanation. Real
+           app screens from a mock build on a fictional case; two illustrative
+           stills open it. Native controls, starts muted only once in view and
+           never under reduced motion; the transcript carries what it shows. -->
+      <section class="film-section" aria-labelledby="film-title">
+        <div class="wrap film-inner">
+          <div class="film-copy">
+            <h2 id="film-title">See it work in 25 seconds.</h2>
+            <p>A real walkthrough on a fictional letter. No real data.</p>
+          </div>
+          <figure class="film-frame">
+            <video class="film-video" controls muted playsinline preload="none"
+                   poster="/media/film/product-film-poster.jpg"
+                   data-vertical="/media/film/product-film-vertical.mp4"
+                   data-vertical-poster="/media/film/product-film-poster-vertical.jpg"
+                   aria-describedby="film-transcript" width="1920" height="1080">
+              <source src="/media/film/product-film-landscape.mp4" type="video/mp4">
+            </video>
+            <figcaption>
+              <details class="film-transcript">
+                <summary>What the film shows</summary>
+                <div id="film-transcript">
+                  <p>Hands hold an insurance denial letter. A phone takes a photo of it.</p>
+                  <p>In the GetMyYes app, the photo is uploaded with the privacy and consent notice in view. A free plain-English summary appears: what happened, how much is at stake, the likely appeal path, and what is still needed. Below it, the appeal letter is already started.</p>
+                  <p>Then the full appeal packet: an appeal letter, an evidence checklist, a doctor letter request and a deadline tracker. You review every page and send it yourself.</p>
+                  <p>Free preview. No card. Guest uploads auto-delete in 24 hours. The case shown is fictional.</p>
+                </div>
+              </details>
+            </figcaption>
+          </figure>
+        </div>
+      </section>
 
       <!-- Real urgency rather than manufactured urgency: the 180-day internal-appeal
            window from tools/appeal-deadline-calculator. Moved out of the hero so the
@@ -2745,6 +2807,37 @@
       window.addEventListener('beforeprint', function () {
         targets.forEach(function (el) { el.classList.add('is-revealed'); });
       });
+    })();
+  </script>
+  <script>
+    // Product film: phones get the vertical cut; the film starts muted once it
+    // is mostly in view, and pauses again when scrolled away. Never under
+    // reduced motion: there the poster and the controls wait for a tap.
+    (function () {
+      var video = document.querySelector('.film-video');
+      if (!video) return;
+      if (matchMedia('(max-width: 760px)').matches) {
+        video.classList.add('is-vertical');
+        video.setAttribute('poster', video.getAttribute('data-vertical-poster'));
+        video.setAttribute('width', '1080');
+        video.setAttribute('height', '1920');
+        video.src = video.getAttribute('data-vertical');
+      }
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
+      var userPaused = false;
+      video.addEventListener('pause', function () { if (!video.ended && video.dataset.autoPausing !== '1') userPaused = true; });
+      new IntersectionObserver(function (entries) {
+        var visible = entries[0].intersectionRatio >= 0.6;
+        if (visible && video.paused && !userPaused) {
+          video.preload = 'auto';
+          var started = video.play();
+          if (started && started.catch) started.catch(function () {});
+        } else if (!visible && !video.paused) {
+          video.dataset.autoPausing = '1';
+          video.pause();
+          video.dataset.autoPausing = '';
+        }
+      }, { threshold: [0, 0.6] }).observe(video);
     })();
   </script>
 </body>
