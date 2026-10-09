@@ -495,3 +495,194 @@ html.motion-paused .glass-stage { animation-play-state: paused; }
 @media (prefers-color-scheme: dark) {
   .film-video { box-shadow: 0 40px 90px -46px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08); }
 }
+
+/* ==================================================================
+   The plain-English lens (hero). A fictional letter; a glass reading
+   bar slides over it and the line beneath reads in plain English.
+   Without script each line is simply followed by its plain version;
+   home.js adds .lens-on, then sets --ly/--lh (the bar) on the sheet and
+   --oy/--rh (each line's box) on the plain lines. No backdrop-filter:
+   the bar is light and edge, so the glass allow-list stays as it is.
+   ================================================================== */
+.lens-sheet { position: relative; padding: 16px 16px 18px; background: var(--surface); }
+.lens-letterhead {
+  margin: 0 12px 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.lens-rows { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.lens-row { display: grid; }
+.lens-jargon,
+.lens-plain { display: block; padding: 6px 12px; border-radius: 10px; }
+.lens-jargon { color: var(--text-soft); font-family: var(--serif); font-size: 15.5px; line-height: 1.4; }
+.lens-plain { color: var(--navy-dark); font-size: 16px; font-weight: 650; line-height: 1.45; }
+/* No script: the plain version sits under its line, marked like a note. */
+.lens-card:not(.lens-on) .lens-plain {
+  margin: 0 0 6px 12px;
+  border-left: 3px solid var(--teal);
+  border-radius: 0 10px 10px 0;
+  background: var(--surface-soft);
+}
+.lens-on .lens-row > * { grid-area: 1 / 1; }
+.lens-on .lens-plain {
+  position: relative;
+  z-index: 1;
+  background: var(--surface-soft);
+  clip-path: inset(
+    max(0px, calc(var(--ly, -999px) - var(--oy, 0px))) 0
+    max(0px, calc(var(--oy, 0px) + var(--rh, 0px) - var(--ly, -999px) - var(--lh, 0px))) 0
+    round 10px
+  );
+}
+.lens-glass { display: none; }
+.lens-on .lens-glass {
+  display: block;
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 14px;
+  right: 14px;
+  height: var(--lh, 0px);
+  transform: translateY(var(--ly, -999px));
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0) 38%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 0 0 1px rgba(47, 111, 98, 0.45),
+    0 12px 28px -14px rgba(16, 38, 59, 0.5),
+    0 0 26px -6px rgba(143, 211, 194, 0.7);
+  cursor: grab;
+  touch-action: none;
+}
+.lens-on .lens-glass:active { cursor: grabbing; }
+/* The bar names what it does. */
+.lens-on .lens-glass::before {
+  content: "Plain English";
+  position: absolute;
+  top: -10px;
+  right: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--teal);
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  line-height: 1.5;
+}
+.lens-on .lens-row { cursor: pointer; }
+.lens-toggle {
+  display: inline;
+  min-height: 24px;
+  margin: 0;
+  padding: 3px 0;
+  border: 0;
+  background: none;
+  color: #FFFFFF;
+  font: inherit;
+  font-weight: 750;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.lens-toggle[aria-pressed="true"] { text-decoration-style: double; }
+.lens-toggle:focus-visible { outline: 3px solid #A9DED2; outline-offset: 2px; border-radius: 4px; }
+@media (prefers-color-scheme: dark) {
+  .lens-on .lens-glass {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 38%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      inset 0 0 0 1px rgba(143, 211, 194, 0.55),
+      0 12px 28px -14px rgba(0, 0, 0, 0.8),
+      0 0 26px -6px rgba(143, 211, 194, 0.45);
+  }
+  .lens-on .lens-glass::before { background: #8FD3C2; color: #0E1922; }
+}
+@media (prefers-contrast: more) {
+  .lens-on .lens-glass { box-shadow: inset 0 0 0 2px var(--teal); background: none; }
+}
+
+/* ==================================================================
+   The one-number hook. Both figures are published Marketplace data,
+   cited in #research-sources. home.js arms the reveal only when the
+   section starts below the fold and motion is welcome; text is never
+   faded (axe counts faded text as low contrast), only sharpened.
+   ================================================================== */
+.odds { padding-block: clamp(64px, 8vw, 104px) clamp(8px, 2vw, 24px); }
+.odds-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: clamp(28px, 5vw, 80px);
+  align-items: end;
+}
+.odds-number {
+  margin: 0;
+  color: var(--teal);
+  font-family: var(--serif);
+  font-size: clamp(96px, 14vw, 184px);
+  font-weight: 700;
+  line-height: 0.86;
+  letter-spacing: -0.035em;
+  transition: transform 900ms cubic-bezier(0.2, 0.8, 0.2, 1), filter 900ms ease;
+}
+.odds-lead h2 { max-width: 19ch; margin-top: 16px; font-size: clamp(26px, 3vw, 38px); line-height: 1.15; }
+.odds-dots { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: clamp(6px, 1vw, 10px); max-width: 380px; }
+.odds-dots i {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--border);
+  transition: background-color 420ms ease, box-shadow 420ms ease, transform 420ms cubic-bezier(0.2, 0.9, 0.3, 1.3);
+}
+.odds-dots i:nth-child(-n+4) { background: var(--teal); box-shadow: 0 0 0 4px rgba(47, 111, 98, 0.16); }
+.odds-dots i:nth-child(2) { transition-delay: 160ms; }
+.odds-dots i:nth-child(3) { transition-delay: 320ms; }
+.odds-dots i:nth-child(4) { transition-delay: 480ms; }
+.odds-follow p { margin-top: 18px; font-size: 20px; line-height: 1.45; }
+.odds-follow .odds-note { margin-top: 10px; color: var(--muted); font-size: 15px; }
+.odds[data-armed] .odds-number { transform: translateY(18px) scale(0.94); filter: blur(10px); }
+.odds[data-armed] .odds-dots i:nth-child(-n+4) { background: var(--border); box-shadow: none; transform: scale(0.8); }
+.odds[data-armed].is-in .odds-number { transform: none; filter: none; }
+.odds[data-armed].is-in .odds-dots i:nth-child(-n+4) { background: var(--teal); box-shadow: 0 0 0 4px rgba(47, 111, 98, 0.16); transform: none; }
+@media (prefers-color-scheme: dark) {
+  .odds-dots i:nth-child(-n+4),
+  .odds[data-armed].is-in .odds-dots i:nth-child(-n+4) { background: #8FD3C2; box-shadow: 0 0 0 4px rgba(143, 211, 194, 0.16); }
+}
+@media (max-width: 760px) {
+  .odds-inner { grid-template-columns: minmax(0, 1fr); align-items: start; }
+}
+
+/* ==================================================================
+   Deadline ring: the answer drawn as the 180-day window, with the
+   time left in teal. The sentence beside it carries the meaning.
+   ================================================================== */
+.deadline-result-grid { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: center; }
+.deadline-ring { position: relative; width: 116px; height: 116px; }
+.deadline-ring svg { display: block; width: 100%; height: 100%; transform: rotate(-90deg); }
+.deadline-ring circle { fill: none; stroke-width: 10; }
+.deadline-ring .ring-track { stroke: var(--border); }
+.deadline-ring .ring-left {
+  stroke: var(--teal);
+  stroke-linecap: round;
+  stroke-dasharray: 100 100;
+  stroke-dashoffset: calc(100 - var(--left, 0) * 100);
+  transition: stroke-dashoffset 1100ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.deadline-ring-label { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; color: var(--navy-dark); }
+.deadline-ring-label b { font-family: var(--serif); font-size: 32px; line-height: 1; font-variant-numeric: tabular-nums; }
+.deadline-ring-label small { margin-top: 2px; color: var(--muted); font-size: 12px; font-weight: 750; }
+@media (prefers-color-scheme: dark) { .deadline-ring .ring-left { stroke: #8FD3C2; } }
+@media (prefers-reduced-motion: reduce) { .deadline-ring .ring-left { transition: none; } }
+@media (max-width: 420px) {
+  .deadline-result-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* The footer took the "not ready yet?" links: four columns, two on
+   tablets (phones keep the single column from the inline styles). */
+@media (min-width: 681px) and (max-width: 980px) {
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+}

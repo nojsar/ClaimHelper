@@ -80,6 +80,9 @@ test.describe("homepage", () => {
     const result = page.locator("#hero-deadline-result");
     await expect(result).toContainText("150 days left");
     await expect(result).toContainText("letter always controls");
+    // The same answer, drawn: a ring of the window with the time left.
+    await expect(result.locator(".deadline-ring")).toContainText("150");
+    await expect(result.locator(".deadline-ring")).toHaveAttribute("aria-hidden", "true");
     await page.locator("#hero-denial-date").fill(iso(200));
     await form.locator("button[type=submit]").click();
     await expect(result).toContainText("likely passed");
@@ -320,4 +323,47 @@ test.describe("product film", () => {
       expect(await page.locator(".film-video").evaluate((v) => v.currentSrc || v.src)).toMatch(/product-film-v\d+-vertical\.mp4$/);
     });
   });
+});
+
+test.describe("plain-English lens", () => {
+  // Where the bar sits, and where one line sits, in the sheet's coordinates.
+  const bar = (page) => page.evaluate(() => {
+    const sheet = document.querySelector(".lens-sheet");
+    return { y: parseFloat(sheet.style.getPropertyValue("--ly")), h: parseFloat(sheet.style.getPropertyValue("--lh")) };
+  });
+  const line = (page, i) => page.evaluate((n) => {
+    const plain = document.querySelectorAll(".lens-plain")[n];
+    return { y: parseFloat(plain.style.getPropertyValue("--oy")), h: parseFloat(plain.style.getPropertyValue("--rh")) };
+  }, i);
+
+  test("every line carries its plain version, and the lens goes to a tapped line", async ({ page }) => {
+    await page.goto("/");
+    const rows = page.locator(".lens-row");
+    await expect(rows).toHaveCount(5);
+    for (let i = 0; i < 5; i += 1) await expect(rows.nth(i).locator(".lens-plain")).toContainText("In plain English:");
+    await expect(page.locator(".lens-card")).toHaveClass(/lens-on/);
+    await rows.nth(3).click();
+    const target = await line(page, 3);
+    await expect.poll(async () => Math.abs((await bar(page)).y - target.y)).toBeLessThan(1);
+  });
+
+  test("one button shows every line in plain English", async ({ page }) => {
+    await page.goto("/");
+    const toggle = page.locator(".lens-toggle");
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-pressed", "true");
+    const first = await line(page, 0);
+    const last = await line(page, 4);
+    await expect.poll(async () => {
+      const b = await bar(page);
+      return b.y <= first.y + 1 && b.y + b.h >= last.y + last.h - 1;
+    }).toBe(true);
+  });
+});
+
+test("the one-number hook is sourced", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#odds-title")).toContainText("Fewer than 1%");
+  await expect(page.locator(".odds a[href='#research-sources']")).toBeVisible();
+  await expect(page.locator("#research-sources a[href*='kff.org']")).toHaveCount(1);
 });

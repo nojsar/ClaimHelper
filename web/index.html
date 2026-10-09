@@ -534,19 +534,7 @@
       padding: 20px 22px;
       background: var(--navy);
       color: #FFFFFF;
-      cursor: pointer;
-      list-style: none;
     }
-    .preview-card-header::-webkit-details-marker { display: none; }
-    .preview-card-header::after {
-      content: "Hide example -";
-      grid-column: 2;
-      margin-top: -5px;
-      color: #D9E5EC;
-      font-size: 14px;
-      font-weight: 800;
-    }
-    .preview-card:not([open]) .preview-card-header::after { content: "Show example +"; }
     .preview-document-icon {
       width: 42px;
       height: 42px;
@@ -561,32 +549,6 @@
     .preview-header-copy { display: block; }
     .preview-card-header strong { display: block; font-size: 20px; line-height: 1.28; }
     .preview-header-subtitle { display: block; margin-top: 5px; color: #D9E5EC; font-size: 15px; line-height: 1.45; }
-    .preview-sheet { padding: 22px; }
-    .preview-label {
-      margin: 0 0 6px;
-      color: var(--muted);
-      font-size: 14px;
-      font-weight: 800;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-    .preview-value { color: var(--navy-dark); font-size: 19px; font-weight: 800; }
-    .preview-explanation {
-      margin-top: 18px;
-      padding: 17px;
-      border-left: 4px solid var(--teal);
-      border-radius: 0 10px 10px 0;
-      background: var(--surface-soft);
-    }
-    .preview-explanation strong { display: block; color: var(--navy-dark); font-size: 17px; }
-    .preview-explanation p { margin-top: 5px; color: var(--text-soft); font-size: 16px; line-height: 1.5; }
-    .preview-next { margin-top: 18px; }
-    .preview-next li {
-      margin: 7px 0;
-      color: var(--text-soft);
-      font-size: 16px;
-      line-height: 1.45;
-    }
     .preview-card-foot {
       display: flex;
       gap: 12px;
@@ -1118,7 +1080,7 @@
     .closing .button-primary:hover { background: var(--surface-soft); color: var(--navy-dark); }
 
     .site-footer { padding-block: 44px; border-top: 1px solid var(--border); background: var(--surface); }
-    .footer-grid { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 30px; }
+    .footer-grid { display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; gap: 30px; }
     .footer-grid h2 { font-family: var(--sans); font-size: 18px; letter-spacing: 0; }
     .footer-grid p, .footer-grid a { color: var(--text-soft); font-size: 15px; }
     .footer-links { display: grid; gap: 8px; }
@@ -1580,41 +1542,41 @@
           <div class="hero-copy">
             <p class="hero-badge">Secure appeal document service</p>
             <h1 id="hero-title"><span class="hero-title-line">Understand the denial.</span><span class="hero-title-line hero-accent">Build the appeal.</span></h1>
-            <p class="lede">Upload your denial letter, or a clear phone photo of it, for a free plain-English summary. It takes about two minutes.</p>
+            <p class="lede">Snap your denial letter. Get a free plain-English summary in about two minutes.</p>
             <div class="hero-actions">
               <button type="button" class="button button-primary" data-boot="/upload" aria-describedby="hero-trust">See my free denial summary</button>
             </div>
             <p class="hero-sample"><a href="/sample-packet">Or read the sample packet first</a></p>
-            <p class="hero-note" id="hero-trust"><strong>Preview $0; no credit card required.</strong> Full packet $39 or Full Case $59, each a one-time payment. Create an account only if you purchase. No subscription. U.S. health plans only.</p>
+            <p class="hero-note" id="hero-trust"><strong>Preview $0; no credit card required.</strong> Full packet $39 or Full Case $59, one-time. Create an account only if you purchase. U.S. health plans only.</p>
           </div>
 
+          <!-- The plain-English lens: a fictional letter, and a glass reading
+               bar that turns the line beneath it into plain English. Every
+               rewrite is written in advance; nothing is sent anywhere. Without
+               script, or for a screen reader, each line is followed by its
+               plain-English version. home.js adds the lens. -->
           <div class="glass-stage">
-          <details class="preview-card mobile-collapsible" aria-labelledby="preview-card-title" open>
-            <summary class="preview-card-header">
+          <div class="preview-card lens-card" data-lens>
+            <div class="preview-card-header">
               <span class="preview-document-icon" aria-hidden="true">▤</span>
               <span class="preview-header-copy">
                 <strong id="preview-card-title">Example of your free summary</strong>
-                <span class="preview-header-subtitle">Plain English, before you decide to pay</span>
+                <span class="preview-header-subtitle lens-hint">Insurer language, in plain English</span>
               </span>
-            </summary>
-            <div class="preview-sheet">
-              <p class="preview-label">Denial reason found</p>
-              <p class="preview-value">Prior authorization required</p>
-              <div class="preview-explanation">
-                <strong>What this means</strong>
-                <p>The plan says approval was needed before the service. Check whether your doctor requested it and whether the notice lists an appeal deadline.</p>
-              </div>
-              <div class="preview-next">
-                <p class="preview-label">Likely next checks</p>
-                <ul>
-                  <li>Confirm the filing deadline in the notice</li>
-                  <li>Ask the doctor for the authorization record</li>
-                  <li>Review the plan's appeal instructions</li>
-                </ul>
-              </div>
+            </div>
+            <div class="lens-sheet">
+              <p class="lens-letterhead">Notice of adverse benefit determination</p>
+              <ul class="lens-rows" aria-labelledby="preview-card-title">
+                <li class="lens-row"><span class="lens-jargon">Claim A-20418-77, DOS 03/14: adverse benefit determination issued.</span><span class="lens-plain"><span class="sr-only">In plain English: </span>This is the official denial for your March 14 visit.</span></li>
+                <li class="lens-row"><span class="lens-jargon">Service not certified. Prior authorization was not obtained per Section 4.2 of the Evidence of Coverage.</span><span class="lens-plain"><span class="sr-only">In plain English: </span>The plan says approval was needed first, and it was not requested.</span></li>
+                <li class="lens-row"><span class="lens-jargon">Member may request an internal appeal within 180 calendar days of receipt of this notice.</span><span class="lens-plain"><span class="sr-only">In plain English: </span>You can appeal. You have 180 days from when you got this letter.</span></li>
+                <li class="lens-row"><span class="lens-jargon">Supporting documentation, including a letter of medical necessity from the treating provider, may be submitted.</span><span class="lens-plain"><span class="sr-only">In plain English: </span>A letter from your doctor saying why you need it can help.</span></li>
+                <li class="lens-row"><span class="lens-jargon">If the determination is upheld, the member may be eligible for external review by an independent review organization.</span><span class="lens-plain"><span class="sr-only">In plain English: </span>If they say no again, an independent reviewer may look at it.</span></li>
+              </ul>
+              <span class="lens-glass" aria-hidden="true"></span>
             </div>
             <div class="preview-card-foot"><span><strong>Fictional example.</strong> No patient data.</span><a href="/sample-packet">Read the sample packet →</a></div>
-          </details>
+          </div>
           </div>
         </div>
       </section>
@@ -1630,11 +1592,28 @@
         </div>
       </aside>
 
+      <!-- One sourced number, before any explanation. Both figures are the
+           published Marketplace data cited in #research-sources, never
+           GetMyYes results. The dots are decoration; the words carry it. -->
+      <section class="odds" aria-labelledby="odds-title">
+        <div class="wrap odds-inner">
+          <div class="odds-lead">
+            <p class="odds-number" aria-hidden="true">&lt;1%</p>
+            <h2 id="odds-title"><span class="sr-only">Fewer than 1% </span>of denied claims were appealed in published Marketplace data.</h2>
+          </div>
+          <div class="odds-follow">
+            <div class="odds-dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <p>When people did appeal, about <strong>4 in 10</strong> denials were overturned.</p>
+            <p class="odds-note">Public data, not GetMyYes results or a prediction for your case. <a href="#research-sources">Sources</a></p>
+          </div>
+        </div>
+      </section>
+
       <!-- The product film: the service working, before any explanation. Real
            app screens from a mock build on a fictional case; two illustrative
            stills open it. Native controls, starts muted only once in view and
            never under reduced motion; the transcript carries what it shows. -->
-      <section class="film-section" aria-labelledby="film-title">
+      <section class="film-section" id="how-it-works" aria-labelledby="film-title">
         <div class="wrap film-inner">
           <div class="film-copy">
             <h2 id="film-title">See it work in 26 seconds.</h2>
@@ -1665,13 +1644,13 @@
       </section>
 
       <!-- Real urgency rather than manufactured urgency: the 180-day internal-appeal
-           window from tools/appeal-deadline-calculator. Moved out of the hero so the
-           hero carries one message and one action; here it has a section of its own. -->
+           window from tools/appeal-deadline-calculator. The answer is drawn as a
+           ring of time used and time left; the sentence beside it says the same. -->
       <section class="deadline-band" aria-labelledby="deadline-band-title">
         <div class="wrap deadline-band-inner">
           <div class="deadline-band-copy">
             <h2 id="deadline-band-title">How long do you have?</h2>
-            <p>Many plans allow about 180 days from the date on the notice. Your own letter sets the real deadline.</p>
+            <p>Many plans allow about 180 days. Your own letter sets the real deadline.</p>
           </div>
           <form class="deadline-check" id="hero-deadline-form" novalidate>
             <label class="deadline-check-label" for="hero-denial-date">Date printed on your denial letter</label>
@@ -1679,22 +1658,8 @@
               <input class="deadline-check-input" type="date" id="hero-denial-date" name="hero-denial-date" autocomplete="off">
               <button type="submit" class="button button-secondary deadline-check-button">Check my deadline</button>
             </div>
-            <p class="deadline-check-result" id="hero-deadline-result" role="status" hidden></p>
+            <div class="deadline-check-result" id="hero-deadline-result" role="status" hidden></div>
           </form>
-        </div>
-      </section>
-
-      <section class="section section-soft" id="how-it-works" aria-labelledby="how-title">
-        <div class="wrap">
-          <div class="section-heading">
-            <h2 id="how-title">Three clear steps.</h2>
-            <p class="lede">No insurance expertise needed. We explain each step and ask only for the details needed for your appeal.</p>
-          </div>
-          <ol class="steps-rail">
-            <li class="rail-step"><span class="rail-marker" aria-hidden="true">1</span><h3>Upload your denial letter</h3><p>Use a PDF or clear photo of the notice.</p></li>
-            <li class="rail-step"><span class="rail-marker" aria-hidden="true">2</span><h3>Confirm the details</h3><p>Check the denial reason, deadline, names, and dates.</p></li>
-            <li class="rail-step"><span class="rail-marker" aria-hidden="true">3</span><h3>Review your packet</h3><p>Check every page, download the PDF, and send it yourself.</p></li>
-          </ol>
         </div>
       </section>
 
@@ -1705,12 +1670,11 @@
               <div class="packet-cover-top"><span class="packet-file-tab">Your appeal kit</span></div>
               <p class="packet-cover-count"><strong>6</strong><span>documents</span></p>
               <h2 id="included-title">One clear appeal kit.</h2>
-              <p class="packet-cover-copy">Built from your denial. Uncertain details are marked for review.</p>
+              <p class="packet-cover-copy">Built from your denial. Unclear details are flagged for you.</p>
               <div class="packet-cover-actions">
                 <button class="button button-primary" type="button" data-boot="/upload">See my free denial summary</button>
                 <a class="packet-sample-link" href="/sample-packet">Read the sample packet →</a>
               </div>
-              <p class="packet-assurance">Free preview, no card, and nothing is sent automatically.</p>
             </div>
 
             <article class="packet-manifest" aria-labelledby="packet-manifest-title">
@@ -1718,27 +1682,27 @@
               <ul class="packet-list">
                 <li class="packet-item">
                   <span class="packet-check" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5.5 12.5l4.2 4.2 9.5-9.2" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-                  <div class="packet-item-copy"><h3>Plain-English summary</h3><p>The denial, translated.</p></div>
+                  <div class="packet-item-copy"><h3>Plain-English summary</h3></div>
                 </li>
                 <li class="packet-item">
                   <span class="packet-check" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5.5 12.5l4.2 4.2 9.5-9.2" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-                  <div class="packet-item-copy"><h3>Appeal letter draft</h3><p>Ready for your review.</p></div>
+                  <div class="packet-item-copy"><h3>Appeal letter draft</h3></div>
                 </li>
                 <li class="packet-item">
                   <span class="packet-check" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5.5 12.5l4.2 4.2 9.5-9.2" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-                  <div class="packet-item-copy"><h3>Evidence checklist</h3><p>What may help and why.</p></div>
+                  <div class="packet-item-copy"><h3>Evidence checklist</h3></div>
                 </li>
                 <li class="packet-item">
                   <span class="packet-check" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5.5 12.5l4.2 4.2 9.5-9.2" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-                  <div class="packet-item-copy"><h3>Doctor letter request</h3><p>A clear note to share.</p></div>
+                  <div class="packet-item-copy"><h3>Doctor letter request</h3></div>
                 </li>
                 <li class="packet-item">
                   <span class="packet-check" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5.5 12.5l4.2 4.2 9.5-9.2" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-                  <div class="packet-item-copy"><h3>Insurer call script</h3><p>What to ask and record.</p></div>
+                  <div class="packet-item-copy"><h3>Insurer call script</h3></div>
                 </li>
                 <li class="packet-item">
                   <span class="packet-check" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5.5 12.5l4.2 4.2 9.5-9.2" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-                  <div class="packet-item-copy"><h3>Deadline tracker + PDF</h3><p>Key dates. One clean file.</p></div>
+                  <div class="packet-item-copy"><h3>Deadline tracker + PDF</h3></div>
                 </li>
               </ul>
               <footer class="packet-manifest-footer"><span><strong>Plus:</strong> a follow-up plan</span></footer>
@@ -1751,9 +1715,7 @@
         <div class="wrap proof-layout">
           <div class="proof-copy">
             <p class="eyebrow">Proof you can check</p>
-            <h2 id="proof-title">Before you trust the promise, inspect the work.</h2>
-            <p class="lede">See exactly what you get. Review the packet, try your own document for $0, and check who operates the service before you decide to pay.</p>
-            <p class="proof-promise"><strong>Our standard:</strong> show verifiable details before asking you to pay.</p>
+            <h2 id="proof-title">Inspect the work before you pay.</h2>
           </div>
           <section class="proof-carousel" data-proof-carousel aria-roledescription="carousel" aria-label="Proof you can inspect before purchasing">
             <div class="proof-viewport" id="proof-viewport" data-proof-viewport tabindex="0" aria-describedby="proof-live-status">
@@ -1761,29 +1723,25 @@
                 <article class="proof-slide" data-proof-slide role="group" aria-roledescription="slide" aria-label="1 of 4: Complete fictional packet">
                   <div class="proof-slide-kicker"><span>Product proof</span></div>
                   <h3>A complete fictional packet</h3>
-                  <p>Read the summary, appeal-letter structure, evidence checklist, doctor-request draft, call script, deadline tracker, and follow-up plan. No upload and no account.</p>
+                  <p>Every document, start to finish. No upload, no account.</p>
                   <a class="proof-action" href="/sample-packet">Read the sample packet →</a>
                 </article>
                 <article class="proof-slide" data-proof-slide role="group" aria-roledescription="slide" aria-label="2 of 4: Free summary from your document">
                   <div class="proof-slide-kicker"><span>Try it first</span></div>
                   <h3>Your own summary is $0</h3>
-                  <p>Upload the denial, check the extracted facts, and see a plain-English explanation before deciding whether a paid packet is right for you.</p>
+                  <p>See your denial explained before deciding to pay.</p>
                   <button type="button" class="proof-action button button-primary" data-boot="/upload">See my free denial summary</button>
                 </article>
                 <article class="proof-slide" data-proof-slide role="group" aria-roledescription="slide" aria-label="3 of 4: Named operator and published terms">
                   <div class="proof-slide-kicker"><span>Accountability</span></div>
                   <h3>A named operator and published terms</h3>
-                  <p>GetMyYes lists its registered operator, support address, privacy and deletion practices, Stripe payment handling, and accuracy-guarantee terms.</p>
+                  <p>Who runs GetMyYes, how to reach support, and the guarantee terms.</p>
                   <a class="proof-action" href="#trust">Review business and privacy details →</a>
                 </article>
                 <article class="proof-slide" data-proof-slide role="group" aria-roledescription="slide" aria-label="4 of 4: Published Marketplace research">
                   <div class="proof-slide-kicker"><span>Independent context</span></div>
                   <h3>Public data, not a promise</h3>
-                  <p>Marketplace research shows why an appeal can deserve a closer look. These figures are not GetMyYes results and do not predict any individual outcome.</p>
-                  <div class="proof-stats" role="group" aria-label="Published Marketplace appeal statistics">
-                    <div class="proof-stat"><strong>&lt;1%</strong><span>of denied claims were appealed in published federal data</span></div>
-                    <div class="proof-stat"><strong>4 in 10</strong><span>appealed denials were overturned in a KFF analysis</span></div>
-                  </div>
+                  <p>The figures above come from CMS and KFF, not from GetMyYes.</p>
                   <a class="proof-action" href="#research-sources">Check the published sources →</a>
                 </article>
               </div>
@@ -1801,7 +1759,7 @@
         <div class="wrap">
           <div class="section-heading">
             <h2 id="pricing-title">See the free preview before deciding.</h2>
-            <p class="lede">There is no subscription, and the price does not change after you upload your denial.</p>
+            <p class="lede">One-time prices that never change after you upload.</p>
           </div>
           <div class="price-grid">
             <article class="price-card">
@@ -1809,7 +1767,7 @@
               <p class="price">$0</p>
               <p class="price-sub">No card required</p>
               <ul>
-                <li><span class="check" aria-hidden="true">✓</span><span>Denial type and plain-English summary</span></li>
+                <li><span class="check" aria-hidden="true">✓</span><span>Plain-English summary</span></li>
                 <li><span class="check" aria-hidden="true">✓</span><span>Likely appeal path</span></li>
                 <li><span class="check" aria-hidden="true">✓</span><span>Missing-information checklist</span></li>
               </ul>
@@ -1822,7 +1780,6 @@
               <ul>
                 <li><span class="check" aria-hidden="true">✓</span><span>All seven packet items</span></li>
                 <li><span class="check" aria-hidden="true">✓</span><span>Two follow-up drafting rounds</span></li>
-                <li><span class="check" aria-hidden="true">✓</span><span>Saved securely to your account</span></li>
                 <li><span class="check" aria-hidden="true">✓</span><span><a href="/terms#accuracy-guarantee">14-day accuracy guarantee</a></span></li>
               </ul>
               <button type="button" class="button button-primary" data-boot="/upload">See my free denial summary</button>
@@ -1838,13 +1795,12 @@
                   <li><span class="check" aria-hidden="true">✓</span><span>Everything in the $39 packet</span></li>
                   <li><span class="check" aria-hidden="true">✓</span><span>Up to 10 follow-up drafting rounds</span></li>
                   <li><span class="check" aria-hidden="true">✓</span><span>Second-level and external-review drafts</span></li>
-                  <li><span class="check" aria-hidden="true">✓</span><span>$20 upgrade after buying the packet</span></li>
                 </ul>
                 <button type="button" class="button button-secondary" data-boot="/upload?tier=packet_plus">See my free denial summary</button>
               </div>
             </details>
           </div>
-          <p class="pricing-note">Stripe processes payments. GetMyYes never receives or stores your full card number. No appeal outcome is guaranteed.</p>
+          <p class="pricing-note">Stripe processes payments; GetMyYes never sees your full card number. No appeal outcome is guaranteed.</p>
         </div>
       </section>
 
@@ -1858,13 +1814,13 @@
         <div class="wrap trust-grid">
           <div>
             <p class="eyebrow">Privacy and accountability</p>
-            <h2 id="trust-title">Clear information about who handles your documents.</h2>
-            <p class="lede">GetMyYes is a document drafting assistant. It is not a law firm, clinic, insurer, or insurance broker.</p>
+            <h2 id="trust-title">Who handles your documents.</h2>
+            <p class="lede">A document drafting assistant. Not a law firm, clinic, insurer, or broker.</p>
             <ul class="trust-list">
-              <li><span class="check" aria-hidden="true">✓</span><span><strong>Your documents are not used to train AI.</strong> Processing is limited to providing the service you request.</span></li>
-              <li><span class="check" aria-hidden="true">✓</span><span><strong>You can delete your data.</strong> Cases, files, and the account can be removed from Settings.</span></li>
-              <li><span class="check" aria-hidden="true">✓</span><span><strong>No advertising trackers.</strong> Analytics is first-party, cookieless, and aggregate-only.</span></li>
-              <li><span class="check" aria-hidden="true">✓</span><span><strong>Accessible by design.</strong> The service targets WCAG 2.2 Level AA and publishes known limitations.</span></li>
+              <li><span class="check" aria-hidden="true">✓</span><span><strong>Your documents are not used to train AI.</strong></span></li>
+              <li><span class="check" aria-hidden="true">✓</span><span><strong>You can delete your data</strong> from Settings.</span></li>
+              <li><span class="check" aria-hidden="true">✓</span><span><strong>No advertising trackers.</strong> Cookieless, aggregate analytics.</span></li>
+              <li><span class="check" aria-hidden="true">✓</span><span><strong>Accessibility target: WCAG 2.2 AA.</strong></span></li>
             </ul>
           </div>
           <details class="operator-card mobile-collapsible" aria-labelledby="operator-title" open>
@@ -1876,10 +1832,8 @@
               <div><dt>Operator</dt><dd>Nojus Sargevičius, registered sole trader (<i lang="lt">individuali veikla</i>), Lithuania</dd></div>
               <div><dt>Registration</dt><dd>Activity code 621090 · State Tax Inspectorate certificate No. 1531216</dd></div>
               <div><dt>Support</dt><dd><a href="mailto:support@getmyyes.com">support@getmyyes.com</a></dd></div>
-              <div><dt>Payments</dt><dd>Processed securely by Stripe</dd></div>
               <div><dt>Policies</dt><dd><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/accessibility">Accessibility</a> · <a href="/editorial-policy">Editorial policy</a></dd></div>
             </dl>
-            <p class="support-callout"><strong>Need help before uploading?</strong><br>Email support at <a href="mailto:support@getmyyes.com">support@getmyyes.com</a>.</p>
           </details>
         </div>
       </section>
@@ -1887,37 +1841,14 @@
       <section class="section section-soft" aria-labelledby="faq-title">
         <div class="wrap">
           <div class="section-heading">
-            <h2 id="faq-title">Know what to expect before you begin.</h2>
+            <h2 id="faq-title">Before you begin.</h2>
           </div>
           <div class="faq">
-            <details><summary>Can I appeal a denied medication or prior authorization?</summary><p>Many denials can be appealed, but the appeal-rights section of your own notice controls. Confirm the filing deadline and submission address directly with your insurer.</p></details>
-            <details><summary>Will GetMyYes send anything for me?</summary><p>No. You review every document and decide whether and how to send it. GetMyYes does not communicate with your insurer or doctor on your behalf.</p></details>
-            <details><summary>What happens to my uploaded documents?</summary><p>Unsaved guest uploads normally auto-delete after 24 hours. A case kept through an account follows the retention periods in the <a href="/privacy">Privacy Policy</a>, and you can delete it from Settings.</p></details>
-            <details><summary>Is approval guaranteed?</summary><p>No. Every appeal depends on the plan, facts, evidence, deadline, and reviewer. GetMyYes helps organize and draft documents; it cannot decide medical necessity or guarantee an outcome.</p></details>
-            <details><summary>What if the packet contains an error?</summary><p>Contact <a href="mailto:support@getmyyes.com">support@getmyyes.com</a> within 14 days. Under the <a href="/terms#accuracy-guarantee">accuracy guarantee</a>, the packet will be corrected or refunded when the stated conditions apply.</p></details>
-            <details><summary>Can someone help me use the website?</summary><p>Yes. Email <a href="mailto:support@getmyyes.com">support@getmyyes.com</a>. Accessibility information and known limitations are published in the <a href="/accessibility">Accessibility Statement</a>.</p></details>
+            <details><summary>Will GetMyYes send anything for me?</summary><p>No. You review every document and decide whether and how to send it. GetMyYes never contacts your insurer or doctor.</p></details>
+            <details><summary>What happens to my uploaded documents?</summary><p>Unsaved guest uploads normally auto-delete after 24 hours. Saved cases follow the <a href="/privacy">Privacy Policy</a>, and you can delete them from Settings.</p></details>
+            <details><summary>Is approval guaranteed?</summary><p>No. Every appeal depends on the plan, facts, evidence, deadline, and reviewer. GetMyYes cannot decide medical necessity or guarantee an outcome.</p></details>
+            <details><summary>What if the packet contains an error?</summary><p>Email <a href="mailto:support@getmyyes.com">support@getmyyes.com</a> within 14 days. Under the <a href="/terms#accuracy-guarantee">accuracy guarantee</a>, it is corrected or refunded when the stated conditions apply.</p></details>
           </div>
-        </div>
-      </section>
-
-      <section class="section" aria-labelledby="resources-title">
-        <div class="wrap">
-          <div class="section-heading">
-            <h2 id="resources-title">Not ready to open a case?</h2>
-            <p class="lede">Read a guide, check a denial code, or use the deadline calculator first.</p>
-          </div>
-          <details class="resource-details mobile-collapsible" open>
-            <summary class="mobile-section-summary">Browse free guides and tools</summary>
-            <nav class="resource-links" aria-label="Free health insurance appeal resources">
-              <a href="/appeals/">Appeal guides</a>
-              <a href="/appeals/how-to-appeal-health-insurance-denial">How to appeal</a>
-              <a href="/appeals/appeal-letter-template">Free letter template</a>
-              <a href="/codes/">Denial codes</a>
-              <a href="/insurers/">Appeal by insurer</a>
-              <a href="/tools/appeal-deadline-calculator">Deadline calculator</a>
-              <a href="/insurer-denial-rates">Denial rates data</a>
-            </nav>
-          </details>
         </div>
       </section>
 
@@ -1925,7 +1856,7 @@
         <div class="wrap closing-inner">
           <div>
             <h2 id="closing-title">Start by understanding what the denial says.</h2>
-            <p>The preview is free, requires no card, and gives you information before you decide whether to buy anything.</p>
+            <p>The preview is free and needs no card.</p>
           </div>
           <button type="button" class="button button-primary" data-boot="/upload">See my free denial summary</button>
         </div>
@@ -1947,6 +1878,17 @@
               <a href="/terms">Terms of service</a>
               <a href="/accessibility">Accessibility</a>
               <a href="/editorial-policy">Editorial policy</a>
+            </div>
+          </div>
+          <div>
+            <h2>Free guides and tools</h2>
+            <div class="footer-links">
+              <a href="/appeals/">Appeal guides</a>
+              <a href="/appeals/appeal-letter-template">Free letter template</a>
+              <a href="/codes/">Denial codes</a>
+              <a href="/insurers/">Appeal by insurer</a>
+              <a href="/tools/appeal-deadline-calculator">Deadline calculator</a>
+              <a href="/insurer-denial-rates">Denial rates data</a>
             </div>
           </div>
           <div>
@@ -2188,9 +2130,24 @@
         return date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
       }
 
-      function show(html) {
+      function show(html, left) {
         result.innerHTML = html;
         result.hidden = false;
+        // The ring fills from empty to the time left (CSS eases it).
+        var ring = result.querySelector(".deadline-ring");
+        if (ring) requestAnimationFrame(function () {
+          requestAnimationFrame(function () { ring.style.setProperty("--left", String(left)); });
+        });
+      }
+
+      // The 180-day window as a ring, teal for the time left. Decorative:
+      // the sentence beside it says the same thing.
+      function ring(daysLeft, text) {
+        return "<div class=\"deadline-result-grid\"><div class=\"deadline-ring\" aria-hidden=\"true\">" +
+          "<svg viewBox=\"0 0 120 120\"><circle class=\"ring-track\" cx=\"60\" cy=\"60\" r=\"52\" pathLength=\"100\"/>" +
+          (daysLeft > 0 ? "<circle class=\"ring-left\" cx=\"60\" cy=\"60\" r=\"52\" pathLength=\"100\"/>" : "") +
+          "</svg><span class=\"deadline-ring-label\"><b>" + Math.max(0, daysLeft) + "</b><small>days left</small></span></div>" +
+          "<div>" + text + "</div></div>";
       }
 
       form.addEventListener("submit", function (event) {
@@ -2221,18 +2178,18 @@
         var daysLeft = Math.round((fileBy - today) / DAY);
 
         if (daysLeft > 0) {
-          show(
+          show(ring(daysLeft,
             "<strong>About " + daysLeft + " day" + (daysLeft === 1 ? "" : "s") + " left to file your internal appeal.</strong>" +
-            "That is the usual 180-day window, ending around " + fmt(fileBy) + ". File well before then — gathering records takes weeks, not days." +
+            "The usual 180-day window ends around " + fmt(fileBy) + ". Start early: records take weeks to gather." +
             "<span class=\"caveat\">Estimate for commercial plans under common federal timeframes. The deadline printed on your own letter always controls.</span>"
-          );
+          ), Math.min(1, daysLeft / 180));
         } else {
-          show(
+          show(ring(0,
             "<strong>The usual 180-day internal window has likely passed.</strong>" +
-            "It would have ended around " + fmt(fileBy) + ". That may not be the end of it — an independent " +
+            "It would have ended around " + fmt(fileBy) + ". That may not be the end of it. An independent " +
             "<a href=\"/appeals/external-review\">external review</a> is often available for about four months after a final internal denial, and some plans allow late filing for good cause." +
             "<span class=\"caveat\">Estimate for commercial plans under common federal timeframes. The deadline printed on your own letter always controls.</span>"
-          );
+          ), 0);
         }
       });
     })();
