@@ -1095,3 +1095,63 @@ html.motion-paused .usp-orn { animation-play-state: paused; }
   body::after { display: none; }
   .hero-copy, .closing-inner { text-shadow: none; }
 }
+
+/* ==================================================================
+   The tutorial's logic, applied (sunset-tutorial prompts): a floating
+   menu, a page grid that expresses the product, and one icon family.
+   Their grid was the solar array's cell lines; ours is a letter pad:
+   two margin rules run the length of the page at the column's edges,
+   and each section opens on a ruled line.
+   ================================================================== */
+.site-header {
+  top: 12px;
+  width: min(calc(100% - 24px), 1216px);
+  margin: 12px auto 0;
+  border: 1px solid rgba(16, 38, 59, 0.10);
+  border-radius: 999px;
+}
+.site-header::after { display: none; }
+.site-header .header-inner { width: 100%; min-height: 62px; padding: 6px 8px 6px 22px; }
+.site-header .button-small { border-radius: 999px; }
+@media (max-width: 680px) {
+  .site-header .header-inner { min-height: 56px; padding: 4px 6px 4px 16px; }
+}
+@media (prefers-color-scheme: dark) {
+  .site-header { border-color: rgba(255, 255, 255, 0.10); }
+}
+
+:root { --rule: rgba(16, 38, 59, 0.09); }
+@media (prefers-color-scheme: dark) { :root { --rule: rgba(255, 255, 255, 0.07); } }
+#main-content { position: relative; }
+#main-content::before,
+#main-content::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 5;
+  width: 1px;
+  background: var(--rule);
+  pointer-events: none;
+}
+#main-content::before { left: max(16px, calc(50% - 580px)); }
+#main-content::after { right: max(16px, calc(50% - 580px)); }
+.hero-lines i:nth-child(-n+2) { display: none; }
+.usp,
+.odds,
+.film-section,
+.deadline-band { border-top: 1px solid var(--rule); }
+
+/* Icons: Solar Bold Duotone (one family, never hand-drawn). */
+.reassurance-list .ri { display: block; width: 26px; height: 26px; margin: 0 auto 6px; color: var(--teal); }
+.preview-document-icon .pi { width: 24px; height: 24px; color: var(--navy); }
+.usp-kicker .ki,
+.usp-count .ki { width: 18px; height: 18px; margin-right: 10px; vertical-align: -4px; color: var(--teal); }
+.usp-pin-icons .ki { display: none; }
+.usp-pin-icons .ki.is-on { display: inline-block; }
+@media (prefers-color-scheme: dark) {
+  .reassurance-list .ri,
+  .usp-kicker .ki,
+  .usp-count .ki { color: #8FD3C2; }
+  .preview-document-icon .pi { color: #F2F6F8; }
+}

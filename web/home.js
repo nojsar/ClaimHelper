@@ -79,6 +79,22 @@
     });
   }, { rootMargin: '0px 0px -8% 0px' });
   targets.forEach(function (el) { observer.observe(el); });
+  // A fast fling can carry a short section from below the screen to above it
+  // between two frames, so the observer never sees it on screen. Anything the
+  // reader has already scrolled past is revealed too.
+  var sweep = 0;
+  window.addEventListener('scroll', function () {
+    if (sweep) return;
+    sweep = requestAnimationFrame(function () {
+      sweep = 0;
+      targets.forEach(function (el) {
+        if (!el.classList.contains('is-revealed') && el.getBoundingClientRect().top < window.innerHeight) {
+          el.classList.add('is-revealed');
+          observer.unobserve(el);
+        }
+      });
+    });
+  }, { passive: true });
   root.classList.add('reveal-ready');
   window.addEventListener('beforeprint', function () {
     targets.forEach(function (el) { el.classList.add('is-revealed'); });
@@ -368,10 +384,12 @@
       actor.el.style.filter = s < 0.98 ? 'blur(' + ((1 - s) * 6).toFixed(1) + 'px)' : '';
     });
   }
+  var pinIcons = Array.prototype.slice.call(section.querySelectorAll('.usp-pin-icons .ki'));
   function show(i) {
     if (shown === i) return;
     shown = i;
     countNow.textContent = '0' + (i + 1);
+    pinIcons.forEach(function (icon, j) { icon.classList.toggle('is-on', j === i); });
     pinLine.classList.add('is-swapping');
     setTimeout(function () {
       pinLine.textContent = lines[i];

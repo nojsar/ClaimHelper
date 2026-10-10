@@ -40,6 +40,10 @@
     ' vec3 glowC=mix(vec3(1.,.86,.62),vec3(1.,.66,.40),uNight);',
     ' sky+=glowC*exp(-d*mix(5.,3.4,uNight))*mix(.28,.42,uNight)*(.6+.4*uRise);',
     ' vec3 col=sky;',
+    // god rays: soft spokes fanning out of the sun, turning very slowly
+    ' vec2 dv=P-sun;float ang=atan(dv.y,dv.x);float rad=length(dv)/U;',
+    ' float rays=pow(.5+.5*sin(ang*16.+n(vec2(ang*2.5,uTime*.06))*5.+uTime*.12),5.);',
+    ' col+=glowC*rays*smoothstep(.02,.12,rad)*exp(-rad*2.4)*step(hz,P.y)*mix(.16,.22,uNight)*(.5+.5*uRise);',
     // the sun, cut by the horizon
     ' vec3 sunC=mix(vec3(1.,.93,.74),vec3(1.,.80,.52),uNight);',
     ' float disc=smoothstep(sr,sr-1.5,length(P-sun));col=mix(col,sunC,disc*step(hz,P.y));',
@@ -57,13 +61,18 @@
     '  vec3 dayW=mix(vec3(.553,.627,.761),vec3(.208,.329,.451),pow(s,.8));',
     '  vec3 nightW=mix(vec3(.180,.200,.290),vec3(.035,.078,.125),pow(s,.8));',
     '  vec3 w=mix(dayW,nightW,uNight);',
-    '  float k=P.y*.7;float st=sin(k+n(vec2(P.x/U*6.,k*.08)+uTime*.05)*5.);',
-    '  w*=1.+.06*smoothstep(.6,1.,st);',
-    // glitter: soft-ended dashes, longer and looser toward the viewer
+    // swell lines in perspective (close together at the horizon, wider toward
+    // the viewer), rolling in continuously
+    '  float v=hz-P.y;float z=U*.35/(v+U*.02);',
+    '  float st=sin(z*9.+n(vec2(P.x/U*4.+uTime*.12,z*.6))*4.-uTime*1.3);',
+    '  w*=1.+.07*smoothstep(.55,1.,st)-.04*smoothstep(.6,1.,-st);',
+    // glitter: soft-ended dashes that drift and twinkle, each on its own
+    // phase, longer and looser toward the viewer
     '  float ax=abs(P.x-sun.x);float wid=(.03+s*.3)*min(R.x,1.2*U);',
-    '  vec2 g2=vec2(P.x/(9.+s*24.),P.y/4.5);vec2 cell=floor(g2);vec2 f=fract(g2);',
+    '  vec2 g2=vec2((P.x+uTime*4.)/(9.+s*24.),P.y/4.5);vec2 cell=floor(g2);vec2 f=fract(g2);',
     '  float dash=smoothstep(0.,.22,f.x)*smoothstep(1.,.78,f.x)*smoothstep(.1,.4,f.y)*smoothstep(.9,.6,f.y);',
-    '  float g=step(.8-s*.15,h(cell+floor(uTime*1.6)))*dash*smoothstep(wid,wid*.3,ax)*(.55+.45*uRise);',
+    '  float r=h(cell);float tw=.5+.5*sin(uTime*(1.6+r*2.4)+r*40.);',
+    '  float g=step(.6-s*.12,r)*smoothstep(.35,1.,tw)*dash*smoothstep(wid,wid*.3,ax)*(.55+.45*uRise);',
     '  w=mix(w,mix(vec3(1.,.90,.66),vec3(1.,.72,.45),uNight),g*.85);',
     '  w+=glowC*exp(-ax/U*6.)*exp(-s*5.)*.18;',
     '  col=w;',
