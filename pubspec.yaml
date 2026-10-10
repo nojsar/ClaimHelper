@@ -70,6 +70,10 @@ flutter:
           weight: 600
         - asset: assets/fonts/Fraunces72pt-Bold.ttf
           weight: 700
+    - family: Tinos
+      fonts:
+        - asset: assets/fonts/Tinos-Bold.ttf
+          weight: 700
     - family: IBMPlexMono
       fonts:
         - asset: assets/fonts/IBMPlexMono-Regular.ttf

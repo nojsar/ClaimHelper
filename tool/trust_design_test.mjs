@@ -17,6 +17,8 @@ const [
   previewPaywall,
   appScaffold,
   caseLoader,
+  icon,
+  brandWidgets,
 ] = await Promise.all([
   readFile(path.join(root, "web", "index.html"), "utf8"),
   readFile(path.join(root, "lib", "core", "theme.dart"), "utf8"),
@@ -30,6 +32,8 @@ const [
   readFile(path.join(root, "lib", "features", "preview", "preview_paywall_screen.dart"), "utf8"),
   readFile(path.join(root, "lib", "widgets", "app_scaffold.dart"), "utf8"),
   readFile(path.join(root, "lib", "widgets", "case_loader.dart"), "utf8"),
+  readFile(path.join(root, "web", "icon.svg"), "utf8"),
+  readFile(path.join(root, "lib", "widgets", "ui.dart"), "utf8"),
 ]);
 
 function token(css, name) {
@@ -156,7 +160,16 @@ assert.match(theme, /minimumSize:\s*const Size\(52, 52\)/);
 assert.equal(token(guides, "carmine"), navy, "Guide brand color must match homepage navy.");
 assert.equal(token(guides, "green"), teal, "Guide accent color must match homepage teal.");
 assert.equal(token(guides, "control-border"), token(home, "muted"), "Guide controls must use the strong interactive border.");
-assert.match(guides, /\.brand \.mark\s*\{[^}]*linear-gradient\(135deg, var\(--carmine\), var\(--green\)\)/s);
+// One mark everywhere: the favicon's teal tile with its drawn check
+// (web/icon.svg), never a font's check glyph, which renders differently per
+// typeface.
+const markCheck = /<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false"><path d="M15 33\.5 26\.5 45 49 20"\/><\/svg>/;
+assert.match(icon, /M15 33\.5 L26\.5 45 L49 20/, "The favicon's check is the brand check.");
+assert.match(guides, /\.brand \.mark\s*\{[^}]*background:\s*#2F6F62/s, "Guide brand mark must be the favicon's teal tile.");
+assert.match(home, /\.brand-mark\s*\{[^}]*background:\s*#2F6F62/s, "Homepage brand mark must be the favicon's teal tile.");
+assert.match(home, new RegExp(`class="brand-mark" aria-hidden="true">${markCheck.source}`), "The homepage mark must draw the favicon's check.");
+assert.doesNotMatch(home, /class="(?:brand-mark|loader-mark)"[^>]*>✓/, "Brand marks draw the check rather than using a glyph.");
+assert.match(brandWidgets, /class BrandMark[\s\S]*?Offset\(15, 33\.5\),\s*Offset\(26\.5, 45\),\s*Offset\(49, 20\)[\s\S]*?0xFF2F6F62/, "The app's BrandMark must draw the favicon's tile and check.");
 assert.match(legal, /the same calm document system/i);
 
 const manifest = JSON.parse(manifestSource);

@@ -12,10 +12,19 @@ const pageHeadingStyle = TextStyle(
   height: 1.15,
 );
 
-/// The GetMyYes brand mark: a calm navy-to-teal tile with a check.
+/// The GetMyYes mark, the same everywhere: the favicon's teal tile with its
+/// drawn check (web/icon.svg), in both appearances.
 class BrandMark extends StatelessWidget {
   const BrandMark({super.key, this.size = 34});
   final double size;
+
+  /// The check's three points on icon.svg's 64-unit grid: a tick, down to
+  /// its elbow and up past where it began. Completion, never a cross.
+  static const checkPoints = [
+    Offset(15, 33.5),
+    Offset(26.5, 45),
+    Offset(49, 20),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -23,8 +32,7 @@ class BrandMark extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        gradient: context.palette.brandGradient,
-        borderRadius: BorderRadius.circular(size * 0.30),
+        borderRadius: BorderRadius.circular(size * 0.22),
         boxShadow: const [
           BoxShadow(
             color: Color(0x382F6F62),
@@ -34,12 +42,43 @@ class BrandMark extends StatelessWidget {
           ),
         ],
       ),
-      child: Icon(Icons.check_rounded, color: Colors.white, size: size * 0.62),
+      child: CustomPaint(painter: const _BrandMarkPainter()),
     );
   }
 }
 
-/// Wordmark: brand mark + "GetMyYes".
+class _BrandMarkPainter extends CustomPainter {
+  const _BrandMarkPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Drawn on icon.svg's 64-unit grid.
+    final k = size.width / 64;
+    canvas.scale(k);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(0, 0, 64, 64),
+        const Radius.circular(14),
+      ),
+      Paint()..color = const Color(0xFF2F6F62),
+    );
+    final check = Path()..addPolygon(BrandMark.checkPoints, false);
+    canvas.drawPath(
+      check,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 8.5
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..color = Colors.white,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_BrandMarkPainter oldDelegate) => false;
+}
+
+/// Wordmark: the mark and "GetMyYes" in the site's headline serif.
 class Wordmark extends StatelessWidget {
   const Wordmark({super.key, this.markSize = 32, this.fontSize = 20});
   final double markSize;
@@ -54,9 +93,10 @@ class Wordmark extends StatelessWidget {
         const SizedBox(width: 10),
         Text('GetMyYes',
             style: TextStyle(
+              fontFamily: AppFonts.wordmark,
               fontSize: fontSize,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.3,
               color: context.palette.textPrimary,
             )),
       ],

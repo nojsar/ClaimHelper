@@ -6,6 +6,10 @@ abstract final class AppFonts {
   static const sans = 'IBMPlexSans';
   static const serif = 'Fraunces';
   static const mono = 'IBMPlexMono';
+
+  /// The wordmark's face: Tinos, metrically identical to the Times New Roman
+  /// the site sets "GetMyYes" in.
+  static const wordmark = 'Tinos';
 }
 
 /// Calm, familiar healthcare-document colors shared with getmyyes.com.

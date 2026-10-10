@@ -125,9 +125,17 @@ void main() {
       MaterialApp(theme: buildAppTheme(), home: const BrandMark()),
     );
 
-    expect(find.byIcon(Icons.check_rounded), findsOneWidget);
+    // The mark is drawn (the favicon's check), so the shape itself is held
+    // here: a tick that drops to its elbow and rises past where it began.
+    expect(find.byType(BrandMark), findsOneWidget);
     expect(find.byIcon(Icons.close_rounded), findsNothing);
     expect(find.byIcon(Icons.cancel_rounded), findsNothing);
+    const p = BrandMark.checkPoints;
+    expect(p, hasLength(3));
+    expect(p[1].dy, greaterThan(p[0].dy));
+    expect(p[1].dx, greaterThan(p[0].dx));
+    expect(p[2].dy, lessThan(p[0].dy));
+    expect(p[2].dx, greaterThan(p[1].dx));
   });
 }
 

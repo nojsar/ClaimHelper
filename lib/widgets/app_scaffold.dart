@@ -116,9 +116,9 @@ class _AppScaffoldState extends State<AppScaffold> {
                                       child: Padding(
                                         padding: const EdgeInsets.all(2),
                                         child: compactBrand
-                                            ? BrandMark(size: 30)
+                                            ? BrandMark(size: 34)
                                             : Wordmark(
-                                                markSize: 30, fontSize: 19),
+                                                markSize: 34, fontSize: 22),
                                       ),
                                     ),
                                   ),
