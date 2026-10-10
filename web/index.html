@@ -1673,38 +1673,37 @@
         </div>
       </section>
 
-      <!-- The product film: the service working, before any explanation. Real
-           app screens from a mock build on a fictional case; two illustrative
-           stills open it. Native controls, starts muted only once in view and
-           never under reduced motion; the transcript carries what it shows. -->
-      <section class="film-section" id="how-it-works" aria-labelledby="film-title">
-        <div class="wrap film-inner">
-          <div class="film-copy">
-            <h2 id="film-title">See it work in 26 seconds.</h2>
-            <p>A real walkthrough on a fictional letter. No real data.</p>
-          </div>
-          <figure class="film-frame">
-            <video class="film-video" controls muted playsinline preload="none"
-                   poster="/media/film/product-film-v1-poster.jpg"
-                   data-vertical="/media/film/product-film-v1-vertical.mp4"
-                   data-vertical-poster="/media/film/product-film-v1-poster-vertical.jpg"
-                   aria-describedby="film-transcript" width="1920" height="1080">
-              <source src="/media/film/product-film-v1-landscape.mp4" type="video/mp4">
-              <track kind="captions" src="/media/film/product-film-v1.vtt" srclang="en" label="English">
-            </video>
-            <figcaption>
+      <!-- The dawn-print film, edge to edge: the same sky as the hero, drawn
+           frame by frame, so the page and the film read as one picture. It
+           rises out of the paper above and its sea runs on into the page
+           below. Native controls; it starts muted only once mostly in view and
+           never under reduced motion. Captions come from the narration script
+           and the transcript carries everything it shows. -->
+      <section class="film-section film-wide" id="how-it-works" aria-labelledby="film-title">
+        <div class="wrap film-head">
+          <p class="eyebrow">Watch · 25 seconds</p>
+          <h2 id="film-title">From the letter to the plan.</h2>
+        </div>
+        <figure class="film-frame">
+          <video class="film-video" controls muted playsinline preload="none"
+                 poster="/media/ad/dawn-ad-v2-poster.jpg"
+                 aria-describedby="film-transcript" width="1920" height="1080">
+            <source src="/media/ad/dawn-ad-v2-landscape.mp4" type="video/mp4">
+            <track kind="captions" src="/media/ad/dawn-ad-v2.vtt" srclang="en" label="English">
+          </video>
+          <figcaption>
+            <div class="wrap">
               <details class="film-transcript">
                 <summary>What the film shows</summary>
                 <div id="film-transcript">
-                  <p>Hands hold an insurance denial letter. A phone takes a photo of it.</p>
-                  <p>In the GetMyYes app, the photo is uploaded with the privacy and consent notice in view. A free plain-English summary appears: what happened, how much is at stake, the likely appeal path, and what is still needed. Below it, the appeal letter is already started.</p>
-                  <p>Then the full appeal packet: an appeal letter, an evidence checklist, a doctor letter request and a deadline tracker. You review every page and send it yourself.</p>
-                  <p>Free preview. No card. Guest uploads auto-delete in 24 hours. The case shown is fictional.</p>
+                  <p>An animated film in the style of a woodblock print. At night a folded letter drifts down over a calm sea and unfolds. A glass lens moves down it and turns each line into plain English: the plan says approval was needed first; you can appeal, and you have 180 days; a letter from your doctor can help.</p>
+                  <p>As dawn comes, the pages of the appeal (an appeal letter, an evidence checklist and a deadline tracker) fan out, fold into a paper plane, and the plane flies into the sunrise.</p>
+                  <p>It ends in morning light: Understand the denial. Build the appeal. Free preview, no card, you send it yourself. The letter shown is fictional.</p>
                 </div>
               </details>
-            </figcaption>
-          </figure>
-        </div>
+            </div>
+          </figcaption>
+        </figure>
       </section>
 
       <!-- Real urgency rather than manufactured urgency: the 180-day internal-appeal

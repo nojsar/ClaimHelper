@@ -456,19 +456,12 @@
   watch.observe(carousel);
 })();
 
-// Product film: phones get the vertical cut; the film starts muted once it
-// is mostly in view, and pauses again when scrolled away. Never under
+// The film plays muted once it is mostly in view, and pauses again when
+// scrolled away. It is the horizontal cut everywhere, edge to edge. Never under
 // reduced motion: there the poster and the controls wait for a tap.
 (function () {
   var video = document.querySelector('.film-video');
   if (!video) return;
-  if (matchMedia('(max-width: 760px)').matches) {
-    video.classList.add('is-vertical');
-    video.setAttribute('poster', video.getAttribute('data-vertical-poster'));
-    video.setAttribute('width', '1080');
-    video.setAttribute('height', '1920');
-    video.src = video.getAttribute('data-vertical');
-  }
   if (matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
   var userPaused = false;
   video.addEventListener('pause', function () { if (!video.ended && video.dataset.autoPausing !== '1') userPaused = true; });

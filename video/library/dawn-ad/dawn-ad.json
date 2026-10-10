@@ -9,20 +9,47 @@
     "flow": "Nopaa11ROa1qjWwW0VyU",
     "generated": "2026-10-10",
     "lines": [
-      { "text": "Some letters arrive at night.", "clipFrom": 0.0, "clipTo": 1.84, "at": 0.6 },
-      { "text": "GetMyYes reads yours with you, line by line, in plain English. The summary is free.", "clipFrom": 1.95, "clipTo": 8.55, "at": 3.9 },
-      { "text": "Then it helps you build the appeal: the letter, the evidence, the deadline.", "clipFrom": 8.6, "clipTo": 13.6, "at": 10.9 },
-      { "text": "You check every page. And you send it yourself.", "clipFrom": 13.6, "clipTo": 17.45, "at": 16.1 },
-      { "text": "GetMyYes. Understand the denial. Build the appeal.", "clipFrom": 17.45, "clipTo": 21.84, "at": 20.5 }
+      {
+        "text": "Some letters arrive at night.",
+        "clipFrom": 0.0,
+        "clipTo": 1.84,
+        "at": 0.6
+      },
+      {
+        "text": "GetMyYes reads yours with you, line by line, in plain English. The summary is free.",
+        "clipFrom": 1.95,
+        "clipTo": 8.55,
+        "at": 3.9
+      },
+      {
+        "text": "Then it helps you build the appeal: the letter, the evidence, the deadline.",
+        "clipFrom": 8.6,
+        "clipTo": 13.6,
+        "at": 10.9
+      },
+      {
+        "text": "You check every page. And you send it yourself.",
+        "clipFrom": 13.6,
+        "clipTo": 17.45,
+        "at": 16.1
+      },
+      {
+        "text": "GetMyYes. Understand the denial. Build the appeal.",
+        "clipFrom": 17.45,
+        "clipTo": 21.84,
+        "at": 20.5
+      }
     ]
   },
   "score": {
     "file": "dawn-ad/score.mp3",
-    "source": "https://assets.mixkit.co/music/955/955.mp3",
-    "title": "I Believe 2",
-    "sourceStart": 2.0,
+    "source": "https://assets.mixkit.co/music/566/566.mp3",
+    "title": "Daniel & Me",
+    "sourceStart": 1.0,
     "length": 26.0,
-    "gainDb": 6.19,
+    "gainDb": -4.66,
+    "mix": "cut level with the narration; the ad ducks it 18 dB under speech and 12 dB in the gaps",
+    "chosen": "2026-10-10, by the owner from three previews (replacing Mixkit 955, judged too loud and not fitting)",
     "license": "Mixkit Stock Music Free License (https://mixkit.co/license/#musicFree)"
   }
 }

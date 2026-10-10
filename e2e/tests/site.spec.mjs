@@ -304,7 +304,7 @@ test.describe("product film", () => {
     const described = await video.getAttribute("aria-describedby");
     await expect(page.locator(`#${described}`)).toContainText("fictional");
     // Narration means captions, straight from the script.
-    await expect(page.locator(".film-video track[kind='captions']")).toHaveAttribute("src", /product-film-v\d+\.vtt$/);
+    await expect(page.locator(".film-video track[kind='captions']")).toHaveAttribute("src", /dawn-ad-v\d+\.vtt$/);
     await video.scrollIntoViewIfNeeded();
     await page.waitForTimeout(600);
     expect(await video.evaluate((v) => v.paused)).toBe(true);
@@ -312,17 +312,29 @@ test.describe("product film", () => {
 
   test.describe("with motion welcome", () => {
     test.use({ reducedMotion: "no-preference" });
-    test("starts muted once in view, and phones get the vertical cut", async ({ page, browserName }) => {
+    test("starts muted once in view", async ({ page, browserName }) => {
       test.skip(browserName === "webkit", "Playwright's WebKit build ships without H.264 playback.");
       await page.goto("/");
       const video = page.locator(".film-video");
       await video.scrollIntoViewIfNeeded();
       await expect.poll(() => video.evaluate((v) => !v.paused && v.muted), { timeout: 8000 }).toBe(true);
-      await page.setViewportSize({ width: 390, height: 844 });
-      await page.goto("/");
-      expect(await page.locator(".film-video").evaluate((v) => v.currentSrc || v.src)).toMatch(/product-film-v\d+-vertical\.mp4$/);
     });
   });
+
+  // The owner asked for the film horizontal and edge to edge, part of the page.
+  for (const width of [1440, 390]) {
+    test(`runs edge to edge as the horizontal cut at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 860 });
+      await page.goto("/");
+      const film = await page.locator(".film-video").evaluate((v) => {
+        const rect = v.getBoundingClientRect();
+        return { left: rect.left, width: rect.width, page: document.documentElement.clientWidth, src: v.querySelector("source").getAttribute("src") };
+      });
+      expect(film.left).toBeLessThanOrEqual(0.5);
+      expect(Math.abs(film.width - film.page)).toBeLessThanOrEqual(1);
+      expect(film.src).toMatch(/dawn-ad-v\d+-landscape\.mp4$/);
+    });
+  }
 });
 
 test.describe("plain-English lens", () => {

@@ -60,6 +60,24 @@ const SFX: { at: number; sfx: string; volume: number }[] = [
   { at: D.end + 0.3, sfx: "done-chime", volume: 0.32 },
 ];
 
+/* ------------------------------------------------------------ the mix */
+
+// The score is cut level with the narration (dawn-ad.json), then sits 18 dB
+// under the voice while she speaks and 12 dB under in the gaps, easing
+// between the two over a quarter of a second.
+const UNDER = 10 ** (-18 / 20);
+const GAP = 10 ** (-12 / 20);
+const RAMP = 0.25;
+const SPEECH = data.voice.lines.map((line) => [line.at, line.at + line.clipTo - line.clipFrom] as const);
+const duck = (t: number): number => {
+  let near = Infinity;
+  for (const [a, b] of SPEECH) {
+    if (t >= a && t <= b) return UNDER;
+    near = Math.min(near, t < a ? a - t : t - b);
+  }
+  return mix(UNDER, GAP, clamp01(near / RAMP));
+};
+
 /* ------------------------------------------------------------- the sky */
 
 type Uniforms = Record<string, WebGLUniformLocation | null>;
@@ -428,7 +446,7 @@ export const DawnAd: React.FC<{ format: DawnAdFormat }> = ({ format }) => {
     <AbsoluteFill style={{ background: "#0D1726", overflow: "hidden" }}>
       <Html5Audio
         src={staticFile("dawn-ad/score.mp3")}
-        volume={(fr) => 0.42 * interpolate(fr, [0, f(0.6), durationInFrames - f(1.2), durationInFrames - 1], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })}
+        volume={(fr) => duck(fr / 60) * interpolate(fr, [0, f(0.6), durationInFrames - f(1.2), durationInFrames - 1], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })}
       />
       {data.voice.lines.map((line) => (
         <Sequence key={line.text} from={f(line.at)} durationInFrames={f(line.clipTo - line.clipFrom) + 1} layout="none">

@@ -118,7 +118,7 @@ if (args.includes("--film")) {
 // year: bump AD_VERSION on a re-render. `--review` renders eight frames per
 // cut into video/out/ad-review for a contact sheet instead.
 // The sky is WebGL, so the browser runs with ANGLE.
-const AD_VERSION = "v1";
+const AD_VERSION = "v2";
 
 if (args.includes("--dawn-ad")) {
   await sync();
@@ -131,13 +131,19 @@ if (args.includes("--dawn-ad")) {
   const chromiumOptions = { gl: process.env.REMOTION_GL || "angle" };
   const serveUrl = await bundle({ entryPoint: path.join(here, "src", "index.ts"), publicDir: path.join(here, "public") });
   const review = args.includes("--review");
+  // Captions straight from the narration script, so they always match it.
+  const { readFile, writeFile } = await import("node:fs/promises");
+  const ad = JSON.parse(await readFile(path.join(here, "library", "dawn-ad", "dawn-ad.json"), "utf8"));
+  const stamp = (seconds) => new Date(seconds * 1000).toISOString().slice(11, 23);
+  const vtt = ["WEBVTT", "", ...ad.voice.lines.flatMap((line, i) => [String(i + 1), `${stamp(line.at)} --> ${stamp(line.at + line.clipTo - line.clipFrom)}`, line.text, ""])].join("\n");
+  if (!review) await writeFile(path.join(adRoot, `dawn-ad-${AD_VERSION}.vtt`), vtt);
   for (const cut of ["vertical", "landscape"]) {
     const composition = await selectComposition({ serveUrl, id: `dawn-ad-${cut}`, browserExecutable, chromiumOptions });
     const base = `dawn-ad-${AD_VERSION}`;
     const suffix = cut === "vertical" ? "-vertical" : "";
     const frames = review
       ? [1.8, 5.2, 8.9, 12.6, 15.0, 17.6, 21.2, 25.0].map((s, i) => [`review-${i}`, Math.round(s * composition.fps)])
-      : [["poster", Math.round(5.6 * composition.fps)], ["cover", composition.durationInFrames - 1]];
+      : [["poster", Math.round(2.2 * composition.fps)], ["cover", composition.durationInFrames - 1]];
     for (const [name, frame] of frames) {
       await renderStill({ composition, serveUrl, browserExecutable, chromiumOptions, frame, imageFormat: "jpeg", jpegQuality: 88, output: path.join(review ? reviewRoot : adRoot, `${base}-${name}${suffix}.jpg`) });
     }
