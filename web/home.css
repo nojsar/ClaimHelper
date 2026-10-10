@@ -1326,3 +1326,57 @@ html.motion-paused .usp-orn { animation-play-state: paused; }
 /* Paper keeps its ink: the sheets are cream in both themes, so their labels
    stay dark rather than following the page's light ink in dark mode. */
 .usp-sheets span { color: #10263B; }
+
+/* ==================================================================
+   The day. Between the film and the closing sunrise the page used to be
+   a stack of flat bands. Now it is one sky over paper: the film's
+   morning, a clear midday, a warm afternoon and a dusk that hands over to
+   the closing's dawn colours, with print haze drifting across it (static).
+   In dark mode it is one night that slowly deepens, with sparse stars,
+   into the closing sky.
+   ================================================================== */
+.day { position: relative; isolation: isolate; }
+.day::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 300px 11px at 16% 9%, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0)),
+    radial-gradient(ellipse 420px 13px at 82% 21%, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0)),
+    radial-gradient(ellipse 260px 10px at 70% 38%, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0)),
+    radial-gradient(ellipse 380px 12px at 12% 57%, rgba(255, 250, 240, 0.7), rgba(255, 250, 240, 0)),
+    radial-gradient(ellipse 340px 12px at 88% 74%, rgba(255, 244, 232, 0.7), rgba(255, 244, 232, 0)),
+    radial-gradient(ellipse 280px 10px at 24% 90%, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0)),
+    radial-gradient(ellipse 46% 9% at 86% 14%, rgba(255, 226, 170, 0.32), rgba(255, 226, 170, 0)),
+    radial-gradient(ellipse 50% 9% at 10% 68%, rgba(255, 196, 150, 0.22), rgba(255, 196, 150, 0)),
+    linear-gradient(180deg, #FAF5EC 0%, #F6EEE1 16%, #EFF2F0 38%, #F5ECE1 60%, #EFE3E3 80%, #D9DDEC 94%, #BCD0EC 100%);
+}
+/* The bands give way to the one sky. */
+.day > section { background: transparent; border-top: 0; }
+.day > .section + .section { padding-top: clamp(40px, 5vw, 72px); }
+@media (prefers-color-scheme: dark) {
+  .day::before {
+    background:
+      radial-gradient(1.4px 1.4px at 12% 6%, #FFF3D6, rgba(255, 243, 214, 0)),
+      radial-gradient(1.2px 1.2px at 77% 11%, #FFF3D6, rgba(255, 243, 214, 0)),
+      radial-gradient(1.6px 1.6px at 41% 19%, #FFF3D6, rgba(255, 243, 214, 0)),
+      radial-gradient(1.2px 1.2px at 92% 31%, #FFF3D6, rgba(255, 243, 214, 0)),
+      radial-gradient(1.4px 1.4px at 6% 43%, #FFF3D6, rgba(255, 243, 214, 0)),
+      radial-gradient(1.2px 1.2px at 63% 52%, #FFF3D6, rgba(255, 243, 214, 0)),
+      radial-gradient(1.6px 1.6px at 28% 64%, #FFF3D6, rgba(255, 243, 214, 0)),
+      radial-gradient(1.4px 1.4px at 85% 71%, #FFF3D6, rgba(255, 243, 214, 0)),
+      radial-gradient(1.2px 1.2px at 48% 79%, #FFF3D6, rgba(255, 243, 214, 0)),
+      radial-gradient(1.6px 1.6px at 16% 86%, #FFF3D6, rgba(255, 243, 214, 0)),
+      radial-gradient(1.4px 1.4px at 71% 92%, #FFF3D6, rgba(255, 243, 214, 0)),
+      radial-gradient(1.2px 1.2px at 37% 96%, #FFF3D6, rgba(255, 243, 214, 0)),
+      radial-gradient(ellipse 340px 12px at 18% 26%, rgba(170, 190, 230, 0.07), rgba(170, 190, 230, 0)),
+      radial-gradient(ellipse 420px 14px at 80% 58%, rgba(170, 190, 230, 0.07), rgba(170, 190, 230, 0)),
+      radial-gradient(ellipse 44% 8% at 84% 12%, rgba(207, 224, 238, 0.07), rgba(207, 224, 238, 0)),
+      linear-gradient(180deg, #0E1922 0%, #0F1B26 30%, #111D2C 60%, #131D33 85%, #0D1726 100%);
+  }
+}
+@media (prefers-contrast: more), (forced-colors: active) {
+  .day::before { background: var(--background); }
+}
