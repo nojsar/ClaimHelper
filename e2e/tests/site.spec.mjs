@@ -312,12 +312,53 @@ test.describe("product film", () => {
 
   test.describe("with motion welcome", () => {
     test.use({ reducedMotion: "no-preference" });
-    test("starts muted once in view", async ({ page, browserName }) => {
+    // The owner asked for sound on by default: the film asks for it first.
+    test("starts once in view, with sound where the browser allows", async ({ page, browserName }) => {
       test.skip(browserName === "webkit", "Playwright's WebKit build ships without H.264 playback.");
       await page.goto("/");
       const video = page.locator(".film-video");
+      await expect(video).not.toHaveAttribute("muted", /.*/);
       await video.scrollIntoViewIfNeeded();
+      await expect.poll(() => video.evaluate((v) => !v.paused), { timeout: 8000 }).toBe(true);
+      const muted = await video.evaluate((v) => v.muted);
+      await expect(page.locator(".film-sound")).toBeVisible({ visible: muted });
+    });
+
+    // Regression: the pause it makes itself was once taken for the visitor's,
+    // so a film scrolled past never started again.
+    test("pauses when scrolled away and plays again on return", async ({ page, browserName }) => {
+      test.skip(browserName === "webkit", "Playwright's WebKit build ships without H.264 playback.");
+      await page.goto("/");
+      const video = page.locator(".film-video");
+      await video.evaluate((v) => v.scrollIntoView({ block: "center" }));
+      await expect.poll(() => video.evaluate((v) => !v.paused), { timeout: 8000 }).toBe(true);
+      await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+      await expect.poll(() => video.evaluate((v) => v.paused), { timeout: 4000 }).toBe(true);
+      await video.evaluate((v) => v.scrollIntoView({ block: "center" }));
+      await expect.poll(() => video.evaluate((v) => !v.paused), { timeout: 8000 }).toBe(true);
+    });
+
+    // Browsers hold sound back until the first tap or key; emulate that rule.
+    test("held-back sound plays muted with a Sound on button, and the first tap brings it in", async ({ page, browserName }) => {
+      test.skip(browserName === "webkit", "Playwright's WebKit build ships without H.264 playback.");
+      await page.addInitScript(() => {
+        let tapped = false;
+        addEventListener("pointerdown", () => { tapped = true; }, true);
+        addEventListener("keydown", () => { tapped = true; }, true);
+        const play = HTMLMediaElement.prototype.play;
+        HTMLMediaElement.prototype.play = function () {
+          if (!this.muted && !tapped) return Promise.reject(new DOMException("needs a gesture", "NotAllowedError"));
+          return play.call(this);
+        };
+      });
+      await page.goto("/");
+      const video = page.locator(".film-video");
+      await video.evaluate((v) => v.scrollIntoView({ block: "center" }));
       await expect.poll(() => video.evaluate((v) => !v.paused && v.muted), { timeout: 8000 }).toBe(true);
+      await expect(page.locator(".film-sound")).toBeVisible();
+      await page.locator(".film-plate").click();
+      await expect.poll(() => video.evaluate((v) => !v.paused && !v.muted), { timeout: 4000 }).toBe(true);
+      await expect(page.locator(".film-sound")).toBeHidden();
     });
   });
 
@@ -389,6 +430,17 @@ test.describe("dawn print homepage", () => {
     // The suite asks for reduced motion: nothing flies, every heading reads in place.
     await expect(page.locator(".usp")).not.toHaveClass(/is-flying/);
     for (let i = 0; i < 3; i += 1) await expect(titles.nth(i)).toBeVisible();
+  });
+
+  // The packet sheets are cream paper in both themes, so their labels keep
+  // dark ink; following the page's light ink made them vanish in dark mode.
+  test("the packet sheets keep dark ink in dark mode", async ({ browser }) => {
+    const context = await browser.newContext({ colorScheme: "dark", reducedMotion: "reduce" });
+    const page = await context.newPage();
+    await page.goto("/");
+    const ink = await page.locator(".usp-sheets span").first().evaluate((el) => getComputedStyle(el).color);
+    expect(ink).toBe("rgb(16, 38, 59)");
+    await context.close();
   });
 
   test("the sky is decoration, with a painted sky behind it", async ({ page }) => {

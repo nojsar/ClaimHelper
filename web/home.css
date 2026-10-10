@@ -1177,22 +1177,152 @@ html.motion-paused .usp-orn { animation-play-state: paused; }
   -webkit-mask-image: linear-gradient(180deg, transparent 0, rgba(0, 0, 0, 0.2) 4%, rgba(0, 0, 0, 0.62) 9%, rgba(0, 0, 0, 0.9) 13%, #000 17%);
   mask-image: linear-gradient(180deg, transparent 0, rgba(0, 0, 0, 0.2) 4%, rgba(0, 0, 0, 0.62) 9%, rgba(0, 0, 0, 0.9) 13%, #000 17%);
 }
-.film-wide figcaption {
-  padding: clamp(64px, 7vw, 104px) 0 clamp(28px, 4vw, 48px);
-  background: linear-gradient(180deg, #1B2F44 0, var(--background) clamp(64px, 7vw, 104px)) top / 100% clamp(64px, 7vw, 104px) no-repeat;
-}
-.film-wide .film-transcript { margin-top: 0; }
-@media (prefers-color-scheme: dark) {
-  .film-wide figcaption { background-image: linear-gradient(180deg, #13263A 0, var(--background) clamp(64px, 7vw, 104px)); }
-}
 /* The margin rules stop at the picture's edge rather than crossing it. */
-.film-wide .film-frame { position: relative; z-index: 6; }
+.film-wide .film-frame { position: relative; z-index: 6; --film-sea: rgb(10, 20, 32); --film-day: 0; }
+
+/* The shore: the film's sea runs on under the picture in print swells, its
+   colour following the film from night to morning (home.js sets --film-sea
+   from the playhead), and breaks on the paper in a scalloped tide line. The
+   sun's path keeps glinting in it once morning comes. Static otherwise. */
+.film-wide figcaption { padding: 0 0 clamp(8px, 1.5vw, 16px); background: none; }
+.film-wide figcaption::before {
+  content: "";
+  display: block;
+  height: clamp(48px, 5.4vw, 84px);
+  margin-top: -1px;
+  background-color: var(--film-sea);
+  background-image:
+    radial-gradient(ellipse 22px 2px at 57% 18%, rgba(255, 226, 170, calc(var(--film-day) * 0.75)), rgba(255, 226, 170, 0)),
+    radial-gradient(ellipse 30px 2px at 61% 34%, rgba(255, 226, 170, calc(var(--film-day) * 0.6)), rgba(255, 226, 170, 0)),
+    radial-gradient(ellipse 18px 2px at 54% 47%, rgba(255, 226, 170, calc(var(--film-day) * 0.55)), rgba(255, 226, 170, 0)),
+    radial-gradient(ellipse 34px 2px at 59% 62%, rgba(255, 226, 170, calc(var(--film-day) * 0.45)), rgba(255, 226, 170, 0)),
+    repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0 1px, rgba(255, 255, 255, 0) 1px 8px);
+  transition: background-color 0.9s linear;
+  -webkit-mask:
+    linear-gradient(#000 0 0) top / 100% calc(100% - 11px) no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='12' viewBox='0 0 160 12'%3E%3Cpath d='M0 0H160V5C150 5 140 11 120 11C100 11 90 5 80 5C70 5 60 11 40 11C20 11 10 5 0 5Z'/%3E%3C/svg%3E") bottom / 160px 12px repeat-x;
+  mask:
+    linear-gradient(#000 0 0) top / 100% calc(100% - 11px) no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='12' viewBox='0 0 160 12'%3E%3Cpath d='M0 0H160V5C150 5 140 11 120 11C100 11 90 5 80 5C70 5 60 11 40 11C20 11 10 5 0 5Z'/%3E%3C/svg%3E") bottom / 160px 12px repeat-x;
+}
+
+/* The caption, set like a plate in a printed book, and the transcript as a
+   sheet of the same letter paper the film unfolds. */
+.film-caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 28px;
+  padding-top: clamp(18px, 2.4vw, 30px);
+}
+.film-plate {
+  margin: 0;
+  max-width: 62ch;
+  font-family: var(--serif);
+  font-size: clamp(18px, 1.7vw, 22px);
+  line-height: 1.35;
+  color: var(--navy-dark);
+}
+.film-plate-no {
+  margin-right: 14px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  vertical-align: 0.15em;
+}
+.film-wide .film-transcript { margin: 0 0 0 auto; }
+.film-wide .film-transcript summary {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px 0 14px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--navy);
+  font-size: 15px;
+}
+.film-wide .film-transcript summary::-webkit-details-marker { display: none; }
+.film-wide .film-transcript summary::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  margin-left: 4px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 0.2s ease;
+}
+.film-wide .film-transcript[open] { flex-basis: 100%; margin-left: 0; }
+.film-wide .film-transcript[open] summary::after { transform: translateY(2px) rotate(-135deg); }
+.film-wide .film-transcript summary .ki { width: 18px; height: 18px; color: var(--teal); }
+.film-wide #film-transcript {
+  margin-top: 14px;
+  max-width: 78ch;
+  padding: clamp(18px, 2.4vw, 28px) clamp(20px, 3vw, 34px);
+  border-radius: 10px;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 29px, rgba(23, 50, 77, 0.07) 29px 30px) 0 14px / 100% 100% no-repeat,
+    #FFFDF8;
+  box-shadow: 0 24px 40px -30px rgba(16, 38, 59, 0.55), 0 0 0 1px #E6DCCB;
+  color: #1F2B37;
+  line-height: 30px;
+}
+.film-wide #film-transcript p { margin: 0; max-width: none; }
+.film-wide #film-transcript p + p { margin-top: 0; text-indent: 1.5em; }
+
+/* Sound, when the browser held it back: a paper pill over the film's sea. */
+.film-sound {
+  position: absolute;
+  z-index: 2;
+  left: clamp(14px, 2.6vw, 36px);
+  bottom: calc(clamp(48px, 5.4vw, 84px) + clamp(18px, 2.4vw, 30px) + 64px);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: #FFFDF8;
+  color: #10263B;
+  font: 700 15px/1 var(--sans, Inter, system-ui, sans-serif);
+  box-shadow: 0 16px 30px -18px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(16, 38, 59, 0.12);
+  cursor: pointer;
+}
+.film-sound[hidden] { display: none; }
+.film-sound .ki { width: 20px; height: 20px; color: #2F6F62; }
+.film-sound:hover { background: #F3ECDF; }
+.film-sound:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 3px; box-shadow: 0 0 0 6px #10263B; }
+
+/* The plane the film sends into the sunrise lands on the deadline check. */
+.film-wide + .deadline-band { border-top: 0; padding-top: clamp(36px, 5vw, 72px); }
+.deadline-band .deadline-check { position: relative; }
+.deadline-orn {
+  position: absolute;
+  right: clamp(-8px, -1vw, 0px);
+  top: clamp(-74px, -6vw, -52px);
+  width: clamp(104px, 10vw, 148px);
+  height: auto;
+  pointer-events: none;
+  filter: drop-shadow(0 14px 14px rgba(23, 50, 77, 0.2));
+}
 @media (max-width: 680px) {
-  .film-wide figcaption {
-    padding-top: 40px;
-    background: linear-gradient(180deg, #1B2F44 0, var(--background) 40px) top / 100% 40px no-repeat;
-  }
+  .film-caption { flex-direction: column; align-items: flex-start; }
+  .film-wide .film-transcript { margin-left: 0; }
+  .film-sound { bottom: auto; top: 18%; }
+  .deadline-orn { top: -58px; right: 6px; width: 96px; }
 }
-@media (max-width: 680px) and (prefers-color-scheme: dark) {
-  .film-wide figcaption { background-image: linear-gradient(180deg, #13263A 0, var(--background) 40px); }
+@media (forced-colors: active) {
+  .film-wide figcaption::before { display: none; }
+  .film-sound, .film-wide .film-transcript summary { border: 1px solid ButtonText; }
 }
+
+/* Paper keeps its ink: the sheets are cream in both themes, so their labels
+   stay dark rather than following the page's light ink in dark mode. */
+.usp-sheets span { color: #10263B; }

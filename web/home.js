@@ -456,25 +456,107 @@
   watch.observe(carousel);
 })();
 
-// The film plays muted once it is mostly in view, and pauses again when
-// scrolled away. It is the horizontal cut everywhere, edge to edge. Never under
-// reduced motion: there the poster and the controls wait for a tap.
+// The film's sea runs on under it as the shore band, and that water follows
+// the film from night to morning: the colour of the picture's lower edge at
+// each moment, sampled from the render.
+(function () {
+  var video = document.querySelector('.film-video');
+  var frame = video && video.closest('.film-frame');
+  if (!frame) return;
+  var SEA = [[0, [10, 20, 32]], [12, [17, 29, 45]], [18, [42, 67, 93]], [25, [54, 82, 112]]];
+  function tint() {
+    var t = video.currentTime || 0;
+    var i = 1;
+    while (i < SEA.length - 1 && t > SEA[i][0]) i += 1;
+    var a = SEA[i - 1], b = SEA[i];
+    var k = Math.min(1, Math.max(0, (t - a[0]) / (b[0] - a[0])));
+    var c = a[1].map(function (v, n) { return Math.round(v + (b[1][n] - v) * k); });
+    frame.style.setProperty('--film-sea', 'rgb(' + c.join(',') + ')');
+    frame.style.setProperty('--film-day', Math.min(1, Math.max(0, (t - 12) / 10)).toFixed(2));
+  }
+  video.addEventListener('timeupdate', tint);
+  video.addEventListener('seeked', tint);
+})();
+
+// The film plays once it is mostly in view (or fills most of the screen,
+// when it is taller than the screen) and pauses when scrolled away. It asks
+// for sound first; a browser that will not start sound before the visitor's
+// first tap or click gets it muted, with a Sound on button, and that first
+// tap anywhere outside the player then turns the sound on. A visitor who
+// pauses or mutes it themselves is never overruled, and a film that has run
+// to the end stays finished. Never under reduced motion: there the poster and
+// the controls wait for a tap.
 (function () {
   var video = document.querySelector('.film-video');
   if (!video) return;
   if (matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
+  var sound = document.querySelector('.film-sound');
   var userPaused = false;
-  video.addEventListener('pause', function () { if (!video.ended && video.dataset.autoPausing !== '1') userPaused = true; });
+  var userMuted = false;
+  var autoPausing = false;
+  var autoMuting = false;
+  var forcedMute = false;
+  var finished = false;
+
+  function showSound(on) { if (sound) sound.hidden = !on; }
+  function unmute() {
+    forcedMute = false;
+    video.muted = false;
+    showSound(false);
+  }
+
+  // Pause and volume events arrive after the call that caused them, so our
+  // own calls are marked until their event has been seen.
+  video.addEventListener('pause', function () {
+    if (autoPausing) { autoPausing = false; return; }
+    if (!video.ended) userPaused = true;
+  });
+  video.addEventListener('play', function () { userPaused = false; finished = false; });
+  video.addEventListener('ended', function () { finished = true; showSound(false); });
+  video.addEventListener('volumechange', function () {
+    if (autoMuting) { autoMuting = false; return; }
+    userMuted = video.muted;
+    if (!video.muted) { forcedMute = false; showSound(false); }
+  });
+
+  function start() {
+    video.preload = 'auto';
+    var withSound = video.play();
+    if (!withSound || !withSound.catch) return;
+    withSound.catch(function (error) {
+      if (!error || error.name !== 'NotAllowedError' || userMuted) return;
+      autoMuting = !video.muted;
+      video.muted = true;
+      forcedMute = true;
+      var silent = video.play();
+      if (silent && silent.then) silent.then(function () { showSound(true); }, function () { showSound(false); });
+    });
+  }
+
+  if (sound) sound.addEventListener('click', function () {
+    unmute();
+    if (video.paused) start();
+  });
+  // The visitor's first tap or key anywhere else counts as the go-ahead for sound.
+  function gesture(event) {
+    if (!forcedMute || userMuted || video.paused) return;
+    if (event.target === video || (sound && sound.contains(event.target))) return;
+    unmute();
+  }
+  document.addEventListener('pointerdown', gesture, true);
+  document.addEventListener('keydown', gesture, true);
+
+  var thresholds = [];
+  for (var i = 0; i <= 20; i += 1) thresholds.push(i / 20);
   new IntersectionObserver(function (entries) {
-    var visible = entries[0].intersectionRatio >= 0.6;
-    if (visible && video.paused && !userPaused) {
-      video.preload = 'auto';
-      var started = video.play();
-      if (started && started.catch) started.catch(function () {});
-    } else if (!visible && !video.paused) {
-      video.dataset.autoPausing = '1';
+    var entry = entries[0];
+    var room = Math.min(entry.boundingClientRect.height, (entry.rootBounds || { height: innerHeight }).height);
+    var seen = room > 0 ? entry.intersectionRect.height / room : 0;
+    if (seen >= 0.6 && video.paused && !userPaused && !finished) {
+      start();
+    } else if (seen < 0.3 && !video.paused) {
+      autoPausing = true;
       video.pause();
-      video.dataset.autoPausing = '';
     }
-  }, { threshold: [0, 0.6] }).observe(video);
+  }, { threshold: thresholds }).observe(video);
 })();
