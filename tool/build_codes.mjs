@@ -182,7 +182,7 @@ ${officialCodeSources()}
           <a class="go" href="/#/upload" aria-describedby="preview-trust">See my free denial summary</a>
           <a class="sample" href="/sample-packet">See a sample packet first</a>
         </div>
-        <p class="sub">Free preview · $39 full packet · No subscription</p>
+        <p class="sub">Free preview · $5 full packet · No subscription</p>
       </div>
 
       <div class="related">
@@ -266,7 +266,7 @@ ${officialCodeSources()}
           <a class="go" href="/#/upload" aria-describedby="preview-trust">See my free denial summary</a>
           <a class="sample" href="/sample-packet">See a sample packet first</a>
         </div>
-        <p class="sub">Free preview · $39 full packet · No subscription</p>
+        <p class="sub">Free preview · $5 full packet · No subscription</p>
       </div>`;
   return shell({
     title: "Insurance Denial Codes Explained | GetMyYes",

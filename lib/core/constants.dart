@@ -106,16 +106,19 @@ abstract final class UsStates {
 }
 
 abstract final class Pricing {
-  static const fullPacketUsd = 39;
-  static const followUpRoundUsd = 19;
-  static const fullCaseUsd = 59;
-  static const fullCaseUpgradeUsd = 20;
+  static const fullPacketUsd = 5;
+  static const followUpRoundUsd = 5;
+  static const fullCaseUsd = 20;
+  static const fullCaseUpgradeUsd = 15;
+
+  /// Rounds the follow-up bundle adds on top of the included ones.
+  static const bundleFollowUpRounds = 5;
 
   /// Follow-up rounds included with every packet purchase.
   static const freeFollowUpRounds = 2;
 
   /// Full Case is capped — up to this many drafting rounds per case.
-  static const fullCaseRoundsCap = 10;
+  static const fullCaseRoundsCap = freeFollowUpRounds + bundleFollowUpRounds;
 }
 
 /// Compile-time switch: `flutter run --dart-define=USE_MOCKS=true` runs the

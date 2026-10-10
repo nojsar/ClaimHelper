@@ -63,7 +63,7 @@ assert.doesNotMatch(
 assert.match(home, /id=["']hero-trust["']/i, "The hero trust disclosure is required.");
 assert.match(home, /Example of your free summary/i, "The hero must show tangible product proof.");
 assert.match(home, /Preview \$0; no credit card required/i);
-assert.match(home, /Full packet \$39 or Full Case \$59/i);
+assert.match(home, /Full packet \$5 or Full Case \$20/i);
 assert.match(home, /Create an account only if you purchase/i);
 assert.doesNotMatch(home, /Start (?:my |with the )?free preview/i);
 assert.match(home, /\.faq summary::after\s*\{[^}]*Show answer \+/s);

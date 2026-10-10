@@ -55,27 +55,27 @@ export const config = {
   },
   /** Full Appeal Packet price in USD cents. */
   get fullPacketPriceCents(): number {
-    return Number(process.env.FULL_PACKET_PRICE_CENTS || 3900);
+    return Number(process.env.FULL_PACKET_PRICE_CENTS || 500);
   },
   /** One additional follow-up round, USD cents. */
   get followUpRoundPriceCents(): number {
     return Number(process.env.FOLLOWUP_ROUND_PRICE_CENTS || 500);
   },
-  /** Full Case upgrade (capped follow-up bundle), USD cents. */
+  /** Full Case: the packet plus the 5-round follow-up bundle, USD cents. */
   get fullCasePriceCents(): number {
-    return Number(process.env.FULL_CASE_PRICE_CENTS || 5900);
+    return Number(process.env.FULL_CASE_PRICE_CENTS || 2000);
   },
-  /** Difference between the $39 packet and the $59 Full Case bundle. */
+  /** The 5-round follow-up bundle bought after the $5 packet, USD cents. */
   get fullCaseUpgradePriceCents(): number {
-    return Number(process.env.FULL_CASE_UPGRADE_PRICE_CENTS || 2000);
+    return Number(process.env.FULL_CASE_UPGRADE_PRICE_CENTS || 1500);
   },
   /** Follow-up rounds included with every packet purchase. */
   get freeFollowUpRounds(): number {
     return Number(process.env.FREE_FOLLOWUP_ROUNDS || 2);
   },
-  /** Hard cap of drafting rounds granted by Full Case — never unlimited. */
+  /** Drafting rounds with Full Case: the 2 included plus the 5-round bundle. Never unlimited. */
   get fullCaseRoundsCap(): number {
-    return Number(process.env.FULL_CASE_ROUNDS_CAP || 10);
+    return Number(process.env.FULL_CASE_ROUNDS_CAP || 7);
   },
   /** Retention window granted only after a customer opts into preview reminders. */
   get reminderOptInCaseTtlDays(): number {

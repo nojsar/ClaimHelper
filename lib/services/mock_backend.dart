@@ -210,7 +210,8 @@ class MockBackend implements Backend {
         caseId,
         (c) => c.copyWith(
             paid: true,
-            pricePaid: plus ? 59 : 39,
+            pricePaid:
+                (plus ? Pricing.fullCaseUsd : Pricing.fullPacketUsd).toDouble(),
             followUpCredits: plus ? Pricing.fullCaseRoundsCap : 2,
             fullCase: plus ? true : null,
             status: CaseStatus.paid));

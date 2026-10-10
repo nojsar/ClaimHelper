@@ -1,6 +1,7 @@
 import 'package:claimhelper/models/appeal_case.dart';
 import 'package:claimhelper/models/extraction.dart';
 import 'package:claimhelper/models/guided_answers.dart';
+import 'package:claimhelper/core/constants.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -96,13 +97,13 @@ void main() {
 
   group('AppealCase.remainingFollowUps', () {
     test('keeps the legacy Full Case entitlement when credits are absent', () {
-      expect(base(paid: true, fullCase: true).remainingFollowUps, 10);
+      expect(base(paid: true, fullCase: true).remainingFollowUps,
+          Pricing.fullCaseRoundsCap);
     });
 
     test('uses an explicit credit counter when it is present', () {
       expect(
-        base(paid: true, fullCase: true, followUpCredits: 4)
-            .remainingFollowUps,
+        base(paid: true, fullCase: true, followUpCredits: 4).remainingFollowUps,
         4,
       );
     });

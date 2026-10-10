@@ -5,12 +5,13 @@ import { config } from "../config";
 import { reminderOptInExpiry } from "../reminders";
 import { Timestamp } from "firebase-admin/firestore";
 
-test("default Full Case economics are capped and the upgrade is a $20 delta", () => {
-  assert.equal(config.fullPacketPriceCents, 3900);
-  assert.equal(config.fullCasePriceCents, 5900);
-  assert.equal(config.fullCaseUpgradePriceCents, 2000);
-  assert.equal(config.fullCaseRoundsCap, 10);
+test("default economics: $5 packet, $15 for five more rounds, $5 a round", () => {
+  assert.equal(config.fullPacketPriceCents, 500);
+  assert.equal(config.fullCaseUpgradePriceCents, 1500);
+  assert.equal(config.fullCasePriceCents, config.fullPacketPriceCents + config.fullCaseUpgradePriceCents);
+  assert.equal(config.followUpRoundPriceCents, 500);
   assert.equal(config.freeFollowUpRounds, 2);
+  assert.equal(config.fullCaseRoundsCap, config.freeFollowUpRounds + 5);
 });
 
 test("default AI quality configuration uses GPT-5.6 Terra with high reasoning", () => {

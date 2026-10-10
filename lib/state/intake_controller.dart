@@ -77,6 +77,15 @@ String friendlyIntakeError(Object error) {
     r'Try again in about \d+ min\.',
   ).firstMatch(message);
   if (rateLimit != null) return rateLimit.group(0)!;
+  // The document itself is the problem (unreadable, not a denial, the wrong
+  // type, too large): the server's own sentence says what to change.
+  final document = RegExp(
+    r"(We couldn't find a health-insurance denial in that file\.[^\]]*?PDF\.)"
+    r"|(We couldn't read that document\.[^\]]*?PDF\.)"
+    r'|(Unsupported file type [^.]*\.[^\]]*?file\.)'
+    r'|(Uploaded files exceed the 45 MB combined limit\.[^\]]*?again\.)',
+  ).firstMatch(message);
+  if (document != null) return document.group(0)!;
   return 'Something went wrong. Please check your connection and retry.';
 }
 

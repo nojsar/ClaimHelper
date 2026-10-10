@@ -676,7 +676,7 @@ class _PricingTeaser extends StatelessWidget {
         children: [
           const SectionHeader(
             eyebrow: 'Simple pricing',
-            title: 'Free to preview. Choose \$39 or \$59.',
+            title: 'Free to preview. Choose \$5 or \$20.',
             subtitle:
                 'See your denial type, what\'s at stake, and your likely appeal '
                 'path before you pay a cent.',
@@ -733,7 +733,7 @@ class _PaidPriceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => const _PriceCard(
         title: 'Full appeal packet',
-        price: '\$39',
+        price: '\$${Pricing.fullPacketUsd}',
         blurb: 'Everything you need to submit.',
         features: [
           'Appeal letter draft',
@@ -752,14 +752,14 @@ class _FullCasePriceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => const _PriceCard(
         title: 'Full Case',
-        price: '\$59',
+        price: '\$${Pricing.fullCaseUsd}',
         blurb: 'Packet plus a larger follow-up bundle.',
         features: [
           'Everything in the full packet',
-          'Up to 10 follow-up drafting rounds',
+          'Up to ${Pricing.fullCaseRoundsCap} follow-up drafting rounds',
           'Second-level appeal drafts',
           'External-review request drafts',
-          '\$20 upgrade after buying the packet',
+          '\$${Pricing.fullCaseUpgradeUsd} for 5 more rounds after the packet',
         ],
         highlighted: false,
       );

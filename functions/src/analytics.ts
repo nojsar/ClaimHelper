@@ -1353,7 +1353,7 @@ export const recordCaseTierSelection = onCall({ invoker: "public" }, async (requ
 
 /**
  * Record a settled payment/refund once on its purchase document. Keeping the
- * idempotency marker beside the Stripe purchase means repeat $19 follow-up
+ * idempotency marker beside the Stripe purchase means repeat $5 follow-up
  * purchases remain countable while webhook retries cannot inflate revenue.
  * Unlike non-financial product analytics, a storage failure deliberately
  * propagates: the entitlement transaction has already committed, and Stripe's

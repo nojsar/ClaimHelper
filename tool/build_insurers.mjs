@@ -191,7 +191,7 @@ ${entry.faq.map((f) => `      <h3>${esc(f.q)}</h3>\n      <p>${esc(f.a)}</p>`).j
           <a class="go" href="/#/upload" aria-describedby="preview-trust">See my free denial summary</a>
           <a class="sample" href="/sample-packet">See a sample packet first</a>
         </div>
-        <p class="sub">Free preview · $39 full packet · No subscription</p>
+        <p class="sub">Free preview · $5 full packet · No subscription</p>
       </div>
 
       <div class="related">
@@ -256,7 +256,7 @@ ${rows}
           <a class="go" href="/#/upload" aria-describedby="preview-trust">See my free denial summary</a>
           <a class="sample" href="/sample-packet">See a sample packet first</a>
         </div>
-        <p class="sub">Free preview · $39 full packet · No subscription</p>
+        <p class="sub">Free preview · $5 full packet · No subscription</p>
       </div>`;
   return shell({
     title: "Appeal a Denial by Insurer | GetMyYes",

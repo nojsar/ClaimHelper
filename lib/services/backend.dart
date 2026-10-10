@@ -94,7 +94,7 @@ abstract class Backend {
       String caseId, DenialExtraction current);
 
   /// Returns a checkout URL to redirect to (web) — null when mocked/paid.
-  /// kind: 'packet' ($39) or 'packet_plus' ($59 packet + capped follow-ups).
+  /// kind: 'packet' ($5) or 'packet_plus' ($20: packet + 5 more follow-up rounds).
   Future<String?> createCheckoutSession(String caseId,
       {String kind = 'packet'});
 

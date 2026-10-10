@@ -101,7 +101,7 @@ export function boundedPriorRoundsContext(rounds: unknown[]): string {
 /**
  * Continues a paid case after the insurer responds (or doesn't). Every packet
  * purchase includes config.freeFollowUpRounds rounds; extra rounds come from
- * the $19 round purchase or the Full Case upgrade (capped, not unlimited).
+ * the $5 round purchase or the Full Case upgrade (capped, not unlimited).
  */
 export const generateFollowUp = onCall(
   { secrets: [openaiApiKey], timeoutSeconds: 300, invoker: "public" },

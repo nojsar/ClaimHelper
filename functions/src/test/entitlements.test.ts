@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import test from "node:test";
 
+import { config } from "../config";
 import { remainingFollowUpCredits } from "../entitlements";
 
 test("legacy Full Case records reconstruct their capped remaining credits", () => {
@@ -10,7 +11,7 @@ test("legacy Full Case records reconstruct their capped remaining credits", () =
     fullCase: true,
     followUpCredits: undefined,
     followUps: Array.from({ length: 3 }),
-  }), 7);
+  }), config.fullCaseRoundsCap - 3);
   assert.equal(remainingFollowUpCredits({
     fullCase: true,
     followUpCredits: undefined,

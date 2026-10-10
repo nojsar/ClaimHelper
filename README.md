@@ -222,7 +222,7 @@ Deployed functions:
 | `extractDenialFromUploadedFile` | callable | Sends uploaded PDFs/images to OpenAI Responses API; stores structured extraction; enforces a bounded hourly allowance. |
 | `generateFreePreview` | callable | Free-tier summary, amount at stake, likely appeal path. |
 | `saveGuidedAnswers` | callable | Persists guided-question answers. |
-| `createCheckoutSession` | callable | Starts $39 Stripe Checkout for web. |
+| `createCheckoutSession` | callable | Starts $5 (or $20 Full Case) Stripe Checkout for web. |
 | `stripeWebhook` | HTTP | Verifies signature; the only path that sets `paid=true`. |
 | `generateAppealPacket` | callable | Paid: drafts the full packet (entitlement enforced server-side). |
 | `fulfillPaidPacket` | Firestore trigger | Starts packet generation after verified payment grants entitlement. |
@@ -271,11 +271,11 @@ Implementation notes (`functions/src/openai/`):
 | `STRIPE_SECRET_KEY` | secret | `sk_test_...` in dev. |
 | `STRIPE_WEBHOOK_SECRET` | secret | `whsec_...` from the webhook endpoint. |
 | `APP_BASE_URL` | env | Used to build Checkout success/cancel URLs. |
-| `FULL_PACKET_PRICE_CENTS` | env | Defaults to `3900` ($39). |
-| `FULL_CASE_PRICE_CENTS` | env | Defaults to `5900` ($59 total). |
-| `FULL_CASE_UPGRADE_PRICE_CENTS` | env | Defaults to `2000` ($20 after a packet purchase). |
-| `FULL_CASE_ROUNDS_CAP` | env | Defaults to `10` follow-up drafting rounds. |
-| `FOLLOWUP_ROUND_PRICE_CENTS` | env | Defaults to `1900` ($19 per additional round). |
+| `FULL_PACKET_PRICE_CENTS` | env | Defaults to `500` ($5). |
+| `FULL_CASE_PRICE_CENTS` | env | Defaults to `2000` ($20 total). |
+| `FULL_CASE_UPGRADE_PRICE_CENTS` | env | Defaults to `1500` ($15 for five more rounds after a packet purchase). |
+| `FULL_CASE_ROUNDS_CAP` | env | Defaults to `7` follow-up drafting rounds (2 included + 5 in the bundle). |
+| `FOLLOWUP_ROUND_PRICE_CENTS` | env | Defaults to `500` ($5 per additional round). |
 
 Set up the webhook:
 

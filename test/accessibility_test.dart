@@ -352,7 +352,7 @@ void main() {
       isTrue,
     );
     final packetTier = tester
-        .getSemantics(find.bySemanticsLabel(r'Full Appeal Packet, $39'))
+        .getSemantics(find.bySemanticsLabel(r'Full Appeal Packet, $5'))
         .getSemanticsData();
     expect(packetTier.flagsCollection.isButton, isTrue);
     expect(packetTier.flagsCollection.isSelected, Tristate.isTrue);

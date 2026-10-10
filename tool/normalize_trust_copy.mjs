@@ -12,8 +12,8 @@ const replacements = [
   ["Start with the free preview", "See my free denial summary"],
   ["Start free preview", "See my free denial summary"],
   [
-    "FREE PREVIEW · $39 FULL PACKET · NO SUBSCRIPTION. EVER.",
-    "Free preview · $39 full packet · No subscription",
+    "FREE PREVIEW · $5 FULL PACKET · NO SUBSCRIPTION. EVER.",
+    "Free preview · $5 full packet · No subscription",
   ],
 ];
 const retiredTone =

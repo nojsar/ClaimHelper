@@ -27,6 +27,11 @@ import { consumeUidHourlyRateLimit } from "./rate_limit";
 
 /** Responses API allows up to 50 MB combined per request. */
 const MAX_TOTAL_BYTES = 45 * 1024 * 1024;
+/** Shown when no denial can be read from the upload. */
+export const UNREADABLE_DOCUMENT =
+  "We couldn't find a health-insurance denial in that file. Try a clearer " +
+  "photo that shows every page, or the original PDF.";
+
 /** Matches the free-preview allowance while still permitting several cases. */
 const MAX_EXTRACTIONS_PER_HOUR = 5;
 
@@ -183,7 +188,17 @@ export const extractDenialFromUploadedFile = onCall(
         maxOutputTokens: 12000,
         excludeUsageAnalytics: isAdminAnalyticsUid(uid),
       });
-      const extraction = parseEditableExtraction(modelExtraction);
+      let extraction: Record<string, unknown>;
+      try {
+        extraction = parseEditableExtraction(modelExtraction);
+      } catch (err) {
+        // The model could not name a document type or denial reason: the
+        // file is unreadable or is not a denial. Say that, in plain words.
+        if (err instanceof HttpsError && err.code === "invalid-argument") {
+          throw new HttpsError("invalid-argument", UNREADABLE_DOCUMENT);
+        }
+        throw err;
+      }
       const finalized = await finalizeGenerationLease(snap.ref, lease, {
         extraction,
         sourceFilePaths: filePaths,

@@ -27,7 +27,7 @@ launches flagged and accounts banned).
 - Topics: Health & Fitness · Artificial Intelligence · Web App
 - Description (≤260 chars):
 
-> Upload a denial letter. GetMyYes reads the codes, fine print, and deadlines, then drafts your appeal letter, evidence checklist, doctor letter request, and call script. Free preview, $39 for the full packet. No subscription, no cookies, no data resale.
+> Upload a denial letter. GetMyYes reads the codes, fine print, and deadlines, then drafts your appeal letter, evidence checklist, doctor letter request, and call script. Free preview, $5 for the full packet. No subscription, no cookies, no data resale.
 
 **First comment (maker story — post immediately after launch):**
 
@@ -37,7 +37,7 @@ launches flagged and accounts banned).
 >
 > GetMyYes reads the actual denial letter — the CARC codes, the "not medically necessary" rationale, the appeal deadline — and drafts the whole response packet: appeal letter, evidence checklist, a letter request for your doctor, and a call script. You review everything before anything is sent; it's a drafting assistant, not a robo-lawyer.
 >
-> Things I cared about: free preview before any payment ($39 one-time, no subscription), no analytics cookies, self-hosted everything, delete-your-account button that actually deletes. There's also a free layer with no signup: plain-English appeal guides, a denial-code decoder, and a deadline calculator.
+> Things I cared about: free preview before any payment ($5 one-time, no subscription), no analytics cookies, self-hosted everything, delete-your-account button that actually deletes. There's also a free layer with no signup: plain-English appeal guides, a denial-code decoder, and a deadline calculator.
 >
 > I'd love blunt feedback — especially from anyone who's fought a denial themselves. AMA all day.
 
@@ -73,7 +73,7 @@ Show HN: Turn a health-insurance denial letter into a ready-to-send appeal
 >
 > Stack notes for the curious: Flutter web + Firebase (functions do the LLM calls; the app ships with a full mock mode), Stripe for one-time payments (no subscription), first-party cookie-less analytics, and all marketing pages are static HTML generated from reviewed datasets in the repo — no CMS. The privacy posture is strict by design (health-adjacent data): no third-party assets anywhere, no trackers, account deletion actually deletes.
 >
-> Free tier needs no signup: plain-English appeal guides, a CARC denial-code decoder, and an appeal-deadline calculator. The paid packet is $39 one-time with a free preview.
+> Free tier needs no signup: plain-English appeal guides, a CARC denial-code decoder, and an appeal-deadline calculator. The paid packet is $5 one-time with a free preview.
 >
 > Honest limitations: US plans only; it's a drafting assistant, not legal advice; success depends on the underlying clinical facts. Happy to answer anything about the appeal-rules research or the build.
 

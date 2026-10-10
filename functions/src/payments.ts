@@ -289,7 +289,7 @@ export const createCheckoutSession = onCall(
     const active = activeCheckout(snap.get("activeCheckout"));
     // A refresh/double-click returns the existing session rather than opening
     // another payable checkout. Other product kinds remain available for a
-    // legitimate packet → $20 Full Case upgrade.
+    // legitimate packet → $15 Full Case upgrade (five more rounds).
     if (active?.kind === kind && active.expiresAt > nowSeconds) {
       let existing: Stripe.Checkout.Session | null = null;
       try {
@@ -593,7 +593,7 @@ async function handleCompletedCheckout(session: Stripe.Checkout.Session): Promis
     const isInitialPurchase = kind === "packet" || kind === "packet_plus";
     const duplicate =
       // A packet_plus session completing after a packet is already paid is not
-      // an upgrade: the only supported upgrade is the $20 full_case product.
+      // an upgrade: the only supported upgrade is the $15 full_case product.
       (isInitialPurchase && caseSnap.get("paid") === true) ||
       // packet_plus already includes Full Case, so any later upgrade session
       // is also a duplicate even when it predates this schema marker.
