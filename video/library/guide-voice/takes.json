@@ -1,0 +1,19 @@
+{
+  "note": "One ElevenLabs take per guide (eleven_v4, Carolyn - Warm Grounded Narrator, 4rgssJ1pg3E9c0U78Iid), generated 2026-10-10 from scripts.json. flow/session identify the take; the audio is saved as <id>.mp3 beside this file and cut into lines by tool/guide_voice.mjs.",
+  "takes": {
+    "appeal-step-by-step": { "flow": "Bdnv6ako6WDB4Cq1WWVi", "session": "tpR5ERq8uOACijMBR54y", "credits": 189 },
+    "appeal-letter-template": { "flow": "zL9s5VGATP4c0OAxW3B0", "session": "n8cY1NG2nriqJ6WCIcVO", "credits": 175 },
+    "medical-necessity": { "flow": "c0opOIhulNh4xpwhEPL6", "session": "445nYxWczxKjt6r6XMN3", "credits": 187 },
+    "prior-authorization": { "flow": "8EXkpBUOXFaaMeN7nIM5", "session": "UIJqdSTvwkisWxsv4HwS", "credits": 185 },
+    "step-therapy": { "flow": "zRUKttlaXWb9KswW1yws", "session": "qY29UK2GDKs6BEiTXjJB", "credits": 189 },
+    "formulary-exclusion": { "flow": "GVowMOvc8kFaJW47cIHF", "session": "f6MkQjxmRFG7X22VQPtZ", "credits": 184 },
+    "out-of-network": { "flow": "24Hl1VDfgG4BF7fo4wlL", "session": "dMALWW46PCY1P27NrMNo", "credits": 180 },
+    "experimental-denial": { "flow": "UmrD4tFGHSmIwt4BT5Mr", "session": "eZLCiwFc4Ixx7O79nfwk", "credits": 198 },
+    "external-review": { "flow": "SEx6SOZuNHfcjAYAYbBp", "session": "DFBYQiF8mOYD58CFMmNT", "credits": 185 },
+    "er-denial": { "flow": "5M22ma7CS5ycprV0aQcI", "session": "x50dU4fQW0MMDL6T5I0e", "credits": 188 },
+    "mental-health-parity": { "flow": "4liE1hOHOrHddHo8BJWE", "session": "yQZUryYsM7VWnP7yTx5X", "credits": 212 },
+    "california-imr": { "flow": "W4NGKpbUao7gj7oi72ht", "session": "b3uh2k1zRbNQYhk1wUjt", "credits": 197 },
+    "glp1-denial": { "flow": "siPyk7afWJYEe4MGT67u", "session": "ccQcCc3oYih0GGH4qiOJ", "credits": 189 },
+    "imaging-denial": { "flow": "BXZy553qmtS1SsrtvEDZ", "session": "jH11ExEQepMZNQKbdsIH", "credits": 177 }
+  }
+}

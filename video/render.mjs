@@ -4,7 +4,7 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { bundle } from "@remotion/bundler";
 import { ensureBrowser, renderMedia, renderStill, selectComposition } from "@remotion/renderer";
-import { FORMATS, musicFile, posterFile, sync, videoFile } from "../tool/social_video.mjs";
+import { FORMATS, posterFile, sync, videoFile } from "../tool/social_video.mjs";
 
 /**
  * Renders the marketing autopilot's social media with Remotion.
@@ -53,8 +53,8 @@ async function inputsChangedAt(guide) {
   const srcDir = path.join(here, "src");
   // queue.json is regenerated on every run, so its mtime always looks newer;
   // what it is derived FROM (posts.json and the guide page) is checked instead.
-  const sources = (await readdir(srcDir))
-    .filter((name) => name !== "queue.json")
+  const sources = (await readdir(srcDir, { recursive: true }))
+    .filter((name) => name !== "queue.json" && /\.(tsx?|json)$/.test(name))
     .map((name) => path.join(srcDir, name));
   const times = await Promise.all(
     [
@@ -64,7 +64,9 @@ async function inputsChangedAt(guide) {
       path.join(projectRoot, "marketing", "posts.json"),
       path.join(projectRoot, "web", "appeals", `${guide.slug}.html`),
       path.join(here, "library", "sfx.json"),
-      await musicFile(guide.id),
+      path.join(here, "library", "guide-voice", `${guide.id}.mp3`),
+      path.join(here, "library", "guide-voice", "lines.json"),
+      guide.score ? path.join(here, "library", guide.score) : null,
     ]
       .filter(Boolean)
       .map(mtime),
@@ -157,6 +159,12 @@ if (args.includes("--dawn-ad")) {
   process.exit(0);
 }
 
+// New narration takes are cut into their lines before the model is built.
+{
+  const { spawnSync } = await import("node:child_process");
+  const cutVoice = spawnSync(process.execPath, [path.join(projectRoot, "tool", "guide_voice.mjs")], { stdio: "inherit" });
+  if (cutVoice.status !== 0) throw new Error("tool/guide_voice.mjs failed");
+}
 const guides = (await sync()).filter((guide) => !only || guide.id === only);
 if (!guides.length) throw new Error(only ? `No queue entry with id ${only}.` : "The post queue is empty.");
 await mkdir(mediaRoot, { recursive: true });
@@ -181,7 +189,7 @@ for (const guide of guides) {
     else upToDate += 1;
   }
 
-  // A still from the last frame: the fully settled card. It stands in wherever
+  // A still of the risen title: the cover networks show, and the image wherever
   // a network takes an image but not a video. It is cut from the square
   // composition, so --format vertical leaves it alone.
   if (formats.includes("square")) {
@@ -202,6 +210,8 @@ if (!jobs.length) {
 const browserExecutable = process.env.REMOTION_BROWSER_EXECUTABLE || null;
 if (!browserExecutable) await ensureBrowser();
 
+// The posts draw the homepage's dawn shader, so the browser needs WebGL.
+const chromiumOptions = { gl: process.env.REMOTION_GL || "angle" };
 console.log(`[social-video] Bundling the Remotion project for ${jobs.length} file(s)...`);
 const serveUrl = await bundle({
   entryPoint: path.join(here, "src", "index.ts"),
@@ -214,18 +224,27 @@ const live = process.stdout.isTTY;
 
 for (const job of jobs) {
   const label = `${job.guide.id} ${job.still ? "poster" : job.format}`;
+  // The poster is drawn without the falling letter, which would otherwise be
+  // crossing the title at that moment.
+  const inputProps = job.still ? { cover: true } : {};
   const composition = await selectComposition({
     serveUrl,
     id: `${job.guide.id}-${job.format}`,
     browserExecutable,
+    chromiumOptions,
+    inputProps,
   });
 
   if (job.still) {
+    // The hook: the guide's title risen over the night sea. Networks show it
+    // as the cover, so it should be the frame that makes someone stop.
     await renderStill({
       composition,
       serveUrl,
       browserExecutable,
-      frame: composition.durationInFrames - 1,
+      chromiumOptions,
+      inputProps,
+      frame: Math.round(2.2 * composition.fps),
       imageFormat: "png",
       output: job.output,
     });
@@ -238,6 +257,7 @@ for (const job of jobs) {
     composition,
     serveUrl,
     browserExecutable,
+    chromiumOptions,
     codec: "h264",
     crf: 16,
     imageFormat: "png",

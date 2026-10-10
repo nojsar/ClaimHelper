@@ -1,0 +1,32 @@
+{
+  "note": "Score for the guide posts: four passages of one track, chosen by the owner for the ad. Each guide uses one passage (picked by a hash of its id); the post ducks it 18 dB under the voice and 12 dB in the gaps.",
+  "source": "https://assets.mixkit.co/music/566/566.mp3",
+  "title": "Daniel & Me",
+  "license": "Mixkit Stock Music Free License (https://mixkit.co/license/#musicFree)",
+  "passages": [
+    {
+      "file": "guide-voice/score-1.mp3",
+      "sourceStart": 1.0,
+      "length": 24.0,
+      "gainDb": -4.44
+    },
+    {
+      "file": "guide-voice/score-2.mp3",
+      "sourceStart": 34.0,
+      "length": 24.0,
+      "gainDb": -0.52
+    },
+    {
+      "file": "guide-voice/score-3.mp3",
+      "sourceStart": 66.0,
+      "length": 24.0,
+      "gainDb": -7.05
+    },
+    {
+      "file": "guide-voice/score-4.mp3",
+      "sourceStart": 118.0,
+      "length": 24.0,
+      "gainDb": -5.98
+    }
+  ]
+}

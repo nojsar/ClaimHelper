@@ -8,7 +8,7 @@ This is intentionally a small, durable acquisition system—not a mass-content o
 - Search engines can discover the guide hub from the homepage and every guide from the sitemap.
 - After a successful deploy, the script submits all sitemap URLs to IndexNow so participating search engines can recrawl changes. Google still uses the sitemap and Search Console.
 - GitHub Actions can publish one useful evergreen guide each Monday, Wednesday, and Friday to every network whose secrets are configured: Bluesky, Mastodon, X, Threads, LinkedIn, Facebook, Instagram, and YouTube (as a Short). Each network is offset through the queue so they post different guides on the same day, every post carries campaign tags, and a network with missing secrets is skipped with a log line instead of failing the run (`tool/post_all.mjs`).
-- Every post's media is a branded 12-second, 60fps motion video rendered from the guide itself with Remotion (`video/`, output committed to `web/media/social/`), scored with a licensed music excerpt matched to the guide's mood and sound effects timed to the animation. Instagram and YouTube get the vertical reel; Facebook, Mastodon, X, and Bluesky get the square cut. Threads and LinkedIn are unchanged.
+- Every post's media is a narrated, 60fps dawn-print motion video (about 15 seconds) rendered from the guide itself with Remotion (`video/`, output committed to `web/media/social/`): the homepage's woodblock-print look, a voice-over reading the guide's title and summary, a quiet licensed score ducked under the voice, and sound effects timed to the animation. Instagram and YouTube get the vertical reel; Facebook, Mastodon, X, and Bluesky get the square cut. Threads and LinkedIn are unchanged.
 - The private owner dashboard at `https://getmyyes.com/#/stats` reports visits, funnel conversion, top pages/referrers/countries, revenue, and campaign traffic without analytics cookies.
 
 ## One-time setup: search
@@ -150,11 +150,19 @@ TikTok is deliberately not automated: its API keeps every post private until the
 
 Post media is rendered by Remotion from the guide library itself — the headline is the guide's own `og:title`, the body line is its entry in `marketing/posts.json`, and the fixed lines live in `STATIC_COPY` in `tool/social_video.mjs`. Nothing is written at post time.
 
+Every guide video is the homepage's dawn print, in motion (`video/src/guide/DawnGuide.tsx`): a night sky with the title rising, a letter falling and unfolding while the plain-English lens prints the summary line by line, the letter folding into a paper plane that flies off as the sun comes up, then the end card. The scenes are timed to the guide's voice-over, so the length follows the narration.
+
+The voice-over reads `video/library/guide-voice/scripts.json`: the guide's title, its summary, and the closing line. Each take is one ElevenLabs generation (eleven_v4, the Carolyn voice the dawn ad uses), saved as `video/library/guide-voice/<id>.mp3` and logged in `takes.json`. `tool/guide_voice.mjs` cuts each take into its three lines at the pauses nearest where the script says they should fall (`lines.json`); the render runs it first, and `node tool/guide_voice.mjs --check` lists guides that still need a take. A guide without one still renders, on fixed timing with no voice, so add the take before its first posting slot.
+
 When adding or renaming a guide, after the OG cards:
+
+1. Add its entry to `video/library/guide-voice/scripts.json` (title with no dashes, the summary from `marketing/posts.json`, then "Read the free guide at getmyyes.com.").
+2. Generate the take with the ElevenLabs connector using the same voice and model, and save it as `video/library/guide-voice/<id>.mp3`; record the flow and session in `takes.json`.
+3. Render:
 
 ```bash
 npm --prefix video install          # first time only
-node tool/render_social_video.mjs   # renders whatever is out of date
+node tool/render_social_video.mjs   # cuts new takes, renders whatever is out of date
 ```
 
 Commit the resulting `web/media/social/<id>-{square,vertical}.mp4` and `<id>-poster.png`, then **deploy hosting** — Instagram and Facebook fetch the file from the live site by URL, so an undeployed render is simply not used yet. `node tool/social_video.mjs --check` fails the workflow when a queue post has no render; the posters themselves fall back rather than skip a slot:
@@ -192,9 +200,9 @@ Remotion is free for individuals and companies of up to three people; larger com
 
 ### Music and sound effects
 
-Each video is scored with a 12.6-second excerpt from a library of 50 Mixkit tracks (`video/library/music/`, catalogued with source, excerpt start, and gain in `video/library/music.json`) plus eleven Mixkit sound effects (`video/library/sfx/`, `sfx.json`). The library was chosen for calm, hopeful, instrumental moods; anything tagged sad, dark, dramatic, or similar, and anything likely to have vocals, was left out. Each excerpt starts where its track is steady and has a musical accent as the letter lands, and is loudness-matched so every guide sounds equally loud.
+The guide videos share the dawn ad's score, Mixkit's "Daniel & Me" (chosen by the owner), cut into four 24-second passages (`video/library/guide-voice/score-{1..4}.mp3`, catalogued in `score.json`). Each guide gets one passage by a hash of its id. The score is quiet on purpose: it sits 18 dB under the voice while she speaks and 12 dB under it in the gaps, with short ramps between. Four soft Mixkit sound effects (`video/library/sfx/`, `sfx.json`) mark the letter, the lens, the plane, and the end card.
 
-`MUSIC_MOOD` in `tool/social_video.mjs` gives each guide a temperament (gentle, hopeful, or steady); the sync step assigns it an unused track of that mood once and records it in `video/library/assignments.json`, which only ever grows, so a new guide never reshuffles the others. The cues in `video/src/Soundtrack.tsx` read their times from the animation's storyboard.
+The 50-track library (`video/library/music/`, `music.json`, `MUSIC_MOOD` and `assignments.json`) scored the earlier 12-second cards. It is kept, and assignments still grow, but the guide videos no longer use it.
 
 Licence (Mixkit Stock Music Free License / Sound Effects Free License): fine in social posts, YouTube videos, and ads, commercially, with no attribution. Not allowed: redistributing the files on their own, registering them with Content ID or any rights service, or remixing the music into a music-only track. That is why the library lives in `video/` (committed, never deployed) and only finished videos are served.
 
@@ -202,7 +210,7 @@ No generated music, ever: the owner rejected synthesised scores. Change the libr
 
 ### One-off posts
 
-`marketing/one-off.json` holds posts that go out once, by hand, never on the schedule (the first is `intro-film`, the narrated product film from the homepage). To publish one: Actions → Marketing autopilot → Run workflow, untick **dry_run**, and enter its id in **one_off**. Every network then posts it instead of the day's guide, with its own media and alt text, its own `utm_campaign`, and its own tag (so Bluesky's guide spacing ignores it). Each poster stops if the one-off's text is already on that account, so a second dispatch is safe. With `requireVideo`, a network that cannot attach the video (Mastodon without `write:media`, Bluesky with an unverified email, X without credits, Threads, LinkedIn) skips instead of posting a bare link, so dispatching again after fixing that account fills it in. On YouTube it is declared as altered or synthetic content, because the film has generated stills and narration. Dry runs validate every one-off's length on every network, so an over-long entry fails the scheduled preview first.
+`marketing/one-off.json` holds posts that go out once, by hand, never on the schedule (the first is `intro-film`, the narrated product film from the homepage). To publish one: Actions → Marketing autopilot → Run workflow, untick **dry_run**, and enter its id in **one_off**. Every network then posts it instead of the day's guide, with its own media and alt text, its own `utm_campaign`, and its own tag (so Bluesky's guide spacing ignores it). Each poster stops if the one-off's text is already on that account, so a second dispatch is safe. With `requireVideo`, a network that cannot attach the video (Mastodon without `write:media`, Bluesky with an unverified email, X without credits, Threads, LinkedIn) skips instead of posting a bare link, so dispatching again after fixing that account fills it in. On YouTube it is declared as altered or synthetic content, because the film has generated stills and narration. Guide Shorts are declared the same way once they carry their generated voice-over. Dry runs validate every one-off's length on every network, so an over-long entry fails the scheduled preview first.
 
 ## Normal deploy
 

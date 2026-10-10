@@ -102,11 +102,19 @@ async function assignMusic(guides) {
   return assigned;
 }
 
-/** The excerpt a guide's video is scored with, for render staleness checks. */
-export async function musicFile(id) {
-  const assigned = await readJson(path.join(libraryRoot, "assignments.json"), {});
-  return assigned[id] ? path.join(libraryRoot, "music", `${assigned[id]}.mp3`) : null;
+/**
+ * Whether a guide's video carries its generated voice-over
+ * (video/library/guide-voice/<id>.mp3, an ElevenLabs take; see takes.json).
+ */
+export async function narrated(id) {
+  try {
+    await stat(path.join(libraryRoot, "guide-voice", `${id}.mp3`));
+    return true;
+  } catch {
+    return false;
+  }
 }
+
 const siteOrigin = "https://getmyyes.com";
 
 /**
@@ -224,26 +232,38 @@ export async function readPoster(id, format = "square") {
  * animation shows, so a screen-reader user is not told less than a viewer.
  */
 export function altText(title, summary, post) {
-  // A one-off carries its own description, because it is not the guide card.
+  // A one-off carries its own description, because it is not a guide post.
   if (post?.alt) return post.alt;
   return (
-    `A GetMyYes appeal guide: ${title}. ${summary} ` +
-    "Animation: a denial letter is scanned, its reason lifts into a plain-English " +
-    "summary, and the summary branches to three next steps: an appeal letter, a " +
-    "deadline, and an independent review."
+    `A narrated GetMyYes appeal guide: ${title}. ${summary} ` +
+    "Animation in a woodblock-print style: at night a folded letter drifts down over a calm sea, " +
+    "unfolds, and a glass lens prints the summary on it in plain English; then the letter folds " +
+    "into a paper plane and flies into the sunrise, ending on: Read the free guide at getmyyes.com/appeals."
   );
 }
 
 /** One entry per queue post, or null for guides whose page has no OG tags. */
 export async function videoModel() {
   const guides = [];
+  const voiceLines = await readJson(path.join(libraryRoot, "guide-voice", "lines.json"), {});
+  const { passages = [] } = await readJson(path.join(libraryRoot, "guide-voice", "score.json"), {});
   for (const post of posts) {
     const meta = await guideMeta(post);
     if (!meta) {
       console.warn(`[social-video] ${post.id}: no OG metadata on its guide page; skipping.`);
       continue;
     }
-    guides.push({ id: post.id, slug: slugOf(post), title: meta.title, summary: post.text });
+    // The narration (tool/guide_voice.mjs) and one of the score's passages;
+    // a guide without its take yet renders with silent narration.
+    const take = voiceLines[post.id];
+    guides.push({
+      id: post.id,
+      slug: slugOf(post),
+      title: meta.title,
+      summary: post.text,
+      voice: take ? { file: take.file, lines: take.lines } : null,
+      score: passages.length ? passages[hash(post.id) % passages.length].file : null,
+    });
   }
   return guides;
 }
@@ -269,7 +289,7 @@ export async function sync() {
   }
   // The product film's stills, app captures and score, and the dawn ad's
   // narration and score.
-  for (const kind of ["stills", "film", "dawn-ad"]) {
+  for (const kind of ["stills", "film", "dawn-ad", "guide-voice"]) {
     await cp(path.join(libraryRoot, kind), path.join(videoRoot, "public", kind), { recursive: true });
   }
   const music = await assignMusic(guides);

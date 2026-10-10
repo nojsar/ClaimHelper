@@ -10,7 +10,7 @@ import {
   postForDay,
   previewAndExit,
 } from "./social_core.mjs";
-import { readVideo } from "./social_video.mjs";
+import { narrated, readVideo } from "./social_video.mjs";
 
 // YouTube poster: the day's guide as a Short, the Remotion vertical reel with
 // its licensed soundtrack, uploaded through the Data API v3 resumable upload.
@@ -111,9 +111,9 @@ const session = await fetch(`${UPLOAD}?uploadType=resumable&part=snippet,status`
     status: {
       privacyStatus: "public",
       selfDeclaredMadeForKids: false,
-      // A guide is an animated explainer card, not realistic synthetic media.
-      // A one-off says for itself (the film has generated stills and voice).
-      containsSyntheticMedia: Boolean(post.syntheticMedia),
+      // A one-off says for itself (the film has generated stills and voice);
+      // a guide is declared once it is narrated, the voice being generated.
+      containsSyntheticMedia: Boolean(post.syntheticMedia) || (await narrated(post.id)),
     },
   }),
 });

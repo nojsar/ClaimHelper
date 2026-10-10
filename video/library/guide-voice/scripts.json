@@ -1,0 +1,48 @@
+{
+  "note": "Voiceover scripts for the guide posts, built only from reviewed copy: the guide's og:title, its one-line summary from marketing/posts.json, and one fixed closing line. A title's em or en dash becomes a comma so the voice reads it as a pause.",
+  "closing": "Read the free guide at getmyyes.com.",
+  "guides": {
+    "appeal-step-by-step": {
+      "script": "How to Appeal a Health Insurance Denial, Step-by-Step.\n\nDenied by health insurance? Map the evidence, deadlines, internal appeal, and next review step.\n\nRead the free guide at getmyyes.com."
+    },
+    "appeal-letter-template": {
+      "script": "Free Health Insurance Appeal Letter Template.\n\nA free fill-in insurance appeal letter, plus what to attach and how to prove you filed it.\n\nRead the free guide at getmyyes.com."
+    },
+    "medical-necessity": {
+      "script": "How to Appeal a 'Not Medically Necessary' Denial.\n\n“Not medically necessary”? Ask which clinical criterion was not met, then answer it with evidence.\n\nRead the free guide at getmyyes.com."
+    },
+    "prior-authorization": {
+      "script": "How to Appeal a Prior Authorization Denial.\n\nPrior-auth denials can be administrative, clinical, or step-therapy related. Identify which one first.\n\nRead the free guide at getmyyes.com."
+    },
+    "step-therapy": {
+      "script": "Step Therapy Denial? How to Get an Exception.\n\n“Try the cheaper drug first” may allow exceptions for prior failures, contraindications, or likely harm.\n\nRead the free guide at getmyyes.com."
+    },
+    "formulary-exclusion": {
+      "script": "Drug Not on Formulary? How to Get an Exception.\n\nA formulary exception usually must address each covered alternative. Organize the evidence first.\n\nRead the free guide at getmyyes.com."
+    },
+    "out-of-network": {
+      "script": "How to Appeal an Out-of-Network Denial.\n\nOut-of-network denials can involve emergency care, network gaps, or billing. Identify the rule first.\n\nRead the free guide at getmyyes.com."
+    },
+    "experimental-denial": {
+      "script": "How to Appeal an “Experimental or Investigational” Denial.\n\nCalled “experimental”? Request the exact policy and evidence cutoff, then compare your record to it.\n\nRead the free guide at getmyyes.com."
+    },
+    "external-review": {
+      "script": "External Review of a Health Insurance Denial.\n\nInternal appeal denied? An independent external review may be next. Check eligibility and deadlines.\n\nRead the free guide at getmyyes.com."
+    },
+    "er-denial": {
+      "script": "ER Denied as \"Not an Emergency\"? How to Appeal.\n\nER denied as “not an emergency”? Coverage is judged by symptoms at the door, not the final diagnosis.\n\nRead the free guide at getmyyes.com."
+    },
+    "mental-health-parity": {
+      "script": "Therapy or Mental Health Treatment Denied? Parity Rules Help You Appeal.\n\nTherapy denied? Federal parity law limits how much stricter mental health rules can be than medical.\n\nRead the free guide at getmyyes.com."
+    },
+    "california-imr": {
+      "script": "How to Appeal a Health Insurance Denial in California.\n\nDenied in California? Free Independent Medical Review has overturned many denials — here's how to file.\n\nRead the free guide at getmyyes.com."
+    },
+    "glp1-denial": {
+      "script": "GLP-1 Denied? Exclusion or Prior Authorization.\n\nGLP-1 denied? Check whether it is a plan exclusion or a criteria review — they need different appeals.\n\nRead the free guide at getmyyes.com."
+    },
+    "imaging-denial": {
+      "script": "MRI or CT Denied? Start With the Peer-to-Peer.\n\nMRI or CT denied? The fastest route back is usually a peer-to-peer your doctor can request.\n\nRead the free guide at getmyyes.com."
+    }
+  }
+}

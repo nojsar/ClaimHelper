@@ -1,7 +1,7 @@
 import React from "react";
 import { Composition } from "remotion";
-import { DURATION_IN_FRAMES, FPS, Format, LAYOUTS } from "./brand";
-import { GuidePost } from "./GuidePost";
+import { FPS, Format, LAYOUTS } from "./brand";
+import { DawnGuide, guideTiming } from "./guide/DawnGuide";
 import { FILM_SECONDS, ProductFilm } from "./film/ProductFilm";
 import { DAWN_AD_SECONDS, DawnAd } from "./ad/DawnAd";
 import queue from "./queue.json";
@@ -52,13 +52,15 @@ export const RemotionRoot: React.FC = () => (
       height={1080}
       defaultProps={{ format: "landscape" as const }}
     />
+    {/* One post per guide per format, in the dawn-print style, each as
+        long as its own narration needs. */}
     {queue.guides.flatMap((guide) =>
       (Object.keys(LAYOUTS) as Format[]).map((format) => (
         <Composition
           key={`${guide.id}-${format}`}
           id={`${guide.id}-${format}`}
-          component={GuidePost}
-          durationInFrames={DURATION_IN_FRAMES}
+          component={DawnGuide}
+          durationInFrames={guideTiming(guide.voice ?? null).frames}
           fps={FPS}
           width={LAYOUTS[format].width}
           height={LAYOUTS[format].height}
@@ -66,11 +68,8 @@ export const RemotionRoot: React.FC = () => (
             format,
             title: guide.title,
             summary: guide.summary,
-            kicker: queue.kicker,
-            steps: queue.steps,
-            url: queue.url,
-            chip: queue.chip,
-            music: guide.music ?? null,
+            voice: guide.voice ?? null,
+            score: guide.score ?? "guide-voice/score-1.mp3",
           }}
         />
       )),

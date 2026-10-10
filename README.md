@@ -109,7 +109,7 @@ claimhelper/
 │   │   └── openai/               # client, prompts, JSON schemas
 │   └── .env.example
 ├── video/                        # Remotion project: the social post media
-│   ├── src/GuidePost.tsx         # one composition, square + vertical
+│   ├── src/guide/DawnGuide.tsx   # narrated guide post, square + vertical
 │   └── render.mjs                # renders into web/media/social/ (committed)
 ├── firestore.rules
 ├── storage.rules

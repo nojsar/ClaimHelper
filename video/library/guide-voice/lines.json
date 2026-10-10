@@ -1,0 +1,268 @@
+{
+  "appeal-letter-template": {
+    "file": "guide-voice/appeal-letter-template.mp3",
+    "mtimeMs": 1791630229864,
+    "script": "Free Health Insurance Appeal Letter Template.\n\nA free fill-in insurance appeal letter, plus what to attach and how to prove you filed it.\n\nRead the free guide at getmyyes.com.",
+    "lines": [
+      {
+        "clipFrom": 0.03,
+        "clipTo": 2.48
+      },
+      {
+        "clipFrom": 2.7,
+        "clipTo": 8.48
+      },
+      {
+        "clipFrom": 8.76,
+        "clipTo": 11.75
+      }
+    ]
+  },
+  "appeal-step-by-step": {
+    "file": "guide-voice/appeal-step-by-step.mp3",
+    "mtimeMs": 1791642143921,
+    "script": "How to Appeal a Health Insurance Denial, Step-by-Step.\n\nDenied by health insurance? Map the evidence, deadlines, internal appeal, and next review step.\n\nRead the free guide at getmyyes.com.",
+    "lines": [
+      {
+        "clipFrom": 0.01,
+        "clipTo": 3.7
+      },
+      {
+        "clipFrom": 4.02,
+        "clipTo": 10.4
+      },
+      {
+        "clipFrom": 10.58,
+        "clipTo": 13.69
+      }
+    ]
+  },
+  "er-denial": {
+    "file": "guide-voice/er-denial.mp3",
+    "mtimeMs": 1791642251568,
+    "script": "ER Denied as \"Not an Emergency\"? How to Appeal.\n\nER denied as “not an emergency”? Coverage is judged by symptoms at the door, not the final diagnosis.\n\nRead the free guide at getmyyes.com.",
+    "lines": [
+      {
+        "clipFrom": 0,
+        "clipTo": 4.08
+      },
+      {
+        "clipFrom": 4.44,
+        "clipTo": 11.94
+      },
+      {
+        "clipFrom": 12.2,
+        "clipTo": 15.35
+      }
+    ]
+  },
+  "experimental-denial": {
+    "file": "guide-voice/experimental-denial.mp3",
+    "mtimeMs": 1791630290512,
+    "script": "How to Appeal an “Experimental or Investigational” Denial.\n\nCalled “experimental”? Request the exact policy and evidence cutoff, then compare your record to it.\n\nRead the free guide at getmyyes.com.",
+    "lines": [
+      {
+        "clipFrom": 0.01,
+        "clipTo": 3.94
+      },
+      {
+        "clipFrom": 4.38,
+        "clipTo": 11.38
+      },
+      {
+        "clipFrom": 11.72,
+        "clipTo": 14.81
+      }
+    ]
+  },
+  "external-review": {
+    "file": "guide-voice/external-review.mp3",
+    "mtimeMs": 1791642155873,
+    "script": "External Review of a Health Insurance Denial.\n\nInternal appeal denied? An independent external review may be next. Check eligibility and deadlines.\n\nRead the free guide at getmyyes.com.",
+    "lines": [
+      {
+        "clipFrom": 0,
+        "clipTo": 2.66
+      },
+      {
+        "clipFrom": 2.92,
+        "clipTo": 10.22
+      },
+      {
+        "clipFrom": 10.36,
+        "clipTo": 13.43
+      }
+    ]
+  },
+  "formulary-exclusion": {
+    "file": "guide-voice/formulary-exclusion.mp3",
+    "mtimeMs": 1791630260801,
+    "script": "Drug Not on Formulary? How to Get an Exception.\n\nA formulary exception usually must address each covered alternative. Organize the evidence first.\n\nRead the free guide at getmyyes.com.",
+    "lines": [
+      {
+        "clipFrom": 0,
+        "clipTo": 3.34
+      },
+      {
+        "clipFrom": 3.74,
+        "clipTo": 10.22
+      },
+      {
+        "clipFrom": 10.5,
+        "clipTo": 13.65
+      }
+    ]
+  },
+  "medical-necessity": {
+    "file": "guide-voice/medical-necessity.mp3",
+    "mtimeMs": 1791630230637,
+    "script": "How to Appeal a 'Not Medically Necessary' Denial.\n\n“Not medically necessary”? Ask which clinical criterion was not met, then answer it with evidence.\n\nRead the free guide at getmyyes.com.",
+    "lines": [
+      {
+        "clipFrom": 0.01,
+        "clipTo": 3.3
+      },
+      {
+        "clipFrom": 3.66,
+        "clipTo": 10.6
+      },
+      {
+        "clipFrom": 10.84,
+        "clipTo": 14.01
+      }
+    ]
+  },
+  "mental-health-parity": {
+    "file": "guide-voice/mental-health-parity.mp3",
+    "mtimeMs": 1791642252570,
+    "script": "Therapy or Mental Health Treatment Denied? Parity Rules Help You Appeal.\n\nTherapy denied? Federal parity law limits how much stricter mental health rules can be than medical.\n\nRead the free guide at getmyyes.com.",
+    "lines": [
+      {
+        "clipFrom": 0.07,
+        "clipTo": 4.88
+      },
+      {
+        "clipFrom": 5.4,
+        "clipTo": 11.46
+      },
+      {
+        "clipFrom": 11.84,
+        "clipTo": 14.95
+      }
+    ]
+  },
+  "out-of-network": {
+    "file": "guide-voice/out-of-network.mp3",
+    "mtimeMs": 1791630288942,
+    "script": "How to Appeal an Out-of-Network Denial.\n\nOut-of-network denials can involve emergency care, network gaps, or billing. Identify the rule first.\n\nRead the free guide at getmyyes.com.",
+    "lines": [
+      {
+        "clipFrom": 0.03,
+        "clipTo": 2.54
+      },
+      {
+        "clipFrom": 2.98,
+        "clipTo": 10.24
+      },
+      {
+        "clipFrom": 10.5,
+        "clipTo": 13.67
+      }
+    ]
+  },
+  "prior-authorization": {
+    "file": "guide-voice/prior-authorization.mp3",
+    "mtimeMs": 1791630231449,
+    "script": "How to Appeal a Prior Authorization Denial.\n\nPrior-auth denials can be administrative, clinical, or step-therapy related. Identify which one first.\n\nRead the free guide at getmyyes.com.",
+    "lines": [
+      {
+        "clipFrom": 0,
+        "clipTo": 2.82
+      },
+      {
+        "clipFrom": 3.18,
+        "clipTo": 10.16
+      },
+      {
+        "clipFrom": 10.44,
+        "clipTo": 13.51
+      }
+    ]
+  },
+  "step-therapy": {
+    "file": "guide-voice/step-therapy.mp3",
+    "mtimeMs": 1791630260010,
+    "script": "Step Therapy Denial? How to Get an Exception.\n\n“Try the cheaper drug first” may allow exceptions for prior failures, contraindications, or likely harm.\n\nRead the free guide at getmyyes.com.",
+    "lines": [
+      {
+        "clipFrom": 0,
+        "clipTo": 3.34
+      },
+      {
+        "clipFrom": 3.68,
+        "clipTo": 10.58
+      },
+      {
+        "clipFrom": 10.9,
+        "clipTo": 14.01
+      }
+    ]
+  },
+  "california-imr": {
+    "file": "guide-voice/california-imr.mp3",
+    "mtimeMs": 1791642355376,
+    "script": "How to Appeal a Health Insurance Denial in California.\n\nDenied in California? Free Independent Medical Review has overturned many denials — here's how to file.\n\nRead the free guide at getmyyes.com.",
+    "lines": [
+      {
+        "clipFrom": 0,
+        "clipTo": 3.36
+      },
+      {
+        "clipFrom": 3.72,
+        "clipTo": 10.54
+      },
+      {
+        "clipFrom": 10.76,
+        "clipTo": 13.91
+      }
+    ]
+  },
+  "glp1-denial": {
+    "file": "guide-voice/glp1-denial.mp3",
+    "mtimeMs": 1791642356361,
+    "script": "GLP-1 Denied? Exclusion or Prior Authorization.\n\nGLP-1 denied? Check whether it is a plan exclusion or a criteria review — they need different appeals.\n\nRead the free guide at getmyyes.com.",
+    "lines": [
+      {
+        "clipFrom": 0,
+        "clipTo": 4.62
+      },
+      {
+        "clipFrom": 4.88,
+        "clipTo": 11.96
+      },
+      {
+        "clipFrom": 12.22,
+        "clipTo": 15.17
+      }
+    ]
+  },
+  "imaging-denial": {
+    "file": "guide-voice/imaging-denial.mp3",
+    "mtimeMs": 1791642522478,
+    "script": "MRI or CT Denied? Start With the Peer-to-Peer.\n\nMRI or CT denied? The fastest route back is usually a peer-to-peer your doctor can request.\n\nRead the free guide at getmyyes.com.",
+    "lines": [
+      {
+        "clipFrom": 0,
+        "clipTo": 4.18
+      },
+      {
+        "clipFrom": 4.66,
+        "clipTo": 11.3
+      },
+      {
+        "clipFrom": 11.5,
+        "clipTo": 14.61
+      }
+    ]
+  }
+}
