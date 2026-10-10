@@ -1,10 +1,6 @@
 /* GetMyYes legal pages — the same calm document system used by the site and guides. */
-body.legal-page {
-  background:
-    radial-gradient(circle at 8% 2%, rgba(23, 50, 77, 0.055), transparent 31rem),
-    radial-gradient(circle at 92% 28%, rgba(47, 111, 98, 0.05), transparent 34rem),
-    var(--paper);
-}
+/* The page wash is guide.css's dawn sky; legal pages add the ruled pad. */
+body.legal-page { background: transparent; }
 
 body.legal-page::before {
   position: fixed;
@@ -240,7 +236,6 @@ body.legal-page::before {
 /* Dark appearance. The tokens come from guide.css; only the striping and the
    page wash here are literal light colours, and this file loads after it. */
 @media (prefers-color-scheme: dark) {
-  body.legal-page { background: var(--paper); }
   body.legal-page::before { background-image: none; }
   .legal-page tbody tr:nth-child(even) { background: rgba(255, 255, 255, 0.03); }
 }

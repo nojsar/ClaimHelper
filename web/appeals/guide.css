@@ -625,3 +625,201 @@ header.site::after {
   }
   header.site::after { display: none; }
 }
+
+/* ==================================================================
+   Dawn print layer (October 2026): the homepage's design, carried to
+   every guide, code, insurer, tool, data and legal page.
+   - Warm paper and a faint grain.
+   - A dawn sky at the top of each page that settles into the paper,
+     night in dark mode.
+   - The floating pill menu.
+   - Letter-pad margin rules down the column.
+   - Mono kickers, headlines that rise out of their masks, and the call
+     to action as a night-sky print.
+   Static by design: nothing here loops, so no pause control is owed.
+   ================================================================== */
+:root {
+  --rule: rgba(16, 38, 59, 0.09);
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --paper: #FAF5EC;
+    --letter: #FFFDF8;
+    --cream: #F3ECDF;
+    --border: #DED2BF;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  :root { --rule: rgba(255, 255, 255, 0.07); }
+}
+
+/* The paper moves to the root so the sky below can sit between it and
+   the page. */
+html { background: var(--paper); }
+body { background: transparent; }
+
+/* The dawn: a print sky at the top of the page, fading into paper. Small
+   text that sits on it steps up from muted to the secondary ink, so it
+   keeps 4.5:1 on the palest part of the sky. */
+html::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: -1;
+  height: clamp(440px, 52vw, 620px);
+  pointer-events: none;
+  /* The fade is the top layer, so the sun and haze settle into the paper
+     with the sky instead of stopping at the band's edge. */
+  background:
+    linear-gradient(180deg, rgba(250, 245, 236, 0) 50%, var(--paper) 96%),
+    radial-gradient(ellipse 240px 12px at 18% 30%, rgba(255, 250, 240, 0.75), rgba(255, 250, 240, 0)),
+    radial-gradient(ellipse 320px 14px at 78% 46%, rgba(255, 246, 232, 0.6), rgba(255, 246, 232, 0)),
+    radial-gradient(circle at 85% 64%, rgba(255, 242, 212, 0.95) 0 40px, rgba(255, 226, 170, 0.5) 42px, rgba(255, 226, 170, 0) 190px),
+    linear-gradient(180deg, #CAD6EC 0%, #D9D0E3 36%, #F2CBBA 66%, #F8DEB8 100%);
+}
+/* On a phone the column is the whole width: the sun becomes glow only,
+   low in the corner, so no disc sits behind the headline. */
+@media (max-width: 760px) {
+  html::before {
+    background:
+      linear-gradient(180deg, rgba(250, 245, 236, 0) 50%, var(--paper) 96%),
+      radial-gradient(ellipse 200px 10px at 22% 22%, rgba(255, 250, 240, 0.7), rgba(255, 250, 240, 0)),
+      radial-gradient(circle at 100% 70%, rgba(255, 232, 186, 0.7), rgba(255, 226, 170, 0) 170px),
+      linear-gradient(180deg, #CAD6EC 0%, #D9D0E3 36%, #F2CBBA 66%, #F8DEB8 100%);
+  }
+}
+@media (prefers-color-scheme: light) {
+  .crumbs,
+  .crumbs a,
+  .updated { color: var(--ink-soft); }
+}
+@media (prefers-color-scheme: dark) {
+  html::before {
+    background:
+      linear-gradient(180deg, rgba(14, 25, 34, 0) 50%, var(--paper) 96%),
+      radial-gradient(1.6px 1.6px at 12% 14%, #FFF3D6, rgba(255, 243, 214, 0)),
+      radial-gradient(1.4px 1.4px at 31% 26%, #FFF3D6, rgba(255, 243, 214, 0)),
+      radial-gradient(1.8px 1.8px at 57% 9%, #FFF3D6, rgba(255, 243, 214, 0)),
+      radial-gradient(1.4px 1.4px at 73% 21%, #FFF3D6, rgba(255, 243, 214, 0)),
+      radial-gradient(1.6px 1.6px at 88% 12%, #FFF3D6, rgba(255, 243, 214, 0)),
+      radial-gradient(1.2px 1.2px at 44% 33%, #FFF3D6, rgba(255, 243, 214, 0)),
+      radial-gradient(1.4px 1.4px at 93% 38%, #FFF3D6, rgba(255, 243, 214, 0)),
+      radial-gradient(1.2px 1.2px at 6% 41%, #FFF3D6, rgba(255, 243, 214, 0)),
+      radial-gradient(ellipse 420px 160px at 86% 78%, rgba(255, 176, 130, 0.22), rgba(255, 176, 130, 0)),
+      linear-gradient(180deg, #0B1524 0%, #18243F 46%, #2C2B47 82%, #3A3450 100%);
+  }
+}
+
+/* Paper grain, as faint as print. */
+html::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+@media (prefers-color-scheme: dark) { html::after { opacity: 0.06; } }
+@media (prefers-contrast: more) { html::after { display: none; } }
+
+/* The floating menu: the bar lifts off the page edge into a pill, glass
+   over the dawn. */
+header.site {
+  top: 12px;
+  width: min(calc(100% - 24px), 1084px);
+  margin: 12px auto 0;
+  border: 1px solid rgba(16, 38, 59, 0.10);
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.62);
+}
+header.site::after { display: none; }
+header.site .bar { min-height: 62px; padding: 6px 8px 6px 22px; }
+a.btn-start { border-radius: 999px; display: inline-flex; align-items: center; }
+@media (max-width: 560px) {
+  header.site { border-radius: 26px; }
+  header.site .bar { padding: 8px 10px 8px 14px; }
+}
+@media (prefers-color-scheme: dark) {
+  header.site { border-color: rgba(255, 255, 255, 0.10); background: rgba(14, 25, 34, 0.55); }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  header.site { background: var(--paper); }
+}
+
+/* The page grid is a letter pad: margin rules down the column's edges. */
+.wrap:has(> main) { position: relative; }
+.wrap:has(> main)::before,
+.wrap:has(> main)::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--rule);
+  pointer-events: none;
+}
+.wrap:has(> main)::before { left: 6px; }
+.wrap:has(> main)::after { right: 6px; }
+
+/* Kickers in mono capitals, as on the homepage. */
+.keyfacts .kicker,
+.sources .kicker,
+.letterblock .lb-bar .kicker,
+.cta .kicker,
+.related .kicker,
+.flow-caption,
+.gcard .tag { font-family: var(--mono); letter-spacing: 0.14em; }
+
+/* Headlines rise out of their own masks, once, on arrival. */
+h1 { font-size: clamp(34px, 5.6vw, 52px); line-height: 1.08; letter-spacing: -0.02em; }
+@keyframes guide-rise {
+  from { transform: translateY(0.5em); clip-path: inset(0 0 100% 0); }
+  to { transform: none; clip-path: inset(-25% -4% -25% -4%); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  article > h1,
+  .legal-heading h1 { animation: guide-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  article > .lede { animation: guide-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both; }
+}
+
+/* Cards are printed paper on the page. */
+.keyfacts,
+.sources,
+.code-finder,
+.gcard,
+details { background: var(--letter); border-color: var(--border); }
+
+/* The call to action is a small night print: the same sky the homepage
+   film opens on, its horizon glow kept below the text. */
+.cta {
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 72px;
+  background:
+    radial-gradient(circle at 76% 104%, rgba(255, 214, 160, 0.85) 0 26px, rgba(255, 190, 140, 0.35) 28px, rgba(255, 190, 140, 0) 150px),
+    radial-gradient(1.4px 1.4px at 14% 18%, #FFF3D6, rgba(255, 243, 214, 0)),
+    radial-gradient(1.2px 1.2px at 46% 12%, #FFF3D6, rgba(255, 243, 214, 0)),
+    radial-gradient(1.6px 1.6px at 82% 22%, #FFF3D6, rgba(255, 243, 214, 0)),
+    linear-gradient(180deg, #0D1726 0%, #1A2742 58%, #3B3452 86%, #6E5160 100%);
+  box-shadow: 0 30px 60px -32px rgba(11, 29, 45, 0.55);
+}
+.cta::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 26px;
+  background:
+    repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #2E3349, #13202E);
+  pointer-events: none;
+}
+@media (forced-colors: active) {
+  .cta { background: Canvas; }
+  .cta::after { display: none; }
+}
