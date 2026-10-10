@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200">
+  <!-- the trail it leaves -->
+  <path d="M12 176 C70 170 96 140 132 132" fill="none" stroke="#2F6F62" stroke-width="3" stroke-dasharray="2 12" stroke-linecap="round" opacity=".7"/>
+  <!-- folds: far wing, keel, near wing -->
+  <path d="M138 118 L292 18 L196 150 Z" fill="#E7DCC8"/>
+  <path d="M138 118 L292 18 L176 128 Z" fill="#FFFDF7"/>
+  <path d="M176 128 L292 18 L206 176 L190 140 Z" fill="#F2E8D6"/>
+  <path d="M190 140 L206 176 L176 128 Z" fill="#CDBD9F"/>
+  <path d="M138 118 L176 128 L292 18" fill="none" stroke="#DCCDB4" stroke-width="2" stroke-linejoin="round"/>
+</svg>

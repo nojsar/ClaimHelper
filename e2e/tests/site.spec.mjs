@@ -367,3 +367,44 @@ test("the one-number hook is sourced", async ({ page }) => {
   await expect(page.locator(".odds a[href='#research-sources']")).toBeVisible();
   await expect(page.locator("#research-sources a[href*='kff.org']")).toHaveCount(1);
 });
+
+test.describe("dawn print homepage", () => {
+  test("the three promises keep real headings; the flying copy is decoration", async ({ page }) => {
+    await page.goto("/");
+    const titles = page.locator(".usp-row .usp-title");
+    await expect(titles).toHaveCount(3);
+    await expect(page.locator(".usp-pin")).toHaveAttribute("aria-hidden", "true");
+    // The suite asks for reduced motion: nothing flies, every heading reads in place.
+    await expect(page.locator(".usp")).not.toHaveClass(/is-flying/);
+    for (let i = 0; i < 3; i += 1) await expect(titles.nth(i)).toBeVisible();
+  });
+
+  test("the sky is decoration, with a painted sky behind it", async ({ page }) => {
+    await page.goto("/");
+    for (const host of [".hero .dawn", ".closing .dawn"]) {
+      await expect(page.locator(host)).toHaveAttribute("aria-hidden", "true");
+    }
+    for (const section of [".hero", ".closing"]) {
+      const bg = await page.locator(section).evaluate((el) => getComputedStyle(el).backgroundImage);
+      expect(bg, section).toContain("gradient");
+    }
+  });
+
+  test.describe("with motion welcome", () => {
+    test.use({ reducedMotion: "no-preference" });
+
+    test("a wide screen pins one heading and hands it on as the pictures pass", async ({ page }) => {
+      const errors = [];
+      page.on("pageerror", (error) => errors.push(error.message));
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await page.goto("/");
+      await expect(page.locator(".usp")).toHaveClass(/is-flying/);
+      await page.locator(".usp-row").nth(2).evaluate((el) => el.scrollIntoView({ block: "center" }));
+      await expect(page.locator(".usp-count-now")).toHaveText("03");
+      // The tile has settled once it is in view.
+      await expect.poll(() => page.locator(".usp-row").nth(2).locator(".usp-media")
+        .evaluate((el) => parseFloat(el.style.getPropertyValue("--q")))).toBeGreaterThan(0.9);
+      expect(errors).toEqual([]);
+    });
+  });
+});

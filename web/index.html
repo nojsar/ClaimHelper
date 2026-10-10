@@ -1536,7 +1536,9 @@
 
     <main id="main-content" tabindex="-1">
       <section class="hero" aria-labelledby="hero-title">
+        <div class="dawn" data-dawn="hero" aria-hidden="true"></div>
         <div class="hero-aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div class="hero-lines" aria-hidden="true"><i></i><i></i><i></i></div>
         <button type="button" class="motion-toggle" data-animation-control aria-pressed="false">Pause motion</button>
         <div class="wrap hero-grid">
           <div class="hero-copy">
@@ -1591,6 +1593,65 @@
           </ul>
         </div>
       </aside>
+
+      <!-- Three promises. Each row is a real heading and line beside its picture.
+           With motion welcome on a wide screen, home.js pins one heading at a time
+           and, as the next row arrives, the letters the two headings share fly
+           to their places in the next one (the copy in each row stays for
+           screen readers). Pictures are real app screens or drawn from the
+           service's own output; the paper ornaments are decoration. -->
+      <section class="usp" aria-labelledby="usp-title">
+        <h2 id="usp-title" class="sr-only">What GetMyYes does for you</h2>
+        <div class="wrap usp-grid">
+          <div class="usp-pin" aria-hidden="true">
+            <p class="usp-count"><span class="usp-count-now">01</span> / 03</p>
+            <p class="usp-flight"></p>
+            <p class="usp-pin-line"></p>
+          </div>
+          <div class="usp-rows">
+            <article class="usp-row">
+              <div class="usp-copy">
+                <p class="usp-kicker">01 · Understand</p>
+                <h3 class="usp-title">Insurer English,<br>in plain English</h3>
+                <p class="usp-line">Your letter, explained in about two minutes.</p>
+              </div>
+              <figure class="usp-media usp-media-screen">
+                <img src="/media/home/summary.webp" width="860" height="1100" loading="lazy" decoding="async" alt="The free summary in the GetMyYes app on a fictional case: the amount at stake, what happened, and the likely appeal path.">
+              </figure>
+              <img class="usp-orn usp-orn-nib" src="/media/home/orn-nib.svg" alt="" loading="lazy" decoding="async">
+            </article>
+            <article class="usp-row">
+              <div class="usp-copy">
+                <p class="usp-kicker">02 · Count</p>
+                <h3 class="usp-title">Your deadline,<br>counted for you</h3>
+                <p class="usp-line">The usual window, worked out from your letter.</p>
+              </div>
+              <figure class="usp-media usp-media-ring">
+                <div class="usp-ring" aria-hidden="true">
+                  <svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><circle class="ring-track" cx="60" cy="60" r="50" pathLength="100"/><circle class="ring-left" cx="60" cy="60" r="50" pathLength="100"/></svg>
+                  <span class="usp-ring-label"><b>150</b><small>days left</small></span>
+                </div>
+                <figcaption class="sr-only">An example deadline: 150 of about 180 days left.</figcaption>
+              </figure>
+              <img class="usp-orn usp-orn-letter" src="/media/home/orn-letter.svg" alt="" loading="lazy" decoding="async">
+            </article>
+            <article class="usp-row">
+              <div class="usp-copy">
+                <p class="usp-kicker">03 · Send</p>
+                <h3 class="usp-title">Your appeal,<br>sent by you</h3>
+                <p class="usp-line">Six documents to review, sign and send yourself.</p>
+              </div>
+              <figure class="usp-media usp-media-stack">
+                <div class="usp-sheets" aria-hidden="true">
+                  <span>Deadline tracker</span><span>Doctor letter request</span><span>Evidence checklist</span><span>Appeal letter</span>
+                </div>
+                <figcaption class="sr-only">Pages of an appeal packet: an appeal letter, an evidence checklist, a doctor letter request and a deadline tracker.</figcaption>
+              </figure>
+              <img class="usp-orn usp-orn-plane" src="/media/home/orn-plane.svg" alt="" loading="lazy" decoding="async">
+            </article>
+          </div>
+        </div>
+      </section>
 
       <!-- One sourced number, before any explanation. Both figures are the
            published Marketplace data cited in #research-sources, never
@@ -1722,24 +1783,28 @@
               <div class="proof-track">
                 <article class="proof-slide" data-proof-slide role="group" aria-roledescription="slide" aria-label="1 of 4: Complete fictional packet">
                   <div class="proof-slide-kicker"><span>Product proof</span></div>
+                  <span class="post-stamp" aria-hidden="true"></span><span class="postmark" aria-hidden="true"></span>
                   <h3>A complete fictional packet</h3>
                   <p>Every document, start to finish. No upload, no account.</p>
                   <a class="proof-action" href="/sample-packet">Read the sample packet →</a>
                 </article>
                 <article class="proof-slide" data-proof-slide role="group" aria-roledescription="slide" aria-label="2 of 4: Free summary from your document">
                   <div class="proof-slide-kicker"><span>Try it first</span></div>
+                  <span class="post-stamp" aria-hidden="true"></span><span class="postmark" aria-hidden="true"></span>
                   <h3>Your own summary is $0</h3>
                   <p>See your denial explained before deciding to pay.</p>
                   <button type="button" class="proof-action button button-primary" data-boot="/upload">See my free denial summary</button>
                 </article>
                 <article class="proof-slide" data-proof-slide role="group" aria-roledescription="slide" aria-label="3 of 4: Named operator and published terms">
                   <div class="proof-slide-kicker"><span>Accountability</span></div>
+                  <span class="post-stamp" aria-hidden="true"></span><span class="postmark" aria-hidden="true"></span>
                   <h3>A named operator and published terms</h3>
                   <p>Who runs GetMyYes, how to reach support, and the guarantee terms.</p>
                   <a class="proof-action" href="#trust">Review business and privacy details →</a>
                 </article>
                 <article class="proof-slide" data-proof-slide role="group" aria-roledescription="slide" aria-label="4 of 4: Published Marketplace research">
                   <div class="proof-slide-kicker"><span>Independent context</span></div>
+                  <span class="post-stamp" aria-hidden="true"></span><span class="postmark" aria-hidden="true"></span>
                   <h3>Public data, not a promise</h3>
                   <p>The figures above come from CMS and KFF, not from GetMyYes.</p>
                   <a class="proof-action" href="#research-sources">Check the published sources →</a>
@@ -1853,6 +1918,7 @@
       </section>
 
       <section class="section closing" aria-labelledby="closing-title">
+        <div class="dawn" data-dawn="close" aria-hidden="true"></div>
         <div class="wrap closing-inner">
           <div>
             <h2 id="closing-title">Start by understanding what the denial says.</h2>
@@ -2194,6 +2260,7 @@
       });
     })();
   </script>
+  <script src="/dawn.js" defer></script>
   <script src="/home.js" defer></script>
 </body>
 </html>
