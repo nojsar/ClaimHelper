@@ -13,6 +13,7 @@ import '../../models/packet.dart';
 import '../../state/providers.dart';
 import '../../widgets/account_gate.dart';
 import '../../widgets/app_scaffold.dart';
+import '../../widgets/dawn.dart';
 import '../../widgets/ui.dart';
 import 'case_tracker_panel.dart';
 
@@ -225,108 +226,118 @@ class _PacketTabsState extends ConsumerState<_PacketTabs> {
       child: DefaultTabController(
         length: tabs.length,
         initialIndex: initialIndex,
-        child: Scaffold(
-          appBar: AppBar(
-            title: const Text('Your appeal packet'),
-            actions: [
-              _SaveCaseButton(appealCase: widget.appealCase),
-              if (compactActions)
-                PopupMenuButton<String>(
-                  enabled: !exporting,
-                  tooltip: exporting ? 'Downloading packet' : 'Download packet',
-                  icon: exporting
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.download_outlined),
-                  onSelected: (value) {
-                    if (value == 'html') {
-                      _exportAccessibleHtml();
-                    } else {
-                      _export();
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    if (kIsWeb)
-                      const PopupMenuItem(
-                        value: 'html',
-                        child: Text('Download accessible HTML'),
-                      ),
-                    const PopupMenuItem(
-                      value: 'pdf',
-                      child: Text('Export PDF'),
-                    ),
-                  ],
-                )
-              else ...[
-                if (kIsWeb)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: OutlinedButton.icon(
-                      onPressed: exporting ? null : _exportAccessibleHtml,
-                      icon: _exportingHtml
+        child: Stack(
+          children: [
+            const Positioned.fill(child: PaperBackdrop(columnWidth: 820)),
+            Scaffold(
+              backgroundColor: Colors.transparent,
+              appBar: AppBar(
+                backgroundColor: Colors.transparent,
+                title: const Text('Your appeal packet'),
+                actions: [
+                  _SaveCaseButton(appealCase: widget.appealCase),
+                  if (compactActions)
+                    PopupMenuButton<String>(
+                      enabled: !exporting,
+                      tooltip:
+                          exporting ? 'Downloading packet' : 'Download packet',
+                      icon: exporting
                           ? const SizedBox(
-                              width: 16,
-                              height: 16,
+                              width: 18,
+                              height: 18,
                               child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Icon(Icons.html_outlined, size: 18),
-                      label: const Text('Accessible HTML'),
+                          : const Icon(Icons.download_outlined),
+                      onSelected: (value) {
+                        if (value == 'html') {
+                          _exportAccessibleHtml();
+                        } else {
+                          _export();
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        if (kIsWeb)
+                          const PopupMenuItem(
+                            value: 'html',
+                            child: Text('Download accessible HTML'),
+                          ),
+                        const PopupMenuItem(
+                          value: 'pdf',
+                          child: Text('Export PDF'),
+                        ),
+                      ],
+                    )
+                  else ...[
+                    if (kIsWeb)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: OutlinedButton.icon(
+                          onPressed: exporting ? null : _exportAccessibleHtml,
+                          icon: _exportingHtml
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2))
+                              : const Icon(Icons.html_outlined, size: 18),
+                          label: const Text('Accessible HTML'),
+                        ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: FilledButton.icon(
+                        onPressed: exporting ? null : _export,
+                        icon: _exportingPdf
+                            ? SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: context.palette.onInk))
+                            : const Icon(Icons.picture_as_pdf, size: 18),
+                        label: const Text('Export PDF'),
+                      ),
                     ),
-                  ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: FilledButton.icon(
-                    onPressed: exporting ? null : _export,
-                    icon: _exportingPdf
-                        ? SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: context.palette.onInk))
-                        : const Icon(Icons.picture_as_pdf, size: 18),
-                    label: const Text('Export PDF'),
-                  ),
-                ),
-              ],
-            ],
-            bottom: const TabBar(isScrollable: true, tabs: tabs),
-          ),
-          body: SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 820),
-                child: TabBarView(
-                  children: [
-                    _SummaryTab(
-                      appealCase: widget.appealCase,
-                      packet: packet,
-                    ),
-                    _TextTab(
-                      title: 'Appeal letter',
-                      body: packet.appealLetter,
-                      copyable: true,
-                    ),
-                    _EvidenceTab(items: packet.evidenceChecklist),
-                    _TextTab(
-                      title: 'Doctor letter request',
-                      body: packet.doctorLetterRequest,
-                      copyable: true,
-                    ),
-                    _TextTab(
-                      title: 'Insurer call script',
-                      body: packet.insurerCallScript,
-                      copyable: true,
-                    ),
-                    _DeadlinesTab(items: packet.deadlineChecklist),
-                    CaseTrackerPanel(appealCase: widget.appealCase),
-                    _FollowUpsTab(appealCase: widget.appealCase),
-                    _FeedbackTab(appealCase: widget.appealCase),
                   ],
+                ],
+                bottom: const TabBar(isScrollable: true, tabs: tabs),
+              ),
+              body: SafeArea(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 820),
+                    child: TabBarView(
+                      children: [
+                        _SummaryTab(
+                          appealCase: widget.appealCase,
+                          packet: packet,
+                        ),
+                        _TextTab(
+                          title: 'Appeal letter',
+                          body: packet.appealLetter,
+                          copyable: true,
+                        ),
+                        _EvidenceTab(items: packet.evidenceChecklist),
+                        _TextTab(
+                          title: 'Doctor letter request',
+                          body: packet.doctorLetterRequest,
+                          copyable: true,
+                        ),
+                        _TextTab(
+                          title: 'Insurer call script',
+                          body: packet.insurerCallScript,
+                          copyable: true,
+                        ),
+                        _DeadlinesTab(items: packet.deadlineChecklist),
+                        CaseTrackerPanel(appealCase: widget.appealCase),
+                        _FollowUpsTab(appealCase: widget.appealCase),
+                        _FeedbackTab(appealCase: widget.appealCase),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -1009,6 +1020,9 @@ class _SummaryTab extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
+        // Morning: the night the letter arrived is over.
+        const DawnWindow(dawn: Dawn.morning, height: 104),
+        const SizedBox(height: 22),
         _sectionTitle('Plain-English summary'),
         Text(packet.plainEnglishSummary),
         const SizedBox(height: 20),

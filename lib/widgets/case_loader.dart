@@ -3,13 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../core/theme.dart';
+import 'dawn.dart';
 
-/// A conventional, calm document-processing status card.
+/// A calm document-processing status card: the plain-English lens from the
+/// homepage film reading down a letter, line by line, above the status.
 ///
-/// The stable layout avoids dramatic motion and effects that can feel
-/// alarming in a healthcare workflow. Status messages
-/// advance slowly when motion is allowed; reduced-motion users see one steady
-/// message.
+/// The motion is slow and steady, nothing that could feel alarming in a
+/// healthcare workflow. Status messages advance slowly when motion is
+/// allowed; reduced-motion users see one steady message and a still lens.
 class CaseLoader extends StatefulWidget {
   const CaseLoader({
     super.key,
@@ -82,7 +83,7 @@ class _CaseLoaderState extends State<CaseLoader> {
     final semanticsValue = progress == null
         ? message
         : '$message ${(progress * 100).round()} percent complete';
-    final iconSize = (widget.size * 0.38).clamp(64.0, 88.0).toDouble();
+    final letterWidth = (widget.size * 0.82).clamp(150.0, 190.0).toDouble();
 
     return Semantics(
       container: true,
@@ -97,32 +98,24 @@ class _CaseLoaderState extends State<CaseLoader> {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: context.palette.surface,
-              borderRadius: BorderRadius.circular(AppRadii.lg),
+              borderRadius: BorderRadius.circular(AppRadii.xl),
               border: Border.all(color: context.palette.border),
-              boxShadow: context.palette.shadowSubtle,
+              boxShadow: context.palette.shadowSoft,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: iconSize,
-                  height: iconSize,
-                  decoration: BoxDecoration(
-                    color: context.palette.primaryTint,
-                    borderRadius: BorderRadius.circular(AppRadii.md),
-                    border: Border.all(color: context.palette.border),
-                  ),
-                  child: Icon(
-                    Icons.description_outlined,
-                    size: iconSize * 0.5,
-                    color: context.palette.primaryDark,
-                  ),
-                ),
+                LensLetter(width: letterWidth),
                 const SizedBox(height: 18),
                 const Text(
                   'Preparing your documents',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800),
+                  style: TextStyle(
+                    fontFamily: AppFonts.serif,
+                    fontSize: 23,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.3,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(

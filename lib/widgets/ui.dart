@@ -1,6 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../core/theme.dart';
+import 'dawn.dart';
+
+/// A page's own heading, set in the serif the site's headlines use.
+const pageHeadingStyle = TextStyle(
+  fontFamily: AppFonts.serif,
+  fontSize: 30,
+  fontWeight: FontWeight.w700,
+  letterSpacing: -0.5,
+  height: 1.15,
+);
 
 /// The GetMyYes brand mark: a calm navy-to-teal tile with a check.
 class BrandMark extends StatelessWidget {
@@ -332,9 +342,10 @@ class ResponsiveActions extends StatelessWidget {
   }
 }
 
-/// A calm, shared orientation cue for the document-to-summary workflow.
-/// It intentionally uses a single current-stage label rather than a cramped
-/// horizontal stepper so it remains readable on small screens and at 200% zoom.
+/// The four steps of the intake as a dawn: the upload happens at night and
+/// each step after it raises the sun, while the paper plane flies along the
+/// dotted path to the step you are on. The window is decoration; the step
+/// itself is spelled out underneath, and read out once as a single label.
 class WorkflowProgress extends StatelessWidget {
   const WorkflowProgress({
     super.key,
@@ -350,61 +361,143 @@ class WorkflowProgress extends StatelessWidget {
     'Review summary',
   ];
 
+  static const _dawn = [
+    Dawn.upload,
+    Dawn.checkFacts,
+    Dawn.questions,
+    Dawn.summary
+  ];
+
   @override
   Widget build(BuildContext context) {
     final current = stages[currentStep];
     final next =
         currentStep + 1 < stages.length ? stages[currentStep + 1] : null;
+    final compact = MediaQuery.sizeOf(context).width < 600;
+    final mono = TextStyle(
+      fontFamily: AppFonts.mono,
+      fontSize: 13,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 1.6,
+      color: context.palette.accentBright,
+    );
     return Semantics(
       container: true,
       label: 'Step ${currentStep + 1} of ${stages.length}: $current'
           '${next == null ? '' : '. Next: $next'}',
       excludeSemantics: true,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: context.palette.primaryTint,
-          borderRadius: BorderRadius.circular(AppRadii.md),
-          border: Border.all(color: context.palette.border),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'STEP ${currentStep + 1} OF ${stages.length}',
-              style: TextStyle(
-                color: context.palette.accentBright,
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.5,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              current,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 10),
-            LinearProgressIndicator(
-              value: (currentStep + 1) / stages.length,
-              minHeight: 8,
-              borderRadius: BorderRadius.circular(999),
-              backgroundColor: context.palette.border,
-              color: context.palette.accent,
-            ),
-            if (next != null) ...[
-              const SizedBox(height: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DawnWindow(
+            dawn: _dawn[currentStep],
+            stages: stages.length,
+            stage: currentStep,
+            height: compact ? 118 : 150,
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 14,
+            runSpacing: 4,
+            children: [
+              Text('STEP ${currentStep + 1} OF ${stages.length}', style: mono),
               Text(
-                'Next: $next',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: context.palette.textSecondary,
+                current,
+                style: const TextStyle(
+                  fontFamily: AppFonts.serif,
+                  fontSize: 21,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              if (next != null && compact)
+                Text(
+                  'Next: $next',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: context.palette.textSecondary,
+                  ),
+                ),
+            ],
+          ),
+          if (!compact) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                for (var i = 0; i < stages.length; i++)
+                  Expanded(
+                    child: _StageTick(
+                      label: stages[i],
+                      done: i < currentStep,
+                      current: i == currentStep,
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _StageTick extends StatelessWidget {
+  const _StageTick({
+    required this.label,
+    required this.done,
+    required this.current,
+  });
+
+  final String label;
+  final bool done;
+  final bool current;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final colour = current
+        ? p.textPrimary
+        : done
+            ? p.accentBright
+            : p.textMuted;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.easeOutCubic,
+            height: 3,
+            decoration: BoxDecoration(
+              color: done || current ? p.accent : p.border,
+              borderRadius: BorderRadius.circular(99),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(
+                done ? Icons.check_circle_rounded : Icons.circle_outlined,
+                size: 15,
+                color: colour,
+              ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: current ? FontWeight.w800 : FontWeight.w600,
+                    color: colour,
+                  ),
                 ),
               ),
             ],
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

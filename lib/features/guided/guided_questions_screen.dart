@@ -200,8 +200,7 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
             const SizedBox(height: 18),
             Semantics(
               header: true,
-              child: Text('Tailor your appeal',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+              child: Text('Tailor your appeal', style: pageHeadingStyle),
             ),
             const SizedBox(height: 6),
             Text(

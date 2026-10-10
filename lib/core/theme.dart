@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Bundled font families (see pubspec.yaml). Fonts ship inside the app so no
-/// request ever goes to Google Fonts at runtime — a GDPR requirement.
+/// request ever goes to Google Fonts at runtime â€” a GDPR requirement.
 abstract final class AppFonts {
   static const sans = 'IBMPlexSans';
   static const serif = 'Fraunces';
@@ -202,14 +202,16 @@ class AppPalette extends ThemeExtension<AppPalette> {
     accent: AppColors.accent,
     accentBright: AppColors.accentBright,
     accentTint: AppColors.accentTint,
-    background: AppColors.background,
-    surface: AppColors.surface,
-    surfaceAlt: AppColors.surfaceAlt,
+    // The site's dawn-print paper (web/home.css): warm paper, letter-white
+    // cards, warm hairlines. AppColors keeps the cool print values for PDFs.
+    background: Color(0xFFFAF5EC),
+    surface: Color(0xFFFFFDF8),
+    surfaceAlt: Color(0xFFF5EFE4),
     textPrimary: AppColors.textPrimary,
     textSecondary: AppColors.textSecondary,
     textMuted: AppColors.textMuted,
-    border: AppColors.border,
-    borderStrong: AppColors.borderStrong,
+    border: Color(0xFFE3D7C4),
+    borderStrong: Color(0xFFC2B296),
     controlBorder: AppColors.controlBorder,
     ink: AppColors.ink,
     inkSoft: AppColors.inkSoft,
@@ -223,7 +225,11 @@ class AppPalette extends ThemeExtension<AppPalette> {
     onError: Colors.white,
     brandGradient: AppGradients.brand,
     ctaGradient: AppGradients.cta,
-    heroWash: AppGradients.heroWash,
+    heroWash: LinearGradient(
+      colors: [Color(0xFFFFFDF8), Color(0xFFFAF5EC), Color(0xFFFAF5EC)],
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+    ),
     accentTextGradient: AppGradients.accentText,
     shadowSoft: AppShadows.soft,
     shadowLifted: AppShadows.lifted,
@@ -366,7 +372,7 @@ abstract final class AppRadii {
 }
 
 /// Route transitions are disabled so the persistent header chrome never
-/// zooms with navigation — AppScaffold animates the page *body* instead.
+/// zooms with navigation â€” AppScaffold animates the page *body* instead.
 class NoTransitionsBuilder extends PageTransitionsBuilder {
   const NoTransitionsBuilder();
   @override
@@ -401,11 +407,15 @@ ThemeData buildAppTheme({Brightness brightness = Brightness.light}) {
     outline: dark ? p.controlBorder : null,
     outlineVariant: dark ? p.border : null,
     onError: dark ? p.onError : null,
-    surfaceContainerLowest: dark ? const Color(0xFF0B151D) : null,
-    surfaceContainerLow: dark ? p.surface : null,
-    surfaceContainer: dark ? const Color(0xFF18262F) : null,
-    surfaceContainerHigh: dark ? p.surfaceAlt : null,
-    surfaceContainerHighest: dark ? const Color(0xFF233543) : null,
+    // Sheets, menus and dialogs: navy tones in dark, the dawn print's warm
+    // paper in light (the seed's own containers are a cool lavender).
+    surfaceContainerLowest:
+        dark ? const Color(0xFF0B151D) : const Color(0xFFFFFDF8),
+    surfaceContainerLow: dark ? p.surface : const Color(0xFFFFFDF8),
+    surfaceContainer: dark ? const Color(0xFF18262F) : const Color(0xFFFAF5EC),
+    surfaceContainerHigh: dark ? p.surfaceAlt : const Color(0xFFF5EFE4),
+    surfaceContainerHighest:
+        dark ? const Color(0xFF233543) : const Color(0xFFEFE7D9),
   );
 
   // Landing pairing: Fraunces serif for headings, IBM Plex Sans for UI.

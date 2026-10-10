@@ -171,8 +171,7 @@ class _ExtractionReviewScreenState
             const SizedBox(height: 18),
             Semantics(
               header: true,
-              child: Text('Check the details',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+              child: Text('Check the details', style: pageHeadingStyle),
             ),
             const SizedBox(height: 6),
             Text(

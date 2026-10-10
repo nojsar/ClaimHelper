@@ -10,6 +10,7 @@ import '../../state/intake_controller.dart';
 import '../../state/providers.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/case_loader.dart';
+import '../../widgets/dawn.dart';
 
 /// Upload/extraction progress backed by a durable case URL. Once a case ID is
 /// available, refreshes restore from Firestore instead of falling into an
@@ -205,6 +206,12 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // First light: the reading happens just before dawn.
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 430),
+                child: const DawnWindow(dawn: Dawn.reading, height: 92),
+              ),
+              const SizedBox(height: 18),
               CaseLoader(
                 progress: progress,
                 messages: uploading

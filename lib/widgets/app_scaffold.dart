@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -5,11 +7,12 @@ import 'package:go_router/go_router.dart';
 
 import '../core/constants.dart';
 import '../core/theme.dart';
+import 'dawn.dart';
 import 'ui.dart';
 
-/// Responsive page shell: a translucent sticky top bar with the ClaimHelper
-/// wordmark plus navigation, and a body constrained to a comfortable reading
-/// width on wide screens.
+/// Responsive page shell in the site's dawn print: warm paper with a dawn
+/// wash and letter-pad margin rules behind everything, the floating pill
+/// menu over it, and a body constrained to a comfortable reading width.
 class AppScaffold extends StatefulWidget {
   const AppScaffold({
     super.key,
@@ -61,64 +64,79 @@ class _AppScaffoldState extends State<AppScaffold> {
     final wide = media.size.width > 900 && media.textScaler.scale(14.5) <= 20;
     final compactBrand =
         media.size.width < 600 && media.textScaler.scale(19) > 28;
-    const headerHeight = 72.0;
+    const headerHeight = 84.0;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final pillRadius = BorderRadius.circular(media.size.width < 600 ? 24 : 999);
     final scaffold = Scaffold(
-      backgroundColor: widget.backgroundColor,
+      backgroundColor: widget.backgroundColor ?? Colors.transparent,
       extendBodyBehindAppBar: true,
       appBar: widget.showChrome
           ? PreferredSize(
               preferredSize: const Size.fromHeight(headerHeight),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: context.palette.surface,
-                  border: Border(
-                    bottom: BorderSide(color: context.palette.border),
-                  ),
-                ),
-                child: SafeArea(
-                  bottom: false,
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1120),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 8),
-                        child: Row(
-                          children: [
-                            Semantics(
-                              button: true,
-                              label: 'GetMyYes home',
-                              excludeSemantics: true,
-                              onTap: () => context.go('/'),
-                              child: InkWell(
-                                onTap: () => context.go('/'),
-                                borderRadius: BorderRadius.circular(10),
-                                child: ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    minWidth: 48,
-                                    minHeight: 48,
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(2),
-                                    child: compactBrand
-                                        ? BrandMark(size: 30)
-                                        : Wordmark(markSize: 30, fontSize: 19),
+              child: SafeArea(
+                bottom: false,
+                child: Center(
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 1120),
+                    margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                    decoration: BoxDecoration(
+                      borderRadius: pillRadius,
+                      border: Border.all(
+                        color: dark
+                            ? const Color(0x1AFFFFFF)
+                            : const Color(0x1A10263B),
+                      ),
+                      boxShadow: context.palette.shadowSubtle,
+                    ),
+                    // The floating pill menu: frosted paper over the dawn.
+                    child: ClipRRect(
+                      borderRadius: pillRadius,
+                      child: BackdropFilter(
+                        filter: ui.ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                        child: ColoredBox(
+                          color: context.palette.surface
+                              .withValues(alpha: dark ? 0.72 : 0.78),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(14, 4, 8, 4),
+                            child: Row(
+                              children: [
+                                Semantics(
+                                  button: true,
+                                  label: 'GetMyYes home',
+                                  excludeSemantics: true,
+                                  onTap: () => context.go('/'),
+                                  child: InkWell(
+                                    onTap: () => context.go('/'),
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                        minWidth: 48,
+                                        minHeight: 48,
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(2),
+                                        child: compactBrand
+                                            ? BrandMark(size: 30)
+                                            : Wordmark(
+                                                markSize: 30, fontSize: 19),
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
+                                const Spacer(),
+                                Semantics(
+                                  container: true,
+                                  label: 'Primary navigation',
+                                  explicitChildNodes: true,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: widget.actions ??
+                                        _defaultActions(context, wide),
+                                  ),
+                                ),
+                              ],
                             ),
-                            const Spacer(),
-                            Semantics(
-                              container: true,
-                              label: 'Primary navigation',
-                              explicitChildNodes: true,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: widget.actions ??
-                                    _defaultActions(context, wide),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
@@ -183,7 +201,14 @@ class _AppScaffoldState extends State<AppScaffold> {
     final shell = FocusTraversalGroup(
       policy: OrderedTraversalPolicy(),
       child: Stack(
-        children: widget.showChrome ? [scaffold, skipControl] : [scaffold],
+        children: [
+          if (widget.backgroundColor == null)
+            Positioned.fill(
+              child: PaperBackdrop(columnWidth: widget.maxWidth),
+            ),
+          scaffold,
+          if (widget.showChrome) skipControl,
+        ],
       ),
     );
     if (widget.title == null) return shell;
@@ -212,6 +237,7 @@ class _AppScaffoldState extends State<AppScaffold> {
           FilledButton(
             onPressed: () => context.go('/upload'),
             style: FilledButton.styleFrom(
+              shape: const StadiumBorder(),
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               textStyle:
                   const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
@@ -360,7 +386,9 @@ class _NavLink extends StatelessWidget {
   }
 }
 
-/// A brief opacity-only entrance keeps the interface calm and spatially stable.
+/// The page settles in: a short fade with a small rise, as the homepage's
+/// sections do. The fade is over in a fifth of a second so nothing stays
+/// hidden for long; the rise finishes the movement.
 class _BodyEntrance extends StatelessWidget {
   const _BodyEntrance({required this.child});
   final Widget child;
@@ -370,10 +398,16 @@ class _BodyEntrance extends StatelessWidget {
     if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) return child;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 160),
+      duration: const Duration(milliseconds: 560),
       curve: Curves.easeOutCubic,
       child: child,
-      builder: (context, t, inner) => Opacity(opacity: t, child: inner),
+      builder: (context, t, inner) => Opacity(
+        opacity: (t * 3).clamp(0.0, 1.0),
+        child: Transform.translate(
+          offset: Offset(0, (1 - t) * 16),
+          child: inner,
+        ),
+      ),
     );
   }
 }

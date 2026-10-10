@@ -408,7 +408,7 @@ class _PreviewPaywallScreenState extends ConsumerState<PreviewPaywallScreen> {
               header: true,
               child: Text(
                 'Your free preview',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+                style: pageHeadingStyle,
               ),
             ),
             const SizedBox(height: 16),
@@ -886,7 +886,7 @@ class _PaywallCard extends StatelessWidget {
               header: true,
               child: const Text(
                 'Choose your packet',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+                style: pageHeadingStyle,
               ),
             ),
             const SizedBox(height: 8),

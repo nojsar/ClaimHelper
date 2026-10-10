@@ -12,6 +12,7 @@ import '../../services/analytics.dart';
 import '../../services/backend.dart';
 import '../../state/intake_controller.dart';
 import '../../widgets/app_scaffold.dart';
+import '../../widgets/dawn.dart';
 import '../../widgets/ui.dart';
 import 'file_drop.dart';
 import 'upload_validation.dart';
@@ -220,9 +221,11 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
                     child: const Text(
                       'Upload your denial letter',
                       style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.5,
+                        fontFamily: AppFonts.serif,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.6,
+                        height: 1.12,
                       ),
                     ),
                   ),
@@ -571,106 +574,91 @@ class _DropZone extends StatelessWidget {
     final browseLabel = hasFiles ? 'Choose more files' : 'Choose files';
     final reduceMotion =
         MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    return AnimatedContainer(
-      duration:
-          reduceMotion ? Duration.zero : const Duration(milliseconds: 160),
-      curve: Curves.easeOut,
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        vertical: dragging ? (compact ? 40 : 52) : (compact ? 32 : 44),
-        horizontal: 20,
+    // A sheet of letter paper with a dashed edge and an envelope that opens
+    // as a file comes near; once documents are in, it is sealed.
+    return CustomPaint(
+      foregroundPainter: DashedOutline(
+        color: active
+            ? context.palette.primary
+            : context.palette.primary.withValues(alpha: 0.35),
+        radius: AppRadii.xl,
+        width: dragging ? 2.2 : 1.5,
       ),
-      decoration: BoxDecoration(
-        gradient: dragging ? null : context.palette.heroWash,
-        color: dragging ? context.palette.primaryTint : null,
-        borderRadius: BorderRadius.circular(AppRadii.lg),
-        border: Border.all(
-          color: active
-              ? context.palette.primary
-              : context.palette.primary.withValues(alpha: 0.22),
-          width: dragging ? 2 : 1.4,
+      child: AnimatedContainer(
+        duration:
+            reduceMotion ? Duration.zero : const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(
+          vertical: dragging ? (compact ? 30 : 40) : (compact ? 24 : 32),
+          horizontal: 20,
         ),
-        boxShadow: active ? context.palette.shadowSoft : null,
-      ),
-      child: Column(
-        children: [
-          AnimatedScale(
-            scale: dragging ? 1.12 : 1.0,
-            duration: reduceMotion
-                ? Duration.zero
-                : const Duration(milliseconds: 160),
-            child: Container(
-              width: 60,
-              height: 60,
+        decoration: BoxDecoration(
+          color:
+              dragging ? context.palette.primaryTint : context.palette.surface,
+          borderRadius: BorderRadius.circular(AppRadii.xl),
+          boxShadow: active
+              ? context.palette.shadowSoft
+              : context.palette.shadowSubtle,
+        ),
+        child: Column(
+          children: [
+            EnvelopeArt(
+              open: dragging ? 1.0 : (hovering ? 0.72 : 0.22),
+              sealed: hasFiles && !active,
+              width: compact ? 104 : 124,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              dragging
+                  ? 'Drop your files to add them'
+                  : compact
+                      ? (hasFiles
+                          ? 'Add another denial document'
+                          : 'Choose a denial document')
+                      : (hasFiles
+                          ? 'Drag & drop more files'
+                          : 'Drag & drop your files here'),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              constraints: const BoxConstraints(minHeight: 52),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               decoration: BoxDecoration(
-                gradient: context.palette.brandGradient,
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: const [
-                  BoxShadow(
-                      color: Color(0x442563EB),
-                      blurRadius: 18,
-                      offset: Offset(0, 8),
-                      spreadRadius: -4),
+                color: context.palette.surface,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: context.palette.primary),
+              ),
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 9,
+                runSpacing: 4,
+                children: [
+                  Icon(Icons.folder_open_outlined,
+                      size: 22, color: context.palette.primaryDark),
+                  Text(
+                    browseLabel,
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      color: context.palette.primaryDark,
+                    ),
+                  ),
                 ],
               ),
-              child: Icon(
-                  dragging
-                      ? Icons.file_download_rounded
-                      : Icons.cloud_upload_rounded,
-                  size: 30,
-                  color: Colors.white),
             ),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            dragging
-                ? 'Drop your files to add them'
-                : compact
-                    ? (hasFiles
-                        ? 'Add another denial document'
-                        : 'Choose a denial document')
-                    : (hasFiles
-                        ? 'Drag & drop more files'
-                        : 'Drag & drop your files here'),
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 10),
-          Container(
-            constraints: const BoxConstraints(minHeight: 52),
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-            decoration: BoxDecoration(
-              color: context.palette.surface,
-              borderRadius: BorderRadius.circular(AppRadii.sm),
-              border: Border.all(color: context.palette.primary),
-            ),
-            child: Wrap(
-              alignment: WrapAlignment.center,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 9,
-              runSpacing: 4,
-              children: [
-                Icon(Icons.folder_open_outlined,
-                    size: 22, color: context.palette.primaryDark),
-                Text(
-                  browseLabel,
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    color: context.palette.primaryDark,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (kIsWeb && !compact) ...[
-            const SizedBox(height: 8),
-            Text(
-              'You can also drag files into this area.',
-              style:
-                  TextStyle(fontSize: 16, color: context.palette.textSecondary),
-            ),
+            if (kIsWeb && !compact) ...[
+              const SizedBox(height: 8),
+              Text(
+                'You can also drag files into this area.',
+                style: TextStyle(
+                    fontSize: 16, color: context.palette.textSecondary),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

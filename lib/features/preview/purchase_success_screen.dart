@@ -6,6 +6,8 @@ import '../../core/theme.dart';
 import '../../models/appeal_case.dart';
 import '../../state/providers.dart';
 import '../../widgets/app_scaffold.dart';
+import '../../widgets/dawn.dart';
+import '../../widgets/ui.dart';
 
 /// Landing page after Stripe checkout. It observes the authoritative payment
 /// and packet-generation state, then opens the completed packet.
@@ -197,136 +199,145 @@ class _GenerationStatusCard extends StatelessWidget {
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 560),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(28),
-                decoration: BoxDecoration(
-                  color: context.palette.surface,
-                  borderRadius: BorderRadius.circular(AppRadii.lg),
-                  border: Border.all(color: context.palette.border),
-                  boxShadow: context.palette.shadowSubtle,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        color: paymentConfirmed
-                            ? context.palette.accentTint
-                            : context.palette.primaryTint,
-                        borderRadius: BorderRadius.circular(AppRadii.md),
-                      ),
-                      child: Icon(
-                        paymentConfirmed
-                            ? Icons.verified_user_outlined
-                            : Icons.receipt_long_outlined,
-                        size: 34,
-                        color: paymentConfirmed
-                            ? context.palette.accentBright
-                            : context.palette.primaryDark,
-                      ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Morning: the last of the night lifts once, then holds.
+                  DawnWindow(
+                    dawn: paymentConfirmed ? Dawn.morning : Dawn.summary,
+                    height: 104,
+                    ambient: false,
+                  ),
+                  const SizedBox(height: 18),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(28),
+                    decoration: BoxDecoration(
+                      color: context.palette.surface,
+                      borderRadius: BorderRadius.circular(AppRadii.lg),
+                      border: Border.all(color: context.palette.border),
+                      boxShadow: context.palette.shadowSubtle,
                     ),
-                    const SizedBox(height: 18),
-                    Text(
-                      paymentConfirmed
-                          ? 'Payment confirmed'
-                          : 'Checking your payment',
-                      style: const TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      stage,
-                      style: TextStyle(
-                        fontSize: 17,
-                        height: 1.5,
-                        color: context.palette.textSecondary,
-                      ),
-                    ),
-                    if (onRefresh != null || onOpenSavedCases != null) ...[
-                      const SizedBox(height: 18),
-                      Wrap(
-                        spacing: 10,
-                        runSpacing: 10,
-                        children: [
-                          if (onRefresh != null)
-                            FilledButton.icon(
-                              onPressed: onRefresh,
-                              icon: const Icon(Icons.refresh_rounded),
-                              label: const Text('Refresh status'),
-                            ),
-                          if (onOpenSavedCases != null)
-                            OutlinedButton.icon(
-                              onPressed: onOpenSavedCases,
-                              icon: const Icon(Icons.folder_open_outlined),
-                              label: const Text('My saved cases'),
-                            ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            color: paymentConfirmed
+                                ? context.palette.accentTint
+                                : context.palette.primaryTint,
+                            borderRadius: BorderRadius.circular(AppRadii.md),
+                          ),
+                          child: Icon(
+                            paymentConfirmed
+                                ? Icons.verified_user_outlined
+                                : Icons.receipt_long_outlined,
+                            size: 34,
+                            color: paymentConfirmed
+                                ? context.palette.accentBright
+                                : context.palette.primaryDark,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        Text(
+                          paymentConfirmed
+                              ? 'Payment confirmed'
+                              : 'Checking your payment',
+                          style: pageHeadingStyle,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          stage,
+                          style: TextStyle(
+                            fontSize: 17,
+                            height: 1.5,
+                            color: context.palette.textSecondary,
+                          ),
+                        ),
+                        if (onRefresh != null || onOpenSavedCases != null) ...[
+                          const SizedBox(height: 18),
+                          Wrap(
+                            spacing: 10,
+                            runSpacing: 10,
+                            children: [
+                              if (onRefresh != null)
+                                FilledButton.icon(
+                                  onPressed: onRefresh,
+                                  icon: const Icon(Icons.refresh_rounded),
+                                  label: const Text('Refresh status'),
+                                ),
+                              if (onOpenSavedCases != null)
+                                OutlinedButton.icon(
+                                  onPressed: onOpenSavedCases,
+                                  icon: const Icon(Icons.folder_open_outlined),
+                                  label: const Text('My saved cases'),
+                                ),
+                            ],
+                          ),
                         ],
-                      ),
-                    ],
-                    const SizedBox(height: 22),
-                    if (normalizedProgress == null && reduceMotion)
-                      Container(
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: context.palette.border,
-                          borderRadius: BorderRadius.circular(999),
+                        const SizedBox(height: 22),
+                        if (normalizedProgress == null && reduceMotion)
+                          Container(
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: context.palette.border,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                          )
+                        else
+                          LinearProgressIndicator(
+                            value: normalizedProgress,
+                            minHeight: 10,
+                            borderRadius: BorderRadius.circular(999),
+                            backgroundColor: context.palette.border,
+                            color: context.palette.accent,
+                          ),
+                        if (normalizedProgress != null) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            complete
+                                ? 'Packet ready'
+                                : '${(normalizedProgress * 100).round()}% complete',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: context.palette.textSecondary,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 22),
+                        _StatusRow(
+                          complete: paymentConfirmed,
+                          active: !paymentConfirmed,
+                          label: 'Payment confirmation',
                         ),
-                      )
-                    else
-                      LinearProgressIndicator(
-                        value: normalizedProgress,
-                        minHeight: 10,
-                        borderRadius: BorderRadius.circular(999),
-                        backgroundColor: context.palette.border,
-                        color: context.palette.accent,
-                      ),
-                    if (normalizedProgress != null) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        complete
-                            ? 'Packet ready'
-                            : '${(normalizedProgress * 100).round()}% complete',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: context.palette.textSecondary,
+                        _StatusRow(
+                          complete: complete,
+                          active: paymentConfirmed && !complete,
+                          label: 'Prepare appeal packet',
                         ),
-                      ),
-                    ],
-                    const SizedBox(height: 22),
-                    _StatusRow(
-                      complete: paymentConfirmed,
-                      active: !paymentConfirmed,
-                      label: 'Payment confirmation',
+                        _StatusRow(
+                          complete: complete,
+                          active: false,
+                          label: 'Open and review every page',
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          paymentConfirmed
+                              ? 'You may safely leave this page. Work continues on your account, and the packet will appear in My saved cases.'
+                              : 'Stripe confirmation can take a few seconds. Refreshing checks this payment; it does not start a new checkout.',
+                          style: TextStyle(
+                            fontSize: 16,
+                            height: 1.5,
+                            color: context.palette.textMuted,
+                          ),
+                        ),
+                      ],
                     ),
-                    _StatusRow(
-                      complete: complete,
-                      active: paymentConfirmed && !complete,
-                      label: 'Prepare appeal packet',
-                    ),
-                    _StatusRow(
-                      complete: complete,
-                      active: false,
-                      label: 'Open and review every page',
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      paymentConfirmed
-                          ? 'You may safely leave this page. Work continues on your account, and the packet will appear in My saved cases.'
-                          : 'Stripe confirmation can take a few seconds. Refreshing checks this payment; it does not start a new checkout.',
-                      style: TextStyle(
-                        fontSize: 16,
-                        height: 1.5,
-                        color: context.palette.textMuted,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
