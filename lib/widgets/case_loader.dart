@@ -96,10 +96,10 @@ class _CaseLoaderState extends State<CaseLoader> {
             width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: context.palette.surface,
               borderRadius: BorderRadius.circular(AppRadii.lg),
-              border: Border.all(color: AppColors.border),
-              boxShadow: AppShadows.subtle,
+              border: Border.all(color: context.palette.border),
+              boxShadow: context.palette.shadowSubtle,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -108,14 +108,14 @@ class _CaseLoaderState extends State<CaseLoader> {
                   width: iconSize,
                   height: iconSize,
                   decoration: BoxDecoration(
-                    color: AppColors.primaryTint,
+                    color: context.palette.primaryTint,
                     borderRadius: BorderRadius.circular(AppRadii.md),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: context.palette.border),
                   ),
                   child: Icon(
                     Icons.description_outlined,
                     size: iconSize * 0.5,
-                    color: AppColors.primaryDark,
+                    color: context.palette.primaryDark,
                   ),
                 ),
                 const SizedBox(height: 18),
@@ -128,10 +128,10 @@ class _CaseLoaderState extends State<CaseLoader> {
                 Text(
                   message,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     height: 1.5,
-                    color: AppColors.textSecondary,
+                    color: context.palette.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 18),
@@ -140,24 +140,24 @@ class _CaseLoaderState extends State<CaseLoader> {
                     value: progress,
                     minHeight: 8,
                     borderRadius: BorderRadius.circular(999),
-                    backgroundColor: AppColors.border,
-                    color: AppColors.accent,
+                    backgroundColor: context.palette.border,
+                    color: context.palette.accent,
                   )
                 else
                   Container(
                     height: 8,
                     decoration: BoxDecoration(
-                      color: AppColors.border,
+                      color: context.palette.border,
                       borderRadius: BorderRadius.circular(999),
                     ),
                   ),
                 const SizedBox(height: 12),
-                const Text(
+                Text(
                   'Keep this page open while this step finishes.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
-                    color: AppColors.textMuted,
+                    color: context.palette.textMuted,
                   ),
                 ),
               ],

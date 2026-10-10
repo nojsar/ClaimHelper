@@ -77,6 +77,9 @@ class GetMyYesApp extends StatelessWidget {
       title: AppCopy.appName,
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
+      darkTheme: buildAppTheme(brightness: Brightness.dark),
+      // Follows the system appearance, like the getmyyes.com landing page.
+      themeMode: ThemeMode.system,
       routerConfig: appRouter,
     );
   }

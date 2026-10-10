@@ -231,12 +231,12 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen> {
                     : 'This usually takes 10–30 seconds. Your case can now be '
                         'restored if the page refreshes.',
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: context.palette.textSecondary),
               ),
               if (progress != null) ...[
                 const SizedBox(height: 16),
                 Text('${(progress * 100).toStringAsFixed(0)}%',
-                    style: const TextStyle(color: AppColors.textSecondary)),
+                    style: TextStyle(color: context.palette.textSecondary)),
               ],
               if (retry != null) ...[
                 const SizedBox(height: 20),

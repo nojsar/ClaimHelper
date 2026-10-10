@@ -250,10 +250,10 @@ class _CaseTrackerPanelState extends ConsumerState<CaseTrackerPanel> {
           ),
         ),
         const SizedBox(height: 6),
-        const Text(
+        Text(
           'Save proof and response dates here. Confirmation details stay in '
           'your private case and are never copied into analytics.',
-          style: TextStyle(color: AppColors.textSecondary, height: 1.45),
+          style: TextStyle(color: context.palette.textSecondary, height: 1.45),
         ),
         const SizedBox(height: 18),
         _dateField(
@@ -349,8 +349,8 @@ class _CaseTrackerPanelState extends ConsumerState<CaseTrackerPanel> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: _outcome == AppealOutcome.denied
-                ? AppColors.warningTint
-                : AppColors.accentTint,
+                ? context.palette.warningTint
+                : context.palette.accentTint,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -391,8 +391,9 @@ class _CaseTrackerPanelState extends ConsumerState<CaseTrackerPanel> {
               child: Text(
                 _error ?? _message!,
                 style: TextStyle(
-                  color:
-                      _error == null ? AppColors.accentBright : AppColors.error,
+                  color: _error == null
+                      ? context.palette.accentBright
+                      : context.palette.error,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -405,11 +406,11 @@ class _CaseTrackerPanelState extends ConsumerState<CaseTrackerPanel> {
           child: FilledButton.icon(
             onPressed: _saving ? null : _save,
             icon: _saving
-                ? const SizedBox(
+                ? SizedBox(
                     width: 16,
                     height: 16,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white),
+                        strokeWidth: 2, color: context.palette.onInk),
                   )
                 : const Icon(Icons.save_outlined),
             label: Text(_saving ? 'Saving…' : 'Save case tracker'),

@@ -141,11 +141,11 @@ class _EmailLinkSignInScreenState extends ConsumerState<EmailLinkSignInScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const Text(
+                    Text(
                       'Enter the email address that received this link. We use it '
                       'only to verify access to your saved appeal case.',
                       style: TextStyle(
-                          color: AppColors.textSecondary, height: 1.45),
+                          color: context.palette.textSecondary, height: 1.45),
                     ),
                     const SizedBox(height: 20),
                     TextField(
@@ -165,8 +165,8 @@ class _EmailLinkSignInScreenState extends ConsumerState<EmailLinkSignInScreen> {
                         liveRegion: true,
                         label: 'Error: $_error',
                         child: Text(_error!,
-                            style: const TextStyle(
-                                color: AppColors.error, fontSize: 13)),
+                            style: TextStyle(
+                                color: context.palette.error, fontSize: 13)),
                       ),
                     ],
                     const SizedBox(height: 20),

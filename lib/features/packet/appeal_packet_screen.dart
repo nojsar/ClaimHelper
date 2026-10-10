@@ -132,7 +132,7 @@ class _GeneratePromptState extends ConsumerState<_GeneratePrompt> {
                       label: 'Error: ${_error!}',
                       child: ExcludeSemantics(
                         child: Text(_error!,
-                            style: const TextStyle(color: AppColors.error)),
+                            style: TextStyle(color: context.palette.error)),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -220,7 +220,7 @@ class _PacketTabsState extends ConsumerState<_PacketTabs> {
     final initialIndex = widget.initialTab == 'feedback' ? tabs.length - 1 : 0;
 
     return Title(
-      color: AppColors.primary,
+      color: context.palette.primary,
       title: 'Appeal packet | GetMyYes',
       child: DefaultTabController(
         length: tabs.length,
@@ -279,11 +279,11 @@ class _PacketTabsState extends ConsumerState<_PacketTabs> {
                   child: FilledButton.icon(
                     onPressed: exporting ? null : _export,
                     icon: _exportingPdf
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 16,
                             height: 16,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white))
+                                strokeWidth: 2, color: context.palette.onInk))
                         : const Icon(Icons.picture_as_pdf, size: 18),
                     label: const Text('Export PDF'),
                   ),
@@ -385,16 +385,16 @@ class _FollowUpsTabState extends ConsumerState<_FollowUpsTab> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.warningTint,
+                color: context.palette.warningTint,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Text(
+              child: Text(
                 'One round = one submission, so give it everything you have: '
                 'paste the insurer\'s reply, phone-call outcomes, dates, '
                 'reference numbers, and anything new from your doctor. You '
                 'can use a round any time — even right now.',
                 style: TextStyle(
-                    fontSize: 13, height: 1.45, color: AppColors.warning),
+                    fontSize: 13, height: 1.45, color: context.palette.warning),
               ),
             ),
           ],
@@ -532,8 +532,8 @@ class _FollowUpsTabState extends ConsumerState<_FollowUpsTab> {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: remaining > 0
-                    ? AppColors.accentTint
-                    : AppColors.warningTint,
+                    ? context.palette.accentTint
+                    : context.palette.warningTint,
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
@@ -544,19 +544,19 @@ class _FollowUpsTabState extends ConsumerState<_FollowUpsTab> {
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,
                     color: remaining > 0
-                        ? AppColors.accentBright
-                        : AppColors.warning),
+                        ? context.palette.accentBright
+                        : context.palette.warning),
               ),
             ),
           ],
         ),
         const SizedBox(height: 8),
-        const Text(
+        Text(
           'When the insurer replies — or ignores you — report back and we '
           'draft your next move: a second-level appeal, an external-review '
           'request, a records cover letter, or a status demand. You can use '
           'a round immediately; there\'s no waiting period.',
-          style: TextStyle(color: AppColors.textSecondary, height: 1.5),
+          style: TextStyle(color: context.palette.textSecondary, height: 1.5),
         ),
         const SizedBox(height: 16),
         if (remaining > 0)
@@ -565,11 +565,11 @@ class _FollowUpsTabState extends ConsumerState<_FollowUpsTab> {
             child: FilledButton.icon(
               onPressed: _busy ? null : _startRound,
               icon: _busy
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white))
+                          strokeWidth: 2, color: context.palette.onInk))
                   : const Icon(Icons.forward_to_inbox_rounded, size: 18),
               label: Text(_busy
                   ? 'Drafting your next move…'
@@ -587,11 +587,11 @@ class _FollowUpsTabState extends ConsumerState<_FollowUpsTab> {
                       style:
                           TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
                   const SizedBox(height: 6),
-                  const Text(
+                  Text(
                     'Keep the case moving with one more round, or upgrade '
                     'to Full Case for a larger capped drafting bundle.',
-                    style:
-                        TextStyle(color: AppColors.textSecondary, height: 1.45),
+                    style: TextStyle(
+                        color: context.palette.textSecondary, height: 1.45),
                   ),
                   const SizedBox(height: 14),
                   ResponsiveActions(
@@ -614,8 +614,8 @@ class _FollowUpsTabState extends ConsumerState<_FollowUpsTab> {
                     'follow-up drafting rounds on this case. Your total is '
                     '\$${Pricing.fullCaseUsd} including the packet you already '
                     'bought. No outcome is guaranteed.',
-                    style: const TextStyle(
-                        fontSize: 12, color: AppColors.textMuted),
+                    style: TextStyle(
+                        fontSize: 12, color: context.palette.textMuted),
                   ),
                 ],
               ),
@@ -675,9 +675,9 @@ class _FollowUpRoundCard extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.surfaceAlt,
+            color: context.palette.surfaceAlt,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: context.palette.border),
           ),
           child: SelectableText(body,
               style: const TextStyle(height: 1.5, fontSize: 13.5)),
@@ -700,7 +700,7 @@ class _FollowUpRoundCard extends StatelessWidget {
             ? null
             : Text(_dateLabel,
                 style:
-                    const TextStyle(fontSize: 12, color: AppColors.textMuted)),
+                    TextStyle(fontSize: 12, color: context.palette.textMuted)),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         expandedCrossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -729,7 +729,7 @@ class _FollowUpRoundCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.warningTint,
+                color: context.palette.warningTint,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
@@ -737,8 +737,8 @@ class _FollowUpRoundCard extends StatelessWidget {
                 children: [
                   for (final w in round.warnings)
                     Text('• $w',
-                        style: const TextStyle(
-                            color: AppColors.warning,
+                        style: TextStyle(
+                            color: context.palette.warning,
                             fontSize: 12.5,
                             height: 1.5)),
                 ],
@@ -747,10 +747,10 @@ class _FollowUpRoundCard extends StatelessWidget {
             const SizedBox(height: 12),
           ],
           Text(round.disclaimer,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 11.5,
                   fontStyle: FontStyle.italic,
-                  color: AppColors.textMuted)),
+                  color: context.palette.textMuted)),
         ],
       ),
     );
@@ -803,9 +803,9 @@ class _SaveCaseButtonState extends ConsumerState<_SaveCaseButton> {
   @override
   Widget build(BuildContext context) {
     if (widget.appealCase.saved) {
-      return const IconButton(
+      return IconButton(
         tooltip: 'Saved to your account',
-        icon: Icon(Icons.bookmark_added, color: AppColors.accent),
+        icon: Icon(Icons.bookmark_added, color: context.palette.accent),
         onPressed: null,
       );
     }
@@ -882,9 +882,10 @@ class _NextActionsChecklist extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'Work through these in the order that fits your notice. You remain responsible for reviewing every document and confirming your plan\'s requirements.',
-              style: TextStyle(color: AppColors.textSecondary, height: 1.45),
+              style:
+                  TextStyle(color: context.palette.textSecondary, height: 1.45),
             ),
             const SizedBox(height: 10),
             for (var index = 0; index < actions.length; index++)
@@ -892,8 +893,8 @@ class _NextActionsChecklist extends StatelessWidget {
                 contentPadding: EdgeInsets.zero,
                 leading: CircleAvatar(
                   radius: 15,
-                  backgroundColor: AppColors.primaryTint,
-                  foregroundColor: AppColors.primaryDark,
+                  backgroundColor: context.palette.primaryTint,
+                  foregroundColor: context.palette.primaryDark,
                   child: Text('${index + 1}'),
                 ),
                 title: Text(actions[index].title),
@@ -966,18 +967,18 @@ class _FullCaseUpgradeCardState extends ConsumerState<_FullCaseUpgradeCard> {
             Text(
               'Optional: upgrade this paid packet to Full Case for \$${Pricing.fullCaseUpgradeUsd} more. It provides up to ${Pricing.fullCaseRoundsCap} follow-up drafting rounds total for this case. Your current packet stays available, and no appeal outcome is guaranteed.',
               style:
-                  const TextStyle(color: AppColors.textSecondary, height: 1.45),
+                  TextStyle(color: context.palette.textSecondary, height: 1.45),
             ),
             const SizedBox(height: 14),
             FilledButton.icon(
               onPressed: _starting ? null : _upgrade,
               icon: _starting
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.white,
+                        color: context.palette.onInk,
                       ),
                     )
                   : const Icon(Icons.add_task_outlined),
@@ -1020,23 +1021,24 @@ class _SummaryTab extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: AppColors.warningTint,
+              color: context.palette.warningTint,
               borderRadius: BorderRadius.circular(10),
-              border:
-                  Border.all(color: AppColors.warning.withValues(alpha: 0.35)),
+              border: Border.all(
+                  color: context.palette.warning.withValues(alpha: 0.35)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Important',
+                Text('Important',
                     style: TextStyle(
-                        fontWeight: FontWeight.w700, color: AppColors.warning)),
+                        fontWeight: FontWeight.w700,
+                        color: context.palette.warning)),
                 const SizedBox(height: 6),
                 for (final w in packet.warnings)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 2),
                     child: Text('• $w',
-                        style: const TextStyle(color: AppColors.warning)),
+                        style: TextStyle(color: context.palette.warning)),
                   ),
               ],
             ),
@@ -1087,9 +1089,9 @@ class _TextTab extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: context.palette.surface,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: context.palette.border),
           ),
           child: SelectableText(body,
               style: const TextStyle(height: 1.5, fontSize: 14)),
@@ -1103,10 +1105,10 @@ class _EvidenceTab extends StatelessWidget {
   const _EvidenceTab({required this.items});
   final List<EvidenceItem> items;
 
-  Color _statusColor(String status) => switch (status) {
-        'provided' => AppColors.accent,
-        'missing' => AppColors.error,
-        _ => AppColors.textSecondary,
+  Color _statusColor(BuildContext context, String status) => switch (status) {
+        'provided' => context.palette.accent,
+        'missing' => context.palette.error,
+        _ => context.palette.textSecondary,
       };
 
   IconData _statusIcon(String status) => switch (status) {
@@ -1125,14 +1127,14 @@ class _EvidenceTab extends StatelessWidget {
         for (final e in items)
           Card(
             child: ListTile(
-              leading:
-                  Icon(_statusIcon(e.status), color: _statusColor(e.status)),
+              leading: Icon(_statusIcon(e.status),
+                  color: _statusColor(context, e.status)),
               title: Text(e.item,
                   style: const TextStyle(fontWeight: FontWeight.w600)),
               subtitle: Text(e.whyNeeded),
               trailing: Text(e.status,
                   style: TextStyle(
-                      color: _statusColor(e.status),
+                      color: _statusColor(context, e.status),
                       fontWeight: FontWeight.w600,
                       fontSize: 12)),
             ),
@@ -1146,10 +1148,10 @@ class _DeadlinesTab extends StatelessWidget {
   const _DeadlinesTab({required this.items});
   final List<DeadlineItem> items;
 
-  Color _priColor(String p) => switch (p) {
-        'high' => AppColors.error,
-        'medium' => AppColors.warning,
-        _ => AppColors.textSecondary,
+  Color _priColor(BuildContext context, String p) => switch (p) {
+        'high' => context.palette.error,
+        'medium' => context.palette.warning,
+        _ => context.palette.textSecondary,
       };
 
   @override
@@ -1162,18 +1164,18 @@ class _DeadlinesTab extends StatelessWidget {
         for (final d in items)
           Card(
             child: ListTile(
-              leading: Icon(Icons.event, color: _priColor(d.priority)),
+              leading: Icon(Icons.event, color: _priColor(context, d.priority)),
               title: Text(d.task),
               subtitle: Text(d.dueDate ?? 'Confirm date with your insurer'),
               trailing: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _priColor(d.priority).withValues(alpha: 0.12),
+                  color: _priColor(context, d.priority).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(d.priority,
                     style: TextStyle(
-                        color: _priColor(d.priority),
+                        color: _priColor(context, d.priority),
                         fontSize: 12,
                         fontWeight: FontWeight.w600)),
               ),
@@ -1237,22 +1239,23 @@ class _FeedbackTabState extends ConsumerState<_FeedbackTab> {
     if (existing != null || _saved) {
       return ListView(
         padding: const EdgeInsets.all(20),
-        children: const [
+        children: [
           Card(
             child: Padding(
               padding: EdgeInsets.all(18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.check_circle_outline, color: AppColors.accent),
+                  Icon(Icons.check_circle_outline,
+                      color: context.palette.accent),
                   SizedBox(height: 10),
                   Text('Thanks — your private feedback was saved.',
                       style: TextStyle(fontWeight: FontWeight.w800)),
                   SizedBox(height: 6),
                   Text(
                     'Only your fixed choices were saved. Nothing is published automatically.',
-                    style:
-                        TextStyle(color: AppColors.textSecondary, height: 1.45),
+                    style: TextStyle(
+                        color: context.palette.textSecondary, height: 1.45),
                   ),
                 ],
               ),
@@ -1266,9 +1269,9 @@ class _FeedbackTabState extends ConsumerState<_FeedbackTab> {
       children: [
         _sectionTitle('How was this packet?'),
         const SizedBox(height: 8),
-        const Text(
+        Text(
           'Optional. Choose only the fixed options below — do not include medical, insurance, or personal details. Your choices help us improve the product. If you do not respond here, we may send one transactional feedback request about two weeks after purchase; it is not marketing.',
-          style: TextStyle(color: AppColors.textSecondary, height: 1.45),
+          style: TextStyle(color: context.palette.textSecondary, height: 1.45),
         ),
         const SizedBox(height: 20),
         DropdownButtonFormField<String>(
@@ -1326,11 +1329,11 @@ class _FeedbackTabState extends ConsumerState<_FeedbackTab> {
         FilledButton(
           onPressed: _saving ? null : _save,
           child: _saving
-              ? const SizedBox(
+              ? SizedBox(
                   width: 18,
                   height: 18,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.white),
+                      strokeWidth: 2, color: context.palette.onInk),
                 )
               : const Text('Save feedback'),
         ),
@@ -1347,14 +1350,14 @@ class _DisclaimerFooter extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceAlt,
+        color: context.palette.surfaceAlt,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(text,
-          style: const TextStyle(
+          style: TextStyle(
               fontSize: 12,
               fontStyle: FontStyle.italic,
-              color: AppColors.textSecondary)),
+              color: context.palette.textSecondary)),
     );
   }
 }

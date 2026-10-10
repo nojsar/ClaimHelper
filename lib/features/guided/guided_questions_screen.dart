@@ -204,11 +204,11 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
             ),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'We only ask what the document could not tell us and what '
               'materially improves your preview. Optional packet details can '
               'be added below.',
-              style: TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: context.palette.textSecondary),
             ),
             const SizedBox(height: 8),
             Semantics(
@@ -220,8 +220,8 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
                 style: TextStyle(
                   fontSize: 16,
                   color: _saveError == null
-                      ? AppColors.textMuted
-                      : AppColors.warning,
+                      ? context.palette.textMuted
+                      : context.palette.warning,
                 ),
               ),
             ),
@@ -297,10 +297,11 @@ class _GuidedQuestionsScreenState extends ConsumerState<GuidedQuestionsScreen> {
               ),
             if (plan.askAlternatives) ...[
               _Q('Have you tried required alternatives?'),
-              const Text(
+              Text(
                 'If applicable, add drugs or treatments that failed, were not '
                 'tolerated, or were not safe for you. Leave this blank if none.',
-                style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+                style: TextStyle(
+                    fontSize: 16, color: context.palette.textSecondary),
               ),
               const SizedBox(height: 8),
               _AlternativesEditor(
@@ -630,9 +631,10 @@ class _ProblemList extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.errorTint,
+          color: context.palette.errorTint,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
+          border:
+              Border.all(color: context.palette.error.withValues(alpha: 0.35)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -643,13 +645,13 @@ class _ProblemList extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.error_outline,
-                        size: 16, color: AppColors.error),
+                    Icon(Icons.error_outline,
+                        size: 16, color: context.palette.error),
                     const SizedBox(width: 8),
                     Expanded(
                         child: Text(p,
-                            style: const TextStyle(
-                                fontSize: 13, color: AppColors.error))),
+                            style: TextStyle(
+                                fontSize: 13, color: context.palette.error))),
                   ],
                 ),
               ),

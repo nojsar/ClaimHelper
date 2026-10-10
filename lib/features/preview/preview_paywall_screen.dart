@@ -480,24 +480,30 @@ class _DeadlineBanner extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: urgent ? AppColors.primaryTint : AppColors.surfaceAlt,
+        color:
+            urgent ? context.palette.primaryTint : context.palette.surfaceAlt,
         borderRadius: BorderRadius.circular(AppRadii.md),
         border: Border.all(
-            color: urgent ? AppColors.primary : AppColors.borderStrong,
+            color:
+                urgent ? context.palette.primary : context.palette.borderStrong,
             width: urgent ? 1.2 : 0.8),
       ),
       child: Row(
         children: [
           Icon(Icons.timer_outlined,
               size: 20,
-              color: urgent ? AppColors.primaryDark : AppColors.textSecondary),
+              color: urgent
+                  ? context.palette.primaryDark
+                  : context.palette.textSecondary),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               '$label Filing on time keeps every appeal level open.',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: urgent ? AppColors.primaryDark : AppColors.textPrimary,
+                color: urgent
+                    ? context.palette.primaryDark
+                    : context.palette.textPrimary,
               ),
             ),
           ),
@@ -524,14 +530,14 @@ class _PreviewCard extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.accentTint,
+                  color: context.palette.accentTint,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   preview.amountAtStake!,
                   softWrap: true,
-                  style: const TextStyle(
-                    color: AppColors.accentBright,
+                  style: TextStyle(
+                    color: context.palette.accentBright,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -557,8 +563,8 @@ class _PreviewCard extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.radio_button_unchecked,
-                          size: 16, color: AppColors.textSecondary),
+                      Icon(Icons.radio_button_unchecked,
+                          size: 16, color: context.palette.textSecondary),
                       const SizedBox(width: 8),
                       Expanded(child: Text(m)),
                     ],
@@ -590,8 +596,9 @@ class _LetterTeaserCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              children: const [
-                Icon(Icons.history_edu_outlined, color: AppColors.primaryDark),
+              children: [
+                Icon(Icons.history_edu_outlined,
+                    color: context.palette.primaryDark),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text('Your appeal letter is already started',
@@ -607,9 +614,9 @@ class _LetterTeaserCard extends StatelessWidget {
                   width: double.infinity,
                   padding: EdgeInsets.fromLTRB(18, 18, 18, teaserBottomPadding),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceAlt,
+                    color: context.palette.surfaceAlt,
                     borderRadius: BorderRadius.circular(AppRadii.sm),
-                    border: Border.all(color: AppColors.borderStrong),
+                    border: Border.all(color: context.palette.borderStrong),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -638,7 +645,7 @@ class _LetterTeaserCard extends StatelessWidget {
                                     widthFactor: w,
                                     child: Container(
                                         height: 9,
-                                        color: AppColors.textSecondary
+                                        color: context.palette.textSecondary
                                             .withValues(alpha: 0.5)),
                                   ),
                                 ),
@@ -662,16 +669,16 @@ class _LetterTeaserCard extends StatelessWidget {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          AppColors.surfaceAlt.withValues(alpha: 0),
-                          AppColors.surfaceAlt,
+                          context.palette.surfaceAlt.withValues(alpha: 0),
+                          context.palette.surfaceAlt,
                         ],
                       ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
+                      children: [
                         Icon(Icons.lock_outline,
-                            size: 15, color: AppColors.textSecondary),
+                            size: 15, color: context.palette.textSecondary),
                         SizedBox(width: 6),
                         Flexible(
                           child: Text(
@@ -680,7 +687,7 @@ class _LetterTeaserCard extends StatelessWidget {
                             style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.textSecondary),
+                                color: context.palette.textSecondary),
                           ),
                         ),
                       ],
@@ -726,8 +733,9 @@ class _MissingPiecesCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              children: const [
-                Icon(Icons.playlist_add_rounded, color: AppColors.primaryDark),
+              children: [
+                Icon(Icons.playlist_add_rounded,
+                    color: context.palette.primaryDark),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text('Add the missing pieces',
@@ -737,10 +745,11 @@ class _MissingPiecesCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'Know any of the items above? Type them here or attach the '
               'documents — your preview (and later your packet) will use them.',
-              style: TextStyle(color: AppColors.textSecondary, height: 1.45),
+              style:
+                  TextStyle(color: context.palette.textSecondary, height: 1.45),
             ),
             const SizedBox(height: 14),
             TextField(
@@ -780,17 +789,17 @@ class _MissingPiecesCard extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.error_outline,
                         size: 18,
-                        color: AppColors.error,
+                        color: context.palette.error,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           fileError!,
-                          style: const TextStyle(
-                            color: AppColors.error,
+                          style: TextStyle(
+                            color: context.palette.error,
                             fontSize: 16,
                             height: 1.4,
                           ),
@@ -812,11 +821,11 @@ class _MissingPiecesCard extends StatelessWidget {
                 FilledButton.icon(
                   onPressed: updating ? null : onApply,
                   icon: updating
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 16,
                           height: 16,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white))
+                              strokeWidth: 2, color: context.palette.onInk))
                       : const Icon(Icons.refresh_rounded, size: 18),
                   label: Text(
                       updating ? 'Updating preview…' : 'Update my preview'),
@@ -824,9 +833,9 @@ class _MissingPiecesCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'PDF, JPG, PNG, HEIC, or WebP — 20 MB each, 45 MB total.',
-              style: TextStyle(fontSize: 16, color: AppColors.textMuted),
+              style: TextStyle(fontSize: 16, color: context.palette.textMuted),
             ),
           ],
         ),
@@ -881,13 +890,13 @@ class _PaywallCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'You can keep the free summary without buying. If you continue, '
               'you make one payment through Stripe — there is no subscription.',
               style: TextStyle(
                 fontSize: 17,
                 height: 1.5,
-                color: AppColors.textSecondary,
+                color: context.palette.textSecondary,
               ),
             ),
             const SizedBox(height: 14),
@@ -895,17 +904,17 @@ class _PaywallCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.accentTint,
+                color: context.palette.accentTint,
                 borderRadius: BorderRadius.circular(AppRadii.sm),
-                border:
-                    Border.all(color: AppColors.accent.withValues(alpha: 0.28)),
+                border: Border.all(
+                    color: context.palette.accent.withValues(alpha: 0.28)),
               ),
               child: Text(
                 'Suggested from your answers: $recommended',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: context.palette.textPrimary,
                 ),
               ),
             ),
@@ -944,8 +953,8 @@ class _PaywallCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 3),
                 child: Row(
                   children: [
-                    const Icon(Icons.check_circle,
-                        size: 18, color: AppColors.accent),
+                    Icon(Icons.check_circle,
+                        size: 18, color: context.palette.accent),
                     const SizedBox(width: 8),
                     Expanded(child: Text(i)),
                   ],
@@ -957,11 +966,11 @@ class _PaywallCard extends StatelessWidget {
               child: FilledButton.icon(
                 onPressed: purchasing ? null : onBuy,
                 icon: purchasing
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white))
+                            strokeWidth: 2, color: context.palette.onInk))
                     : const Icon(Icons.lock_outline_rounded),
                 label: Text(purchasing
                     ? 'Starting checkout…'
@@ -969,21 +978,21 @@ class _PaywallCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               'An account is required only when you continue to checkout, so '
               'your packet can be saved securely.',
               style: TextStyle(
                 fontSize: 16,
                 height: 1.45,
-                color: AppColors.textSecondary,
+                color: context.palette.textSecondary,
               ),
             ),
             const SizedBox(height: 12),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Icon(Icons.verified_user_outlined,
-                    size: 17, color: AppColors.accent),
+                    size: 17, color: context.palette.accent),
                 SizedBox(width: 7),
                 Expanded(
                   child: Text(
@@ -995,12 +1004,12 @@ class _PaywallCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Stripe processes the payment. GetMyYes never receives or stores your full card number.',
               style: TextStyle(
                 fontSize: 16,
                 height: 1.45,
-                color: AppColors.textMuted,
+                color: context.palette.textMuted,
               ),
             ),
             const SizedBox(height: 6),
@@ -1034,7 +1043,7 @@ class _PaywallCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       height: 1.45,
-                      color: AppColors.textSecondary,
+                      color: context.palette.textSecondary,
                     ),
                   ),
                 ),
@@ -1095,9 +1104,9 @@ class _PricingLink extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
-                color: AppColors.primaryDark,
+                color: context.palette.primaryDark,
                 fontWeight: FontWeight.w600,
                 decoration: TextDecoration.underline,
               ),
@@ -1147,10 +1156,14 @@ class _TierOption extends StatelessWidget {
               reduceMotion ? Duration.zero : const Duration(milliseconds: 180),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: selected ? AppColors.primaryTint : AppColors.surface,
+            color: selected
+                ? context.palette.primaryTint
+                : context.palette.surface,
             borderRadius: BorderRadius.circular(AppRadii.md),
             border: Border.all(
-              color: selected ? AppColors.primaryDark : AppColors.controlBorder,
+              color: selected
+                  ? context.palette.primaryDark
+                  : context.palette.controlBorder,
               width: selected ? 1.6 : 0.8,
             ),
           ),
@@ -1162,8 +1175,9 @@ class _TierOption extends StatelessWidget {
                     ? Icons.radio_button_checked
                     : Icons.radio_button_unchecked,
                 size: 20,
-                color:
-                    selected ? AppColors.primaryDark : AppColors.textSecondary,
+                color: selected
+                    ? context.palette.primaryDark
+                    : context.palette.textSecondary,
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -1180,18 +1194,18 @@ class _TierOption extends StatelessWidget {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text('\$$price',
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 19,
                                 fontWeight: FontWeight.w800,
-                                color: AppColors.primaryDark)),
+                                color: context.palette.primaryDark)),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Text(caption,
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 16,
                             height: 1.5,
-                            color: AppColors.textSecondary)),
+                            color: context.palette.textSecondary)),
                   ],
                 ),
               ),
@@ -1231,8 +1245,9 @@ class _ReminderCard extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
-              children: const [
-                Icon(Icons.mark_email_read_outlined, color: AppColors.accent),
+              children: [
+                Icon(Icons.mark_email_read_outlined,
+                    color: context.palette.accent),
                 SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -1255,9 +1270,9 @@ class _ReminderCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              children: const [
+              children: [
                 Icon(Icons.schedule_send_outlined,
-                    color: AppColors.primaryDark, size: 20),
+                    color: context.palette.primaryDark, size: 20),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text('Save a private link to this preview',
@@ -1276,8 +1291,10 @@ class _ReminderCard extends StatelessWidget {
                   : 'Optional. We\'ll email this preview and a private case link, '
                       'then send transactional deadline reminders. Your unpaid case '
                       'is retained for up to 14 days; this is not marketing.',
-              style: const TextStyle(
-                  color: AppColors.textSecondary, height: 1.5, fontSize: 16),
+              style: TextStyle(
+                  color: context.palette.textSecondary,
+                  height: 1.5,
+                  fontSize: 16),
             ),
             const SizedBox(height: 12),
             LayoutBuilder(
@@ -1299,11 +1316,11 @@ class _ReminderCard extends StatelessWidget {
                 final button = FilledButton(
                   onPressed: saving ? null : onSave,
                   child: saving
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 16,
                           height: 16,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white))
+                              strokeWidth: 2, color: context.palette.onInk))
                       : const Text('Save preview & remind me'),
                 );
                 if (stack) {

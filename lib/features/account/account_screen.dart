@@ -219,10 +219,11 @@ class _AccountPromptState extends ConsumerState<_AccountPrompt> {
                       fontSize: 16, fontWeight: FontWeight.w700)),
             ),
             const SizedBox(height: 4),
-            const Text(
+            Text(
               'You can browse and generate a preview without an account. Save '
               'and restore packets by creating one.',
-              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              style:
+                  TextStyle(fontSize: 13, color: context.palette.textSecondary),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -255,7 +256,7 @@ class _AccountPromptState extends ConsumerState<_AccountPrompt> {
                 label: 'Error: ${_error!}',
                 child: ExcludeSemantics(
                   child: Text(_error!,
-                      style: const TextStyle(color: AppColors.error)),
+                      style: TextStyle(color: context.palette.error)),
                 ),
               ),
             ],
@@ -267,7 +268,7 @@ class _AccountPromptState extends ConsumerState<_AccountPrompt> {
                 child: ExcludeSemantics(
                   child: Text(
                     _status!,
-                    style: const TextStyle(color: AppColors.accent),
+                    style: TextStyle(color: context.palette.accent),
                   ),
                 ),
               ),
@@ -317,7 +318,7 @@ class _AccountCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       child: ListTile(
-        leading: const Icon(Icons.account_circle, color: AppColors.primary),
+        leading: Icon(Icons.account_circle, color: context.palette.primary),
         title: Text(email ?? 'Signed in'),
         subtitle: const Text('Your cases are saved to this account.'),
         trailing: TextButton(
@@ -346,7 +347,9 @@ class _CaseTile extends StatelessWidget {
           appealCase.paid
               ? Icons.workspace_premium
               : Icons.description_outlined,
-          color: appealCase.paid ? AppColors.accent : AppColors.primary,
+          color: appealCase.paid
+              ? context.palette.accent
+              : context.palette.primary,
         ),
         title: Text(ex?.deniedItem ?? 'Denial case',
             maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -379,11 +382,11 @@ class _EmptyCases extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 32),
       child: Column(
         children: [
-          const Icon(Icons.folder_open,
-              size: 40, color: AppColors.textSecondary),
+          Icon(Icons.folder_open,
+              size: 40, color: context.palette.textSecondary),
           const SizedBox(height: 12),
-          const Text('No cases yet',
-              style: TextStyle(color: AppColors.textSecondary)),
+          Text('No cases yet',
+              style: TextStyle(color: context.palette.textSecondary)),
           const SizedBox(height: 16),
           FilledButton.icon(
             onPressed: () => context.go('/upload'),

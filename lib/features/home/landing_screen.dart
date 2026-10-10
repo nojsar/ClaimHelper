@@ -97,7 +97,7 @@ class _Hero extends StatelessWidget {
                 fontWeight: FontWeight.w800,
                 height: 1.08,
                 letterSpacing: -1.4,
-                color: AppColors.textPrimary,
+                color: context.palette.textPrimary,
               ),
               children: [
                 const TextSpan(text: 'Understand your denial. Build a '),
@@ -105,7 +105,7 @@ class _Hero extends StatelessWidget {
                   text: 'clear appeal packet',
                   style: TextStyle(
                     foreground: Paint()
-                      ..shader = AppGradients.accentText
+                      ..shader = context.palette.accentTextGradient
                           .createShader(const Rect.fromLTWH(0, 0, 420, 60)),
                   ),
                 ),
@@ -121,8 +121,10 @@ class _Hero extends StatelessWidget {
           child: Text(
             AppCopy.subTagline,
             textAlign: wide ? TextAlign.start : TextAlign.center,
-            style: const TextStyle(
-                fontSize: 17.5, height: 1.6, color: AppColors.textSecondary),
+            style: TextStyle(
+                fontSize: 17.5,
+                height: 1.6,
+                color: context.palette.textSecondary),
           ),
         ),
         const SizedBox(height: 30),
@@ -165,7 +167,7 @@ class _Hero extends StatelessWidget {
     const visual = _PacketPreview();
 
     return _Section(
-      gradient: AppGradients.heroWash,
+      gradient: context.palette.heroWash,
       padding: EdgeInsets.fromLTRB(24, wide ? 96 : 84, 24, 72),
       child: wide
           ? Row(
@@ -191,13 +193,13 @@ class _TrustPoint extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 17, color: AppColors.accent),
+        Icon(icon, size: 17, color: context.palette.accent),
         const SizedBox(width: 7),
         Text(text,
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary)),
+                color: context.palette.textSecondary)),
       ],
     );
   }
@@ -211,10 +213,10 @@ class _PacketPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.palette.surface,
         borderRadius: BorderRadius.circular(AppRadii.xl),
-        border: Border.all(color: AppColors.border),
-        boxShadow: AppShadows.lifted,
+        border: Border.all(color: context.palette.border),
+        boxShadow: context.palette.shadowLifted,
       ),
       padding: const EdgeInsets.all(22),
       child: Column(
@@ -224,7 +226,7 @@ class _PacketPreview extends StatelessWidget {
             children: [
               const IconTile(icon: Icons.description_rounded, size: 42),
               const SizedBox(width: 12),
-              const Flexible(
+              Flexible(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -237,16 +239,16 @@ class _PacketPreview extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                            fontSize: 15, color: AppColors.textMuted)),
+                            fontSize: 15, color: context.palette.textMuted)),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
               const Spacer(),
-              const PillBadge(
+              PillBadge(
                 label: 'Ready',
                 icon: Icons.check_circle_rounded,
-                color: AppColors.accent,
+                color: context.palette.accent,
               ),
             ],
           ),
@@ -255,7 +257,7 @@ class _PacketPreview extends StatelessWidget {
           const _FakeLine(widthFactor: 0.92),
           const _FakeLine(widthFactor: 0.72),
           const SizedBox(height: 16),
-          Container(height: 1, color: AppColors.border),
+          Container(height: 1, color: context.palette.border),
           const SizedBox(height: 16),
           ...[
             'Appeal letter draft',
@@ -266,14 +268,14 @@ class _PacketPreview extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 11),
                 child: Row(
                   children: [
-                    const Icon(Icons.check_circle_rounded,
-                        size: 18, color: AppColors.accent),
+                    Icon(Icons.check_circle_rounded,
+                        size: 18, color: context.palette.accent),
                     const SizedBox(width: 10),
                     Text(t,
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary)),
+                            color: context.palette.textPrimary)),
                   ],
                 ),
               )),
@@ -281,22 +283,23 @@ class _PacketPreview extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.accentTint,
+              color: context.palette.accentTint,
               borderRadius: BorderRadius.circular(AppRadii.md),
             ),
             child: Row(
-              children: const [
-                Icon(Icons.savings_outlined, size: 18, color: AppColors.accent),
+              children: [
+                Icon(Icons.savings_outlined,
+                    size: 18, color: context.palette.accent),
                 SizedBox(width: 10),
                 Text('\$1,349 at stake',
                     style: TextStyle(
                         fontWeight: FontWeight.w800,
-                        color: AppColors.accent,
+                        color: context.palette.accent,
                         fontSize: 16)),
                 Spacer(),
                 Text('PDF ready',
                     style: TextStyle(
-                        fontSize: 15, color: AppColors.textSecondary)),
+                        fontSize: 15, color: context.palette.textSecondary)),
               ],
             ),
           ),
@@ -319,7 +322,7 @@ class _FakeLine extends StatelessWidget {
         child: Container(
           height: 9,
           decoration: BoxDecoration(
-            color: AppColors.surfaceAlt,
+            color: context.palette.surfaceAlt,
             borderRadius: BorderRadius.circular(6),
           ),
         ),
@@ -333,7 +336,7 @@ class _LogosStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _Section(
-      color: AppColors.surface,
+      color: context.palette.surface,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 26),
       child: Wrap(
         alignment: WrapAlignment.center,
@@ -366,13 +369,13 @@ class _StatChip extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(value,
-            style: const TextStyle(
+            style: TextStyle(
                 fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
+                color: context.palette.textPrimary,
                 fontSize: 16)),
         const SizedBox(width: 6),
         Text(label,
-            style: const TextStyle(color: AppColors.textMuted, fontSize: 16)),
+            style: TextStyle(color: context.palette.textMuted, fontSize: 16)),
       ],
     );
   }
@@ -384,8 +387,8 @@ class _Dot extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         width: 4,
         height: 4,
-        decoration: const BoxDecoration(
-            color: AppColors.borderStrong, shape: BoxShape.circle),
+        decoration: BoxDecoration(
+            color: context.palette.borderStrong, shape: BoxShape.circle),
       );
 }
 
@@ -454,24 +457,24 @@ class _HowItWorks extends StatelessWidget {
                               IconTile(icon: _steps[i].$2),
                               const Spacer(),
                               Text(_steps[i].$1,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontSize: 22,
                                       fontWeight: FontWeight.w800,
-                                      color: AppColors.border)),
+                                      color: context.palette.border)),
                             ],
                           ),
                           const SizedBox(height: 18),
                           Text(_steps[i].$3,
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 16.5,
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary)),
+                                  color: context.palette.textPrimary)),
                           const SizedBox(height: 8),
                           Text(_steps[i].$4,
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 16,
                                   height: 1.5,
-                                  color: AppColors.textSecondary)),
+                                  color: context.palette.textSecondary)),
                         ],
                       ),
                     ),
@@ -524,7 +527,7 @@ class _WhatsIncluded extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _Section(
-      color: AppColors.surfaceAlt,
+      color: context.palette.surfaceAlt,
       fillViewport: true,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -552,8 +555,8 @@ class _WhatsIncluded extends StatelessWidget {
                         children: [
                           IconTile(
                             icon: it.$1,
-                            color: AppColors.accent,
-                            background: AppColors.accentTint,
+                            color: context.palette.accent,
+                            background: context.palette.accentTint,
                           ),
                           const SizedBox(height: 16),
                           Text(it.$2,
@@ -561,10 +564,10 @@ class _WhatsIncluded extends StatelessWidget {
                                   fontSize: 16, fontWeight: FontWeight.w700)),
                           const SizedBox(height: 7),
                           Text(it.$3,
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 16,
                                   height: 1.5,
-                                  color: AppColors.textSecondary)),
+                                  color: context.palette.textSecondary)),
                         ],
                       ),
                     ),
@@ -593,15 +596,15 @@ class _TrustBand extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.check_circle_rounded,
-                    size: 20, color: AppColors.accent),
+                Icon(Icons.check_circle_rounded,
+                    size: 20, color: context.palette.accent),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(b,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 15,
                           height: 1.45,
-                          color: AppColors.textPrimary)),
+                          color: context.palette.textPrimary)),
                 ),
               ],
             ),
@@ -622,12 +625,14 @@ class _TrustBand extends StatelessWidget {
                 letterSpacing: -0.6,
                 height: 1.15)),
         const SizedBox(height: 14),
-        const Text(
+        Text(
           'GetMyYes is a document drafting assistant — not medical, legal, '
           'or insurance advice. We never train AI on your documents, and you '
           'review everything before it\'s sent.',
           style: TextStyle(
-              fontSize: 15.5, height: 1.6, color: AppColors.textSecondary),
+              fontSize: 15.5,
+              height: 1.6,
+              color: context.palette.textSecondary),
         ),
       ],
     );
@@ -637,9 +642,10 @@ class _TrustBand extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(wide ? 44 : 28),
         decoration: BoxDecoration(
-          color: AppColors.primaryTint,
+          color: context.palette.primaryTint,
           borderRadius: BorderRadius.circular(AppRadii.xl),
-          border: Border.all(color: AppColors.primary.withValues(alpha: 0.12)),
+          border: Border.all(
+              color: context.palette.primary.withValues(alpha: 0.12)),
         ),
         child: wide
             ? Row(
@@ -663,7 +669,7 @@ class _PricingTeaser extends StatelessWidget {
   Widget build(BuildContext context) {
     final wide = MediaQuery.sizeOf(context).width > 1040;
     return _Section(
-      color: AppColors.surfaceAlt,
+      color: context.palette.surfaceAlt,
       fillViewport: true,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -778,12 +784,14 @@ class _PriceCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        gradient: highlighted ? AppGradients.cta : null,
-        color: highlighted ? null : AppColors.surface,
+        gradient: highlighted ? context.palette.ctaGradient : null,
+        color: highlighted ? null : context.palette.surface,
         borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(
-            color: highlighted ? Colors.transparent : AppColors.border),
-        boxShadow: highlighted ? AppShadows.lifted : AppShadows.subtle,
+            color: highlighted ? Colors.transparent : context.palette.border),
+        boxShadow: highlighted
+            ? context.palette.shadowLifted
+            : context.palette.shadowSubtle,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -796,7 +804,7 @@ class _PriceCard extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                       color: highlighted
                           ? Colors.white.withValues(alpha: 0.9)
-                          : AppColors.textSecondary)),
+                          : context.palette.textSecondary)),
               const Spacer(),
               if (highlighted)
                 const PillBadge(
@@ -816,8 +824,9 @@ class _PriceCard extends StatelessWidget {
                       fontSize: 42,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -1.5,
-                      color:
-                          highlighted ? Colors.white : AppColors.textPrimary)),
+                      color: highlighted
+                          ? Colors.white
+                          : context.palette.textPrimary)),
               const SizedBox(width: 8),
               Flexible(
                 child: Text(blurb,
@@ -826,7 +835,7 @@ class _PriceCard extends StatelessWidget {
                         fontSize: 16,
                         color: highlighted
                             ? Colors.white.withValues(alpha: 0.85)
-                            : AppColors.textMuted)),
+                            : context.palette.textMuted)),
               ),
             ],
           ),
@@ -837,7 +846,9 @@ class _PriceCard extends StatelessWidget {
                   children: [
                     Icon(Icons.check_circle_rounded,
                         size: 19,
-                        color: highlighted ? Colors.white : AppColors.accent),
+                        color: highlighted
+                            ? Colors.white
+                            : context.palette.accent),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(f,
@@ -845,7 +856,7 @@ class _PriceCard extends StatelessWidget {
                               fontSize: 16,
                               color: highlighted
                                   ? Colors.white
-                                  : AppColors.textPrimary)),
+                                  : context.palette.textPrimary)),
                     ),
                   ],
                 ),
@@ -857,7 +868,7 @@ class _PriceCard extends StatelessWidget {
                 ? FilledButton(
                     onPressed: () => context.go('/upload'),
                     style: FilledButton.styleFrom(
-                      backgroundColor: Colors.white,
+                      backgroundColor: context.palette.panelAction,
                       foregroundColor: AppColors.primaryDark,
                     ),
                     child: const Text('See my free denial summary'),
@@ -883,9 +894,9 @@ class _ClosingCta extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 56),
         decoration: BoxDecoration(
-          gradient: AppGradients.cta,
+          gradient: context.palette.ctaGradient,
           borderRadius: BorderRadius.circular(AppRadii.xl),
-          boxShadow: AppShadows.lifted,
+          boxShadow: context.palette.shadowLifted,
         ),
         child: Column(
           children: [
@@ -907,7 +918,7 @@ class _ClosingCta extends StatelessWidget {
             FilledButton.icon(
               onPressed: () => context.go('/upload'),
               style: FilledButton.styleFrom(
-                backgroundColor: Colors.white,
+                backgroundColor: context.palette.panelAction,
                 foregroundColor: AppColors.primaryDark,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 30, vertical: 18),
@@ -929,7 +940,7 @@ class _Footer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: AppColors.ink,
+      color: context.palette.panel,
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1120),
@@ -974,8 +985,8 @@ class _Footer extends StatelessWidget {
                             color: Colors.white.withValues(alpha: 0.55))),
                     _FooterLink('Privacy', () => context.go('/settings')),
                     _FooterLink('My cases', () => context.go('/account')),
-                    _FooterLink(
-                        'See my free denial summary', () => context.go('/upload')),
+                    _FooterLink('See my free denial summary',
+                        () => context.go('/upload')),
                   ],
                 ),
               ],

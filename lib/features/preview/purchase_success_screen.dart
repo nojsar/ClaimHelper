@@ -201,10 +201,10 @@ class _GenerationStatusCard extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(28),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: context.palette.surface,
                   borderRadius: BorderRadius.circular(AppRadii.lg),
-                  border: Border.all(color: AppColors.border),
-                  boxShadow: AppShadows.subtle,
+                  border: Border.all(color: context.palette.border),
+                  boxShadow: context.palette.shadowSubtle,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -214,8 +214,8 @@ class _GenerationStatusCard extends StatelessWidget {
                       height: 64,
                       decoration: BoxDecoration(
                         color: paymentConfirmed
-                            ? AppColors.accentTint
-                            : AppColors.primaryTint,
+                            ? context.palette.accentTint
+                            : context.palette.primaryTint,
                         borderRadius: BorderRadius.circular(AppRadii.md),
                       ),
                       child: Icon(
@@ -224,8 +224,8 @@ class _GenerationStatusCard extends StatelessWidget {
                             : Icons.receipt_long_outlined,
                         size: 34,
                         color: paymentConfirmed
-                            ? AppColors.accentBright
-                            : AppColors.primaryDark,
+                            ? context.palette.accentBright
+                            : context.palette.primaryDark,
                       ),
                     ),
                     const SizedBox(height: 18),
@@ -241,10 +241,10 @@ class _GenerationStatusCard extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       stage,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 17,
                         height: 1.5,
-                        color: AppColors.textSecondary,
+                        color: context.palette.textSecondary,
                       ),
                     ),
                     if (onRefresh != null || onOpenSavedCases != null) ...[
@@ -273,7 +273,7 @@ class _GenerationStatusCard extends StatelessWidget {
                       Container(
                         height: 10,
                         decoration: BoxDecoration(
-                          color: AppColors.border,
+                          color: context.palette.border,
                           borderRadius: BorderRadius.circular(999),
                         ),
                       )
@@ -282,8 +282,8 @@ class _GenerationStatusCard extends StatelessWidget {
                         value: normalizedProgress,
                         minHeight: 10,
                         borderRadius: BorderRadius.circular(999),
-                        backgroundColor: AppColors.border,
-                        color: AppColors.accent,
+                        backgroundColor: context.palette.border,
+                        color: context.palette.accent,
                       ),
                     if (normalizedProgress != null) ...[
                       const SizedBox(height: 8),
@@ -291,10 +291,10 @@ class _GenerationStatusCard extends StatelessWidget {
                         complete
                             ? 'Packet ready'
                             : '${(normalizedProgress * 100).round()}% complete',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.textSecondary,
+                          color: context.palette.textSecondary,
                         ),
                       ),
                     ],
@@ -319,10 +319,10 @@ class _GenerationStatusCard extends StatelessWidget {
                       paymentConfirmed
                           ? 'You may safely leave this page. Work continues on your account, and the packet will appear in My saved cases.'
                           : 'Stripe confirmation can take a few seconds. Refreshing checks this payment; it does not start a new checkout.',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         height: 1.5,
-                        color: AppColors.textMuted,
+                        color: context.palette.textMuted,
                       ),
                     ),
                   ],
@@ -349,8 +349,9 @@ class _StatusRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color =
-        complete || active ? AppColors.accentBright : AppColors.textMuted;
+    final color = complete || active
+        ? context.palette.accentBright
+        : context.palette.textMuted;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(

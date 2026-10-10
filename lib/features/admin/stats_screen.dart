@@ -36,7 +36,7 @@ class StatsScreen extends StatelessWidget {
                 liveRegion: true,
                 label: 'Checking analytics access',
                 child:
-                    const CircularProgressIndicator(color: AppColors.primary),
+                    CircularProgressIndicator(color: context.palette.primary),
               ),
             );
           }
@@ -191,7 +191,7 @@ class _StatsBodyState extends State<_StatsBody> {
             child: Semantics(
               liveRegion: true,
               label: 'Loading traffic statistics',
-              child: const CircularProgressIndicator(color: AppColors.primary),
+              child: CircularProgressIndicator(color: context.palette.primary),
             ),
           );
         }
@@ -206,7 +206,7 @@ class _StatsBodyState extends State<_StatsBody> {
             final isLoading = filter != null &&
                 filteredSnap.connectionState == ConnectionState.waiting;
             return RefreshIndicator(
-              color: AppColors.primary,
+              color: context.palette.primary,
               onRefresh: _refresh,
               child: AnalyticsDashboardContent(
                 overall: overall,
@@ -355,20 +355,20 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
       children: [
         Text('Last 30 days', style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 4),
-        const Text(
+        Text(
           'Customer-only counters — cookieless, aggregate-only. Signed-in '
           'owner activity and private stats routes are excluded; public visits '
           'from a new, unlinked browser cannot be identified as owner traffic. '
           'Legacy totals are not mixed in.',
-          style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+          style: TextStyle(color: context.palette.textMuted, fontSize: 13),
         ),
         const SizedBox(height: 8),
-        const Text(
+        Text(
           'Select any total, graph bar, funnel step, reliability value, timing '
           'row, country, referrer, campaign, page, or acquisition source. Statistics change the '
           'daily series, graph bars filter compatible totals to one UTC day, '
           'and breakdowns compare all traffic with that segment.',
-          style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+          style: TextStyle(color: context.palette.textMuted, fontSize: 13),
         ),
         const SizedBox(height: 14),
         const _AnalyticsMeaningNotice(),
@@ -431,8 +431,8 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
             child: Text(
               '${_metric.label} is aggregate-only; comparison with '
               '${filter.label} is unavailable.',
-              style: const TextStyle(
-                color: AppColors.textMuted,
+              style: TextStyle(
+                color: context.palette.textMuted,
                 fontSize: 12,
               ),
             ),
@@ -456,7 +456,7 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
         _SectionTitle(dateLabel == null
             ? 'Customer journey (30 days)'
             : 'Customer journey ($dateLabel)'),
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(bottom: 10),
           child: Text(
             'Started appeal counts the free-preview action; added document '
@@ -466,7 +466,7 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
             'only after Stripe confirms a completed checkout; submitted '
             'appeals are counted only when a customer records the case as '
             'sent.',
-            style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+            style: TextStyle(color: context.palette.textMuted, fontSize: 13),
           ),
         ),
         _FunnelCard(
@@ -477,13 +477,13 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
         ),
         const SizedBox(height: 28),
         const _SectionTitle('Product reliability and outcomes'),
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(bottom: 10),
           child: Text(
             'Each workflow transition and final outcome is counted at most '
             'once per case. Error categories are bounded; case text and health '
             'information never enter analytics.',
-            style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+            style: TextStyle(color: context.palette.textMuted, fontSize: 13),
           ),
         ),
         _ProductHealthCard(
@@ -494,13 +494,13 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
         ),
         const SizedBox(height: 28),
         const _SectionTitle('App click-to-ready time'),
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(bottom: 10),
           child: Text(
             'Measured from opening the secure workspace to its first rendered '
             'frame. Only fixed timing buckets are stored; exact timings and '
             'pages are discarded.',
-            style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+            style: TextStyle(color: context.palette.textMuted, fontSize: 13),
           ),
         ),
         _AppReadinessCard(
@@ -519,8 +519,8 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
             'of people: shared networks and VPNs can merge or split visitors. '
             'Country estimates stay 30-day overall-only${dateLabel == null ? '' : ' and are not narrowed to $dateLabel'}. '
             'They are not linked to a page, case, submission, or payment.',
-            style: const TextStyle(
-              color: AppColors.textMuted,
+            style: TextStyle(
+              color: context.palette.textMuted,
               fontSize: 13,
             ),
           ),
@@ -560,11 +560,11 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
         ),
         const SizedBox(height: 28),
         const _SectionTitle('Customer-reported acquisition'),
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(bottom: 10),
           child: Text(
             'Optional fixed choices collected before checkout. Rows show selected, paid, paid ÷ selected, and revenue. These are overall-only purchase aggregates, not a visitor profile or traffic cohort.',
-            style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+            style: TextStyle(color: context.palette.textMuted, fontSize: 13),
           ),
         ),
         _AcquisitionSourceCard(
@@ -577,13 +577,13 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
         _SectionTitle(dateLabel == null
             ? 'Top page routes (pageviews)'
             : 'Page routes (pageviews) · $dateLabel'),
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(bottom: 10),
           child: Text(
             'These rows count pageviews, not unique visitors or customer '
             'cases. The /appeals route is the public appeals guide index; it '
             'does not mean an appeal was created or submitted.',
-            style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+            style: TextStyle(color: context.palette.textMuted, fontSize: 13),
           ),
         ),
         AnalyticsBreakdownList(
@@ -597,13 +597,13 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
         ),
         const SizedBox(height: 28),
         const _SectionTitle('Monetization'),
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(bottom: 10),
           child: Text(
             'Server-confirmed, aggregate-only product counters. Net revenue is '
             'paid amount less recorded refunds; Stripe remains authoritative for '
             'an individual payment. These values are not traffic segments.',
-            style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+            style: TextStyle(color: context.palette.textMuted, fontSize: 13),
           ),
         ),
         _MonetizationCard(
@@ -614,13 +614,13 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
         ),
         const SizedBox(height: 28),
         const _SectionTitle('Model operations'),
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(bottom: 10),
           child: Text(
             'Aggregate operational telemetry only: no prompts, outputs, case '
             'data, or customer identifiers are stored. Model metrics are '
             'overall-only and are not attributed to traffic segments.',
-            style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+            style: TextStyle(color: context.palette.textMuted, fontSize: 13),
           ),
         ),
         _ModelOperationsCard(
@@ -791,16 +791,16 @@ class _ActiveViewBanner extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.surfaceAlt,
+          color: context.palette.surfaceAlt,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.primary, width: 1.5),
+          border: Border.all(color: context.palette.primary, width: 1.5),
         ),
         child: Wrap(
           spacing: 14,
           runSpacing: 10,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            Icon(Icons.tune, color: AppColors.primary, size: 20),
+            Icon(Icons.tune, color: context.palette.primary, size: 20),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 590),
               child: Column(
@@ -808,16 +808,16 @@ class _ActiveViewBanner extends StatelessWidget {
                 children: [
                   Text(
                     viewParts.join(' · '),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                      color: context.palette.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 3),
                   Text(
                     detail,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
+                    style: TextStyle(
+                      color: context.palette.textSecondary,
                       fontSize: 12,
                     ),
                   ),
@@ -946,8 +946,8 @@ class _AcquisitionSourceCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: selectedSource == entry.source
-                              ? AppColors.primary
-                              : AppColors.border,
+                              ? context.palette.primary
+                              : context.palette.border,
                         ),
                       ),
                       child: Wrap(
@@ -997,24 +997,24 @@ class _AnalyticsMeaningNotice extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.surfaceAlt,
+          color: context.palette.surfaceAlt,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.palette.border),
         ),
-        child: const Row(
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(
               Icons.info_outline,
               size: 20,
-              color: AppColors.textSecondary,
+              color: context.palette.textSecondary,
             ),
             SizedBox(width: 10),
             Expanded(
               child: Text(
                 message,
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: context.palette.textSecondary,
                   fontSize: 13,
                 ),
               ),
@@ -1090,11 +1090,12 @@ class _StatTile extends StatelessWidget {
             '${metric.label.toLowerCase()}.',
         excludeSemantics: true,
         child: Material(
-          color: AppColors.surface,
+          color: context.palette.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
             side: BorderSide(
-              color: selected ? AppColors.primary : AppColors.border,
+              color:
+                  selected ? context.palette.primary : context.palette.border,
               width: selected ? 2 : 1,
             ),
           ),
@@ -1113,18 +1114,18 @@ class _StatTile extends StatelessWidget {
                         Expanded(
                           child: Text(
                             metric.label,
-                            style: const TextStyle(
-                              color: AppColors.textMuted,
+                            style: TextStyle(
+                              color: context.palette.textMuted,
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
                         if (selected)
-                          const Icon(
+                          Icon(
                             Icons.show_chart,
                             size: 18,
-                            color: AppColors.primary,
+                            color: context.palette.primary,
                           ),
                       ],
                     ),
@@ -1132,11 +1133,11 @@ class _StatTile extends StatelessWidget {
                     Text(
                       mainLabel,
                       softWrap: true,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: AppFonts.serif,
                         fontSize: 28,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: context.palette.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -1146,16 +1147,16 @@ class _StatTile extends StatelessWidget {
                             ? 'All | $filterLabel'
                             : 'All | $filterLabel unavailable',
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AppColors.primary,
+                        style: TextStyle(
+                          color: context.palette.primary,
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                     Text(
                       secondaryLabel,
-                      style: const TextStyle(
-                        color: AppColors.textMuted,
+                      style: TextStyle(
+                        color: context.palette.textMuted,
                         fontSize: 12,
                       ),
                     ),
@@ -1235,9 +1236,9 @@ class _DailyBarsState extends State<_DailyBars> {
       key: const ValueKey('analytics-daily-chart'),
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.palette.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.palette.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1248,8 +1249,8 @@ class _DailyBarsState extends State<_DailyBars> {
               child: Text(
                 'No ${widget.metric.label.toLowerCase()} recorded yet. Select a day '
                 'to inspect its other totals.',
-                style: const TextStyle(
-                  color: AppColors.textMuted,
+                style: TextStyle(
+                  color: context.palette.textMuted,
                   fontSize: 12,
                 ),
               ),
@@ -1315,13 +1316,13 @@ class _DailyBarsState extends State<_DailyBars> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const _LegendSwatch(
-                  color: AppColors.accent,
+                _LegendSwatch(
+                  color: context.palette.accent,
                   label: 'All traffic',
                 ),
                 const SizedBox(width: 14),
                 _LegendSwatch(
-                  color: AppColors.primary,
+                  color: context.palette.primary,
                   label: widget.filterLabel!,
                 ),
               ],
@@ -1380,12 +1381,12 @@ class _DailyBar extends StatelessWidget {
           message: message,
           child: Material(
             color: selected
-                ? AppColors.primary.withValues(alpha: 0.08)
+                ? context.palette.primary.withValues(alpha: 0.08)
                 : Colors.transparent,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
               side: BorderSide(
-                color: selected ? AppColors.primary : Colors.transparent,
+                color: selected ? context.palette.primary : Colors.transparent,
                 width: 2,
               ),
             ),
@@ -1405,8 +1406,8 @@ class _DailyBar extends StatelessWidget {
                             height: totalHeight,
                             decoration: BoxDecoration(
                               color: total == 0
-                                  ? AppColors.surfaceAlt
-                                  : AppColors.accent,
+                                  ? context.palette.surfaceAlt
+                                  : context.palette.accent,
                               borderRadius: const BorderRadius.vertical(
                                 top: Radius.circular(3),
                               ),
@@ -1417,8 +1418,8 @@ class _DailyBar extends StatelessWidget {
                               widthFactor: .56,
                               child: Container(
                                 height: filteredHeight,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.primary,
+                                decoration: BoxDecoration(
+                                  color: context.palette.primary,
                                   borderRadius: BorderRadius.vertical(
                                     top: Radius.circular(3),
                                   ),
@@ -1432,8 +1433,9 @@ class _DailyBar extends StatelessWidget {
                     Text(
                       day.key.length >= 10 ? day.key.substring(8) : day.key,
                       style: TextStyle(
-                        color:
-                            selected ? AppColors.primary : AppColors.textMuted,
+                        color: selected
+                            ? context.palette.primary
+                            : context.palette.textMuted,
                         fontSize: 10,
                         fontWeight:
                             selected ? FontWeight.w800 : FontWeight.w500,
@@ -1475,7 +1477,7 @@ class _LegendSwatch extends StatelessWidget {
                 label,
                 overflow: TextOverflow.ellipsis,
                 style:
-                    const TextStyle(color: AppColors.textMuted, fontSize: 11),
+                    TextStyle(color: context.palette.textMuted, fontSize: 11),
               ),
             ),
           ],
@@ -1547,9 +1549,9 @@ class _MonetizationCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.palette.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.palette.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1558,7 +1560,7 @@ class _MonetizationCard extends StatelessWidget {
             Text(
               'Overall only | — for $filterLabel. Payment and revenue events '
               'are not attributed to traffic segments.',
-              style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+              style: TextStyle(color: context.palette.textMuted, fontSize: 12),
             ),
             const SizedBox(height: 12),
           ],
@@ -1665,9 +1667,9 @@ class _ModelOperationsCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.palette.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.palette.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1676,7 +1678,7 @@ class _ModelOperationsCard extends StatelessWidget {
             Text(
               'Overall only | — for $filterLabel. Model telemetry is not '
               'attributed to traffic segments.',
-              style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+              style: TextStyle(color: context.palette.textMuted, fontSize: 12),
             ),
             const SizedBox(height: 12),
           ],
@@ -1740,9 +1742,9 @@ class _FunnelCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.palette.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.palette.border),
       ),
       child: Column(
         children: [
@@ -1812,9 +1814,9 @@ class _ProductHealthCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.palette.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.palette.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1823,8 +1825,8 @@ class _ProductHealthCard extends StatelessWidget {
             Text(
               'Overall only | — for $filterLabel. Workflow and outcome '
               'events are not attributed to traffic segments.',
-              style: const TextStyle(
-                color: AppColors.textMuted,
+              style: TextStyle(
+                color: context.palette.textMuted,
                 fontSize: 12,
               ),
             ),
@@ -1926,12 +1928,13 @@ class _MiniMetric extends StatelessWidget {
           excludeSemantics: true,
           child: Material(
             color: selected
-                ? AppColors.primary.withValues(alpha: 0.08)
+                ? context.palette.primary.withValues(alpha: 0.08)
                 : Colors.transparent,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(9),
               side: BorderSide(
-                color: selected ? AppColors.primary : AppColors.border,
+                color:
+                    selected ? context.palette.primary : context.palette.border,
                 width: selected ? 2 : 1,
               ),
             ),
@@ -1954,16 +1957,16 @@ class _MiniMetric extends StatelessWidget {
                         '$label ${metric.format(value)}',
                         style: TextStyle(
                           color: selected
-                              ? AppColors.primary
-                              : AppColors.textSecondary,
+                              ? context.palette.primary
+                              : context.palette.textSecondary,
                           fontWeight:
                               selected ? FontWeight.w700 : FontWeight.w400,
                         ),
                       ),
                       if (selected)
-                        const Icon(
+                        Icon(
                           Icons.show_chart,
-                          color: AppColors.primary,
+                          color: context.palette.primary,
                           size: 17,
                         ),
                     ],
@@ -2003,9 +2006,9 @@ class _AppReadinessCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.palette.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.palette.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2014,17 +2017,17 @@ class _AppReadinessCard extends StatelessWidget {
             Text(
               'Overall only | — for $filterLabel. Readiness buckets are not '
               'attributed to traffic segments.',
-              style: const TextStyle(
-                color: AppColors.textMuted,
+              style: TextStyle(
+                color: context.palette.textMuted,
                 fontSize: 12,
               ),
             ),
             const SizedBox(height: 12),
           ],
           if (total == 0) ...[
-            const Text(
+            Text(
               'No app-ready measurements recorded yet.',
-              style: TextStyle(color: AppColors.textMuted),
+              style: TextStyle(color: context.palette.textMuted),
             ),
             const SizedBox(height: 8),
           ],
@@ -2081,12 +2084,12 @@ class _TimingBucket extends StatelessWidget {
         excludeSemantics: true,
         child: Material(
           color: selected
-              ? AppColors.primary.withValues(alpha: 0.08)
+              ? context.palette.primary.withValues(alpha: 0.08)
               : Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(9),
             side: BorderSide(
-              color: selected ? AppColors.primary : Colors.transparent,
+              color: selected ? context.palette.primary : Colors.transparent,
               width: 2,
             ),
           ),
@@ -2110,8 +2113,8 @@ class _TimingBucket extends StatelessWidget {
                       '$value · $percent%${selected ? ' · selected' : ''}',
                       style: TextStyle(
                         color: selected
-                            ? AppColors.primary
-                            : AppColors.textSecondary,
+                            ? context.palette.primary
+                            : context.palette.textSecondary,
                         fontWeight:
                             selected ? FontWeight.w700 : FontWeight.w400,
                       ),
@@ -2148,9 +2151,10 @@ class _TimingBucket extends StatelessWidget {
                         LinearProgressIndicator(
                           value: fraction.clamp(0, 1),
                           minHeight: 10,
-                          backgroundColor: AppColors.surfaceAlt,
-                          color:
-                              selected ? AppColors.primary : AppColors.accent,
+                          backgroundColor: context.palette.surfaceAlt,
+                          color: selected
+                              ? context.palette.primary
+                              : context.palette.accent,
                         ),
                       ],
                     );
@@ -2204,8 +2208,8 @@ class _FunnelRow extends StatelessWidget {
           child: LinearProgressIndicator(
             value: fraction.clamp(0, 1),
             minHeight: 14,
-            backgroundColor: AppColors.surfaceAlt,
-            color: selected ? AppColors.primary : AppColors.accent,
+            backgroundColor: context.palette.surfaceAlt,
+            color: selected ? context.palette.primary : context.palette.accent,
           ),
         );
     final segmentDescription = filterLabel == null
@@ -2224,12 +2228,12 @@ class _FunnelRow extends StatelessWidget {
         excludeSemantics: true,
         child: Material(
           color: selected
-              ? AppColors.primary.withValues(alpha: 0.08)
+              ? context.palette.primary.withValues(alpha: 0.08)
               : Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(9),
             side: BorderSide(
-              color: selected ? AppColors.primary : Colors.transparent,
+              color: selected ? context.palette.primary : Colors.transparent,
               width: 2,
             ),
           ),
@@ -2263,9 +2267,9 @@ class _FunnelRow extends StatelessWidget {
                                 ),
                               ),
                               if (selected)
-                                const Icon(
+                                Icon(
                                   Icons.show_chart,
-                                  color: AppColors.primary,
+                                  color: context.palette.primary,
                                   size: 17,
                                 ),
                             ],
@@ -2273,9 +2277,9 @@ class _FunnelRow extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             valueLabel,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
-                              color: AppColors.textSecondary,
+                              color: context.palette.textSecondary,
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -2305,17 +2309,17 @@ class _FunnelRow extends StatelessWidget {
                                 child: Text(
                                   valueLabel,
                                   textAlign: TextAlign.right,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 13,
-                                    color: AppColors.textSecondary,
+                                    color: context.palette.textSecondary,
                                   ),
                                 ),
                               ),
                               if (selected) ...[
                                 const SizedBox(width: 4),
-                                const Icon(
+                                Icon(
                                   Icons.show_chart,
-                                  color: AppColors.primary,
+                                  color: context.palette.primary,
                                   size: 17,
                                 ),
                               ],
@@ -2382,15 +2386,15 @@ class AnalyticsBreakdownList extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.palette.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.palette.border),
       ),
       child: keys.isEmpty
           ? Padding(
               padding: const EdgeInsets.all(16),
               child: Text(emptyLabel,
-                  style: const TextStyle(color: AppColors.textMuted)),
+                  style: TextStyle(color: context.palette.textMuted)),
             )
           : Column(
               children: [
@@ -2402,8 +2406,8 @@ class AnalyticsBreakdownList extends StatelessWidget {
                       child: Text(
                         'All $comparisonUnit | ${selected.label} '
                         '$comparisonUnit',
-                        style: const TextStyle(
-                          color: AppColors.primary,
+                        style: TextStyle(
+                          color: context.palette.primary,
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                         ),
@@ -2485,7 +2489,7 @@ class _TopListRow extends StatelessWidget {
     final icon = Icon(
       selected ? Icons.filter_alt : Icons.filter_alt_outlined,
       size: 18,
-      color: selected ? AppColors.primary : AppColors.textMuted,
+      color: selected ? context.palette.primary : context.palette.textMuted,
     );
     final labelText = Text(
       label,
@@ -2513,7 +2517,7 @@ class _TopListRow extends StatelessWidget {
               : '$label, $overall. Activate to filter every statistic.',
       excludeSemantics: true,
       child: Material(
-        color: selected ? AppColors.surfaceAlt : Colors.transparent,
+        color: selected ? context.palette.surfaceAlt : Colors.transparent,
         borderRadius: BorderRadius.circular(9),
         child: InkWell(
           onTap: onTap,

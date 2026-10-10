@@ -227,20 +227,20 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'Choose the denial letter, Explanation of Benefits (EOB), or '
                     'prior-authorization notice. Include every page. A clear photo is okay.',
                     style: TextStyle(
-                      color: AppColors.textSecondary,
+                      color: context.palette.textSecondary,
                       fontSize: 17,
                       height: 1.5,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'Accepted: PDF, JPG, PNG, HEIC, or WebP · 20 MB each · 45 MB total.',
                     style: TextStyle(
-                      color: AppColors.textSecondary,
+                      color: context.palette.textSecondary,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -314,12 +314,12 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
                     label: const Text('Take a photo'),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'On supported phones, this opens the rear camera. Otherwise, choose a photo from your device.',
                     style: TextStyle(
                       fontSize: 16,
                       height: 1.45,
-                      color: AppColors.textMuted,
+                      color: context.palette.textMuted,
                     ),
                   ),
                   const SizedBox(height: 18),
@@ -378,30 +378,30 @@ class _UploadTrustPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.accentTint,
+      color: context.palette.accentTint,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadii.md),
-        side: BorderSide(color: AppColors.accent.withValues(alpha: 0.32)),
+        side: BorderSide(color: context.palette.accent.withValues(alpha: 0.32)),
       ),
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
         maintainState: true,
         tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
-        leading: const Icon(Icons.lock_outline_rounded,
-            color: AppColors.accentBright, size: 26),
+        leading: Icon(Icons.lock_outline_rounded,
+            color: context.palette.accentBright, size: 26),
         title: const Text(
           'Your documents stay private',
           style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
         ),
-        subtitle: const Padding(
+        subtitle: Padding(
           padding: EdgeInsets.only(top: 4),
           child: Text(
             'Encrypted in transit. Never used to train AI. No card is required for the free summary.',
             style: TextStyle(
               fontSize: 16,
               height: 1.45,
-              color: AppColors.textSecondary,
+              color: context.palette.textSecondary,
             ),
           ),
         ),
@@ -457,21 +457,21 @@ class _TrustItem extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 18, color: AppColors.accentBright),
+        Icon(icon, size: 18, color: context.palette.accentBright),
         const SizedBox(width: 8),
         Expanded(
           child: Text.rich(
             TextSpan(
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: context.palette.textSecondary,
                 fontSize: 16,
                 height: 1.5,
               ),
               children: [
                 TextSpan(
                   text: '$title: ',
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
+                  style: TextStyle(
+                    color: context.palette.textPrimary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -504,8 +504,8 @@ class _UploadActionBar extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 14),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: const Border(top: BorderSide(color: AppColors.border)),
+        color: context.palette.surface,
+        border: Border(top: BorderSide(color: context.palette.border)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
@@ -539,10 +539,10 @@ class _UploadActionBar extends StatelessWidget {
             Text(
               hint,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 height: 1.4,
-                color: AppColors.textMuted,
+                color: context.palette.textMuted,
               ),
             ),
           ],
@@ -581,16 +581,16 @@ class _DropZone extends StatelessWidget {
         horizontal: 20,
       ),
       decoration: BoxDecoration(
-        gradient: dragging ? null : AppGradients.heroWash,
-        color: dragging ? AppColors.primaryTint : null,
+        gradient: dragging ? null : context.palette.heroWash,
+        color: dragging ? context.palette.primaryTint : null,
         borderRadius: BorderRadius.circular(AppRadii.lg),
         border: Border.all(
           color: active
-              ? AppColors.primary
-              : AppColors.primary.withValues(alpha: 0.22),
+              ? context.palette.primary
+              : context.palette.primary.withValues(alpha: 0.22),
           width: dragging ? 2 : 1.4,
         ),
-        boxShadow: active ? AppShadows.soft : null,
+        boxShadow: active ? context.palette.shadowSoft : null,
       ),
       child: Column(
         children: [
@@ -603,7 +603,7 @@ class _DropZone extends StatelessWidget {
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                gradient: AppGradients.brand,
+                gradient: context.palette.brandGradient,
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: const [
                   BoxShadow(
@@ -639,9 +639,9 @@ class _DropZone extends StatelessWidget {
             constraints: const BoxConstraints(minHeight: 52),
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: context.palette.surface,
               borderRadius: BorderRadius.circular(AppRadii.sm),
-              border: Border.all(color: AppColors.primary),
+              border: Border.all(color: context.palette.primary),
             ),
             child: Wrap(
               alignment: WrapAlignment.center,
@@ -649,14 +649,14 @@ class _DropZone extends StatelessWidget {
               spacing: 9,
               runSpacing: 4,
               children: [
-                const Icon(Icons.folder_open_outlined,
-                    size: 22, color: AppColors.primaryDark),
+                Icon(Icons.folder_open_outlined,
+                    size: 22, color: context.palette.primaryDark),
                 Text(
                   browseLabel,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.primaryDark,
+                    color: context.palette.primaryDark,
                   ),
                 ),
               ],
@@ -664,9 +664,10 @@ class _DropZone extends StatelessWidget {
           ),
           if (kIsWeb && !compact) ...[
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'You can also drag files into this area.',
-              style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+              style:
+                  TextStyle(fontSize: 16, color: context.palette.textSecondary),
             ),
           ],
         ],
@@ -687,9 +688,9 @@ class _FileRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.palette.surface,
         borderRadius: BorderRadius.circular(AppRadii.md),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.palette.border),
       ),
       child: Row(
         children: [
@@ -697,13 +698,13 @@ class _FileRow extends StatelessWidget {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: (isPdf ? AppColors.accent : AppColors.primary)
+              color: (isPdf ? context.palette.accent : context.palette.primary)
                   .withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               isPdf ? Icons.picture_as_pdf_rounded : Icons.image_rounded,
-              color: isPdf ? AppColors.accent : AppColors.primary,
+              color: isPdf ? context.palette.accent : context.palette.primary,
               size: 20,
             ),
           ),
@@ -718,17 +719,17 @@ class _FileRow extends StatelessWidget {
                     style: const TextStyle(
                         fontWeight: FontWeight.w700, fontSize: 16)),
                 Text(formatUploadBytes(file.bytes.length),
-                    style: const TextStyle(
-                        fontSize: 14, color: AppColors.textMuted)),
+                    style: TextStyle(
+                        fontSize: 14, color: context.palette.textMuted)),
               ],
             ),
           ),
-          const Icon(Icons.check_circle_rounded,
-              size: 18, color: AppColors.accent),
+          Icon(Icons.check_circle_rounded,
+              size: 18, color: context.palette.accent),
           if (onRemove != null)
             IconButton(
               icon: const Icon(Icons.close_rounded, size: 18),
-              color: AppColors.textMuted,
+              color: context.palette.textMuted,
               onPressed: onRemove,
               tooltip: 'Remove ${file.name}',
             ),
@@ -746,10 +747,10 @@ class _ConsentBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surfaceAlt,
+      color: context.palette.surfaceAlt,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadii.md),
-        side: const BorderSide(color: AppColors.border),
+        side: BorderSide(color: context.palette.border),
       ),
       clipBehavior: Clip.antiAlias,
       child: CheckboxListTile(
@@ -768,19 +769,19 @@ class _ConsentBox extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 AppCopy.consentText,
                 style: TextStyle(
                   fontSize: 16,
                   height: 1.5,
-                  color: AppColors.textSecondary,
+                  color: context.palette.textSecondary,
                 ),
               ),
               Wrap(
                 spacing: 10,
                 children: [
-                  _legalLink('Privacy Policy', AppUrls.privacy),
-                  _legalLink('Terms of Service', AppUrls.terms),
+                  _legalLink(context, 'Privacy Policy', AppUrls.privacy),
+                  _legalLink(context, 'Terms of Service', AppUrls.terms),
                 ],
               ),
             ],
@@ -790,7 +791,7 @@ class _ConsentBox extends StatelessWidget {
     );
   }
 
-  static Widget _legalLink(String label, String url) {
+  static Widget _legalLink(BuildContext context, String label, String url) {
     return Semantics(
       link: true,
       label: label,
@@ -805,9 +806,9 @@ class _ConsentBox extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
-                color: AppColors.primaryDark,
+                color: context.palette.primaryDark,
                 decoration: TextDecoration.underline,
               ),
             ),

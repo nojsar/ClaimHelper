@@ -132,7 +132,7 @@ final appRouter = GoRouter(
             Text(
               'We could not find ${state.uri.path}.',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: context.palette.textSecondary),
             ),
             const SizedBox(height: 20),
             FilledButton(
@@ -166,17 +166,17 @@ class _ExitToLandingState extends State<_ExitToLanding> {
   @override
   Widget build(BuildContext context) {
     return Title(
-      color: AppColors.primary,
+      color: context.palette.primary,
       title: 'Returning home | GetMyYes',
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.palette.background,
         body: Center(
           child: Semantics(
             scopesRoute: true,
             namesRoute: true,
             liveRegion: true,
             label: 'Returning to the GetMyYes home page',
-            child: const CircularProgressIndicator(color: AppColors.primary),
+            child: CircularProgressIndicator(color: context.palette.primary),
           ),
         ),
       ),

@@ -38,7 +38,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onPressed: () => Navigator.pop(ctx, false),
               child: const Text('Cancel')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            style: FilledButton.styleFrom(
+              backgroundColor: context.palette.error,
+              foregroundColor: context.palette.onError,
+            ),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Delete my account'),
           ),
@@ -82,7 +85,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onPressed: () => Navigator.pop(ctx, false),
               child: const Text('Cancel')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            style: FilledButton.styleFrom(
+              backgroundColor: context.palette.error,
+              foregroundColor: context.palette.onError,
+            ),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Delete everything'),
           ),
@@ -145,10 +151,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               height: 24,
                               child: CircularProgressIndicator(strokeWidth: 2)),
                         )
-                      : const Icon(Icons.delete_forever_outlined,
-                          color: AppColors.error),
-                  title: const Text('Delete all data',
-                      style: TextStyle(color: AppColors.error)),
+                      : Icon(Icons.delete_forever_outlined,
+                          color: context.palette.error),
+                  title: Text('Delete all data',
+                      style: TextStyle(color: context.palette.error)),
                   subtitle: const Text(
                       'Remove every case and uploaded file permanently.'),
                   onTap: _deleting ? null : _deleteAll,
@@ -164,10 +170,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               height: 24,
                               child: CircularProgressIndicator(strokeWidth: 2)),
                         )
-                      : const Icon(Icons.person_off_outlined,
-                          color: AppColors.error),
-                  title: const Text('Delete my account',
-                      style: TextStyle(color: AppColors.error)),
+                      : Icon(Icons.person_off_outlined,
+                          color: context.palette.error),
+                  title: Text('Delete my account',
+                      style: TextStyle(color: context.palette.error)),
                   subtitle: const Text(
                       'Erase your account, cases, and files, and sign out. '
                       'Cannot be undone.'),
@@ -191,8 +197,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.check_circle_outline,
-                              size: 18, color: AppColors.accent),
+                          Icon(Icons.check_circle_outline,
+                              size: 18, color: context.palette.accent),
                           const SizedBox(width: 8),
                           Expanded(child: Text(b)),
                         ],
@@ -208,13 +214,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.warningTint,
+              color: context.palette.warningTint,
               borderRadius: BorderRadius.circular(10),
-              border:
-                  Border.all(color: AppColors.warning.withValues(alpha: 0.35)),
+              border: Border.all(
+                  color: context.palette.warning.withValues(alpha: 0.35)),
             ),
-            child: const Text(AppCopy.disclaimer,
-                style: TextStyle(fontSize: 13, color: AppColors.warning)),
+            child: Text(AppCopy.disclaimer,
+                style: TextStyle(fontSize: 13, color: context.palette.warning)),
           ),
           const SizedBox(height: 24),
           _settingsHeading('Legal'),
@@ -254,9 +260,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          const Center(
+          Center(
             child: Text('GetMyYes · U.S. only at launch',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                style: TextStyle(
+                    color: context.palette.textSecondary, fontSize: 12)),
           ),
           const SizedBox(height: 24),
         ],
@@ -278,19 +285,20 @@ class _MockBanner extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.primaryTint,
+        color: context.palette.primaryTint,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.borderStrong),
+        border: Border.all(color: context.palette.borderStrong),
       ),
       child: Row(
-        children: const [
-          Icon(Icons.science_outlined, color: AppColors.primary),
+        children: [
+          Icon(Icons.science_outlined, color: context.palette.primary),
           SizedBox(width: 8),
           Expanded(
             child: Text(
               'Running in demo mode with mocked AI and payments. No Firebase '
               'project or OpenAI key is used.',
-              style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+              style: TextStyle(
+                  fontSize: 12.5, color: context.palette.textSecondary),
             ),
           ),
         ],

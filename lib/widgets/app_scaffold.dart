@@ -70,9 +70,9 @@ class _AppScaffoldState extends State<AppScaffold> {
               preferredSize: const Size.fromHeight(headerHeight),
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  border: const Border(
-                    bottom: BorderSide(color: AppColors.border),
+                  color: context.palette.surface,
+                  border: Border(
+                    bottom: BorderSide(color: context.palette.border),
                   ),
                 ),
                 child: SafeArea(
@@ -188,7 +188,7 @@ class _AppScaffoldState extends State<AppScaffold> {
     );
     if (widget.title == null) return shell;
     return Title(
-      color: AppColors.primary,
+      color: context.palette.primary,
       title: '${widget.title} | GetMyYes',
       child: Semantics(
         scopesRoute: true,
@@ -351,7 +351,7 @@ class _NavLink extends StatelessWidget {
     return TextButton(
       onPressed: onTap,
       style: TextButton.styleFrom(
-        foregroundColor: AppColors.textSecondary,
+        foregroundColor: context.palette.textSecondary,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
       ),
@@ -388,21 +388,22 @@ class DisclaimerChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.primaryTint,
+        color: context.palette.primaryTint,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.14)),
+        border:
+            Border.all(color: context.palette.primary.withValues(alpha: 0.14)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.shield_outlined, size: 18, color: AppColors.primary),
+          Icon(Icons.shield_outlined, size: 18, color: context.palette.primary),
           const SizedBox(width: 8),
           Flexible(
             child: Text(text,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary)),
+                    color: context.palette.textSecondary)),
           ),
         ],
       ),
@@ -433,16 +434,16 @@ class ErrorRetry extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const IconTile(
+                  IconTile(
                     icon: Icons.error_outline_rounded,
-                    color: AppColors.error,
+                    color: context.palette.error,
                     size: 54,
                   ),
                   const SizedBox(height: 16),
                   Text(message,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          fontSize: 16, color: AppColors.textSecondary)),
+                      style: TextStyle(
+                          fontSize: 16, color: context.palette.textSecondary)),
                   const SizedBox(height: 18),
                   FilledButton.icon(
                     onPressed: onRetry,

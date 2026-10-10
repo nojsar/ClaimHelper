@@ -175,11 +175,11 @@ class _ExtractionReviewScreenState
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
             ),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'We pulled out the details that shape your preview. Check these '
               'essentials; everything else is available below if you want to '
               'review it.',
-              style: TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: context.palette.textSecondary),
             ),
             const SizedBox(height: 20),
             _CategoryPicker(
@@ -246,8 +246,8 @@ class _ExtractionReviewScreenState
                 child: ExcludeSemantics(
                   child: Text(
                     _saveError!,
-                    style: const TextStyle(
-                      color: AppColors.error,
+                    style: TextStyle(
+                      color: context.palette.error,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

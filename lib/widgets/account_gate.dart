@@ -192,7 +192,7 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
         children: [
           Row(
             children: [
-              const Icon(Icons.verified_user_rounded, color: AppColors.primary),
+              Icon(Icons.verified_user_rounded, color: context.palette.primary),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -205,22 +205,23 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
           ),
           const SizedBox(height: 6),
           Text(widget.reason,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 13.5,
-                  color: AppColors.textSecondary,
+                  color: context.palette.textSecondary,
                   height: 1.45)),
           if (passwordSignIn) ...[
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.warningTint,
+                color: context.palette.warningTint,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Text(
+              child: Text(
                 'This case and its uploaded documents will be securely moved '
                 'from the guest session to the account you sign in to.',
-                style: TextStyle(fontSize: 12.5, color: AppColors.warning),
+                style:
+                    TextStyle(fontSize: 12.5, color: context.palette.warning),
               ),
             ),
           ],
@@ -234,7 +235,7 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.accentTint,
+                  color: context.palette.accentTint,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -279,7 +280,7 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
               child: ExcludeSemantics(
                 child: Text(_error!,
                     style:
-                        const TextStyle(color: AppColors.error, fontSize: 13)),
+                        TextStyle(color: context.palette.error, fontSize: 13)),
               ),
             ),
           ],

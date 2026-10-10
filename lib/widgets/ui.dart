@@ -13,7 +13,7 @@ class BrandMark extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        gradient: AppGradients.brand,
+        gradient: context.palette.brandGradient,
         borderRadius: BorderRadius.circular(size * 0.30),
         boxShadow: const [
           BoxShadow(
@@ -47,7 +47,7 @@ class Wordmark extends StatelessWidget {
               fontSize: fontSize,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.5,
-              color: AppColors.textPrimary,
+              color: context.palette.textPrimary,
             )),
       ],
     );
@@ -57,17 +57,18 @@ class Wordmark extends StatelessWidget {
 /// Text painted with a gradient — for highlighting a headline keyword.
 class GradientText extends StatelessWidget {
   const GradientText(this.text,
-      {super.key,
-      required this.style,
-      this.gradient = AppGradients.accentText});
+      {super.key, required this.style, this.gradient});
   final String text;
   final TextStyle style;
-  final Gradient gradient;
+
+  /// Defaults to the palette's navy-to-teal (or, in dark, light) text wash.
+  final Gradient? gradient;
 
   @override
   Widget build(BuildContext context) {
     return ShaderMask(
-      shaderCallback: (bounds) => gradient.createShader(
+      shaderCallback: (bounds) =>
+          (gradient ?? context.palette.accentTextGradient).createShader(
         Rect.fromLTWH(0, 0, bounds.width, bounds.height),
       ),
       child: Text(text, style: style.copyWith(color: Colors.white)),
@@ -81,16 +82,19 @@ class PillBadge extends StatelessWidget {
     super.key,
     required this.label,
     this.icon,
-    this.color = AppColors.primary,
+    this.color,
     this.background,
   });
   final String label;
   final IconData? icon;
-  final Color color;
+
+  /// Defaults to the palette primary.
+  final Color? color;
   final Color? background;
 
   @override
   Widget build(BuildContext context) {
+    final color = this.color ?? context.palette.primary;
     return Container(
       padding:
           EdgeInsets.symmetric(horizontal: icon != null ? 12 : 14, vertical: 7),
@@ -139,23 +143,23 @@ class SectionHeader extends StatelessWidget {
       crossAxisAlignment: align,
       children: [
         Text(eyebrow,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.2,
-              color: AppColors.primary,
+              color: context.palette.primary,
             )),
         const SizedBox(height: 10),
         Semantics(
           header: true,
           child: Text(title,
               textAlign: center ? TextAlign.center : TextAlign.start,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 30,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.6,
                 height: 1.15,
-                color: AppColors.textPrimary,
+                color: context.palette.textPrimary,
               )),
         ),
         if (subtitle != null) ...[
@@ -164,10 +168,10 @@ class SectionHeader extends StatelessWidget {
             constraints: const BoxConstraints(maxWidth: 560),
             child: Text(subtitle!,
                 textAlign: center ? TextAlign.center : TextAlign.start,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 16,
                     height: 1.55,
-                    color: AppColors.textSecondary)),
+                    color: context.palette.textSecondary)),
           ),
         ],
       ],
@@ -183,13 +187,15 @@ class HoverCard extends StatefulWidget {
     this.padding = const EdgeInsets.all(22),
     this.onTap,
     this.radius = AppRadii.lg,
-    this.baseShadow = AppShadows.subtle,
+    this.baseShadow,
   });
   final Widget child;
   final EdgeInsets padding;
   final VoidCallback? onTap;
   final double radius;
-  final List<BoxShadow> baseShadow;
+
+  /// Defaults to the palette's subtle shadow.
+  final List<BoxShadow>? baseShadow;
 
   @override
   State<HoverCard> createState() => _HoverCardState();
@@ -231,15 +237,15 @@ class _HoverCardState extends State<HoverCard> {
             curve: Curves.easeOut,
             padding: widget.padding,
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: context.palette.surface,
               borderRadius: BorderRadius.circular(widget.radius),
               border: Border.all(
                 color: active
-                    ? AppColors.primary.withValues(alpha: 0.75)
-                    : AppColors.border,
+                    ? context.palette.primary.withValues(alpha: 0.75)
+                    : context.palette.border,
                 width: _focused ? 2 : 1,
               ),
-              boxShadow: widget.baseShadow,
+              boxShadow: widget.baseShadow ?? context.palette.shadowSubtle,
             ),
             child: widget.child,
           ),
@@ -254,17 +260,20 @@ class IconTile extends StatelessWidget {
   const IconTile({
     super.key,
     required this.icon,
-    this.color = AppColors.primary,
+    this.color,
     this.background,
     this.size = 46,
   });
   final IconData icon;
-  final Color color;
+
+  /// Defaults to the palette primary.
+  final Color? color;
   final Color? background;
   final double size;
 
   @override
   Widget build(BuildContext context) {
+    final color = this.color ?? context.palette.primary;
     return Container(
       width: size,
       height: size,
@@ -355,17 +364,17 @@ class WorkflowProgress extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.primaryTint,
+          color: context.palette.primaryTint,
           borderRadius: BorderRadius.circular(AppRadii.md),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.palette.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'STEP ${currentStep + 1} OF ${stages.length}',
-              style: const TextStyle(
-                color: AppColors.accentBright,
+              style: TextStyle(
+                color: context.palette.accentBright,
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 0.5,
@@ -381,16 +390,16 @@ class WorkflowProgress extends StatelessWidget {
               value: (currentStep + 1) / stages.length,
               minHeight: 8,
               borderRadius: BorderRadius.circular(999),
-              backgroundColor: AppColors.border,
-              color: AppColors.accent,
+              backgroundColor: context.palette.border,
+              color: context.palette.accent,
             ),
             if (next != null) ...[
               const SizedBox(height: 8),
               Text(
                 'Next: $next',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
-                  color: AppColors.textSecondary,
+                  color: context.palette.textSecondary,
                 ),
               ),
             ],
