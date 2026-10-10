@@ -25,6 +25,31 @@
           "height": 1920
         }
       }
+    },
+    {
+      "id": "dawn-ad",
+      "path": "/",
+      "campaign": "dawn_ad",
+      "tag": "#GetMyYes",
+      "syntheticMedia": true,
+      "requireVideo": true,
+      "title": "Some letters arrive at night",
+      "text": "Some letters arrive at night. GetMyYes reads yours with you in plain English, and the summary is free. Then it helps you build the appeal, and you send it yourself.",
+      "alt": "A 25-second narrated, animated GetMyYes ad in a woodblock-print style. At night a folded letter drifts down over a calm sea and unfolds; a glass lens sweeps over it and turns each line into plain English. The pages of an appeal packet fan out, fold into a paper plane, and the plane flies into the sunrise. It ends in morning light on: Understand the denial. Build the appeal. Free preview, no card, you send it yourself.",
+      "media": {
+        "square": {
+          "video": "media/ad/dawn-ad-v1-landscape.mp4",
+          "poster": "media/ad/dawn-ad-v1-poster.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        "vertical": {
+          "video": "media/ad/dawn-ad-v1-vertical.mp4",
+          "poster": "media/ad/dawn-ad-v1-poster-vertical.jpg",
+          "width": 1080,
+          "height": 1920
+        }
+      }
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "note": "Illustrative stills for the product film, generated for GetMyYes on Higgsfield (model z_image). No real people, documents or data: hands only, letter text deliberately unreadable.",
+  "note": "Illustrative stills generated for GetMyYes on Higgsfield (model z_image). No real people, documents or data: hands only or empty rooms, letter text deliberately unreadable.",
   "stills": [
     {
       "file": "stills/letter-hands.jpg",
@@ -12,6 +12,18 @@
       "job": "f91a9eca-5f4d-4719-9ed8-4587cd86c0b5",
       "generated": "2026-10-09",
       "use": "photographing the letter with a phone"
+    },
+    {
+      "file": "stills/table-night.jpg",
+      "job": "e990727b-d79b-4787-89e2-933bb0f60499",
+      "generated": "2026-10-10",
+      "use": "night-to-morning ad: the letter on the kitchen table at night"
+    },
+    {
+      "file": "stills/table-morning.jpg",
+      "job": "1402a7a5-df25-47b1-a772-75fbe9d40cd7",
+      "generated": "2026-10-10",
+      "use": "night-to-morning ad: the same table at sunrise, envelopes ready"
     }
   ]
 }

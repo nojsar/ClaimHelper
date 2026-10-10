@@ -113,6 +113,44 @@ if (args.includes("--film")) {
   process.exit(0);
 }
 
+// `--dawn-ad` renders "Some letters arrive at night", the dawn-print ad (both
+// cuts, a poster and a cover) into web/media/ad/. /media is immutable for a
+// year: bump AD_VERSION on a re-render. `--review` renders eight frames per
+// cut into video/out/ad-review for a contact sheet instead.
+// The sky is WebGL, so the browser runs with ANGLE.
+const AD_VERSION = "v1";
+
+if (args.includes("--dawn-ad")) {
+  await sync();
+  const adRoot = path.join(projectRoot, "web", "media", "ad");
+  const reviewRoot = path.join(here, "out", "ad-review");
+  await mkdir(adRoot, { recursive: true });
+  await mkdir(reviewRoot, { recursive: true });
+  const browserExecutable = process.env.REMOTION_BROWSER_EXECUTABLE || null;
+  if (!browserExecutable) await ensureBrowser();
+  const chromiumOptions = { gl: process.env.REMOTION_GL || "angle" };
+  const serveUrl = await bundle({ entryPoint: path.join(here, "src", "index.ts"), publicDir: path.join(here, "public") });
+  const review = args.includes("--review");
+  for (const cut of ["vertical", "landscape"]) {
+    const composition = await selectComposition({ serveUrl, id: `dawn-ad-${cut}`, browserExecutable, chromiumOptions });
+    const base = `dawn-ad-${AD_VERSION}`;
+    const suffix = cut === "vertical" ? "-vertical" : "";
+    const frames = review
+      ? [1.8, 5.2, 8.9, 12.6, 15.0, 17.6, 21.2, 25.0].map((s, i) => [`review-${i}`, Math.round(s * composition.fps)])
+      : [["poster", Math.round(5.6 * composition.fps)], ["cover", composition.durationInFrames - 1]];
+    for (const [name, frame] of frames) {
+      await renderStill({ composition, serveUrl, browserExecutable, chromiumOptions, frame, imageFormat: "jpeg", jpegQuality: 88, output: path.join(review ? reviewRoot : adRoot, `${base}-${name}${suffix}.jpg`) });
+    }
+    if (review) continue;
+    await renderMedia({
+      composition, serveUrl, browserExecutable, chromiumOptions, codec: "h264", crf: 18, imageFormat: "png",
+      enforceAudioTrack: true, audioCodec: "aac", audioBitrate: "192k", outputLocation: path.join(adRoot, `${base}-${cut}.mp4`),
+    });
+    console.log(`[dawn-ad] ${cut} done`);
+  }
+  process.exit(0);
+}
+
 const guides = (await sync()).filter((guide) => !only || guide.id === only);
 if (!guides.length) throw new Error(only ? `No queue entry with id ${only}.` : "The post queue is empty.");
 await mkdir(mediaRoot, { recursive: true });

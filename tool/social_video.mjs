@@ -267,8 +267,9 @@ export async function sync() {
   for (const kind of ["music", "sfx"]) {
     await cp(path.join(libraryRoot, kind), path.join(videoRoot, "public", "audio", kind), { recursive: true });
   }
-  // The product film's stills, app captures and score.
-  for (const kind of ["stills", "film"]) {
+  // The product film's stills, app captures and score, and the dawn ad's
+  // narration and score.
+  for (const kind of ["stills", "film", "dawn-ad"]) {
     await cp(path.join(libraryRoot, kind), path.join(videoRoot, "public", kind), { recursive: true });
   }
   const music = await assignMusic(guides);

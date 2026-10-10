@@ -3,6 +3,7 @@ import { Composition } from "remotion";
 import { DURATION_IN_FRAMES, FPS, Format, LAYOUTS } from "./brand";
 import { GuidePost } from "./GuidePost";
 import { FILM_SECONDS, ProductFilm } from "./film/ProductFilm";
+import { DAWN_AD_SECONDS, DawnAd } from "./ad/DawnAd";
 import queue from "./queue.json";
 
 /**
@@ -31,6 +32,25 @@ export const RemotionRoot: React.FC = () => (
       width={1080}
       height={1920}
       defaultProps={{ format: "vertical" as const }}
+    />
+    {/* "Some letters arrive at night": the dawn-print ad, all drawn. */}
+    <Composition
+      id="dawn-ad-vertical"
+      component={DawnAd}
+      durationInFrames={DAWN_AD_SECONDS * FPS}
+      fps={FPS}
+      width={1080}
+      height={1920}
+      defaultProps={{ format: "vertical" as const }}
+    />
+    <Composition
+      id="dawn-ad-landscape"
+      component={DawnAd}
+      durationInFrames={DAWN_AD_SECONDS * FPS}
+      fps={FPS}
+      width={1920}
+      height={1080}
+      defaultProps={{ format: "landscape" as const }}
     />
     {queue.guides.flatMap((guide) =>
       (Object.keys(LAYOUTS) as Format[]).map((format) => (
