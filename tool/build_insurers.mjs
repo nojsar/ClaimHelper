@@ -79,6 +79,14 @@ function shell({ title, description, canonical, h1, crumb, body }) {
         <a class="navlink" href="/insurers/">By insurer</a>
         <a class="btn-start" href="/#/upload">See my free denial summary</a>
       </nav>
+      <details class="site-menu">
+        <summary>Menu</summary>
+        <nav class="site-menu-panel" aria-label="Menu">
+          <a class="btn-start" href="/#/upload">See my free denial summary</a>
+          <a class="navlink" href="/appeals/">Appeal guides</a>
+          <a class="navlink" href="/insurers/">By insurer</a>
+        </nav>
+      </details>
     </div>
   </header>
 

@@ -1380,3 +1380,107 @@ html.motion-paused .usp-orn { animation-play-state: paused; }
 @media (prefers-contrast: more), (forced-colors: active) {
   .day::before { background: var(--background); }
 }
+
+/* ==================================================================
+   Phone polish (October 2026)
+   ================================================================== */
+/* The Menu control is a pill, like the header it sits in. */
+.mobile-menu summary { border-radius: 999px; padding: 8px 18px; }
+
+/* The headline's highlight runs under each line of "Build the appeal." as
+   a thick translucent underline, so it ends with the words when the line
+   wraps on a phone, instead of a bar the width of the whole block. */
+.hero .hero-accent::after { display: none; }
+.hero .hero-accent {
+  text-decoration-line: underline;
+  text-decoration-thickness: 0.17em;
+  text-underline-offset: -0.04em;
+  text-decoration-skip-ink: none;
+  text-decoration-color: rgba(255, 253, 248, 0.55);
+}
+@media (prefers-color-scheme: dark) {
+  .hero .hero-accent { text-decoration-color: rgba(143, 211, 194, 0.22); }
+}
+
+/* The lens shows what is left to read: an unread insurer line carries a
+   dotted rule and a small lens, which fade once the glass has been there;
+   the letterhead's dots fill one by one; the glass has a grip. */
+.lens-dots { display: inline-flex; gap: 5px; margin-left: 10px; vertical-align: 1px; }
+.lens-dots i { width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--teal); transition: background-color 0.3s ease; }
+.lens-dots i.on { background: var(--teal); }
+.lens-on .lens-row:not(.is-read) .lens-jargon {
+  text-decoration: underline dotted rgba(47, 111, 98, 0.6);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+}
+.lens-on .lens-row .lens-jargon::after {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-left: 6px;
+  vertical-align: -2px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='10.5' cy='10.5' r='6.5' fill='none' stroke='%232F6F62' stroke-width='2.4'/%3E%3Cpath d='M15.5 15.5l5 5' stroke='%232F6F62' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.lens-on .lens-row.is-read .lens-jargon::after { opacity: 0; transform: scale(0.4); }
+.lens-on .lens-row:not(.is-read):hover .lens-jargon { color: var(--navy-dark); }
+.lens-on .lens-row { cursor: zoom-in; }
+.lens-on .lens-glass::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 5px;
+  width: 26px;
+  height: 4px;
+  margin-left: -13px;
+  border-radius: 99px;
+  border-top: 1.5px solid rgba(47, 111, 98, 0.55);
+  border-bottom: 1.5px solid rgba(47, 111, 98, 0.55);
+}
+@media (prefers-color-scheme: dark) {
+  .lens-dots i { border-color: #8FD3C2; }
+  .lens-dots i.on { background: #8FD3C2; }
+  .lens-on .lens-row:not(.is-read) .lens-jargon { text-decoration-color: rgba(143, 211, 194, 0.55); }
+  .lens-on .lens-row .lens-jargon::after { filter: brightness(1.9) saturate(0.7); }
+  .lens-on .lens-glass::after { border-color: rgba(143, 211, 194, 0.6); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lens-dots i, .lens-on .lens-row .lens-jargon::after { transition: none; }
+}
+
+/* The appeal kit, more compact. */
+.packet-cover { min-height: 400px; padding: clamp(26px, 3vw, 40px); }
+.packet-cover-count strong { font-size: clamp(64px, 7vw, 92px); }
+.packet-cover h2 { margin-top: 18px; font-size: clamp(32px, 3.4vw, 46px); }
+.packet-cover-actions { margin-top: 20px; }
+.packet-item { min-height: 92px; padding: 18px 20px; }
+.packet-item h3 { font-size: 17px; }
+@media (max-width: 700px) {
+  .packet-cover { padding: 24px 22px; }
+  .packet-cover-count { margin-top: 18px; }
+  .packet-cover-count strong { font-size: 64px; }
+  .packet-cover h2 { margin-top: 10px; font-size: 32px; }
+  .packet-cover-copy { margin-top: 10px; font-size: 16px; }
+  .packet-cover-actions { margin-top: 16px; }
+  .packet-manifest-header { min-height: 0; padding-block: 14px; }
+  .packet-item { min-height: 0; padding: 14px 16px; column-gap: 10px; grid-template-columns: 26px minmax(0, 1fr); }
+  .packet-item:nth-child(odd) { border-right: 1px solid var(--border); }
+  .packet-item:nth-last-child(-n + 2) { border-bottom: 0; }
+  .packet-check { width: 26px; height: 26px; border-radius: 8px; }
+  .packet-check svg { width: 15px; height: 15px; }
+  .packet-item h3 { font-size: 15px; line-height: 1.3; }
+  .packet-manifest-footer { min-height: 0; padding-block: 12px; }
+}
+@media (max-width: 700px) {
+  .packet-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* The postmark sits where a real one would: overlapping the stamp's edge,
+   its lettering fitted inside the ring. */
+@media (max-width: 560px) {
+  .postmark { width: 74px; height: 74px; top: 12px; right: 50px; }
+  .postmark::after { font-size: 7.5px; letter-spacing: 0.1em; }
+  .post-stamp { z-index: 0; }
+  .proof-slide-kicker { padding-right: 116px; }
+}

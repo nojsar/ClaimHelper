@@ -124,6 +124,21 @@
   toggle.textContent = 'translate every line';
   hint.textContent = fine ? 'Move the lens over the letter, or ' : 'Drag the lens or tap a line, or ';
   hint.appendChild(toggle);
+  // What is left to read, shown rather than told: every untranslated line
+  // carries a small lens and a dotted rule, and a dot on the letterhead
+  // fills as each line is read.
+  var dots = document.createElement('span');
+  dots.className = 'lens-dots';
+  dots.setAttribute('aria-hidden', 'true');
+  rows.forEach(function () { dots.appendChild(document.createElement('i')); });
+  var letterhead = card.querySelector('.lens-letterhead');
+  if (letterhead) letterhead.appendChild(dots);
+  function markRead(i) {
+    if (!rows[i] || rows[i].classList.contains('is-read')) return;
+    rows[i].classList.add('is-read');
+    dots.children[i].classList.add('on');
+    if (card.querySelectorAll('.lens-row.is-read').length === rows.length) card.classList.add('lens-done');
+  }
 
   var boxes = [];
   var cur = { y: 0, h: 0 };
@@ -168,9 +183,12 @@
     target.h = h;
     if (!frame) frame = requestAnimationFrame(step);
   }
-  function toRow(i) {
+  // The arrival glide only demonstrates; a line counts as read once the
+  // visitor moves the lens there.
+  function toRow(i, demo) {
     index = Math.max(0, Math.min(boxes.length - 1, i));
     aim(boxes[index].top, boxes[index].height);
+    if (!demo) markRead(index);
   }
   function wholeLetter() {
     var last = boxes[boxes.length - 1];
@@ -231,8 +249,10 @@
     all = !all;
     stopIntro();
     toggle.setAttribute('aria-pressed', String(all));
-    if (all) wholeLetter();
-    else toRow(index);
+    if (all) {
+      wholeLetter();
+      rows.forEach(function (row, i) { markRead(i); });
+    } else toRow(index);
   });
 
   measure();
@@ -240,11 +260,12 @@
   cur.y = target.y = boxes[index].top;
   cur.h = target.h = boxes[index].height;
   paint();
+  markRead(index);
   if ('ResizeObserver' in window) {
     new ResizeObserver(function () {
       measure();
       if (all) wholeLetter();
-      else toRow(index);
+      else toRow(index, true);
     }).observe(sheet);
   }
   if (calm || !('IntersectionObserver' in window)) return;
@@ -252,7 +273,7 @@
     if (!entries[0].isIntersecting) return;
     seen.disconnect();
     [1, 2, 3, 4, 1].forEach(function (i, n) {
-      intro.push(setTimeout(function () { toRow(i); }, 700 + n * 640));
+      intro.push(setTimeout(function () { toRow(i, true); }, 700 + n * 640));
     });
   }, { threshold: 0.6 });
   seen.observe(sheet);

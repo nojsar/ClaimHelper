@@ -828,3 +828,40 @@ details { background: var(--letter); border-color: var(--border); }
   .cta { background: Canvas; }
   .cta::after { display: none; }
 }
+
+/* The phone header: the mark and one Menu pill, as on the homepage, rather
+   than the links and the call to action stacked in three loose rows. */
+.site-menu { display: none; position: relative; margin-left: auto; }
+.site-menu summary {
+  min-height: 44px; display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 16px; border: 1.5px solid var(--ink); border-radius: 999px;
+  background: var(--letter); color: var(--ink); font-size: 15px; font-weight: 800;
+  list-style: none; cursor: pointer;
+}
+.site-menu summary::-webkit-details-marker { display: none; }
+.site-menu summary::after { content: "+"; font-size: 17px; line-height: 1; }
+.site-menu[open] summary::after { content: "\2013"; }
+header.site .site-menu-panel {
+  position: absolute; top: calc(100% + 12px); right: 0; z-index: 30;
+  width: min(300px, calc(100vw - 32px)); margin: 0;
+  display: grid; gap: 2px; padding: 8px;
+  border: 1px solid var(--border); border-radius: 20px;
+  background: var(--letter); box-shadow: 0 24px 48px -20px rgba(16, 38, 59, 0.45);
+}
+header.site .site-menu-panel a.navlink {
+  display: flex; align-items: center; min-height: 48px; padding: 0 14px;
+  border-radius: 12px; color: var(--ink); font-weight: 700; text-decoration: none;
+}
+header.site .site-menu-panel a.navlink:hover,
+header.site .site-menu-panel a[aria-current="page"] { background: var(--cream); }
+header.site .site-menu-panel a.btn-start { justify-content: center; min-height: 48px; margin-bottom: 6px; text-align: center; }
+@media (max-width: 560px) {
+  header.site nav[aria-label="Primary"] { display: none; }
+  .site-menu { display: block; }
+  header.site .bar { flex-wrap: nowrap; }
+  /* Above the page that follows, so the open menu is never painted under it. */
+  header.site { position: relative; z-index: 40; }
+}
+@media (prefers-color-scheme: dark) {
+  header.site .site-menu-panel { box-shadow: 0 24px 48px -20px rgba(0, 0, 0, 0.8); }
+}

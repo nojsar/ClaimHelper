@@ -127,9 +127,17 @@
 
   // The horizon sits just under the hero's copy, so text is never on the sea;
   // the closing scene keeps a low, wide horizon.
+  // Phones and touch screens draw at a lower resolution and frame rate, and
+  // hold the picture still while the page is being scrolled: the sky is soft
+  // enough not to show it, and scrolling stays smooth.
+  var lite = matchMedia('(pointer: coarse)').matches || window.innerWidth < 760;
+  var scrollingUntil = 0;
+  if (lite) {
+    window.addEventListener('scroll', function () { scrollingUntil = performance.now() + 160; }, { passive: true });
+  }
   function layout(scene) {
     var rect = scene.host.getBoundingClientRect();
-    var scale = Math.min(window.devicePixelRatio || 1, 1.5) * 0.6;
+    var scale = Math.min(window.devicePixelRatio || 1, 1.5) * (lite ? 0.42 : 0.6);
     scene.canvas.width = Math.max(2, Math.round(rect.width * scale));
     scene.canvas.height = Math.max(2, Math.round(rect.height * scale));
     scene.gl.viewport(0, 0, scene.canvas.width, scene.canvas.height);
@@ -183,7 +191,7 @@
   }
   function loop(now) {
     frame = 0;
-    if (now - last > 32) {
+    if (now - last > (lite ? 48 : 32) && !(lite && now < scrollingUntil)) {
       last = now;
       draw(now);
     }
