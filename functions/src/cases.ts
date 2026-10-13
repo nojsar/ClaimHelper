@@ -87,8 +87,12 @@ export const createCaseUploadSession = onCall({ invoker: "public" }, async (requ
   });
 
   // Aggregate funnel counter only — nothing about the case or user is logged.
-  // The centralized writer refuses owner events.
-  await recordFirstCaseAnalyticsEvent(uid, caseRef, "uploaded");
+  // The centralized writer refuses owner events. The release's own test
+  // upload (tool/upload_smoke.mjs) says so and stays out of the counts; the
+  // flag can only ever leave the caller's own upload uncounted.
+  if (request.data?.releaseCheck !== true) {
+    await recordFirstCaseAnalyticsEvent(uid, caseRef, "uploaded");
+  }
 
   return {
     caseId,

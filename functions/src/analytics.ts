@@ -448,14 +448,14 @@ export function adminAnalyticsCookieHeader(sessionCookie: string): string {
   ].join("; ");
 }
 
-export type SegmentType = "country" | "referrer" | "campaign" | "path";
+export type SegmentType = "country" | "referrer" | "campaign" | "path" | "ad";
 
 export interface AnalyticsSegment {
   type: SegmentType;
   key: string;
 }
 
-export const MAX_ANALYTICS_SEGMENTS_PER_EVENT = 4;
+export const MAX_ANALYTICS_SEGMENTS_PER_EVENT = 5;
 export const MAX_TRAFFIC_COUNTER_FIELDS_PER_EVENT = 8;
 const MAX_ANALYTICS_SEGMENT_KEY_LENGTH = 64;
 
@@ -549,6 +549,14 @@ const CAMPAIGN_MEDIUM_CATEGORIES = new Set([
   "other",
 ]);
 const CAMPAIGN_TAG_CATEGORIES = new Set(["tagged", "untagged"]);
+/**
+ * Paid-ad creative codes, read from utm_content (fb1 ... fb12). A fixed list,
+ * like every other dimension: an arbitrary utm_content never becomes a key,
+ * and no visitor is identified, only which ad a visit came from in total.
+ */
+export const ANALYTICS_AD_CODES = new Set(
+  Array.from({ length: 12 }, (_, i) => `fb${i + 1}`),
+);
 const ANALYTICS_PATH_CATEGORIES = new Set([
   ...ANALYTICS_EXACT_PATH_CATEGORIES,
   ...ANALYTICS_GROUPED_PATH_CATEGORIES,
@@ -655,6 +663,20 @@ export function campaignAnalyticsCategory(raw: RequestHeader): string | null {
   }
 }
 
+/** The fixed ad code in a first-party page URL's utm_content, if any. */
+export function adAnalyticsCategory(raw: RequestHeader): string | null {
+  const parsed = parsedHeader(raw);
+  if (!parsed.present || !parsed.value || !isFirstPartyAnalyticsUrl(parsed.value)) {
+    return null;
+  }
+  try {
+    const code = new URL(parsed.value).searchParams.get("utm_content")?.trim().toLowerCase();
+    return code && ANALYTICS_AD_CODES.has(code) ? code : null;
+  } catch {
+    return null;
+  }
+}
+
 function isAllowedCampaignCategory(key: string): boolean {
   const [source, medium, tag, extra] = key.split("|");
   return (
@@ -682,6 +704,8 @@ function isAllowedSegment(segment: AnalyticsSegment): boolean {
       return isAllowedCampaignCategory(segment.key);
     case "path":
       return ANALYTICS_PATH_CATEGORIES.has(segment.key);
+    case "ad":
+      return ANALYTICS_AD_CODES.has(segment.key);
     default:
       return false;
   }
@@ -721,6 +745,7 @@ function isAllowedTrafficCounterPath(path: string): boolean {
   if (root === "referrers") return ANALYTICS_REFERRER_CATEGORIES.has(key);
   if (root === "campaigns") return isAllowedCampaignCategory(key);
   if (root === "paths") return ANALYTICS_PATH_CATEGORIES.has(key);
+  if (root === "ads") return ANALYTICS_AD_CODES.has(key);
   return false;
 }
 
@@ -1836,6 +1861,7 @@ export function normalizeTrafficEvent(
   const referrer = type === "app_ready"
     ? null
     : referrerAnalyticsCategory(value.ref);
+  const ad = type === "app_ready" ? null : adAnalyticsCategory(headers.referer);
 
   const fields: Record<string, number> = {};
   const segments: AnalyticsSegment[] = type === "app_ready"
@@ -1844,6 +1870,7 @@ export function normalizeTrafficEvent(
   if (country) segments.push({ type: "country", key: country });
   if (campaign) segments.push({ type: "campaign", key: campaign });
   if (referrer) segments.push({ type: "referrer", key: referrer });
+  if (ad) segments.push({ type: "ad", key: ad });
 
   if (type === "visit") {
     fields.visits = 1;
@@ -1852,6 +1879,7 @@ export function normalizeTrafficEvent(
     if (country) fields[`countries.${country}`] = 1;
     if (campaign) fields[`campaigns.${campaign}`] = 1;
     if (referrer) fields[`referrers.${referrer}`] = 1;
+    if (ad) fields[`ads.${ad}`] = 1;
   } else if (type === "boot") {
     fields.boots = 1;
   } else if (type === "pageview") {

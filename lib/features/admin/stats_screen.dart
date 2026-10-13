@@ -559,6 +559,24 @@ class _AnalyticsDashboardContentState extends State<AnalyticsDashboardContent> {
           emptyLabel: 'No tagged campaign visits yet.',
         ),
         const SizedBox(height: 28),
+        _SectionTitle(dateLabel == null ? 'Top ads' : 'Ads · $dateLabel'),
+        Padding(
+          padding: EdgeInsets.only(bottom: 10),
+          child: Text(
+            'Visits per paid ad, from the fb1 to fb12 code in the ad link '
+            '(utm_content). Select one to see its start clicks and steps.',
+            style: TextStyle(color: context.palette.textMuted, fontSize: 13),
+          ),
+        ),
+        AnalyticsBreakdownList(
+          dimension: AnalyticsDimension.ad,
+          entries: scopedOverall.topAds,
+          filteredEntries: scopedFiltered?.topAds,
+          selectedFilter: filter,
+          onSelect: widget.onFilterSelect,
+          emptyLabel: 'No ad visits yet.',
+        ),
+        const SizedBox(height: 28),
         const _SectionTitle('Customer-reported acquisition'),
         Padding(
           padding: EdgeInsets.only(bottom: 10),

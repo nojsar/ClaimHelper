@@ -8,7 +8,8 @@ enum AnalyticsDimension {
   country('country', 'country', 'countries', 'Country'),
   referrer('referrer', 'referrer', 'referrers', 'Referrer'),
   campaign('campaign', 'campaign', 'campaigns', 'Campaign'),
-  path('path', 'page', 'paths', 'Page');
+  path('path', 'page', 'paths', 'Page'),
+  ad('ad', 'ad', 'ads', 'Ad');
 
   const AnalyticsDimension(
     this.storageName,
@@ -573,6 +574,9 @@ class AnalyticsSummary {
   List<MapEntry<String, int>> get topReferrers => topOf('referrers');
   List<MapEntry<String, int>> get topCampaigns => topOf('campaigns');
   List<MapEntry<String, int>> get topPaths => topOf('paths');
+
+  /// Visits per paid-ad creative code (utm_content fb1 ... fb12).
+  List<MapEntry<String, int>> get topAds => topOf('ads');
 
   List<AcquisitionSourceSummary> get acquisitionSources {
     final merged = <String, ({int selected, int paid, int revenueCents})>{};

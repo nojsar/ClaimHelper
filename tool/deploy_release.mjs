@@ -78,5 +78,8 @@ if (checkOnly) {
 // idempotent, so production releases explicitly acknowledge the failure policy.
 run("firebase", ["deploy", "--project", project, "--force"]);
 run("node", ["tool/production_verify.mjs", "--artifact", "build/web"]);
+// A real guest upload through the production Storage rules. Emulator tests
+// cannot see the IAM grant the rules depend on; this can.
+run("node", ["tool/upload_smoke.mjs"]);
 
 console.log("\n[release] Production deployment and artifact verification passed.");

@@ -276,6 +276,8 @@ test("segment documents are allowlisted, deduplicated, and hard-capped", () => {
     { type: "campaign", key: "google|paid_search|tagged" },
     { type: "path", key: "/attacker-unique" },
     { type: "country", key: "ZZ" },
+    { type: "ad", key: "fb99" },
+    { type: "ad", key: "fb1" },
   ]);
   assert.equal(segments.length, MAX_ANALYTICS_SEGMENTS_PER_EVENT);
   assert.deepEqual(segments, [
@@ -283,6 +285,7 @@ test("segment documents are allowlisted, deduplicated, and hard-capped", () => {
     { type: "path", key: "/upload" },
     { type: "country", key: "LT" },
     { type: "referrer", key: "google" },
+    { type: "campaign", key: "google|paid_search|tagged" },
   ]);
   assert.equal(JSON.stringify(segments).includes("attacker"), false);
 });
@@ -371,6 +374,31 @@ test("normal traffic produces a bounded write plan", () => {
   });
   assert.equal(JSON.stringify(event).includes("user@example.com"), false);
   assert.equal(JSON.stringify(event).includes("secret"), false);
+});
+
+test("a paid ad's fixed code is counted, and any other utm_content is not", () => {
+  const event = normalizeTrafficEvent(
+    { t: "visit", path: "/" },
+    {
+      referer:
+        "https://getmyyes.com/?utm_source=facebook&utm_medium=paid_social&utm_campaign=angle_test&utm_content=FB3",
+    },
+  );
+  assert.equal(event?.fields["ads.fb3"], 1);
+  assert.deepEqual(event?.segments.at(-1), { type: "ad", key: "fb3" });
+
+  const free = normalizeTrafficEvent(
+    { t: "visit", path: "/" },
+    { referer: "https://getmyyes.com/?utm_source=facebook&utm_content=user@example.com" },
+  );
+  assert.equal(JSON.stringify(free).includes("example.com"), false);
+  assert.equal(Object.keys(free?.fields ?? {}).some((k) => k.startsWith("ads.")), false);
+
+  const click = normalizeTrafficEvent(
+    { t: "start_appeal_clicked", path: "/" },
+    { referer: "https://getmyyes.com/?utm_source=facebook&utm_content=fb1" },
+  );
+  assert.deepEqual(click?.segments.find((s) => s.type === "ad"), { type: "ad", key: "fb1" });
 });
 
 test("fixed intent events remain aggregate and segmentable", () => {
