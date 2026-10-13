@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { bundle } from "@remotion/bundler";
 import { ensureBrowser, renderMedia, renderStill, selectComposition } from "@remotion/renderer";
 import { FORMATS, posterFile, sync, videoFile } from "../tool/social_video.mjs";
+import { shortTimeline } from "./src/ad/shortTimeline.ts";
 
 /**
  * Renders the marketing autopilot's social media with Remotion.
@@ -184,20 +185,22 @@ if (args.includes("--meta-ads")) {
   for (const hook of hooks.hooks.filter((h) => !only || h.id === only)) {
     // Same rounding as hookFrames() in DawnHook.tsx.
     const lead = Math.round((voiceAt + (short ? hook.short.to + hooks.timing.short.tail : hook.seconds + tail)) * 60) / 60;
-    // The 15-second cut keeps whole hook sentences, then the read line, then
-    // the end card's line 0.15 s into its last 4.6 s. Same timing as
-    // DawnShort and shortFrames() in DawnHook.tsx.
-    const endLine = ad.voice.lines[ad.voice.lines.length - 1];
-    const read = hooks.timing.short.read;
-    const shortTotal = Math.round(Math.max(hooks.timing.short.seconds, read ? lead + 0.15 + read.seconds + 4.6 - 0.05 : 0) * 60) / 60;
-    const endAt = shortTotal - 4.6;
-    const endLineAt = endAt + 0.15;
-    const readAt = read ? lead + Math.max(0.15, Math.min(0.9, endAt + 0.05 - read.seconds - lead)) : 0;
+    // The 15-second cut: whole hook sentences, the read line, the end card;
+    // the same shortTimeline() the composition uses.
+    const t = short
+      ? shortTimeline({
+          hookSeconds: lead,
+          target: hooks.timing.short.seconds,
+          read: hooks.timing.short.read.lines,
+          readGap: hooks.timing.short.read.gap,
+          end: hooks.timing.short.end.lines,
+          endGap: hooks.timing.short.end.gap,
+        })
+      : null;
     const cues = short
       ? [
           ...hook.lines.filter((line) => line.to <= hook.short.to + 0.01).map((line) => [voiceAt + line.from, voiceAt + line.to, line.text]),
-          ...(read ? read.lines.map((line) => [readAt + line.from, readAt + line.to, line.text]) : []),
-          [endLineAt, endLineAt + endLine.clipTo - endLine.clipFrom, endLine.text],
+          ...[...t.read, ...t.end].map((clip) => [clip.at, clip.at + clip.to - clip.from, clip.text]),
         ]
       : [
           ...hook.lines.map((line) => [voiceAt + line.from, voiceAt + line.to, line.text]),
@@ -211,7 +214,10 @@ if (args.includes("--meta-ads")) {
       const base = path.join(outRoot, `getmyyes-${tag}-${format === "feed" ? "4x5" : "9x16"}`);
       // The cover is the hook with all its words up: what the thumb stops on.
       const frames = review
-        ? [0.45, lead - 0.4, lead + 2.2, lead + 7.5, lead + 12.6, lead + 17.6, lead + 24.6].map((s, i) => [`review-${i}`, Math.round(s * 60)])
+        ? (t
+            ? [0.45, lead - 0.4, t.rows[0] + 0.4, t.rows[1] + 0.5, t.rows[2] + 0.2, t.endAt + 1.2, t.total - 0.1]
+            : [0.45, lead - 0.4, lead + 2.2, lead + 7.5, lead + 12.6, lead + 17.6, lead + 24.6]
+          ).map((s, i) => [`review-${i}`, Math.round(s * 60)])
         : [["cover", Math.round((lead - 0.4) * 60)]];
       for (const [name, frame] of frames) {
         await renderStill({ composition, serveUrl, browserExecutable, chromiumOptions, frame, imageFormat: "jpeg", jpegQuality: 90, output: `${base}-${name}.jpg` });

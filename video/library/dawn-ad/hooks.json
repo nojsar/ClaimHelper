@@ -13,7 +13,53 @@
     "short": {
       "seconds": 15,
       "tail": 0.4,
-      "note": "The 15-second cut: the hook's take up to short.to (whole sentences only), the letter turning into plain English, then the end card with its own line. short.screen replaces screen where a sentence was dropped."
+      "note": "The 15-second cut: the hook's take up to short.to (whole sentences only), then the letter read aloud (read) as its rows turn, then the end card (end: the whole tagline when it fits in 15 s, else just the name). Clips are sentences cut from a take and laid back to back with `gap` seconds between them. Timing: video/src/ad/shortTimeline.ts. short.screen replaces screen where a hook sentence was dropped.",
+      "read": {
+        "file": "dawn-ad/hooks/read.mp3",
+        "generation": "DjNQuFXe9B3jPm6ld8Lg",
+        "generated": "2026-10-13",
+        "gap": 0.2,
+        "lines": [
+          {
+            "text": "Approval was needed first.",
+            "from": 0.0,
+            "to": 1.76,
+            "row": 0
+          },
+          {
+            "text": "You can appeal.",
+            "from": 2.08,
+            "to": 3.0,
+            "row": 1
+          },
+          {
+            "text": "You have 180 days.",
+            "from": 3.36,
+            "to": 5.3
+          }
+        ]
+      },
+      "end": {
+        "file": "dawn-ad/voice.mp3",
+        "gap": 0.22,
+        "lines": [
+          {
+            "text": "GetMyYes.",
+            "from": 17.66,
+            "to": 18.62
+          },
+          {
+            "text": "Understand the denial.",
+            "from": 18.93,
+            "to": 20.29
+          },
+          {
+            "text": "Build the appeal.",
+            "from": 20.6,
+            "to": 21.68
+          }
+        ]
+      }
     }
   },
   "hooks": [

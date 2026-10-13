@@ -3,9 +3,9 @@ import { AbsoluteFill, Html5Audio, Sequence, interpolate, staticFile, useCurrent
 import { FPS, MONO, SERIF } from "../brand";
 import { clamp01, f, settle } from "../motion";
 import data from "../../library/dawn-ad/hooks.json";
-import ad from "../../library/dawn-ad/dawn-ad.json";
 import { BrandMark, DAWN_AD_SECONDS, DawnAd, duckUnder } from "./DawnAd";
 import { CREAM, DawnSky, MINT, Rise, Stars, Strip } from "./paper";
+import { Clip, Placed, TO_END, TO_READ, shortTimeline } from "./shortTimeline";
 import "../fonts";
 
 /**
@@ -159,25 +159,30 @@ export const DawnAdHook: React.FC<{ hook: string; format: HookFormat }> = ({ hoo
 
 /* ------------------------------------------------------------ 15 seconds */
 
-type ReadVoice = { file: string; seconds: number; lines: { text: string; from: number; to: number; row: number }[] };
-const SHORT = data.timing.short as typeof data.timing.short & { read?: ReadVoice };
-// The narration that reads the letter's plain-English lines, when there is one.
-const READ = SHORT.read;
-// The letter scene starts mid-unfold, just as "Read it in plain English"
-// rises; the end card starts once the strips before it have cleared.
+type Short = {
+  seconds: number;
+  tail: number;
+  read: { file: string; gap: number; lines: Clip[] };
+  end: { file: string; gap: number; lines: Clip[] };
+};
+const SHORT = data.timing.short as unknown as Short;
+// The letter scene starts mid-unfold, just as "Read it in plain English" rises.
 const READ_FROM = 4.3;
-const END_FROM = 20.15;
-const END_SECONDS = 4.6;
-const END_LINE_IN = 0.15; // the end card's line starts this far into it
-const TO_READ = 0.3; // dissolve from the hook into the letter
-const TO_END = 0.5; // dissolve from the night into the morning
-const END_LINE = ad.voice.lines[ad.voice.lines.length - 1];
 
 const shortHookSeconds = (hook: Hook): number => f(voiceAt + hook.short.to + SHORT.tail) / FPS;
 
-/** 15 seconds, unless a long hook and the read line need a little more. */
-export const shortFrames = (hook: Hook): number =>
-  f(Math.max(SHORT.seconds, READ ? shortHookSeconds(hook) + 0.15 + READ.seconds + END_SECONDS - 0.05 : 0));
+export const timelineFor = (hook: Hook) =>
+  shortTimeline({
+    hookSeconds: shortHookSeconds(hook),
+    target: SHORT.seconds,
+    read: SHORT.read.lines,
+    readGap: SHORT.read.gap,
+    end: SHORT.end.lines,
+    endGap: SHORT.end.gap,
+  });
+
+/** 15 seconds, unless a long hook leaves no room even for the short ending. */
+export const shortFrames = (hook: Hook): number => f(timelineFor(hook).total);
 
 /** Plays the ad from `from` seconds, fading in over `fade` seconds. */
 const Window: React.FC<{ from: number; fade: number; format: HookFormat; rowsAt?: number[] }> = ({ from, fade, format, rowsAt }) => {
@@ -191,54 +196,49 @@ const Window: React.FC<{ from: number; fade: number; format: HookFormat; rowsAt?
   );
 };
 
+/** Sentences cut from a take and laid where the timeline puts them. */
+const Clips: React.FC<{ file: string; clips: Placed[] }> = ({ file, clips }) => (
+  <>
+    {clips.map((clip) => (
+      <Sequence key={clip.text} from={f(clip.at)} durationInFrames={f(clip.to - clip.from) + 1} layout="none">
+        <Html5Audio src={staticFile(file)} trimBefore={f(clip.from)} trimAfter={f(clip.to)} volume={1} />
+      </Sequence>
+    ))}
+  </>
+);
+
 /**
  * The 15-second cut for the Feed's recommended length: the hook (whole
- * sentences only), the letter turning into plain English, and the end card
- * with its own line, under one ducked score.
+ * sentences only), the letter read aloud as each line turns into plain
+ * English, and the end card, under one ducked score. shortTimeline.ts has
+ * the timing.
  */
 export const DawnShort: React.FC<{ hook: string; format: HookFormat }> = ({ hook: id, format }) => {
+  const { durationInFrames } = useVideoConfig();
   const hook = HOOKS.find((h) => h.id === id);
   if (!hook) throw new Error(`No hook ${id} in hooks.json`);
-  const { durationInFrames } = useVideoConfig();
-  const total = durationInFrames / FPS;
+  const t = timelineFor(hook);
   const hookSeconds = shortHookSeconds(hook);
-  const readAt = hookSeconds - TO_READ;
-  const endAt = total - END_SECONDS;
-  const lineAt = endAt + END_LINE_IN;
-  // The read line sits as late as it can (up to 0.9 s after the letter is in
-  // view) and ends by the dissolve; each row turns as its sentence starts.
-  const readVoiceAt = READ ? hookSeconds + Math.max(0.15, Math.min(0.9, endAt + 0.05 - READ.seconds - hookSeconds)) : 0;
-  const toAdClock = (t: number) => READ_FROM + (t - readAt);
-  const rowsAt = READ
-    ? [0, 1].map((row) => toAdClock(readVoiceAt + READ.lines.find((line) => line.row === row)!.from + 0.15))
-    : undefined;
-  if (rowsAt) rowsAt.push(rowsAt[1] + 1.1);
-  const speech: (readonly [number, number])[] = [
-    [voiceAt, voiceAt + hook.short.to],
-    [lineAt, lineAt + END_LINE.clipTo - END_LINE.clipFrom],
+  const toAdClock = (s: number) => READ_FROM + (s - t.readAt);
+  const speech = [
+    [voiceAt, voiceAt + hook.short.to] as const,
+    ...[...t.read, ...t.end].map((clip) => [clip.at, clip.at + clip.to - clip.from] as const),
   ];
-  if (READ) speech.push([readVoiceAt, readVoiceAt + READ.seconds]);
   const fadeOut = (fr: number) =>
     interpolate(fr, [0, f(0.4), durationInFrames - f(1.0), durationInFrames - 1], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   return (
     <AbsoluteFill style={{ background: "#0D1726" }}>
       <Html5Audio src={staticFile("dawn-ad/score.mp3")} volume={(fr) => duckUnder(fr / FPS, speech) * fadeOut(fr)} />
-      <Sequence from={f(lineAt)} durationInFrames={f(END_LINE.clipTo - END_LINE.clipFrom) + 1} layout="none">
-        <Html5Audio src={staticFile(ad.voice.file)} trimBefore={f(END_LINE.clipFrom)} trimAfter={f(END_LINE.clipTo)} volume={1} />
-      </Sequence>
-      {READ && (
-        <Sequence from={f(readVoiceAt)} layout="none">
-          <Html5Audio src={staticFile(READ.file)} volume={1} />
-        </Sequence>
-      )}
+      <Clips file={SHORT.read.file} clips={t.read} />
+      <Clips file={SHORT.end.file} clips={t.end} />
       <Sequence durationInFrames={f(hookSeconds)}>
         <HookCard hook={hook} format={format} beats={hook.short.screen ?? hook.screen} voiceTo={hook.short.to} skyEndsAt={READ_FROM + TO_READ} />
       </Sequence>
-      <Sequence from={f(readAt)} durationInFrames={f(endAt + TO_END - readAt)}>
-        <Window from={READ_FROM} fade={TO_READ} format={format} rowsAt={rowsAt} />
+      <Sequence from={f(t.readAt)} durationInFrames={f(t.endAt + TO_END - t.readAt)}>
+        <Window from={READ_FROM} fade={TO_READ} format={format} rowsAt={t.rows.map(toAdClock)} />
       </Sequence>
-      <Sequence from={f(endAt)}>
-        <Window from={END_FROM} fade={TO_END} format={format} />
+      <Sequence from={f(t.endAt)}>
+        <Window from={t.endFrom} fade={TO_END} format={format} />
       </Sequence>
     </AbsoluteFill>
   );
