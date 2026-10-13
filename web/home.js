@@ -121,8 +121,8 @@
   toggle.type = 'button';
   toggle.className = 'lens-toggle';
   toggle.setAttribute('aria-pressed', 'false');
-  toggle.textContent = 'translate every line';
-  hint.textContent = fine ? 'Move the lens over the letter, or ' : 'Drag the lens or tap a line, or ';
+  toggle.textContent = 'translate all';
+  hint.textContent = fine ? 'Hover a line, or ' : 'Tap a line, or ';
   hint.appendChild(toggle);
   // What is left to read, shown rather than told: every untranslated line
   // carries a small lens and a dotted rule, and a dot on the letterhead

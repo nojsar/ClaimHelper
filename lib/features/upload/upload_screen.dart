@@ -1,5 +1,4 @@
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -231,8 +230,8 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Choose the denial letter, Explanation of Benefits (EOB), or '
-                    'prior-authorization notice. Include every page. A clear photo is okay.',
+                    'Your denial letter, EOB or prior-authorization notice. '
+                    'Every page. A photo is fine.',
                     style: TextStyle(
                       color: context.palette.textSecondary,
                       fontSize: 17,
@@ -241,7 +240,7 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Accepted: PDF, JPG, PNG, HEIC, or WebP · 20 MB each · 45 MB total.',
+                    'PDF, JPG, PNG, HEIC or WebP · up to 20 MB each.',
                     style: TextStyle(
                       color: context.palette.textSecondary,
                       fontSize: 16,
@@ -318,7 +317,7 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'On supported phones, this opens the rear camera. Otherwise, choose a photo from your device.',
+                    'Opens your camera on phones.',
                     style: TextStyle(
                       fontSize: 16,
                       height: 1.45,
@@ -400,7 +399,7 @@ class _UploadTrustPanel extends StatelessWidget {
         subtitle: Padding(
           padding: EdgeInsets.only(top: 4),
           child: Text(
-            'Encrypted in transit. Never used to train AI. No card is required for the free summary.',
+            'Encrypted. Never used to train AI. No card is required.',
             style: TextStyle(
               fontSize: 16,
               height: 1.45,
@@ -649,14 +648,6 @@ class _DropZone extends StatelessWidget {
                 ],
               ),
             ),
-            if (kIsWeb && !compact) ...[
-              const SizedBox(height: 8),
-              Text(
-                'You can also drag files into this area.',
-                style: TextStyle(
-                    fontSize: 16, color: context.palette.textSecondary),
-              ),
-            ],
           ],
         ),
       ),
