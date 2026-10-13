@@ -19,7 +19,7 @@ const discoveryFiles = [
   "llms.txt",
   "ae1eb6c514f913f2fa38028ca8b6699b.txt",
 ];
-const publicStaticPages = ["privacy.html", "terms.html", "accessibility.html", "404.html"];
+const publicStaticPages = ["privacy.html", "consumer-health-data.html", "terms.html", "accessibility.html", "404.html"];
 const publicStaticAssets = [...publicStaticPages, "legal.css"];
 // Marketing sections beyond /appeals/: the denial-code library, the
 // insurer-specific appeal library, plus standalone tool/data pages.
@@ -550,6 +550,7 @@ function sitemapFor(pages, extraEntries = []) {
     { url: `${siteOrigin}/accessibility`, modified: null },
     { url: `${siteOrigin}/terms`, modified: null },
     { url: `${siteOrigin}/privacy`, modified: null },
+    { url: `${siteOrigin}/consumer-health-data`, modified: null },
   ];
   const body = entries.map(({ url, modified }) => [
     "  <url>",

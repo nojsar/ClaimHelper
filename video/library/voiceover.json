@@ -3,43 +3,43 @@
   "voice": "Warm, calm, natural American English. Reassuring, not salesy.",
   "lines": [
     {
-      "start": 0.12,
-      "end": 2.4,
+      "start": 0.05,
+      "end": 2.25,
       "text": "Got a denial letter from your health insurer?",
       "clipFrom": 0.0,
-      "clipTo": 2.6,
+      "clipTo": 2.4,
       "at": 0.0
     },
     {
-      "start": 3.15,
-      "end": 4.3,
+      "start": 3.04,
+      "end": 3.94,
       "text": "Snap a photo of it.",
-      "clipFrom": 2.9,
-      "clipTo": 4.5,
+      "clipFrom": 2.55,
+      "clipTo": 3.75,
       "at": 2.9
     },
     {
-      "start": 6.15,
-      "end": 12.85,
+      "start": 6.04,
+      "end": 12.57,
       "text": "In about two minutes, you get a free summary in plain English: what happened, what's at stake, and how to appeal.",
-      "clipFrom": 4.7,
-      "clipTo": 11.85,
+      "clipFrom": 3.95,
+      "clipTo": 10.75,
       "at": 5.9
     },
     {
-      "start": 13.95,
-      "end": 20.3,
+      "start": 13.84,
+      "end": 19.96,
       "text": "Then GetMyYes drafts your full appeal packet. You review every page, and you send it yourself.",
-      "clipFrom": 12.2,
-      "clipTo": 19.0,
+      "clipFrom": 11.05,
+      "clipTo": 17.45,
       "at": 13.7
     },
     {
-      "start": 20.85,
-      "end": 25.96,
+      "start": 20.74,
+      "end": 25.5,
       "text": "Free preview. No card. Understand the denial. Build the appeal.",
-      "clipFrom": 19.4,
-      "clipTo": 24.96,
+      "clipFrom": 17.74,
+      "clipTo": 22.8,
       "at": 20.6
     }
   ]

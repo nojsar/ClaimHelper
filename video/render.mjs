@@ -79,7 +79,7 @@ async function inputsChangedAt(guide) {
 // guide posts. Output lands in web/media/film/ so the site can embed it.
 // /media is served immutable for a year, so a re-render must not reuse a file
 // name: bump FILM_VERSION, then update the references in web/index.html.
-const FILM_VERSION = "v1";
+const FILM_VERSION = "v2";
 
 if (args.includes("--film")) {
   await sync();
@@ -121,9 +121,9 @@ if (args.includes("--film")) {
 // year: bump AD_VERSION on a re-render. `--review` renders eight frames per
 // cut into video/out/ad-review for a contact sheet instead.
 // The sky is WebGL, so the browser runs with ANGLE.
-// v2 predates the vertical cut's type moving below the Reels header
-// (2026-10-13): bump AD_VERSION before re-rendering it for the site.
-const AD_VERSION = "v2";
+// v3 (2026-10-13): narration regenerated on the paid ElevenLabs plan, type
+// below the Reels header, and the SAMPLE LETTER stamp.
+const AD_VERSION = "v3";
 
 if (args.includes("--dawn-ad")) {
   await sync();

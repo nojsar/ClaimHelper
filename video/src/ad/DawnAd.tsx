@@ -95,6 +95,27 @@ const Letter: React.FC<{ w: number; unfold: number; plain: number[]; lensAt: num
         NOTICE OF ADVERSE BENEFIT DETERMINATION
       </div>
       <div style={{ position: "absolute", left: pad, top: pad + w * 0.05, fontFamily: MONO, fontSize: w * 0.024, color: "#93A2AC" }}>Claim A-20418-77 · DOS 03/14</div>
+      {/* An example, never a promise: the narration reads this letter's lines,
+          and "180 days" is this sample plan's window, not everyone's. */}
+      <div
+        style={{
+          position: "absolute",
+          right: pad * 0.8,
+          top: pad + w * 0.04,
+          padding: `${w * 0.006}px ${w * 0.016}px`,
+          border: `${Math.max(2, w * 0.005)}px solid ${TEAL}`,
+          borderRadius: w * 0.01,
+          fontFamily: MONO,
+          fontWeight: 700,
+          fontSize: w * 0.04,
+          letterSpacing: "0.12em",
+          color: TEAL,
+          transform: "rotate(-6deg)",
+          opacity: 0.9,
+        }}
+      >
+        SAMPLE LETTER
+      </div>
       <div style={{ position: "absolute", left: pad, right: pad, top: h * 0.22, height: 1.5, background: "rgba(23,50,77,0.14)" }} />
       {ROWS.map((row, i) => {
         const k = plain[i];

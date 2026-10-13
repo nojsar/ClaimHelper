@@ -4,7 +4,8 @@
     "provider": "ElevenLabs",
     "model": "eleven_v4",
     "voice": "Carolyn - Warm Grounded Narrator (4rgssJ1pg3E9c0U78Iid)",
-    "generated": "2026-10-13"
+    "generated": "2026-10-13",
+    "licence": "regenerated 2026-10-13 on the paid ElevenLabs plan (commercial licence); free-plan takes are not used anywhere"
   },
   "timing": {
     "voiceAt": 0.2,
@@ -37,7 +38,8 @@
             "from": 3.36,
             "to": 5.3
           }
-        ]
+        ],
+        "licence": "generated 2026-10-13 on the paid ElevenLabs plan"
       },
       "end": {
         "file": "dawn-ad/voice.mp3",
@@ -45,18 +47,18 @@
         "lines": [
           {
             "text": "GetMyYes.",
-            "from": 17.66,
-            "to": 18.62
+            "from": 17.2,
+            "to": 18.26
           },
           {
             "text": "Understand the denial.",
-            "from": 18.93,
-            "to": 20.29
+            "from": 18.47,
+            "to": 19.84
           },
           {
             "text": "Build the appeal.",
-            "from": 20.6,
-            "to": 21.68
+            "from": 20.06,
+            "to": 21.18
           }
         ]
       }
@@ -67,18 +69,18 @@
       "id": "fb1",
       "angle": "Confusion",
       "file": "dawn-ad/hooks/fb1.mp3",
-      "generation": "eqtMDKWxvbKHR8BAXZFG",
+      "generation": "sTGgq6ziO0W1HqzeeVFD",
       "seconds": 4.96,
       "lines": [
         {
           "text": "Insurance denial letters aren't written for you.",
           "from": 0.0,
-          "to": 2.78
+          "to": 2.75
         },
         {
           "text": "Here's what they actually say.",
-          "from": 3.2,
-          "to": 4.71
+          "from": 3.24,
+          "to": 4.79
         }
       ],
       "screen": [
@@ -94,29 +96,29 @@
         {
           "kind": "strip",
           "text": "Here's what they actually say.",
-          "at": 3.2
+          "at": 3.24
         }
       ],
       "short": {
-        "to": 4.71
+        "to": 4.79
       }
     },
     {
       "id": "fb2",
       "angle": "Deadline",
       "file": "dawn-ad/hooks/fb2.mp3",
-      "generation": "dJNwbla4vGBikAuIBeh8",
-      "seconds": 7.2,
+      "generation": "EWZbVQEfozCFZ0LaVRxk",
+      "seconds": 6.24,
       "lines": [
         {
           "text": "Many health plans allow about 180 days to appeal a denial.",
           "from": 0.0,
-          "to": 4.24
+          "to": 4.18
         },
         {
-          "text": "The clock starts on the date on the letter.",
-          "from": 4.84,
-          "to": 6.94
+          "text": "Check the date on the letter.",
+          "from": 4.73,
+          "to": 6.02
         }
       ],
       "screen": [
@@ -132,11 +134,11 @@
         {
           "kind": "strip",
           "text": "Your letter has the exact date.",
-          "at": 4.84
+          "at": 4.73
         }
       ],
       "short": {
-        "to": 4.24,
+        "to": 4.18,
         "screen": [
           {
             "kind": "rise",
@@ -159,18 +161,18 @@
       "id": "fb3",
       "angle": "Statistic",
       "file": "dawn-ad/hooks/fb3.mp3",
-      "generation": "iaGYZLtmZbfprbAbowBk",
-      "seconds": 8.64,
+      "generation": "Xu5X1MP9ryGw1uJGjxOo",
+      "seconds": 8.4,
       "lines": [
         {
           "text": "In Marketplace plans, fewer than 1 percent of denied claims get appealed.",
           "from": 0.0,
-          "to": 4.69
+          "to": 4.65
         },
         {
           "text": "Of those, about 4 in 10 are overturned.",
-          "from": 5.18,
-          "to": 8.46
+          "from": 5.16,
+          "to": 8.2
         }
       ],
       "screen": [
@@ -191,11 +193,11 @@
         {
           "kind": "strip",
           "text": "About 4 in 10 were overturned.",
-          "at": 5.18
+          "at": 5.16
         }
       ],
       "short": {
-        "to": 4.69,
+        "to": 4.65,
         "screen": [
           {
             "kind": "rise",
@@ -223,18 +225,18 @@
       "id": "fb4",
       "angle": "Value",
       "file": "dawn-ad/hooks/fb4.mp3",
-      "generation": "F99CujzuC3JjFYvrDD2k",
-      "seconds": 5.68,
+      "generation": "JRuPtfT372zm6E5TqHvS",
+      "seconds": 5.76,
       "lines": [
         {
           "text": "Five dollars.",
-          "from": 0.0,
-          "to": 1.08
+          "from": 0.17,
+          "to": 1.15
         },
         {
           "text": "That's what it costs to turn a denial letter into a full appeal packet.",
           "from": 1.54,
-          "to": 5.68
+          "to": 5.54
         }
       ],
       "screen": [
@@ -259,30 +261,30 @@
         }
       ],
       "short": {
-        "to": 5.68
+        "to": 5.54
       }
     },
     {
       "id": "fb5",
       "angle": "Control",
       "file": "dawn-ad/hooks/fb5.mp3",
-      "generation": "RgP6ZATBMUTQvceY4pGg",
-      "seconds": 6.4,
+      "generation": "nN2hp3muvZt5Pq5apQkc",
+      "seconds": 6.48,
       "lines": [
         {
           "text": "Nobody sends anything for you.",
           "from": 0.0,
-          "to": 1.86
+          "to": 1.82
         },
         {
           "text": "You get the letter, the checklist and the call script.",
-          "from": 2.21,
-          "to": 5.08
+          "from": 2.24,
+          "to": 5.12
         },
         {
           "text": "You decide.",
-          "from": 5.47,
-          "to": 6.2
+          "from": 5.54,
+          "to": 6.29
         }
       ],
       "screen": [
@@ -297,12 +299,12 @@
         {
           "kind": "strip",
           "text": "The letter.",
-          "at": 2.21
+          "at": 2.24
         },
         {
           "kind": "strip",
           "text": "The checklist.",
-          "at": 3.25
+          "at": 3.24
         },
         {
           "kind": "strip",
@@ -314,12 +316,12 @@
           "lines": [
             "You decide."
           ],
-          "at": 5.47,
+          "at": 5.54,
           "accent": true
         }
       ],
       "short": {
-        "to": 5.08,
+        "to": 5.12,
         "screen": [
           {
             "kind": "rise",
@@ -332,12 +334,12 @@
           {
             "kind": "strip",
             "text": "The letter.",
-            "at": 2.21
+            "at": 2.24
           },
           {
             "kind": "strip",
             "text": "The checklist.",
-            "at": 3.25
+            "at": 3.24
           },
           {
             "kind": "strip",

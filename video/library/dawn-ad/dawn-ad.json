@@ -5,41 +5,42 @@
     "provider": "ElevenLabs",
     "model": "eleven_v4",
     "voice": "Carolyn - Warm Grounded Narrator (4rgssJ1pg3E9c0U78Iid)",
-    "generation": "6sQXGUskpAyZUOR6KPoT",
-    "flow": "Nopaa11ROa1qjWwW0VyU",
-    "generated": "2026-10-10",
+    "generation": "ZWqaFGrJEypVEhFnHggn",
+    "flow": "sNV96oMNw0rWGDgIHRRK",
+    "generated": "2026-10-13",
     "lines": [
       {
         "text": "Some letters arrive at night.",
         "clipFrom": 0.0,
-        "clipTo": 1.84,
+        "clipTo": 1.75,
         "at": 0.6
       },
       {
         "text": "GetMyYes reads yours with you, line by line, in plain English. The summary is free.",
-        "clipFrom": 1.95,
-        "clipTo": 8.55,
+        "clipFrom": 1.98,
+        "clipTo": 8.4,
         "at": 3.9
       },
       {
         "text": "Then it helps you build the appeal: the letter, the evidence, the deadline.",
-        "clipFrom": 8.6,
-        "clipTo": 13.6,
+        "clipFrom": 8.58,
+        "clipTo": 13.3,
         "at": 10.9
       },
       {
         "text": "You check every page. And you send it yourself.",
-        "clipFrom": 13.6,
-        "clipTo": 17.45,
+        "clipFrom": 13.48,
+        "clipTo": 17.0,
         "at": 16.1
       },
       {
         "text": "GetMyYes. Understand the denial. Build the appeal.",
-        "clipFrom": 17.45,
-        "clipTo": 21.84,
+        "clipFrom": 17.15,
+        "clipTo": 21.2,
         "at": 20.5
       }
-    ]
+    ],
+    "licence": "regenerated 2026-10-13 on the paid ElevenLabs plan (commercial licence); free-plan takes are not used anywhere"
   },
   "score": {
     "file": "dawn-ad/score.mp3",

@@ -1,19 +1,89 @@
 {
-  "note": "One ElevenLabs take per guide (eleven_v4, Carolyn - Warm Grounded Narrator, 4rgssJ1pg3E9c0U78Iid), generated 2026-10-10 from scripts.json. flow/session identify the take; the audio is saved as <id>.mp3 beside this file and cut into lines by tool/guide_voice.mjs.",
+  "note": "One ElevenLabs take per guide (eleven_v4, Carolyn - Warm Grounded Narrator, 4rgssJ1pg3E9c0U78Iid), generated 2026-10-13 on the paid plan (commercial licence) from scripts.json. flow/session identify the take; the audio is saved as <id>.mp3 beside this file and cut into lines by tool/guide_voice.mjs.",
   "takes": {
-    "appeal-step-by-step": { "flow": "Bdnv6ako6WDB4Cq1WWVi", "session": "tpR5ERq8uOACijMBR54y", "credits": 189 },
-    "appeal-letter-template": { "flow": "zL9s5VGATP4c0OAxW3B0", "session": "n8cY1NG2nriqJ6WCIcVO", "credits": 175 },
-    "medical-necessity": { "flow": "c0opOIhulNh4xpwhEPL6", "session": "445nYxWczxKjt6r6XMN3", "credits": 187 },
-    "prior-authorization": { "flow": "8EXkpBUOXFaaMeN7nIM5", "session": "UIJqdSTvwkisWxsv4HwS", "credits": 185 },
-    "step-therapy": { "flow": "zRUKttlaXWb9KswW1yws", "session": "qY29UK2GDKs6BEiTXjJB", "credits": 189 },
-    "formulary-exclusion": { "flow": "GVowMOvc8kFaJW47cIHF", "session": "f6MkQjxmRFG7X22VQPtZ", "credits": 184 },
-    "out-of-network": { "flow": "24Hl1VDfgG4BF7fo4wlL", "session": "dMALWW46PCY1P27NrMNo", "credits": 180 },
-    "experimental-denial": { "flow": "UmrD4tFGHSmIwt4BT5Mr", "session": "eZLCiwFc4Ixx7O79nfwk", "credits": 198 },
-    "external-review": { "flow": "SEx6SOZuNHfcjAYAYbBp", "session": "DFBYQiF8mOYD58CFMmNT", "credits": 185 },
-    "er-denial": { "flow": "5M22ma7CS5ycprV0aQcI", "session": "x50dU4fQW0MMDL6T5I0e", "credits": 188 },
-    "mental-health-parity": { "flow": "4liE1hOHOrHddHo8BJWE", "session": "yQZUryYsM7VWnP7yTx5X", "credits": 212 },
-    "california-imr": { "flow": "W4NGKpbUao7gj7oi72ht", "session": "b3uh2k1zRbNQYhk1wUjt", "credits": 197 },
-    "glp1-denial": { "flow": "siPyk7afWJYEe4MGT67u", "session": "ccQcCc3oYih0GGH4qiOJ", "credits": 189 },
-    "imaging-denial": { "flow": "BXZy553qmtS1SsrtvEDZ", "session": "jH11ExEQepMZNQKbdsIH", "credits": 177 }
+    "appeal-step-by-step": {
+      "flow": "QIcnFTTiYWe0BF9Ts9XY",
+      "session": "wkGGCuawQ8b5gukoLRDu",
+      "generation": "i9zzhLV0Nz6tjG10Exup",
+      "credits": 189
+    },
+    "appeal-letter-template": {
+      "flow": "UFl1mIGDjGBWZ0kXNEV5",
+      "session": "6kvHrztpzZEtpOxRBnws",
+      "generation": "BNY0sp9IhzatlLOVoJd3",
+      "credits": 175
+    },
+    "medical-necessity": {
+      "flow": "lzVxGEkBtKo1DSkVXoST",
+      "session": "18OTA1ddvfsu7lKKETYb",
+      "generation": "w8yVPfgsi3K09mmRZtft",
+      "credits": 187
+    },
+    "prior-authorization": {
+      "flow": "5kdl8aINK4K8xKKrRdlA",
+      "session": "asU8zZusbBETZyZ8SIQo",
+      "generation": "NIIb295lS86U2NYjhVtY",
+      "credits": 185
+    },
+    "step-therapy": {
+      "flow": "EJeFKdLZUCz6Mw3hKAwr",
+      "session": "cxxp8qIq7IGa9m5OuwfL",
+      "generation": "BcQXU3aGBucvxzXcg2Lr",
+      "credits": 189
+    },
+    "formulary-exclusion": {
+      "flow": "hfoj9ghx9sjgwQDuHTfK",
+      "session": "bg3aS9tXnbIz5rD4Rp9g",
+      "generation": "PP3kmEM7FRHZqkg7oQnq",
+      "credits": 184
+    },
+    "out-of-network": {
+      "flow": "grUrozv5wK1uUWxSBACm",
+      "session": "SWqWRV4E73PP5N0NxTC1",
+      "generation": "5XuwDSKXlirBZMHo2Vf2",
+      "credits": 180
+    },
+    "experimental-denial": {
+      "flow": "NIiyzZ5IMcYsF1eorGXN",
+      "session": "qMpvy6yayOoo8ndeuRPF",
+      "generation": "a0yKkHwDI2Z8rus4Xjq4",
+      "credits": 198
+    },
+    "external-review": {
+      "flow": "25MvqP3gKW3Fz3pibWkJ",
+      "session": "KLjzWmaxchsLXHAdvKL5",
+      "generation": "NcyEpCObexSaTmrOE6KI",
+      "credits": 185
+    },
+    "er-denial": {
+      "flow": "hSIHwgep8yPN823hno2v",
+      "session": "KePVdnEmiFH7LQA3c3lA",
+      "generation": "EU5TWEYwR7izEzo4X04z",
+      "credits": 188
+    },
+    "mental-health-parity": {
+      "flow": "vIkl4NpRvju76gMTa3MZ",
+      "session": "njLBapCiZ8hOgWHckgr8",
+      "generation": "JYJumRBwVSnRAdOQtPo6",
+      "credits": 212
+    },
+    "california-imr": {
+      "flow": "VqJPwrxN1mKxttWtxfTD",
+      "session": "BUFlekS1AwIXpHpUAYc5",
+      "generation": "CyappYnwlTLeFHnHXTez",
+      "credits": 197
+    },
+    "glp1-denial": {
+      "flow": "D1sL9VtYnPRrsCop5pAh",
+      "session": "t92BKkwD6D7FEbJfBYIA",
+      "generation": "yuZBNzJdY0EGBsc6QPDQ",
+      "credits": 189
+    },
+    "imaging-denial": {
+      "flow": "5xJ6IRl3xMxRhD2IiYgC",
+      "session": "hzc2dkLUPVs9uMi9uQN7",
+      "generation": "xIJ0wzzGEd77np0Wdkib",
+      "credits": 177
+    }
   }
 }

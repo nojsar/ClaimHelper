@@ -21,9 +21,10 @@
     "provider": "ElevenLabs",
     "model": "eleven_v4",
     "voice": "Carolyn - Warm Grounded Narrator (4rgssJ1pg3E9c0U78Iid)",
-    "generation": "0abBeqhGZoeOjeefQHpL",
-    "flow": "Kc7AiNDfKw0tw3AGqIva",
-    "generated": "2026-10-09",
-    "note": "One take of the whole script; the film cuts it into lines (clip ranges below, seconds into this file) and places each on its scene."
+    "generation": "qm4emI43vyFQwAUv2xEd",
+    "flow": "8ziQHOYGrLMELdDpirri",
+    "generated": "2026-10-13",
+    "note": "One take of the whole script; the film cuts it into lines (clip ranges below, seconds into this file) and places each on its scene.",
+    "licence": "regenerated 2026-10-13 on the paid ElevenLabs plan (commercial licence); free-plan takes are not used anywhere"
   }
 }

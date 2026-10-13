@@ -33,7 +33,10 @@ const END_UNTIL = 24.4;
 /** On the ad's clock, the strips before the end card have cleared here. */
 const END_FROM_EARLIEST = 20.15;
 /** Long enough to read the button when only the name is spoken. */
-const END_SHORTEST = 3.6;
+const END_SHORTEST = 3.5;
+/** The end card's line starts this far in, which leaves a breath (~0.4 s)
+ * after the read line instead of running the two together. */
+const END_LINE_IN = 0.2;
 
 const length = (clips: Clip[], gap: number): number =>
   clips.reduce((sum, clip) => sum + clip.to - clip.from, 0) + gap * Math.max(0, clips.length - 1);
@@ -57,18 +60,18 @@ export function shortTimeline(o: {
 }): ShortTimeline {
   const readLength = length(o.read, o.readGap);
   // The whole tagline when it fits in the target, else just the name.
-  const endFor = (clips: Clip[]) => Math.max(END_SHORTEST, 0.1 + length(clips, o.endGap) + 0.25);
-  const need = (endSeconds: number) => o.hookSeconds + 0.15 + readLength - 0.05 + endSeconds;
+  const endFor = (clips: Clip[]) => Math.max(END_SHORTEST, END_LINE_IN + length(clips, o.endGap) + 0.15);
+  const need = (endSeconds: number) => o.hookSeconds + 0.15 + readLength + 0.05 + endSeconds;
   const endClips = need(endFor(o.end)) <= o.target + 1e-6 ? o.end : o.end.slice(0, 1);
   const endSeconds = endFor(endClips);
   const total = Math.max(o.target, need(endSeconds));
   // The read line starts 0.15-0.45 s after the letter is in view (it is
-  // unfolded by then) and may run 0.05 s into the dissolve to the end card;
-  // any time left over holds the end card longer.
+  // unfolded by then); the dissolve to the end card starts just after it
+  // ends, and any time left over holds the end card longer.
   const readStart = o.hookSeconds + 0.15 + Math.min(0.3, total - need(endSeconds));
   const read = place(o.read, o.readGap, readStart);
   const readEnd = readStart + readLength;
-  const endAt = readEnd - 0.05;
+  const endAt = readEnd + 0.05;
   const endHeld = total - endAt;
   const rowAt = (row: number) => {
     const clip = read.find((c) => c.row === row);
@@ -84,7 +87,7 @@ export function shortTimeline(o: {
     // Never earlier than the strips before the card have cleared.
     endFrom: Math.max(END_FROM_EARLIEST, END_UNTIL - endHeld),
     read,
-    end: place(endClips, o.endGap, endAt + 0.1),
+    end: place(endClips, o.endGap, endAt + END_LINE_IN),
     rows: [first, second, third],
   };
 }

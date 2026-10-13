@@ -22,6 +22,19 @@ Each is about 31–35 seconds: a 5–9 second voiced hook, then the 25.5 second
 ad. In the 9:16 cut the words stay out of the top 14% and bottom 35% that
 the Reels interface covers.
 
+**15-second versions** sit beside them with `-15s` in the name
+(`getmyyes-fb1-15s-4x5.mp4`, `getmyyes-fb1-15s-9x16.mp4`,
+`getmyyes-fb1-15s.en_US.srt`, covers likewise): the hook, the sample letter
+read aloud as each line turns into plain English, and the end card. Render
+with `node video/render.mjs --meta-ads --short`.
+
+**Licensing:** every narration was regenerated on 2026-10-13 on the paid
+ElevenLabs plan. Free-plan output has no commercial licence, so any video
+rendered before that date (including anything uploaded to Ads Manager
+earlier) must be replaced with the current files. The letter carries a
+"SAMPLE LETTER" stamp, so "you have 180 days" reads as that example's
+deadline, not a promise to the viewer.
+
 ## Ads Manager, step by step
 
 **1. Campaign**
@@ -60,7 +73,9 @@ video, text and link.
   text and visual touch-ups.
 - If asked whether the ad uses AI-generated or digitally altered content:
   **yes** — the narration is an AI voice (ElevenLabs). The pictures are
-  drawn, not photographs of people.
+  drawn, not photographs of people. Adding "AI voice" to the description is
+  a cheap extra disclosure (the EU AI Act's transparency rules apply to us
+  as an EU-based advertiser).
 - Call to action: **Learn more**. Display link: `getmyyes.com`.
 - Website URL: the tagged link below, exactly. The `utm_content` code is
   what lets `/#/stats → Top ads` show which ad people came from.
@@ -114,6 +129,6 @@ promises, statistics only with their source.
   round of hooks around the winning angle (add them to `hooks.json` as fb6
   onwards; the stats allow fb1–fb12).
 
-The fb2 narration says "the clock starts on the date on the letter". The
-rules count from when the letter is *received*, so the date printed on the
-letter is the cautious reading, the same one the site's deadline check uses.
+The fb2 narration says "Check the date on the letter." (re-recorded
+2026-10-13; the earlier "the clock starts on the date on the letter" was
+dropped because the rules usually count from when the letter is received).
