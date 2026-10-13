@@ -175,6 +175,7 @@ if (args.includes("--meta-ads")) {
   const chromiumOptions = { gl: process.env.REMOTION_GL || "angle" };
   const serveUrl = await bundle({ entryPoint: path.join(here, "src", "index.ts"), publicDir: path.join(here, "public") });
   const review = args.includes("--review");
+  const short = args.includes("--short");
   const { readFile, writeFile } = await import("node:fs/promises");
   const hooks = JSON.parse(await readFile(path.join(here, "library", "dawn-ad", "hooks.json"), "utf8"));
   const ad = JSON.parse(await readFile(path.join(here, "library", "dawn-ad", "dawn-ad.json"), "utf8"));
@@ -182,16 +183,26 @@ if (args.includes("--meta-ads")) {
   const stamp = (seconds) => new Date(seconds * 1000).toISOString().slice(11, 23).replace(".", ",");
   for (const hook of hooks.hooks.filter((h) => !only || h.id === only)) {
     // Same rounding as hookFrames() in DawnHook.tsx.
-    const lead = Math.round((voiceAt + hook.seconds + tail) * 60) / 60;
-    const cues = [
-      ...hook.lines.map((line) => [voiceAt + line.from, voiceAt + line.to, line.text]),
-      ...ad.voice.lines.map((line) => [lead + line.at, lead + line.at + line.clipTo - line.clipFrom, line.text]),
-    ];
+    const lead = Math.round((voiceAt + (short ? hook.short.to + hooks.timing.short.tail : hook.seconds + tail)) * 60) / 60;
+    // The 15-second cut keeps whole hook sentences, then the end card's line
+    // 5.3 s from the end (DawnShort in DawnHook.tsx).
+    const endLine = ad.voice.lines[ad.voice.lines.length - 1];
+    const endLineAt = hooks.timing.short.seconds - 5.3 + (endLine.at - 20.15);
+    const cues = short
+      ? [
+          ...hook.lines.filter((line) => line.to <= hook.short.to + 0.01).map((line) => [voiceAt + line.from, voiceAt + line.to, line.text]),
+          [endLineAt, endLineAt + endLine.clipTo - endLine.clipFrom, endLine.text],
+        ]
+      : [
+          ...hook.lines.map((line) => [voiceAt + line.from, voiceAt + line.to, line.text]),
+          ...ad.voice.lines.map((line) => [lead + line.at, lead + line.at + line.clipTo - line.clipFrom, line.text]),
+        ];
     const srt = cues.map(([a, b, text], i) => `${i + 1}\n${stamp(a)} --> ${stamp(b)}\n${text}\n`).join("\n");
-    if (!review) await writeFile(path.join(outRoot, `getmyyes-${hook.id}.en_US.srt`), srt);
+    const tag = short ? `${hook.id}-15s` : hook.id;
+    if (!review) await writeFile(path.join(outRoot, `getmyyes-${tag}.en_US.srt`), srt);
     for (const format of ["vertical", "feed"]) {
-      const composition = await selectComposition({ serveUrl, id: `dawn-ad-${hook.id}-${format}`, browserExecutable, chromiumOptions });
-      const base = path.join(outRoot, `getmyyes-${hook.id}-${format === "feed" ? "4x5" : "9x16"}`);
+      const composition = await selectComposition({ serveUrl, id: `${short ? "dawn-short" : "dawn-ad"}-${hook.id}-${format}`, browserExecutable, chromiumOptions });
+      const base = path.join(outRoot, `getmyyes-${tag}-${format === "feed" ? "4x5" : "9x16"}`);
       // The cover is the hook with all its words up: what the thumb stops on.
       const frames = review
         ? [0.45, lead - 0.4, lead + 2.2, lead + 7.5, lead + 12.6, lead + 17.6, lead + 24.6].map((s, i) => [`review-${i}`, Math.round(s * 60)])

@@ -1,9 +1,10 @@
 import React from "react";
-import { AbsoluteFill, Html5Audio, Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, Html5Audio, Sequence, interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { FPS, MONO, SERIF } from "../brand";
 import { clamp01, f, settle } from "../motion";
 import data from "../../library/dawn-ad/hooks.json";
-import { BrandMark, DAWN_AD_SECONDS, DawnAd } from "./DawnAd";
+import ad from "../../library/dawn-ad/dawn-ad.json";
+import { BrandMark, DAWN_AD_SECONDS, DawnAd, duckUnder } from "./DawnAd";
 import { CREAM, DawnSky, MINT, Rise, Stars, Strip } from "./paper";
 import "../fonts";
 
@@ -19,7 +20,7 @@ type Beat =
   | { kind: "rise"; lines: string[]; at: number; scale?: number; accent?: boolean }
   | { kind: "strip"; text: string; at: number }
   | { kind: "note"; text: string; at: number };
-type Hook = (typeof data.hooks)[number] & { screen: Beat[] };
+type Hook = (typeof data.hooks)[number] & { screen: Beat[]; short: { to: number; screen?: Beat[] } };
 
 export const HOOKS = data.hooks as Hook[];
 const { voiceAt, tail } = data.timing;
@@ -27,8 +28,18 @@ const { voiceAt, tail } = data.timing;
 export const hookFrames = (hook: Hook): number => f(voiceAt + hook.seconds + tail);
 export const hookAdFrames = (hook: Hook): number => hookFrames(hook) + DAWN_AD_SECONDS * FPS;
 
-/** The opening alone: brand, the hook's words, its voice. */
-const HookCard: React.FC<{ hook: Hook; format: HookFormat }> = ({ hook, format }) => {
+/**
+ * The opening alone: brand, the hook's words, its voice. A short cut passes
+ * its own beats and stops the take at voiceTo; skyEndsAt is the ad's clock
+ * (seconds) the hook's sea should hand over to.
+ */
+const HookCard: React.FC<{ hook: Hook; format: HookFormat; beats?: Beat[]; voiceTo?: number; skyEndsAt?: number }> = ({
+  hook,
+  format,
+  beats = hook.screen,
+  voiceTo,
+  skyEndsAt = 0,
+}) => {
   const frame = useCurrentFrame();
   const { width, durationInFrames } = useVideoConfig();
   const u = width / 1080;
@@ -42,7 +53,7 @@ const HookCard: React.FC<{ hook: Hook; format: HookFormat }> = ({ hook, format }
   // Beats stack down the frame in the order they are spoken.
   let cursor = (feed ? 230 : 500) * u;
   let strips = 0;
-  const placed = hook.screen.map((beat) => {
+  const placed = beats.map((beat) => {
     const top = cursor;
     const index = beat.kind === "strip" ? strips++ : 0;
     if (beat.kind === "rise") cursor += beat.lines.length * base * (beat.scale ?? 1) * 1.08 + 30 * u;
@@ -57,7 +68,7 @@ const HookCard: React.FC<{ hook: Hook; format: HookFormat }> = ({ hook, format }
   return (
     <AbsoluteFill style={{ background: "#0D1726", overflow: "hidden" }}>
       <Sequence from={f(voiceAt)} layout="none">
-        <Html5Audio src={staticFile(hook.file)} volume={1} />
+        <Html5Audio src={staticFile(hook.file)} trimAfter={voiceTo === undefined ? undefined : f(voiceTo)} volume={1} />
       </Sequence>
       {placed
         .filter(({ beat }) => beat.kind === "strip")
@@ -68,8 +79,8 @@ const HookCard: React.FC<{ hook: Hook; format: HookFormat }> = ({ hook, format }
         ))}
 
       {/* The same sky the ad opens on, its clock ending where the ad's starts. */}
-      <DawnSky night={night} rise={0} hz={0.25} sunX={0.5} px={1.5 * u} offset={-seconds} />
-      <Stars night={night} offset={-seconds} />
+      <DawnSky night={night} rise={0} hz={0.25} sunX={0.5} px={1.5 * u} offset={skyEndsAt - seconds} />
+      <Stars night={night} offset={skyEndsAt - seconds} />
 
       <div
         style={{
@@ -141,6 +152,71 @@ export const DawnAdHook: React.FC<{ hook: string; format: HookFormat }> = ({ hoo
       </Sequence>
       <Sequence from={lead} durationInFrames={DAWN_AD_SECONDS * FPS}>
         <DawnAd format={format} />
+      </Sequence>
+    </AbsoluteFill>
+  );
+};
+
+/* ------------------------------------------------------------ 15 seconds */
+
+const SHORT = data.timing.short;
+export const SHORT_FRAMES = SHORT.seconds * FPS;
+// The letter scene starts mid-unfold, just as "Read it in plain English"
+// rises; the end card starts once the strips before it have cleared.
+const READ_FROM = 4.3;
+const END_FROM = 20.15;
+const END_SECONDS = 5.3;
+const TO_READ = 0.3; // dissolve from the hook into the letter
+const TO_END = 0.5; // dissolve from the night into the morning
+const END_LINE = ad.voice.lines[ad.voice.lines.length - 1];
+
+const shortHookSeconds = (hook: Hook): number => f(voiceAt + hook.short.to + SHORT.tail) / FPS;
+
+/** Plays the ad from `from` seconds, fading in over `fade` seconds. */
+const Window: React.FC<{ from: number; fade: number; format: HookFormat }> = ({ from, fade, format }) => {
+  const frame = useCurrentFrame();
+  return (
+    <AbsoluteFill style={{ opacity: interpolate(frame, [0, f(fade)], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) }}>
+      <Sequence from={-f(from)}>
+        <DawnAd format={format} voice={false} score={false} />
+      </Sequence>
+    </AbsoluteFill>
+  );
+};
+
+/**
+ * The 15-second cut for the Feed's recommended length: the hook (whole
+ * sentences only), the letter turning into plain English, and the end card
+ * with its own line, under one ducked score.
+ */
+export const DawnShort: React.FC<{ hook: string; format: HookFormat }> = ({ hook: id, format }) => {
+  const hook = HOOKS.find((h) => h.id === id);
+  if (!hook) throw new Error(`No hook ${id} in hooks.json`);
+  const total = SHORT.seconds;
+  const hookSeconds = shortHookSeconds(hook);
+  const readAt = hookSeconds - TO_READ;
+  const endAt = total - END_SECONDS;
+  const lineAt = endAt + (END_LINE.at - END_FROM);
+  const speech = [
+    [voiceAt, voiceAt + hook.short.to],
+    [lineAt, lineAt + END_LINE.clipTo - END_LINE.clipFrom],
+  ] as const;
+  const fadeOut = (fr: number) =>
+    interpolate(fr, [0, f(0.4), SHORT_FRAMES - f(1.0), SHORT_FRAMES - 1], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  return (
+    <AbsoluteFill style={{ background: "#0D1726" }}>
+      <Html5Audio src={staticFile("dawn-ad/score.mp3")} volume={(fr) => duckUnder(fr / FPS, speech) * fadeOut(fr)} />
+      <Sequence from={f(lineAt)} durationInFrames={f(END_LINE.clipTo - END_LINE.clipFrom) + 1} layout="none">
+        <Html5Audio src={staticFile(ad.voice.file)} trimBefore={f(END_LINE.clipFrom)} trimAfter={f(END_LINE.clipTo)} volume={1} />
+      </Sequence>
+      <Sequence durationInFrames={f(hookSeconds)}>
+        <HookCard hook={hook} format={format} beats={hook.short.screen ?? hook.screen} voiceTo={hook.short.to} skyEndsAt={READ_FROM + TO_READ} />
+      </Sequence>
+      <Sequence from={f(readAt)} durationInFrames={f(endAt + TO_END - readAt)}>
+        <Window from={READ_FROM} fade={TO_READ} format={format} />
+      </Sequence>
+      <Sequence from={f(endAt)}>
+        <Window from={END_FROM} fade={TO_END} format={format} />
       </Sequence>
     </AbsoluteFill>
   );

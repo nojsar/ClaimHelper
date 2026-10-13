@@ -68,14 +68,15 @@ const UNDER = 10 ** (-18 / 20);
 const GAP = 10 ** (-12 / 20);
 const RAMP = 0.25;
 const SPEECH = data.voice.lines.map((line) => [line.at, line.at + line.clipTo - line.clipFrom] as const);
-const duck = (t: number): number => {
+export const duckUnder = (t: number, speech: readonly (readonly [number, number])[]): number => {
   let near = Infinity;
-  for (const [a, b] of SPEECH) {
+  for (const [a, b] of speech) {
     if (t >= a && t <= b) return UNDER;
     near = Math.min(near, t < a ? a - t : t - b);
   }
   return mix(UNDER, GAP, clamp01(near / RAMP));
 };
+const duck = (t: number): number => duckUnder(t, SPEECH);
 
 /* ----------------------------------------------------------- the paper */
 
@@ -224,7 +225,8 @@ export const BrandMark: React.FC<{ size: number }> = ({ size }) => (
 
 /* ------------------------------------------------------------------ ad */
 
-export const DawnAd: React.FC<{ format: DawnAdFormat }> = ({ format }) => {
+/** voice and score can be left out when a shorter cut lays its own sound. */
+export const DawnAd: React.FC<{ format: DawnAdFormat; voice?: boolean; score?: boolean }> = ({ format, voice = true, score = true }) => {
   const frame = useCurrentFrame();
   const { width, height, durationInFrames } = useVideoConfig();
   const wide = format === "landscape";
@@ -285,11 +287,13 @@ export const DawnAd: React.FC<{ format: DawnAdFormat }> = ({ format }) => {
 
   return (
     <AbsoluteFill style={{ background: "#0D1726", overflow: "hidden" }}>
-      <Html5Audio
-        src={staticFile("dawn-ad/score.mp3")}
-        volume={(fr) => duck(fr / 60) * interpolate(fr, [0, f(0.6), durationInFrames - f(1.2), durationInFrames - 1], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })}
-      />
-      {data.voice.lines.map((line) => (
+      {score && (
+        <Html5Audio
+          src={staticFile("dawn-ad/score.mp3")}
+          volume={(fr) => duck(fr / 60) * interpolate(fr, [0, f(0.6), durationInFrames - f(1.2), durationInFrames - 1], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })}
+        />
+      )}
+      {voice && data.voice.lines.map((line) => (
         <Sequence key={line.text} from={f(line.at)} durationInFrames={f(line.clipTo - line.clipFrom) + 1} layout="none">
           <Html5Audio src={staticFile("dawn-ad/voice.mp3")} trimBefore={f(line.clipFrom)} trimAfter={f(line.clipTo)} volume={1} />
         </Sequence>

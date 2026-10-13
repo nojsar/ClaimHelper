@@ -4,7 +4,7 @@ import { FPS, Format, LAYOUTS } from "./brand";
 import { DawnGuide, guideTiming } from "./guide/DawnGuide";
 import { FILM_SECONDS, ProductFilm } from "./film/ProductFilm";
 import { DAWN_AD_SECONDS, DawnAd } from "./ad/DawnAd";
-import { DawnAdHook, HOOKS, HookFormat, hookAdFrames } from "./ad/DawnHook";
+import { DawnAdHook, DawnShort, HOOKS, HookFormat, SHORT_FRAMES, hookAdFrames } from "./ad/DawnHook";
 import queue from "./queue.json";
 
 /**
@@ -71,6 +71,21 @@ export const RemotionRoot: React.FC = () => (
           id={`dawn-ad-${hook.id}-${format}`}
           component={DawnAdHook}
           durationInFrames={hookAdFrames(hook)}
+          fps={FPS}
+          width={1080}
+          height={format === "feed" ? 1350 : 1920}
+          defaultProps={{ hook: hook.id, format }}
+        />
+      )),
+    )}
+    {/* The same test cut to 15 seconds, the Feed's recommended length. */}
+    {HOOKS.flatMap((hook) =>
+      (["vertical", "feed"] as HookFormat[]).map((format) => (
+        <Composition
+          key={`short-${hook.id}-${format}`}
+          id={`dawn-short-${hook.id}-${format}`}
+          component={DawnShort}
+          durationInFrames={SHORT_FRAMES}
           fps={FPS}
           width={1080}
           height={format === "feed" ? 1350 : 1920}
