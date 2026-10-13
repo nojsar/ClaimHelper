@@ -19,8 +19,12 @@ export const MINT = "#A9DED2";
 
 type Uniforms = Record<string, WebGLUniformLocation | null>;
 
-/** The homepage's dawn print, drawn once per frame at the video's size. */
-export const DawnSky: React.FC<{ night: number; rise: number; hz: number; sunX: number; px: number }> = ({ night, rise, hz, sunX, px }) => {
+/**
+ * The homepage's dawn print, drawn once per frame at the video's size.
+ * `offset` shifts the sea's clock in seconds, so a scene cut in front of
+ * another (an ad's hook) can end exactly where the next one's sea begins.
+ */
+export const DawnSky: React.FC<{ night: number; rise: number; hz: number; sunX: number; px: number; offset?: number }> = ({ night, rise, hz, sunX, px, offset = 0 }) => {
   const frame = useCurrentFrame();
   const { width, height, fps } = useVideoConfig();
   const ref = useRef<HTMLCanvasElement>(null);
@@ -62,7 +66,7 @@ export const DawnSky: React.FC<{ night: number; rise: number; hz: number; sunX: 
     ctx.uniform2f(u.uRes, width, height);
     ctx.uniform1f(u.uPx, px);
     ctx.uniform1f(u.uVH, height / px);
-    ctx.uniform1f(u.uTime, 30 + frame / fps);
+    ctx.uniform1f(u.uTime, 30 + offset + frame / fps);
     ctx.uniform1f(u.uRise, rise);
     ctx.uniform1f(u.uNight, night);
     ctx.uniform1f(u.uHz, hz);
@@ -82,7 +86,7 @@ export const DawnSky: React.FC<{ night: number; rise: number; hz: number; sunX: 
 };
 
 /** A few stars over the night sky, fading as the dawn comes. */
-export const Stars: React.FC<{ night: number }> = ({ night }) => {
+export const Stars: React.FC<{ night: number; offset?: number }> = ({ night, offset = 0 }) => {
   const frame = useCurrentFrame();
   const { width, height } = useVideoConfig();
   const stars = [
@@ -91,7 +95,7 @@ export const Stars: React.FC<{ night: number }> = ({ night }) => {
   return (
     <AbsoluteFill style={{ opacity: clamp01((night - 0.35) / 0.5) }}>
       {stars.map(([x, y], i) => {
-        const tw = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(frame / 60 * (1.1 + i * 0.29) + i * 1.7));
+        const tw = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin((frame / 60 + offset) * (1.1 + i * 0.29) + i * 1.7));
         const r = (i % 3 === 0 ? 2.6 : 1.8) * (height / 1080);
         return <div key={i} style={{ position: "absolute", left: x * width, top: y * height * 0.62, width: r * 2, height: r * 2, borderRadius: 99, background: "#FFF3D6", opacity: tw, boxShadow: `0 0 ${r * 4}px rgba(255,236,200,0.7)` }} />;
       })}

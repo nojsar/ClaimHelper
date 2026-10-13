@@ -4,6 +4,7 @@ import { FPS, Format, LAYOUTS } from "./brand";
 import { DawnGuide, guideTiming } from "./guide/DawnGuide";
 import { FILM_SECONDS, ProductFilm } from "./film/ProductFilm";
 import { DAWN_AD_SECONDS, DawnAd } from "./ad/DawnAd";
+import { DawnAdHook, HOOKS, HookFormat, hookAdFrames } from "./ad/DawnHook";
 import queue from "./queue.json";
 
 /**
@@ -52,6 +53,31 @@ export const RemotionRoot: React.FC = () => (
       height={1080}
       defaultProps={{ format: "landscape" as const }}
     />
+    <Composition
+      id="dawn-ad-feed"
+      component={DawnAd}
+      durationInFrames={DAWN_AD_SECONDS * FPS}
+      fps={FPS}
+      width={1080}
+      height={1350}
+      defaultProps={{ format: "feed" as const }}
+    />
+    {/* The Facebook angle test: a voiced hook per angle, then the ad, in
+        9:16 for Reels and Stories and 4:5 for the Feed. */}
+    {HOOKS.flatMap((hook) =>
+      (["vertical", "feed"] as HookFormat[]).map((format) => (
+        <Composition
+          key={`${hook.id}-${format}`}
+          id={`dawn-ad-${hook.id}-${format}`}
+          component={DawnAdHook}
+          durationInFrames={hookAdFrames(hook)}
+          fps={FPS}
+          width={1080}
+          height={format === "feed" ? 1350 : 1920}
+          defaultProps={{ hook: hook.id, format }}
+        />
+      )),
+    )}
     {/* One post per guide per format, in the dawn-print style, each as
         long as its own narration needs. */}
     {queue.guides.flatMap((guide) =>

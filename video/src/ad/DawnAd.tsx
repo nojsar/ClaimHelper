@@ -30,7 +30,11 @@ import "../fonts";
  *  20.2  morning      end card
  */
 
-export type DawnAdFormat = "vertical" | "landscape";
+/**
+ * vertical is 9:16 for Reels and Stories: type starts below the top 14% the
+ * Reels header covers. feed is 4:5, the tallest frame a Feed shows uncropped.
+ */
+export type DawnAdFormat = "vertical" | "landscape" | "feed";
 export const DAWN_AD_SECONDS = 25.5;
 
 const D = { land: 3.4, unfold: 3.9, lens: 5.1, free: 8.4, build: 10.6, sheets: 11.2, gather: 13.9, fold: 14.5, launch: 16.0, end: 20.2 };
@@ -210,13 +214,24 @@ const Sheet: React.FC<{ title: string; w: number; lit: number }> = ({ title, w, 
   </div>
 );
 
+/** The site's mark: the drawn check on the teal tile, as in web/icon.svg. */
+export const BrandMark: React.FC<{ size: number }> = ({ size }) => (
+  <svg width={size} height={size} viewBox="0 0 64 64">
+    <rect width="64" height="64" rx="14" fill={TEAL} />
+    <path d="M15 33.5 26.5 45 49 20" fill="none" stroke="#FFFFFF" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 /* ------------------------------------------------------------------ ad */
 
 export const DawnAd: React.FC<{ format: DawnAdFormat }> = ({ format }) => {
   const frame = useCurrentFrame();
   const { width, height, durationInFrames } = useVideoConfig();
   const wide = format === "landscape";
+  const feed = format === "feed";
   const u = wide ? height / 1080 : width / 1080;
+  // The first line of type in the tall cuts.
+  const capTop = (feed ? 90 : 280) * u;
   const s = frame / 60;
 
   // The night lifts into morning over the ad; the sun climbs with it.
@@ -226,9 +241,9 @@ export const DawnAd: React.FC<{ format: DawnAdFormat }> = ({ format }) => {
   const sunX = wide ? 0.62 : 0.5;
 
   // The letter: falls, lands, unfolds, is read, folds back up.
-  const letterW = (wide ? 500 : 640) * u;
+  const letterW = (wide ? 500 : feed ? 480 : 600) * u;
   const homeX = wide ? width * 0.66 : width * 0.5;
-  const homeY = wide ? height * 0.47 : height * 0.5;
+  const homeY = wide ? height * 0.47 : feed ? height * 0.6 : height * 0.515;
   const fall = settle(frame, 0.1, D.land - 0.1);
   const sway = 1 - fall;
   const letterX = homeX + Math.sin(s * 2.2) * 70 * u * sway;
@@ -244,7 +259,7 @@ export const DawnAd: React.FC<{ format: DawnAdFormat }> = ({ format }) => {
   const letterLift = toBuild * (wide ? 0 : -height * 0.05);
 
   // The pages fan out of the letter, gather back, and fold into the plane.
-  const sheetW = (wide ? 250 : 300) * u;
+  const sheetW = (wide ? 250 : feed ? 260 : 300) * u;
   const gather = settle(frame, D.gather, 0.6);
   const folded = settle(frame, D.fold, 0.7);
 
@@ -254,19 +269,19 @@ export const DawnAd: React.FC<{ format: DawnAdFormat }> = ({ format }) => {
   const sunPy = height * (1 - hz) - height * 0.035 * rise;
   const path = {
     x: [homeX, homeX + (wide ? 300 : 260) * u, sunPx + (wide ? 180 : 160) * u, sunPx],
-    y: [homeY, homeY - (wide ? 260 : 420) * u, sunPy - 220 * u, sunPy - 12 * u],
+    y: [homeY, homeY - (wide ? 260 : feed ? 340 : 420) * u, sunPy - 220 * u, sunPy - 12 * u],
   };
   const px = bez(fl, path.x[0], path.x[1], path.x[2], path.x[3]);
   const py = bez(fl, path.y[0], path.y[1], path.y[2], path.y[3]);
   const ahead = Math.min(1, fl + 0.01);
   const ang = Math.atan2(bez(ahead, path.y[0], path.y[1], path.y[2], path.y[3]) - py, bez(ahead, path.x[0], path.x[1], path.x[2], path.x[3]) - px);
-  const planeW = (wide ? 300 : 360) * u * mix(1, 0.14, fl);
+  const planeW = (wide ? 300 : feed ? 320 : 360) * u * mix(1, 0.14, fl);
   const planeIn = pop(frame, D.fold + 0.35);
   const trail = Array.from({ length: 48 }, (_, i) => i / 47).filter((t) => t <= fl);
 
   const cream = (k: number) => `rgba(255,247,234,${k})`;
   const capSize = (wide ? 96 : 104) * u;
-  const capLeft: React.CSSProperties = wide ? { left: 120 * u, top: height * 0.3, maxWidth: width * 0.42 } : { left: 80 * u, right: 80 * u, top: 210 * u };
+  const capLeft: React.CSSProperties = wide ? { left: 120 * u, top: height * 0.3, maxWidth: width * 0.42 } : { left: 80 * u, right: 80 * u, top: capTop };
 
   return (
     <AbsoluteFill style={{ background: "#0D1726", overflow: "hidden" }}>
@@ -292,7 +307,7 @@ export const DawnAd: React.FC<{ format: DawnAdFormat }> = ({ format }) => {
           they are printed on strips of paper. */}
       <Rise lines={["Some letters", "arrive at night."]} at={0.7} out={D.unfold + 0.6} size={capSize} color={CREAM} style={capLeft} />
       <Rise lines={["Read it in", "plain English."]} at={D.unfold + 0.5} out={D.build + 0.2} size={capSize * 0.86} color={CREAM} style={capLeft} />
-      <Strip text="Free summary · No card" at={D.free} out={D.build + 0.2} size={40 * u} style={wide ? { left: 124 * u, top: height * 0.3 + capSize * 2.1 } : { left: 84 * u, top: 210 * u + capSize * 1.95 }} />
+      <Strip text="Free summary · No card" at={D.free} out={D.build + 0.2} size={40 * u} style={wide ? { left: 124 * u, top: height * 0.3 + capSize * 2.1 } : { left: 84 * u, top: capTop + capSize * 1.95 }} />
       <Rise lines={["Build the appeal."]} at={D.build + 0.35} out={D.fold + 0.4} size={capSize * 0.86} color={CREAM} style={capLeft} />
       {["The letter.", "The evidence.", "The deadline."].map((t, i) => (
         <Strip
@@ -301,11 +316,11 @@ export const DawnAd: React.FC<{ format: DawnAdFormat }> = ({ format }) => {
           at={11.9 + i * 0.62}
           out={D.fold + 0.4}
           size={38 * u}
-          style={wide ? { left: 124 * u, top: height * 0.3 + capSize * 1.15 + i * 70 * u } : { left: 84 * u + i * 26 * u, top: 210 * u + capSize * 1.1 + i * 68 * u }}
+          style={wide ? { left: 124 * u, top: height * 0.3 + capSize * 1.15 + i * 70 * u } : { left: 84 * u + i * 26 * u, top: capTop + capSize * 1.1 + i * 68 * u }}
         />
       ))}
-      <Strip text="You check every page." at={D.launch + 0.15} out={D.end - 0.1} size={46 * u} style={wide ? { left: 124 * u, top: height * 0.24 } : { left: 84 * u, top: 220 * u }} />
-      <Strip text="You send it yourself." at={D.launch + 1.65} out={D.end - 0.1} size={46 * u} style={wide ? { left: 124 * u, top: height * 0.24 + 84 * u } : { left: 110 * u, top: 300 * u }} />
+      <Strip text="You check every page." at={D.launch + 0.15} out={D.end - 0.1} size={46 * u} style={wide ? { left: 124 * u, top: height * 0.24 } : { left: 84 * u, top: capTop + 10 * u }} />
+      <Strip text="You send it yourself." at={D.launch + 1.65} out={D.end - 0.1} size={46 * u} style={wide ? { left: 124 * u, top: height * 0.24 + 84 * u } : { left: 110 * u, top: capTop + 90 * u }} />
 
       {/* The sheets, behind the letter. */}
       {s >= D.sheets && s < D.fold + 0.6 &&
@@ -313,8 +328,8 @@ export const DawnAd: React.FC<{ format: DawnAdFormat }> = ({ format }) => {
           const p = settle(frame, D.sheets + i * 0.25, 0.8);
           const spread = p * (1 - gather);
           const angle = [-13, 0, 13][i] * spread;
-          const dx = [-1, 0, 1][i] * (wide ? 290 : 300) * u * spread;
-          const dy = (wide ? 40 : 160) * u * spread + (i === 1 ? -30 * u * spread : 0);
+          const dx = [-1, 0, 1][i] * (wide ? 290 : feed ? 270 : 300) * u * spread;
+          const dy = (wide ? 40 : feed ? 120 : 160) * u * spread + (i === 1 ? -30 * u * spread : 0);
           const lit = pop(frame, 11.9 + i * 0.62) * (1 - gather);
           return (
             <div
@@ -381,12 +396,9 @@ export const DawnAd: React.FC<{ format: DawnAdFormat }> = ({ format }) => {
 
       {/* Morning: the end card, set in navy on the risen sky. */}
       {s >= D.end - 0.2 && (
-        <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", padding: 80 * u, gap: 30 * u, textAlign: "center", ...(wide ? {} : { justifyContent: "flex-start", paddingTop: 300 * u }) }}>
+        <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", padding: 80 * u, gap: 30 * u, textAlign: "center", ...(wide ? {} : { justifyContent: "flex-start", paddingTop: (feed ? 110 : 320) * u }) }}>
           <div style={{ display: "flex", alignItems: "center", gap: 18 * u, opacity: settle(frame, D.end, 0.6) }}>
-            <svg width={64 * u} height={64 * u} viewBox="0 0 100 100">
-              <rect width="100" height="100" rx="24" fill={TEAL} />
-              <path d="M27 52 L44 68 L75 34" fill="none" stroke="#FFFFFF" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <BrandMark size={64 * u} />
             <span style={{ fontFamily: SERIF, fontWeight: 700, fontSize: 50 * u, color: NAVY_DARK }}>GetMyYes</span>
           </div>
           <Rise lines={["Understand the denial."]} at={D.end + 0.4} size={(wide ? 92 : 100) * u} color={NAVY_DARK} align="center" style={{ position: "relative" }} />

@@ -1,0 +1,96 @@
+{
+  "note": "Voiced openings for the Facebook angle test: each hook plays over the night sky, then the dawn-print ad runs unchanged. One ad per hook, tagged utm_content=fbN so /#/stats shows which one brings people. Copy follows the ad rules: no outcome promises, no 'your claim was denied' framing, statistics only with their source on screen.",
+  "voice": {
+    "provider": "ElevenLabs",
+    "model": "eleven_v4",
+    "voice": "Carolyn - Warm Grounded Narrator (4rgssJ1pg3E9c0U78Iid)",
+    "generated": "2026-10-13"
+  },
+  "timing": {
+    "voiceAt": 0.2,
+    "tail": 0.5,
+    "note": "Seconds. The voice starts voiceAt into the hook; the hook ends tail after the take. Line times are measured in the take (silence detection), not the hook."
+  },
+  "hooks": [
+    {
+      "id": "fb1",
+      "angle": "Confusion",
+      "file": "dawn-ad/hooks/fb1.mp3",
+      "generation": "eqtMDKWxvbKHR8BAXZFG",
+      "seconds": 4.96,
+      "lines": [
+        { "text": "Insurance denial letters aren't written for you.", "from": 0.0, "to": 2.78 },
+        { "text": "Here's what they actually say.", "from": 3.2, "to": 4.71 }
+      ],
+      "screen": [
+        { "kind": "rise", "lines": ["Denial letters", "aren't written", "for you."], "at": 0.0 },
+        { "kind": "strip", "text": "Here's what they actually say.", "at": 3.2 }
+      ]
+    },
+    {
+      "id": "fb2",
+      "angle": "Deadline",
+      "file": "dawn-ad/hooks/fb2.mp3",
+      "generation": "dJNwbla4vGBikAuIBeh8",
+      "seconds": 7.2,
+      "lines": [
+        { "text": "Many health plans allow about 180 days to appeal a denial.", "from": 0.0, "to": 4.24 },
+        { "text": "The clock starts on the date on the letter.", "from": 4.84, "to": 6.94 }
+      ],
+      "screen": [
+        { "kind": "rise", "lines": ["Many plans allow", "about 180 days", "to appeal."], "at": 0.0 },
+        { "kind": "strip", "text": "Your letter has the exact date.", "at": 4.84 }
+      ]
+    },
+    {
+      "id": "fb3",
+      "angle": "Statistic",
+      "file": "dawn-ad/hooks/fb3.mp3",
+      "generation": "iaGYZLtmZbfprbAbowBk",
+      "seconds": 8.64,
+      "lines": [
+        { "text": "In Marketplace plans, fewer than 1 percent of denied claims get appealed.", "from": 0.0, "to": 4.69 },
+        { "text": "Of those, about 4 in 10 are overturned.", "from": 5.18, "to": 8.46 }
+      ],
+      "screen": [
+        { "kind": "rise", "lines": ["Fewer than 1%", "of denials get", "appealed."], "at": 0.0 },
+        { "kind": "note", "text": "Marketplace plans · CMS data via KFF", "at": 0.9 },
+        { "kind": "strip", "text": "About 4 in 10 were overturned.", "at": 5.18 }
+      ]
+    },
+    {
+      "id": "fb4",
+      "angle": "Value",
+      "file": "dawn-ad/hooks/fb4.mp3",
+      "generation": "F99CujzuC3JjFYvrDD2k",
+      "seconds": 5.68,
+      "lines": [
+        { "text": "Five dollars.", "from": 0.0, "to": 1.08 },
+        { "text": "That's what it costs to turn a denial letter into a full appeal packet.", "from": 1.54, "to": 5.68 }
+      ],
+      "screen": [
+        { "kind": "rise", "lines": ["$5"], "at": 0.0, "scale": 2.1, "accent": true },
+        { "kind": "rise", "lines": ["turns a denial", "letter into a full", "appeal packet."], "at": 1.54, "scale": 0.8 }
+      ]
+    },
+    {
+      "id": "fb5",
+      "angle": "Control",
+      "file": "dawn-ad/hooks/fb5.mp3",
+      "generation": "RgP6ZATBMUTQvceY4pGg",
+      "seconds": 6.4,
+      "lines": [
+        { "text": "Nobody sends anything for you.", "from": 0.0, "to": 1.86 },
+        { "text": "You get the letter, the checklist and the call script.", "from": 2.21, "to": 5.08 },
+        { "text": "You decide.", "from": 5.47, "to": 6.2 }
+      ],
+      "screen": [
+        { "kind": "rise", "lines": ["Nobody sends", "anything for you."], "at": 0.0 },
+        { "kind": "strip", "text": "The letter.", "at": 2.21 },
+        { "kind": "strip", "text": "The checklist.", "at": 3.25 },
+        { "kind": "strip", "text": "The call script.", "at": 4.15 },
+        { "kind": "rise", "lines": ["You decide."], "at": 5.47, "accent": true }
+      ]
+    }
+  ]
+}

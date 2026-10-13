@@ -120,6 +120,8 @@ if (args.includes("--film")) {
 // year: bump AD_VERSION on a re-render. `--review` renders eight frames per
 // cut into video/out/ad-review for a contact sheet instead.
 // The sky is WebGL, so the browser runs with ANGLE.
+// v2 predates the vertical cut's type moving below the Reels header
+// (2026-10-13): bump AD_VERSION before re-rendering it for the site.
 const AD_VERSION = "v2";
 
 if (args.includes("--dawn-ad")) {
@@ -155,6 +157,55 @@ if (args.includes("--dawn-ad")) {
       enforceAudioTrack: true, audioCodec: "aac", audioBitrate: "192k", outputLocation: path.join(adRoot, `${base}-${cut}.mp4`),
     });
     console.log(`[dawn-ad] ${cut} done`);
+  }
+  process.exit(0);
+}
+
+// `--meta-ads` renders the Facebook angle test: each voiced hook in
+// library/dawn-ad/hooks.json, then the ad, as 9:16 (Reels, Stories) and 4:5
+// (Feed), with an .srt and a cover per ad. They are uploaded to Ads Manager
+// by hand, so they land in video/out/meta-ads/ rather than on the site.
+// `--only fb3` renders one hook; `--review` renders stills instead.
+if (args.includes("--meta-ads")) {
+  await sync();
+  const outRoot = path.join(here, "out", "meta-ads");
+  await mkdir(outRoot, { recursive: true });
+  const browserExecutable = process.env.REMOTION_BROWSER_EXECUTABLE || null;
+  if (!browserExecutable) await ensureBrowser();
+  const chromiumOptions = { gl: process.env.REMOTION_GL || "angle" };
+  const serveUrl = await bundle({ entryPoint: path.join(here, "src", "index.ts"), publicDir: path.join(here, "public") });
+  const review = args.includes("--review");
+  const { readFile, writeFile } = await import("node:fs/promises");
+  const hooks = JSON.parse(await readFile(path.join(here, "library", "dawn-ad", "hooks.json"), "utf8"));
+  const ad = JSON.parse(await readFile(path.join(here, "library", "dawn-ad", "dawn-ad.json"), "utf8"));
+  const { voiceAt, tail } = hooks.timing;
+  const stamp = (seconds) => new Date(seconds * 1000).toISOString().slice(11, 23).replace(".", ",");
+  for (const hook of hooks.hooks.filter((h) => !only || h.id === only)) {
+    // Same rounding as hookFrames() in DawnHook.tsx.
+    const lead = Math.round((voiceAt + hook.seconds + tail) * 60) / 60;
+    const cues = [
+      ...hook.lines.map((line) => [voiceAt + line.from, voiceAt + line.to, line.text]),
+      ...ad.voice.lines.map((line) => [lead + line.at, lead + line.at + line.clipTo - line.clipFrom, line.text]),
+    ];
+    const srt = cues.map(([a, b, text], i) => `${i + 1}\n${stamp(a)} --> ${stamp(b)}\n${text}\n`).join("\n");
+    if (!review) await writeFile(path.join(outRoot, `getmyyes-${hook.id}.en_US.srt`), srt);
+    for (const format of ["vertical", "feed"]) {
+      const composition = await selectComposition({ serveUrl, id: `dawn-ad-${hook.id}-${format}`, browserExecutable, chromiumOptions });
+      const base = path.join(outRoot, `getmyyes-${hook.id}-${format === "feed" ? "4x5" : "9x16"}`);
+      // The cover is the hook with all its words up: what the thumb stops on.
+      const frames = review
+        ? [0.45, lead - 0.4, lead + 2.2, lead + 7.5, lead + 12.6, lead + 17.6, lead + 24.6].map((s, i) => [`review-${i}`, Math.round(s * 60)])
+        : [["cover", Math.round((lead - 0.4) * 60)]];
+      for (const [name, frame] of frames) {
+        await renderStill({ composition, serveUrl, browserExecutable, chromiumOptions, frame, imageFormat: "jpeg", jpegQuality: 90, output: `${base}-${name}.jpg` });
+      }
+      if (review) continue;
+      await renderMedia({
+        composition, serveUrl, browserExecutable, chromiumOptions, codec: "h264", crf: 18, imageFormat: "png",
+        enforceAudioTrack: true, audioCodec: "aac", audioBitrate: "192k", outputLocation: `${base}.mp4`,
+      });
+      console.log(`[meta-ads] ${hook.id} ${format} done`);
+    }
   }
   process.exit(0);
 }
