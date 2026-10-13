@@ -36,8 +36,12 @@ the Reels interface covers.
 
 **2. Ad set**
 - Conversion location: **Website**.
-- Performance goal: **Maximise number of link clicks**. (Not "landing page
-  views": that needs the Meta pixel, and the site promises no pixel.)
+- Performance goal: **Maximise number of landing page views**. As of
+  October 2026 Ads Manager says this no longer needs the Meta pixel, so the
+  site's no-pixel promise is untouched. If Ads Manager ever asks for a pixel
+  for it, fall back to *link clicks* rather than adding one.
+- Bid strategy: highest volume, no cost cap. Dynamic creative: off (one
+  video per ad, or the angles can't be compared).
 - Budget: **Daily, €5.00**. Schedule: start today, no end date (stop it by
   hand after 7 days, about €35).
 - Audience: location **United States**; age **25–64**; all genders;
