@@ -225,8 +225,12 @@ export const BrandMark: React.FC<{ size: number }> = ({ size }) => (
 
 /* ------------------------------------------------------------------ ad */
 
-/** voice and score can be left out when a shorter cut lays its own sound. */
-export const DawnAd: React.FC<{ format: DawnAdFormat; voice?: boolean; score?: boolean }> = ({ format, voice = true, score = true }) => {
+/**
+ * voice and score can be left out when a shorter cut lays its own sound;
+ * rowsAt (seconds on this ad's clock) times the lens to a narration that
+ * reads the plain-English lines aloud.
+ */
+export const DawnAd: React.FC<{ format: DawnAdFormat; voice?: boolean; score?: boolean; rowsAt?: number[] }> = ({ format, voice = true, score = true, rowsAt }) => {
   const frame = useCurrentFrame();
   const { width, height, durationInFrames } = useVideoConfig();
   const wide = format === "landscape";
@@ -251,10 +255,11 @@ export const DawnAd: React.FC<{ format: DawnAdFormat; voice?: boolean; score?: b
   const letterX = homeX + Math.sin(s * 2.2) * 70 * u * sway;
   const letterY = mix(-height * 0.25, homeY, fall);
   const unfold = clamp01(glide(frame, D.unfold, D.unfold + 1.0)) * (1 - glide(frame, D.build, D.build + 0.8));
-  const lensP = clamp01((s - D.lens) / 3.0);
-  const lensAt = Math.min(2, lensP * 3 - 0.5);
-  const lensOn = glide(frame, D.lens - 0.2, D.lens + 0.2) * (1 - glide(frame, D.free - 0.2, D.free + 0.3));
-  const plain = ROWS.map((_, i) => settle(frame, D.lens + 0.55 + i * 1.0, 0.5));
+  // The lens reaches each row as it turns: one a second, or on the narration.
+  const rows = rowsAt ?? ROWS.map((_, i) => D.lens + 0.55 + i * 1.0);
+  const lensAt = Math.min(2, interpolate(s, [rows[0] - 0.55, rows[0], rows[1], rows[2]], [-0.5, 0.05, 1.05, 2.05], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
+  const lensOn = glide(frame, rows[0] - 0.75, rows[0] - 0.35) * (1 - glide(frame, rows[2] + 0.55, rows[2] + 1.05));
+  const plain = ROWS.map((_, i) => settle(frame, rows[i], 0.5));
   const toBuild = settle(frame, D.build, 1.0);
   const letterScale = mix(1, 0.55, toBuild);
   const letterGone = glide(frame, D.sheets + 0.1, D.sheets + 0.7);

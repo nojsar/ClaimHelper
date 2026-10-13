@@ -4,7 +4,7 @@ import { FPS, Format, LAYOUTS } from "./brand";
 import { DawnGuide, guideTiming } from "./guide/DawnGuide";
 import { FILM_SECONDS, ProductFilm } from "./film/ProductFilm";
 import { DAWN_AD_SECONDS, DawnAd } from "./ad/DawnAd";
-import { DawnAdHook, DawnShort, HOOKS, HookFormat, SHORT_FRAMES, hookAdFrames } from "./ad/DawnHook";
+import { DawnAdHook, DawnShort, HOOKS, HookFormat, hookAdFrames, shortFrames } from "./ad/DawnHook";
 import queue from "./queue.json";
 
 /**
@@ -85,7 +85,7 @@ export const RemotionRoot: React.FC = () => (
           key={`short-${hook.id}-${format}`}
           id={`dawn-short-${hook.id}-${format}`}
           component={DawnShort}
-          durationInFrames={SHORT_FRAMES}
+          durationInFrames={shortFrames(hook)}
           fps={FPS}
           width={1080}
           height={format === "feed" ? 1350 : 1920}

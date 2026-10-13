@@ -184,13 +184,19 @@ if (args.includes("--meta-ads")) {
   for (const hook of hooks.hooks.filter((h) => !only || h.id === only)) {
     // Same rounding as hookFrames() in DawnHook.tsx.
     const lead = Math.round((voiceAt + (short ? hook.short.to + hooks.timing.short.tail : hook.seconds + tail)) * 60) / 60;
-    // The 15-second cut keeps whole hook sentences, then the end card's line
-    // 5.3 s from the end (DawnShort in DawnHook.tsx).
+    // The 15-second cut keeps whole hook sentences, then the read line, then
+    // the end card's line 0.15 s into its last 4.6 s. Same timing as
+    // DawnShort and shortFrames() in DawnHook.tsx.
     const endLine = ad.voice.lines[ad.voice.lines.length - 1];
-    const endLineAt = hooks.timing.short.seconds - 5.3 + (endLine.at - 20.15);
+    const read = hooks.timing.short.read;
+    const shortTotal = Math.round(Math.max(hooks.timing.short.seconds, read ? lead + 0.15 + read.seconds + 4.6 - 0.05 : 0) * 60) / 60;
+    const endAt = shortTotal - 4.6;
+    const endLineAt = endAt + 0.15;
+    const readAt = read ? lead + Math.max(0.15, Math.min(0.9, endAt + 0.05 - read.seconds - lead)) : 0;
     const cues = short
       ? [
           ...hook.lines.filter((line) => line.to <= hook.short.to + 0.01).map((line) => [voiceAt + line.from, voiceAt + line.to, line.text]),
+          ...(read ? read.lines.map((line) => [readAt + line.from, readAt + line.to, line.text]) : []),
           [endLineAt, endLineAt + endLine.clipTo - endLine.clipFrom, endLine.text],
         ]
       : [
