@@ -4,14 +4,14 @@ import test from "node:test";
 import { estimatedModelCostMicros } from "../model_usage";
 
 test("model cost estimate accounts for cached and output tokens", () => {
-  // 900 uncached * $2.50/M + 100 cached * $0.25/M + 200 output * $15/M
+  // 900 uncached * $5/M + 100 cached * $0.50/M + 200 output * $25/M (GPT-6.1 Sol)
   assert.equal(
     estimatedModelCostMicros({
       inputTokens: 1_000,
       cachedInputTokens: 100,
       outputTokens: 200,
     }),
-    5_275,
+    9_550,
   );
 });
 

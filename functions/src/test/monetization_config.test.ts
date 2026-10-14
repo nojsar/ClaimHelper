@@ -14,8 +14,8 @@ test("default economics: $5 packet, $15 for five more rounds, $5 a round", () =>
   assert.equal(config.fullCaseRoundsCap, config.freeFollowUpRounds + 5);
 });
 
-test("default AI quality configuration uses GPT-5.6 Terra with high reasoning", () => {
-  assert.equal(config.openaiModel, "gpt-5.6-terra");
+test("default AI quality configuration uses GPT-6.1 Sol with high reasoning", () => {
+  assert.equal(config.openaiModel, "gpt-6.1-sol");
   assert.equal(config.openaiReasoningEffort, "high");
   assert.equal(config.openaiServiceTier, "default");
 });

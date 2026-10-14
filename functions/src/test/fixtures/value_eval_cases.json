@@ -21,12 +21,26 @@
       "amountBilled": null,
       "patientResponsibility": null,
       "appealInstructions": "You or your provider may request an appeal in writing within 180 days. Your doctor may request a peer-to-peer review by calling 1-800-555-0142 within 14 days. If your situation is urgent you may request an expedited appeal.",
-      "phoneNumbers": ["1-800-555-0142 (peer-to-peer)", "1-800-555-0100 (member services)"],
-      "mailingAddresses": ["Northwind Health Plan, Appeals Unit, PO Box 4410, Austin, TX 78765"],
-      "missingFields": ["claimNumber", "dateOfService"],
+      "phoneNumbers": [
+        "1-800-555-0142 (peer-to-peer)",
+        "1-800-555-0100 (member services)"
+      ],
+      "mailingAddresses": [
+        "Northwind Health Plan, Appeals Unit, PO Box 4410, Austin, TX 78765"
+      ],
+      "missingFields": [
+        "claimNumber",
+        "dateOfService"
+      ],
       "sourceSnippets": [
-        { "field": "denialReasonText", "snippet": "Documentation does not show at least 6 weeks of conservative therapy" },
-        { "field": "appealDeadline", "snippet": "within 180 days" }
+        {
+          "field": "denialReasonText",
+          "snippet": "Documentation does not show at least 6 weeks of conservative therapy"
+        },
+        {
+          "field": "appealDeadline",
+          "snippet": "within 180 days"
+        }
       ]
     },
     "guidedAnswers": {
@@ -37,17 +51,34 @@
       "isUrgent": false,
       "urgencyNote": null,
       "triedAlternatives": [
-        { "name": "Physical therapy, 8 weeks (16 sessions)", "outcome": "failed" },
-        { "name": "Naproxen", "outcome": "failed" }
+        {
+          "name": "Physical therapy, 8 weeks (16 sessions)",
+          "outcome": "failed"
+        },
+        {
+          "name": "Naproxen",
+          "outcome": "failed"
+        }
       ],
-      "documentsOnHand": ["denial_letter", "chart_notes"],
+      "documentsOnHand": [
+        "denial_letter",
+        "chart_notes"
+      ],
       "contactedInsurer": false,
       "contactNotes": null
     },
     "userAdditions": "I did 16 physical therapy sessions from June to August and took naproxen the whole time. The pain still goes down my left leg and my foot goes numb some days.",
-    "fieldsThatMustStayUnknown": ["claimNumber"],
-    "requiredPlaceholderTerms": ["physical therapy"],
-    "unsupportedCertaintyPhrases": ["will be approved", "guaranteed", "is medically necessary."]
+    "fieldsThatMustStayUnknown": [
+      "claimNumber"
+    ],
+    "requiredPlaceholderTerms": [
+      "physical therapy"
+    ],
+    "unsupportedCertaintyPhrases": [
+      "will be approved",
+      "approval is guaranteed",
+      "you will win"
+    ]
   },
   {
     "id": "glp1-formulary-exception",
@@ -71,11 +102,19 @@
       "amountBilled": null,
       "patientResponsibility": null,
       "appealInstructions": "To request a formulary exception, your prescriber may submit a supporting statement. You may also file an appeal (grievance) with the plan.",
-      "phoneNumbers": ["1-888-555-0177 (pharmacy services)"],
+      "phoneNumbers": [
+        "1-888-555-0177 (pharmacy services)"
+      ],
       "mailingAddresses": [],
-      "missingFields": ["appealDeadline", "mailingAddresses"],
+      "missingFields": [
+        "appealDeadline",
+        "mailingAddresses"
+      ],
       "sourceSnippets": [
-        { "field": "denialReasonText", "snippet": "This drug is not on your plan's formulary." }
+        {
+          "field": "denialReasonText",
+          "snippet": "This drug is not on your plan's formulary."
+        }
       ]
     },
     "guidedAnswers": {
@@ -86,16 +125,30 @@
       "isUrgent": false,
       "urgencyNote": null,
       "triedAlternatives": [
-        { "name": "Phentermine", "outcome": "not_tolerated" }
+        {
+          "name": "Phentermine",
+          "outcome": "not_tolerated"
+        }
       ],
-      "documentsOnHand": ["denial_letter", "prescription"],
+      "documentsOnHand": [
+        "denial_letter",
+        "prescription"
+      ],
       "contactedInsurer": true,
       "contactNotes": "Called pharmacy services on Oct 2; they said my doctor has to send the exception request."
     },
     "userAdditions": null,
-    "fieldsThatMustStayUnknown": ["appealDeadline"],
-    "requiredPlaceholderTerms": ["deadline"],
-    "unsupportedCertaintyPhrases": ["will be approved", "guaranteed", "you qualify for"]
+    "fieldsThatMustStayUnknown": [
+      "appealDeadline"
+    ],
+    "requiredPlaceholderTerms": [
+      "deadline"
+    ],
+    "unsupportedCertaintyPhrases": [
+      "will be approved",
+      "approval is guaranteed",
+      "you will win"
+    ]
   },
   {
     "id": "er-prudent-layperson",
@@ -104,7 +157,7 @@
       "documentType": "eob",
       "denialCategory": "not_medically_necessary",
       "insurerName": "Hudson Valley Health",
-      "planName": "Hudson Valley Gold HMO",
+      "planName": "Hudson Valley Gold HMO (insured group plan)",
       "patientName": "Sam Okafor",
       "memberIdLast4": "7781",
       "claimNumber": "HV-26-0904-11873",
@@ -118,12 +171,21 @@
       "denialReasonText": "Services do not meet the definition of an emergency medical condition. Final diagnosis: gastritis (K29.70). Non-emergent care should be received at an urgent care or primary care office.",
       "amountBilled": 3480,
       "patientResponsibility": 3480,
-      "appealInstructions": "If you disagree with this decision you may file an appeal. See the enclosed notice of your appeal rights.",
-      "phoneNumbers": ["1-877-555-0190"],
-      "mailingAddresses": ["Hudson Valley Health, Grievances and Appeals, 200 River Road, Albany, NY 12207"],
-      "missingFields": ["appealDeadline"],
+      "appealInstructions": "If you disagree with this decision you may file an appeal. See the enclosed notice of your appeal rights. If we uphold the denial, you may have the right to an external appeal through the New York State Department of Financial Services.",
+      "phoneNumbers": [
+        "1-877-555-0190"
+      ],
+      "mailingAddresses": [
+        "Hudson Valley Health, Grievances and Appeals, 200 River Road, Albany, NY 12207"
+      ],
+      "missingFields": [
+        "appealDeadline"
+      ],
       "sourceSnippets": [
-        { "field": "denialReasonText", "snippet": "Final diagnosis: gastritis (K29.70)" }
+        {
+          "field": "denialReasonText",
+          "snippet": "Final diagnosis: gastritis (K29.70)"
+        }
       ]
     },
     "guidedAnswers": {
@@ -134,14 +196,25 @@
       "isUrgent": false,
       "urgencyNote": null,
       "triedAlternatives": [],
-      "documentsOnHand": ["eob", "bill"],
+      "documentsOnHand": [
+        "eob",
+        "bill"
+      ],
       "contactedInsurer": false,
       "contactNotes": null
     },
     "userAdditions": "I went in at 2am with crushing chest pain and my left arm was tingling. I am 54 and my father had a heart attack. They did an EKG and troponin and kept me for 6 hours.",
-    "fieldsThatMustStayUnknown": ["appealDeadline"],
-    "requiredPlaceholderTerms": ["deadline"],
-    "unsupportedCertaintyPhrases": ["will be approved", "guaranteed", "must pay this claim"]
+    "fieldsThatMustStayUnknown": [
+      "appealDeadline"
+    ],
+    "requiredPlaceholderTerms": [
+      "deadline"
+    ],
+    "unsupportedCertaintyPhrases": [
+      "will be approved",
+      "approval is guaranteed",
+      "you will win"
+    ]
   },
   {
     "id": "knee-surgery-medical-necessity",
@@ -165,11 +238,20 @@
       "amountBilled": null,
       "patientResponsibility": null,
       "appealInstructions": "Submit a written appeal to the address below within 180 days. You have the right to request the criteria used and copies of documents relevant to your claim free of charge. After the internal appeal you may be eligible for external review by an independent review organization.",
-      "phoneNumbers": ["1-866-555-0123"],
-      "mailingAddresses": ["Meridian Benefit Administrators, Appeals, PO Box 22018, Tampa, FL 33622"],
-      "missingFields": ["claimNumber"],
+      "phoneNumbers": [
+        "1-866-555-0123"
+      ],
+      "mailingAddresses": [
+        "Meridian Benefit Administrators, Appeals, PO Box 22018, Tampa, FL 33622"
+      ],
+      "missingFields": [
+        "claimNumber"
+      ],
       "sourceSnippets": [
-        { "field": "denialReasonText", "snippet": "mechanical symptoms (locking or catching) and failure of at least 6 weeks of non-operative treatment" }
+        {
+          "field": "denialReasonText",
+          "snippet": "mechanical symptoms (locking or catching) and failure of at least 6 weeks of non-operative treatment"
+        }
       ]
     },
     "guidedAnswers": {
@@ -180,16 +262,34 @@
       "isUrgent": false,
       "urgencyNote": null,
       "triedAlternatives": [
-        { "name": "Physical therapy, 10 weeks", "outcome": "failed" },
-        { "name": "Cortisone injection", "outcome": "failed" }
+        {
+          "name": "Physical therapy, 10 weeks",
+          "outcome": "failed"
+        },
+        {
+          "name": "Cortisone injection",
+          "outcome": "failed"
+        }
       ],
-      "documentsOnHand": ["denial_letter", "chart_notes", "lab_results"],
+      "documentsOnHand": [
+        "denial_letter",
+        "chart_notes",
+        "lab_results"
+      ],
       "contactedInsurer": false,
       "contactNotes": null
     },
     "userAdditions": "My knee locks a few times a week and I have to wiggle it to straighten it. The MRI in July showed a medial meniscus tear. I don't think the surgeon's office sent the PT notes.",
-    "fieldsThatMustStayUnknown": ["claimNumber"],
-    "requiredPlaceholderTerms": ["physical therapy"],
-    "unsupportedCertaintyPhrases": ["will be approved", "guaranteed", "is medically necessary."]
+    "fieldsThatMustStayUnknown": [
+      "claimNumber"
+    ],
+    "requiredPlaceholderTerms": [
+      "physical therapy"
+    ],
+    "unsupportedCertaintyPhrases": [
+      "will be approved",
+      "approval is guaranteed",
+      "you will win"
+    ]
   }
 ]

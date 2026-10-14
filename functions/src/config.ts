@@ -21,10 +21,10 @@ export const ADMIN_UID = "6ZETq21uHIartXQlCCrZnZiQhb83";
 export const config = {
   /** Model is configurable — never hardcode a model name at call sites. */
   get openaiModel(): string {
-    return process.env.OPENAI_MODEL || "gpt-5.6-terra";
+    return process.env.OPENAI_MODEL || "gpt-6.1-sol";
   },
   /**
-   * Reasoning effort for GPT-5.6: none | low | medium | high | xhigh | max.
+   * Reasoning effort for GPT-6.1: none | low | medium | high | xhigh | max.
    * High is the production quality/latency balance selected for this workflow.
    */
   get openaiReasoningEffort(): string {
@@ -37,17 +37,17 @@ export const config = {
   get openaiServiceTier(): string {
     return process.env.OPENAI_SERVICE_TIER || "default";
   },
-  /** GPT-5.6 Terra input price, USD per million tokens. */
+  /** GPT-6.1 Sol input price, USD per million tokens. */
   get openaiInputCostPerMillion(): number {
-    return Number(process.env.OPENAI_INPUT_COST_PER_MILLION || 2.5);
+    return Number(process.env.OPENAI_INPUT_COST_PER_MILLION || 5);
   },
-  /** GPT-5.6 Terra cached-input price, USD per million tokens. */
+  /** GPT-6.1 Sol cached-input price, USD per million tokens. */
   get openaiCachedInputCostPerMillion(): number {
-    return Number(process.env.OPENAI_CACHED_INPUT_COST_PER_MILLION || 0.25);
+    return Number(process.env.OPENAI_CACHED_INPUT_COST_PER_MILLION || 0.5);
   },
-  /** GPT-5.6 Terra output price, USD per million tokens. */
+  /** GPT-6.1 Sol output price, USD per million tokens. */
   get openaiOutputCostPerMillion(): number {
-    return Number(process.env.OPENAI_OUTPUT_COST_PER_MILLION || 15);
+    return Number(process.env.OPENAI_OUTPUT_COST_PER_MILLION || 25);
   },
   /** Base URL of the deployed web app, used for Stripe redirect URLs. */
   get appBaseUrl(): string {

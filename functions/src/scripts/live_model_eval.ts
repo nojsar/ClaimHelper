@@ -28,7 +28,7 @@ async function main(): Promise<void> {
 
   for (const fixture of fixtures) {
     const response = await client.responses.create({
-      model: process.env.OPENAI_MODEL || "gpt-5.6-terra",
+      model: process.env.OPENAI_MODEL || "gpt-6.1-sol",
       store: false,
       max_output_tokens: 30_000,
       reasoning: {
