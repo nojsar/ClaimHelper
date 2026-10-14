@@ -73,7 +73,13 @@ test.describe("homepage", () => {
 
   test("deadline check answers a recent date and an expired one", async ({ page }) => {
     await page.goto("/");
-    const iso = (days) => new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+    // A local calendar date, as a visitor would type it. toISOString() is the
+    // UTC date, which is a day behind just after midnight east of Greenwich.
+    const iso = (days) => {
+      const d = new Date();
+      d.setDate(d.getDate() - days);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
     const form = page.locator("#hero-deadline-form");
     await page.locator("#hero-denial-date").fill(iso(30));
     await form.locator("button[type=submit]").click();
