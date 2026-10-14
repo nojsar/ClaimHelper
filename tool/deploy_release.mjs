@@ -81,5 +81,8 @@ run("node", ["tool/production_verify.mjs", "--artifact", "build/web"]);
 // A real guest upload through the production Storage rules. Emulator tests
 // cannot see the IAM grant the rules depend on; this can.
 run("node", ["tool/upload_smoke.mjs"]);
+// The live Stripe key still opens a $5 checkout (nobody is charged), and no
+// paid packet is stuck in fulfilment.
+run("node", ["tool/payment_smoke.mjs"]);
 
 console.log("\n[release] Production deployment and artifact verification passed.");

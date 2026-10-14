@@ -1,0 +1,195 @@
+[
+  {
+    "id": "mri-prior-auth-conservative-care",
+    "about": "Employer (ERISA) plan denies a lumbar MRI for lack of documented conservative therapy; the patient did 8 weeks of physical therapy.",
+    "extraction": {
+      "documentType": "prior_authorization",
+      "denialCategory": "prior_authorization",
+      "insurerName": "Northwind Health Plan",
+      "planName": "Northwind Choice PPO (employer group)",
+      "patientName": "Dana Reyes",
+      "memberIdLast4": "4417",
+      "claimNumber": null,
+      "priorAuthNumber": "PA-2026-0918-552",
+      "dateOfService": null,
+      "denialDate": "2026-09-18",
+      "appealDeadline": "180 days from the date you receive this notice",
+      "deniedItem": "MRI lumbar spine without contrast (CPT 72148)",
+      "providerName": "Lakeside Orthopedic Associates",
+      "prescriberName": "Dr. Priya Natarajan",
+      "denialReasonText": "The request does not meet clinical criteria for advanced imaging of the lumbar spine. Documentation does not show at least 6 weeks of conservative therapy (for example physical therapy or medication) or red-flag findings. Criteria used: Northwind Clinical Policy IMG-114.",
+      "amountBilled": null,
+      "patientResponsibility": null,
+      "appealInstructions": "You or your provider may request an appeal in writing within 180 days. Your doctor may request a peer-to-peer review by calling 1-800-555-0142 within 14 days. If your situation is urgent you may request an expedited appeal.",
+      "phoneNumbers": ["1-800-555-0142 (peer-to-peer)", "1-800-555-0100 (member services)"],
+      "mailingAddresses": ["Northwind Health Plan, Appeals Unit, PO Box 4410, Austin, TX 78765"],
+      "missingFields": ["claimNumber", "dateOfService"],
+      "sourceSnippets": [
+        { "field": "denialReasonText", "snippet": "Documentation does not show at least 6 weeks of conservative therapy" },
+        { "field": "appealDeadline", "snippet": "within 180 days" }
+      ]
+    },
+    "guidedAnswers": {
+      "relation": "self",
+      "usState": "TX",
+      "insuranceType": "employer",
+      "desiredOutcome": "approve_treatment",
+      "isUrgent": false,
+      "urgencyNote": null,
+      "triedAlternatives": [
+        { "name": "Physical therapy, 8 weeks (16 sessions)", "outcome": "failed" },
+        { "name": "Naproxen", "outcome": "failed" }
+      ],
+      "documentsOnHand": ["denial_letter", "chart_notes"],
+      "contactedInsurer": false,
+      "contactNotes": null
+    },
+    "userAdditions": "I did 16 physical therapy sessions from June to August and took naproxen the whole time. The pain still goes down my left leg and my foot goes numb some days.",
+    "fieldsThatMustStayUnknown": ["claimNumber"],
+    "requiredPlaceholderTerms": ["physical therapy"],
+    "unsupportedCertaintyPhrases": ["will be approved", "guaranteed", "is medically necessary."]
+  },
+  {
+    "id": "glp1-formulary-exception",
+    "about": "Marketplace plan in California denies Wegovy as a non-formulary drug; the patient tried phentermine.",
+    "extraction": {
+      "documentType": "denial_letter",
+      "denialCategory": "formulary_exclusion",
+      "insurerName": "Pacific Crest Health",
+      "planName": "Pacific Crest Silver 70 (Covered California)",
+      "patientName": "Jordan Sample",
+      "memberIdLast4": "2290",
+      "claimNumber": null,
+      "priorAuthNumber": "RX-88213",
+      "dateOfService": null,
+      "denialDate": "2026-09-30",
+      "appealDeadline": null,
+      "deniedItem": "Wegovy (semaglutide) 2.4 mg weekly injection",
+      "providerName": null,
+      "prescriberName": "Dr. Alan Brooks",
+      "denialReasonText": "This drug is not on your plan's formulary. Non-formulary drugs may be covered through the exception process if your prescriber shows the formulary alternatives are not appropriate.",
+      "amountBilled": null,
+      "patientResponsibility": null,
+      "appealInstructions": "To request a formulary exception, your prescriber may submit a supporting statement. You may also file an appeal (grievance) with the plan.",
+      "phoneNumbers": ["1-888-555-0177 (pharmacy services)"],
+      "mailingAddresses": [],
+      "missingFields": ["appealDeadline", "mailingAddresses"],
+      "sourceSnippets": [
+        { "field": "denialReasonText", "snippet": "This drug is not on your plan's formulary." }
+      ]
+    },
+    "guidedAnswers": {
+      "relation": "self",
+      "usState": "CA",
+      "insuranceType": "marketplace",
+      "desiredOutcome": "formulary_exception",
+      "isUrgent": false,
+      "urgencyNote": null,
+      "triedAlternatives": [
+        { "name": "Phentermine", "outcome": "not_tolerated" }
+      ],
+      "documentsOnHand": ["denial_letter", "prescription"],
+      "contactedInsurer": true,
+      "contactNotes": "Called pharmacy services on Oct 2; they said my doctor has to send the exception request."
+    },
+    "userAdditions": null,
+    "fieldsThatMustStayUnknown": ["appealDeadline"],
+    "requiredPlaceholderTerms": ["deadline"],
+    "unsupportedCertaintyPhrases": ["will be approved", "guaranteed", "you qualify for"]
+  },
+  {
+    "id": "er-prudent-layperson",
+    "about": "Fully insured plan in New York denies an ER visit for chest pain as non-emergent after a gastritis diagnosis.",
+    "extraction": {
+      "documentType": "eob",
+      "denialCategory": "not_medically_necessary",
+      "insurerName": "Hudson Valley Health",
+      "planName": "Hudson Valley Gold HMO",
+      "patientName": "Sam Okafor",
+      "memberIdLast4": "7781",
+      "claimNumber": "HV-26-0904-11873",
+      "priorAuthNumber": null,
+      "dateOfService": "2026-08-22",
+      "denialDate": "2026-09-04",
+      "appealDeadline": null,
+      "deniedItem": "Emergency department visit, level 4 (CPT 99284) and related services",
+      "providerName": "St. Mercy Hospital Emergency Department",
+      "prescriberName": null,
+      "denialReasonText": "Services do not meet the definition of an emergency medical condition. Final diagnosis: gastritis (K29.70). Non-emergent care should be received at an urgent care or primary care office.",
+      "amountBilled": 3480,
+      "patientResponsibility": 3480,
+      "appealInstructions": "If you disagree with this decision you may file an appeal. See the enclosed notice of your appeal rights.",
+      "phoneNumbers": ["1-877-555-0190"],
+      "mailingAddresses": ["Hudson Valley Health, Grievances and Appeals, 200 River Road, Albany, NY 12207"],
+      "missingFields": ["appealDeadline"],
+      "sourceSnippets": [
+        { "field": "denialReasonText", "snippet": "Final diagnosis: gastritis (K29.70)" }
+      ]
+    },
+    "guidedAnswers": {
+      "relation": "self",
+      "usState": "NY",
+      "insuranceType": "employer",
+      "desiredOutcome": "pay_bill",
+      "isUrgent": false,
+      "urgencyNote": null,
+      "triedAlternatives": [],
+      "documentsOnHand": ["eob", "bill"],
+      "contactedInsurer": false,
+      "contactNotes": null
+    },
+    "userAdditions": "I went in at 2am with crushing chest pain and my left arm was tingling. I am 54 and my father had a heart attack. They did an EKG and troponin and kept me for 6 hours.",
+    "fieldsThatMustStayUnknown": ["appealDeadline"],
+    "requiredPlaceholderTerms": ["deadline"],
+    "unsupportedCertaintyPhrases": ["will be approved", "guaranteed", "must pay this claim"]
+  },
+  {
+    "id": "knee-surgery-medical-necessity",
+    "about": "Self-funded employer plan in Florida denies knee arthroscopy as not medically necessary under InterQual; the member has an MRI-confirmed meniscal tear.",
+    "extraction": {
+      "documentType": "denial_letter",
+      "denialCategory": "not_medically_necessary",
+      "insurerName": "Meridian Benefit Administrators (administrator for the Coastline Logistics Health Plan)",
+      "planName": "Coastline Logistics Employee Health Plan (self-funded)",
+      "patientName": "Chris Delgado",
+      "memberIdLast4": "6603",
+      "claimNumber": null,
+      "priorAuthNumber": "UM-552019",
+      "dateOfService": null,
+      "denialDate": "2026-09-25",
+      "appealDeadline": "180 days from receipt of this letter",
+      "deniedItem": "Right knee arthroscopic partial medial meniscectomy (CPT 29881)",
+      "providerName": "Bayshore Sports Medicine",
+      "prescriberName": "Dr. Elena Kowalski",
+      "denialReasonText": "The requested surgery is not medically necessary. InterQual criteria require documented mechanical symptoms (locking or catching) and failure of at least 6 weeks of non-operative treatment. These were not documented in the records provided.",
+      "amountBilled": null,
+      "patientResponsibility": null,
+      "appealInstructions": "Submit a written appeal to the address below within 180 days. You have the right to request the criteria used and copies of documents relevant to your claim free of charge. After the internal appeal you may be eligible for external review by an independent review organization.",
+      "phoneNumbers": ["1-866-555-0123"],
+      "mailingAddresses": ["Meridian Benefit Administrators, Appeals, PO Box 22018, Tampa, FL 33622"],
+      "missingFields": ["claimNumber"],
+      "sourceSnippets": [
+        { "field": "denialReasonText", "snippet": "mechanical symptoms (locking or catching) and failure of at least 6 weeks of non-operative treatment" }
+      ]
+    },
+    "guidedAnswers": {
+      "relation": "self",
+      "usState": "FL",
+      "insuranceType": "employer",
+      "desiredOutcome": "approve_treatment",
+      "isUrgent": false,
+      "urgencyNote": null,
+      "triedAlternatives": [
+        { "name": "Physical therapy, 10 weeks", "outcome": "failed" },
+        { "name": "Cortisone injection", "outcome": "failed" }
+      ],
+      "documentsOnHand": ["denial_letter", "chart_notes", "lab_results"],
+      "contactedInsurer": false,
+      "contactNotes": null
+    },
+    "userAdditions": "My knee locks a few times a week and I have to wiggle it to straighten it. The MRI in July showed a medial meniscus tear. I don't think the surgeon's office sent the PT notes.",
+    "fieldsThatMustStayUnknown": ["claimNumber"],
+    "requiredPlaceholderTerms": ["physical therapy"],
+    "unsupportedCertaintyPhrases": ["will be approved", "guaranteed", "is medically necessary."]
+  }
+]

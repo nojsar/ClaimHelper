@@ -448,14 +448,19 @@ export const createCheckoutSession = onCall(
         "Checkout state changed while the payment page was opening. Please try again.",
       );
     }
-    if (isInitialPurchase) await recordFirstCaseAnalyticsEvent(uid, snap.ref, "checkout_started");
-    await recordFirstCaseAnalyticsEvent(uid, snap.ref, "checkout_created");
-    await recordFirstCaseMonetizationEvent(
-      uid,
-      snap.ref,
-      kind,
-      "checkout_created",
-    );
+    // The release's own checkout check (tool/payment_smoke.mjs) says so and
+    // stays out of the funnel; the flag can only leave the caller's own
+    // checkout uncounted.
+    if (request.data?.releaseCheck !== true) {
+      if (isInitialPurchase) await recordFirstCaseAnalyticsEvent(uid, snap.ref, "checkout_started");
+      await recordFirstCaseAnalyticsEvent(uid, snap.ref, "checkout_created");
+      await recordFirstCaseMonetizationEvent(
+        uid,
+        snap.ref,
+        kind,
+        "checkout_created",
+      );
+    }
     return { checkoutUrl: session.url, sessionId: session.id };
   },
 );
