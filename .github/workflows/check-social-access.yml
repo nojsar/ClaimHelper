@@ -1,0 +1,28 @@
+name: Check social video access
+
+# Run by hand. Read-only: confirms Bluesky's email is verified and Mastodon's
+# token can upload media, so those networks can post the narrated videos the
+# autopilot now requires. Posts and uploads nothing. See
+# tool/check_social_access.mjs.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+      - name: Check video access
+        env:
+          BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
+          BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
+          MASTODON_SERVER: ${{ secrets.MASTODON_SERVER }}
+          MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
+        run: node tool/check_social_access.mjs
