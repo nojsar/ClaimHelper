@@ -50,7 +50,60 @@ class _ReturnConfirmationBackend extends MockBackend {
   }
 }
 
+class _WritingPacketBackend extends MockBackend {
+  @override
+  Stream<AppealCase?> watchCase(String caseId) => Stream.value(
+        AppealCase(
+          id: caseId,
+          status: CaseStatus.paid,
+          paid: true,
+          runningOperation: 'packet',
+          runningSince: DateTime.now().subtract(const Duration(seconds: 60)),
+          runningUntil: DateTime.now().add(const Duration(minutes: 5)),
+        ),
+      );
+
+  // The payment-triggered worker owns generation; the page only observes.
+  @override
+  Future<AppealPacket> generateAppealPacket(String caseId) =>
+      Completer<AppealPacket>().future;
+}
+
 void main() {
+  testWidgets(
+      'packet writing shows the usual time, time left and that leaving is safe',
+      (tester) async {
+    tester.view.physicalSize = const Size(320, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          backendProvider.overrideWithValue(_WritingPacketBackend()),
+        ],
+        child: MaterialApp(
+          theme: buildAppTheme(),
+          home: const MediaQuery(
+            data: MediaQueryData(textScaler: TextScaler.linear(2)),
+            child: PurchaseSuccessScreen(caseId: 'writing-case'),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.text('Usually 2–4 minutes'), findsOneWidget);
+    expect(find.text('About 2 min left'), findsOneWidget);
+    expect(find.textContaining('You can close this page.'), findsOneWidget);
+    final bar = tester.widget<LinearProgressIndicator>(
+        find.byType(LinearProgressIndicator));
+    expect(bar.value, closeTo(0.8 * 61 / 180, 0.02));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
       'Stripe return confirms its exact session immediately and on refresh',
       (tester) async {

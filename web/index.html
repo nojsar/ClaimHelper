@@ -1550,6 +1550,50 @@
         <button type="button" class="motion-toggle" data-animation-control aria-pressed="false">Pause motion</button>
         <div class="wrap hero-grid">
           <div class="hero-copy">
+            <section class="resume-case" id="resume-case" aria-labelledby="resume-case-title" hidden>
+              <p class="resume-case-title" id="resume-case-title">Welcome back. Your case is saved.</p>
+              <p class="resume-case-text" id="resume-case-text"></p>
+              <div class="resume-case-actions">
+                <button type="button" class="button button-primary button-small" id="resume-case-open">Continue my case</button>
+                <button type="button" class="button button-quiet button-small" id="resume-case-dismiss">Dismiss</button>
+              </div>
+            </section>
+            <script>
+              // "Continue your case": the app remembers the last case step on
+              // this device only (gmy-resume, see lib/services/resume_store.dart).
+              // This runs before the [data-boot] wiring below, so the button
+              // opens the app like every other entry point.
+              (function () {
+                var box = document.getElementById('resume-case');
+                var raw = null;
+                try { raw = localStorage.getItem('gmy-resume'); } catch (e) {}
+                if (!box || !raw) return;
+                var entry = null;
+                try { entry = JSON.parse(raw); } catch (e) {}
+                var text = {
+                  'processing': 'We were reading your denial letter. Open your case to see what we found.',
+                  'review': 'You were checking the details we read from your denial letter.',
+                  'questions': 'You were answering a few questions about your denial.',
+                  'preview': 'Your free denial summary is saved to your case.',
+                  'purchase-success': 'Your appeal packet is saved to your case.',
+                  'packet': 'Your appeal packet is saved to your case.'
+                };
+                if (!entry || typeof entry.id !== 'string'
+                    || !/^[A-Za-z0-9_-]{4,64}$/.test(entry.id)
+                    || !Object.prototype.hasOwnProperty.call(text, entry.step)) return;
+                var paid = entry.step === 'purchase-success' || entry.step === 'packet';
+                var age = Date.now() - Number(entry.at);
+                if (!(age >= 0 && age < (paid ? 30 : 14) * 86400000)) return;
+                document.getElementById('resume-case-text').textContent = text[entry.step];
+                document.getElementById('resume-case-open')
+                  .setAttribute('data-boot', '/case/' + entry.id + '/' + entry.step);
+                document.getElementById('resume-case-dismiss').addEventListener('click', function () {
+                  try { localStorage.removeItem('gmy-resume'); } catch (e) {}
+                  box.hidden = true;
+                });
+                box.hidden = false;
+              })();
+            </script>
             <p class="hero-badge">Health insurance denials, decoded</p>
             <h1 id="hero-title"><span class="hero-title-line">Understand the denial.</span><span class="hero-title-line hero-accent">Build the appeal.</span></h1>
             <p class="lede">Snap your denial letter. Get it in plain English, free.</p>

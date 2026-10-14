@@ -478,3 +478,35 @@ test.describe("dawn print homepage", () => {
     });
   });
 });
+
+test.describe("continue your case", () => {
+  test("a returning visitor gets a working Continue button and can dismiss it", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("#resume-case")).toBeHidden();
+    await page.evaluate(() => localStorage.setItem("gmy-resume",
+      JSON.stringify({ id: "AbC123xyz", step: "preview", at: Date.now() - 3600000 })));
+    await page.reload();
+    const card = page.locator("#resume-case");
+    await expect(card).toBeVisible();
+    await expect(card).toContainText("free denial summary");
+    await expect(page.locator("#resume-case-open"))
+      .toHaveAttribute("data-boot", "/case/AbC123xyz/preview");
+    await page.locator("#resume-case-dismiss").click();
+    await expect(card).toBeHidden();
+    expect(await page.evaluate(() => localStorage.getItem("gmy-resume"))).toBeNull();
+  });
+
+  test("tampered, unknown or stale entries show nothing", async ({ page }) => {
+    await page.goto("/");
+    for (const entry of [
+      { id: "x\"><img src=x>", step: "preview", age: 0 },
+      { id: "AbC123xyz", step: "stats", age: 0 },
+      { id: "AbC123xyz", step: "preview", age: 20 * 86400000 },
+    ]) {
+      await page.evaluate((e) => localStorage.setItem("gmy-resume",
+        JSON.stringify({ id: e.id, step: e.step, at: Date.now() - e.age })), entry);
+      await page.reload();
+      await expect(page.locator("#resume-case"), JSON.stringify(entry)).toBeHidden();
+    }
+  });
+});

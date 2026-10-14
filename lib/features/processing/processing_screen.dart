@@ -159,6 +159,8 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen> {
             : 'Reading your documents with AI…',
         progress: state.uploading ? state.uploadProgress : null,
         uploading: state.uploading,
+        reading: !state.uploading,
+        startedAt: appealCase.startedAtOf('extraction'),
         retry: _showRetry && appealCase.sourceFilePaths.isNotEmpty
             ? () => _retry(caseId, appealCase.sourceFilePaths)
             : null,
@@ -174,7 +176,7 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen> {
           _retry(caseId, appealCase.sourceFilePaths);
         });
       }
-      return _loader(label: 'Resuming document reading…');
+      return _loader(label: 'Resuming document reading…', reading: true);
     }
 
     return _error(
@@ -191,10 +193,14 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen> {
         ),
       );
 
+  /// Reading a letter with the AI usually takes 20–60 seconds; the server
+  /// keeps going if the visitor leaves, so the note says so.
   Widget _loader({
     required String label,
     double? progress,
     bool uploading = false,
+    bool reading = false,
+    DateTime? startedAt,
     VoidCallback? retry,
   }) {
     return AppScaffold(
@@ -214,6 +220,21 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen> {
               const SizedBox(height: 18),
               CaseLoader(
                 progress: progress,
+                title: uploading
+                    ? 'Uploading your documents'
+                    : reading
+                        ? 'Reading your denial letter'
+                        : 'Preparing your documents',
+                expected: reading ? const Duration(seconds: 45) : null,
+                typical: reading ? 'Usually 20–60 seconds' : null,
+                startedAt: startedAt,
+                note: uploading
+                    ? 'Keep this tab open until the secure upload finishes.'
+                    : reading
+                        ? 'You can leave this page. Reading continues, and '
+                            'your case is saved: come back to getmyyes.com '
+                            'on this device to pick it up.'
+                        : 'Keep this page open while this step finishes.',
                 messages: uploading
                     ? const [
                         'Uploading your documents securely…',
@@ -231,15 +252,6 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen> {
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                       fontSize: 17, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
-              Text(
-                uploading
-                    ? 'Keep this tab open until the secure upload finishes.'
-                    : 'This usually takes 10–30 seconds. Your case can now be '
-                        'restored if the page refreshes.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: context.palette.textSecondary),
-              ),
               if (progress != null) ...[
                 const SizedBox(height: 16),
                 Text('${(progress * 100).toStringAsFixed(0)}%',

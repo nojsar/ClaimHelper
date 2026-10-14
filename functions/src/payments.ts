@@ -689,6 +689,11 @@ async function handleCompletedCheckout(session: Stripe.Checkout.Session): Promis
           : kind === "full_case"
             ? `Full Case upgrade (up to ${config.fullCaseRoundsCap} follow-up drafting rounds)`
             : "additional follow-up drafting round";
+      // The packet is written in the background after payment, so the buyer
+      // knows the wait and that closing the page does not stop it.
+      const timing = isInitialPurchase
+        ? "Your packet usually takes 2–4 minutes to write. You can close the page: it keeps going, and this link opens it when it's ready."
+        : "";
       tx.set(mailRef, {
         caseId,
         ownerUid,
@@ -697,11 +702,12 @@ async function handleCompletedCheckout(session: Stripe.Checkout.Session): Promis
           subject: isInitialPurchase
             ? "Your GetMyYes appeal packet is unlocked"
             : "Your GetMyYes follow-up purchase is active",
-          text: `Thanks for your purchase! Your ${what} is active.\n\nOpen your case any time: ${packetUrl}\n\n` +
+          text: `Thanks for your purchase! Your ${what} is active.${timing ? ` ${timing}` : ""}\n\nOpen your case any time: ${packetUrl}\n\n` +
             "Sign in with the account you used at checkout to access it. Questions? Reply to this email.\n\n" +
             "GetMyYes is a document drafting assistant — not medical, legal, or insurance advice. Review every document before sending.",
           html: "<h2>You're all set</h2>" +
             `<p>Thanks for your purchase! Your <strong>${what}</strong> is active.</p>` +
+            (timing ? `<p>${timing}</p>` : "") +
             `<p><a href="${packetUrl}" style="background:#2563EB;color:#fff;padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:700">Open my case</a></p>` +
             "<p>Sign in with the account you used at checkout to access it any time.</p>" +
             "<p style=\"color:#64748B;font-size:12px\">GetMyYes is a document drafting assistant — not medical, legal, or insurance advice. Review every document before sending.</p>",

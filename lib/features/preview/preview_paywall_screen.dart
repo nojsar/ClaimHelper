@@ -45,6 +45,9 @@ class _PreviewPaywallScreenState extends ConsumerState<PreviewPaywallScreen> {
   DenialExtraction? _extraction;
   bool _loading = true;
   bool _purchasing = false;
+
+  /// When the summary started, from the server when known; drives the bar.
+  DateTime? _startedAt;
   String? _error;
 
   /// 'packet' or 'packet_plus' — which tier the buy button charges.
@@ -93,11 +96,13 @@ class _PreviewPaywallScreenState extends ConsumerState<PreviewPaywallScreen> {
     setState(() {
       _loading = true;
       _error = null;
+      _startedAt = null;
     });
+    DenialExtraction? ex;
     try {
       final intake = ref.read(intakeControllerProvider);
       final backend = ref.read(backendProvider);
-      var ex = intake.extraction;
+      ex = intake.extraction;
 
       if (ex == null) {
         // Deep link / refresh: recover from the stored case instead of
@@ -105,6 +110,7 @@ class _PreviewPaywallScreenState extends ConsumerState<PreviewPaywallScreen> {
         final c = await backend.getCase(widget.caseId);
         ex = c?.extraction;
         if (ex == null) {
+          if (!mounted) return;
           setState(() {
             _error = 'We lost your document session. Please upload again.';
             _loading = false;
@@ -112,28 +118,73 @@ class _PreviewPaywallScreenState extends ConsumerState<PreviewPaywallScreen> {
           return;
         }
         if (c?.preview != null) {
-          setState(() {
-            _preview = c!.preview;
-            _extraction = ex;
-            _loading = false;
-          });
-          _resumeCheckoutAfterEmailLink();
+          _show(c!.preview!, ex);
+          return;
+        }
+        final running = c?.startedAtOf('preview');
+        if (running != null) {
+          // The visitor left while the summary was being written and came
+          // back: wait for the saved result instead of starting another.
+          if (mounted) setState(() => _startedAt = running);
+          final saved = await _waitForStoredPreview();
+          if (saved != null) {
+            _show(saved, ex);
+            return;
+          }
+        }
+      }
+      if (mounted) setState(() => _startedAt ??= DateTime.now());
+      final preview = await backend.generateFreePreview(widget.caseId, ex);
+      _show(preview, ex);
+    } catch (e) {
+      if (ex != null && e.toString().contains('already being prepared')) {
+        final saved = await _waitForStoredPreview();
+        if (saved != null) {
+          _show(saved, ex);
           return;
         }
       }
-      final preview = await backend.generateFreePreview(widget.caseId, ex);
-      setState(() {
-        _preview = preview;
-        _extraction = ex;
-        _loading = false;
-      });
-      _resumeCheckoutAfterEmailLink();
-    } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = _friendlyError(e);
         _loading = false;
       });
     }
+  }
+
+  void _show(FreePreview preview, DenialExtraction extraction) {
+    if (!mounted) return;
+    setState(() {
+      _preview = preview;
+      _extraction = extraction;
+      _loading = false;
+    });
+    _resumeCheckoutAfterEmailLink();
+  }
+
+  /// Another request is already writing this case's summary (the visitor
+  /// left and came back, or opened a second tab). The server saves it when
+  /// it finishes, so poll the stored case for up to three minutes.
+  Future<FreePreview?> _waitForStoredPreview() async {
+    final backend = ref.read(backendProvider);
+    final giveUpAt = DateTime.now().add(const Duration(minutes: 3));
+    while (mounted && DateTime.now().isBefore(giveUpAt)) {
+      await Future<void>.delayed(const Duration(seconds: 3));
+      if (!mounted) return null;
+      try {
+        final c = await backend.getCase(widget.caseId);
+        if (c?.preview != null) return c!.preview;
+        final since = c?.startedAtOf('preview');
+        // Finished without a summary: let the caller start a fresh one.
+        if (since == null) return null;
+        if (mounted && since != _startedAt) {
+          setState(() => _startedAt = since);
+        }
+      } catch (_) {
+        // A dropped connection is retried on the next poll.
+      }
+    }
+    return null;
   }
 
   void _resumeCheckoutAfterEmailLink() {
@@ -372,16 +423,25 @@ class _PreviewPaywallScreenState extends ConsumerState<PreviewPaywallScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const AppScaffold(
+      return AppScaffold(
         title: 'Your preview',
         child: Center(
-          child: CaseLoader(
-            messages: [
-              'Reviewing your denial document…',
-              'Checking the denial reason and deadline…',
-              'Preparing your plain-English summary…',
-              'Opening your review screen…',
-            ],
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: CaseLoader(
+              title: 'Writing your free summary',
+              expected: const Duration(seconds: 35),
+              typical: 'Usually 20–40 seconds',
+              startedAt: _startedAt,
+              note: 'You can leave this page. Your summary is saved to your '
+                  'case: come back to getmyyes.com on this device to see it.',
+              messages: const [
+                'Reviewing your denial document…',
+                'Checking the denial reason and deadline…',
+                'Preparing your plain-English summary…',
+                'Opening your review screen…',
+              ],
+            ),
           ),
         ),
       );
@@ -832,6 +892,15 @@ class _MissingPiecesCard extends StatelessWidget {
                 ),
               ],
             ),
+            if (updating) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Updating usually takes under a minute, a little longer '
+                'with new documents to read.',
+                style: TextStyle(
+                    fontSize: 16, color: context.palette.textSecondary),
+              ),
+            ],
             const SizedBox(height: 6),
             Text(
               'PDF, JPG, PNG, HEIC, or WebP — 20 MB each, 45 MB total.',

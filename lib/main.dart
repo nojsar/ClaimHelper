@@ -9,6 +9,7 @@ import 'core/constants.dart';
 import 'core/theme.dart';
 import 'firebase_options.dart';
 import 'services/analytics.dart';
+import 'services/resume_store.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -55,12 +56,16 @@ Future<void> main() async {
     // Cookieless pageview counter (see services/analytics.dart). The initial
     // page load was already counted as a `visit` by index.html, so seed the
     // dedupe with the boot route and only report subsequent changes.
+    // The same listener remembers the last case step on this device, so the
+    // homepage can offer "Continue your case" after the visitor leaves.
     var lastPath = Uri.base.fragment.isNotEmpty ? Uri.base.fragment : '/';
+    rememberCaseRoute(lastPath);
     appRouter.routerDelegate.addListener(() {
       final path = appRouter.routerDelegate.currentConfiguration.uri.toString();
       if (path != lastPath) {
         lastPath = path;
         trackPageview(path);
+        rememberCaseRoute(path);
       }
     });
   }

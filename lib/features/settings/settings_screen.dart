@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants.dart';
 import '../../core/theme.dart';
+import '../../services/resume_store.dart';
 import '../../state/providers.dart';
 import '../../widgets/app_scaffold.dart';
 
@@ -53,6 +54,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     setState(() => _deletingAccount = true);
     try {
       await ref.read(backendProvider).deleteAccount();
+      forgetCaseRoute();
       ref.invalidate(myCasesProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -104,6 +106,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       for (final c in cases) {
         await backend.deleteCaseAndFiles(c.id);
       }
+      forgetCaseRoute();
       ref.invalidate(myCasesProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

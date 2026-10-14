@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../core/theme.dart';
 import 'dawn.dart';
+import 'estimated_progress.dart';
 
 /// A calm document-processing status card: the plain-English lens from the
 /// homepage film reading down a letter, line by line, above the status.
@@ -11,6 +12,9 @@ import 'dawn.dart';
 /// The motion is slow and steady, nothing that could feel alarming in a
 /// healthcare workflow. Status messages advance slowly when motion is
 /// allowed; reduced-motion users see one steady message and a still lens.
+///
+/// Give [expected] and [typical] for an AI step: the bar then shows an
+/// estimate with the usual time and about how long is left.
 class CaseLoader extends StatefulWidget {
   const CaseLoader({
     super.key,
@@ -21,11 +25,23 @@ class CaseLoader extends StatefulWidget {
     ],
     this.size = 210,
     this.progress,
+    this.title = 'Preparing your documents',
+    this.expected,
+    this.typical,
+    this.startedAt,
+    this.note = 'Keep this page open while this step finishes.',
   });
 
   final List<String> messages;
   final double size;
   final double? progress;
+  final String title;
+  final Duration? expected;
+  final String? typical;
+  final DateTime? startedAt;
+
+  /// What the visitor may do while waiting; null shows nothing.
+  final String? note;
 
   @override
   State<CaseLoader> createState() => _CaseLoaderState();
@@ -80,9 +96,14 @@ class _CaseLoaderState extends State<CaseLoader> {
         ? 'Processing your documents…'
         : widget.messages[safeIndex];
     final progress = widget.progress?.clamp(0.0, 1.0);
-    final semanticsValue = progress == null
-        ? message
-        : '$message ${(progress * 100).round()} percent complete';
+    final expected = widget.expected;
+    final typical = widget.typical;
+    final estimating = progress == null && expected != null && typical != null;
+    final semanticsValue = progress != null
+        ? '$message ${(progress * 100).round()} percent complete'
+        : estimating
+            ? '$message $typical.'
+            : message;
     final letterWidth = (widget.size * 0.82).clamp(150.0, 190.0).toDouble();
 
     return Semantics(
@@ -107,10 +128,10 @@ class _CaseLoaderState extends State<CaseLoader> {
               children: [
                 LensLetter(width: letterWidth),
                 const SizedBox(height: 18),
-                const Text(
-                  'Preparing your documents',
+                Text(
+                  widget.title,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: AppFonts.serif,
                     fontSize: 23,
                     fontWeight: FontWeight.w700,
@@ -128,7 +149,13 @@ class _CaseLoaderState extends State<CaseLoader> {
                   ),
                 ),
                 const SizedBox(height: 18),
-                if (!_reduceMotion)
+                if (estimating)
+                  EstimatedProgress(
+                    expected: expected,
+                    typical: typical,
+                    startedAt: widget.startedAt,
+                  )
+                else if (progress != null || !_reduceMotion)
                   LinearProgressIndicator(
                     value: progress,
                     minHeight: 8,
@@ -144,15 +171,18 @@ class _CaseLoaderState extends State<CaseLoader> {
                       borderRadius: BorderRadius.circular(999),
                     ),
                   ),
-                const SizedBox(height: 12),
-                Text(
-                  'Keep this page open while this step finishes.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: context.palette.textMuted,
+                if (widget.note != null) ...[
+                  const SizedBox(height: 14),
+                  Text(
+                    widget.note!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      height: 1.45,
+                      color: context.palette.textSecondary,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),

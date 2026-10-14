@@ -41,6 +41,9 @@ class AppealCase {
     this.lastError,
     this.generationProgress,
     this.generationStage,
+    this.runningOperation,
+    this.runningSince,
+    this.runningUntil,
     this.followUps = const [],
     this.followUpCredits,
     this.fullCase = false,
@@ -69,6 +72,22 @@ class AppealCase {
   final double? generationProgress;
   final String? generationStage;
 
+  /// The model step the server is running for this case right now
+  /// ('extraction', 'preview', 'packet' or 'followup'), when it started and
+  /// when its lock lapses, from the case's generation lease. Waiting screens
+  /// use them so a refreshed or reopened page keeps the same progress.
+  final String? runningOperation;
+  final DateTime? runningSince;
+  final DateTime? runningUntil;
+
+  /// When [operation] started, if the server is still running it.
+  DateTime? startedAtOf(String operation) {
+    if (runningOperation != operation) return null;
+    final until = runningUntil;
+    if (until != null && until.isBefore(DateTime.now())) return null;
+    return runningSince;
+  }
+
   /// Follow-up assistance rounds already generated, and how many rounds are
   /// still available. Cases paid before the counter existed default to the
   /// included allowance server-side; mirror that here for display.
@@ -92,6 +111,7 @@ class AppealCase {
 
   factory AppealCase.fromJson(String id, Map<String, dynamic> json) {
     final generation = json['generation'];
+    final lease = json['generationLease'];
     return AppealCase(
       id: id,
       ownerUid: json['ownerUid'] as String?,
@@ -125,6 +145,9 @@ class AppealCase {
           : null,
       generationStage:
           generation is Map ? generation['stage'] as String? : null,
+      runningOperation: lease is Map ? lease['operation'] as String? : null,
+      runningSince: lease is Map ? _toDate(lease['acquiredAt']) : null,
+      runningUntil: lease is Map ? _toDate(lease['expiresAt']) : null,
       followUps: (json['followUps'] as List<dynamic>? ?? [])
           .whereType<Map>()
           .map((m) => FollowUpRound.fromJson(Map<String, dynamic>.from(m)))

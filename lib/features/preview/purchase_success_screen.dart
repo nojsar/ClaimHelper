@@ -7,6 +7,7 @@ import '../../models/appeal_case.dart';
 import '../../state/providers.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/dawn.dart';
+import '../../widgets/estimated_progress.dart';
 import '../../widgets/ui.dart';
 
 /// Landing page after Stripe checkout. It observes the authoritative payment
@@ -29,6 +30,10 @@ class PurchaseSuccessScreen extends ConsumerStatefulWidget {
 class _PurchaseSuccessScreenState extends ConsumerState<PurchaseSuccessScreen> {
   bool _generating = false;
   String? _error;
+
+  /// When this page first saw the payment confirmed, used for the estimate
+  /// until the server's packet start time arrives.
+  DateTime? _paidSeenAt;
 
   @override
   void initState() {
@@ -135,8 +140,10 @@ class _PurchaseSuccessScreenState extends ConsumerState<PurchaseSuccessScreen> {
               _generateThenGo(appealCase);
             });
             final done = appealCase.packet != null;
+            _paidSeenAt ??= DateTime.now();
             return _GenerationStatusCard(
               progress: done ? 1.0 : appealCase.generationProgress,
+              startedAt: appealCase.startedAtOf('packet') ?? _paidSeenAt,
               stage: done
                   ? 'Ready — opening your packet…'
                   : generationFailed
@@ -166,12 +173,17 @@ class _GenerationStatusCard extends StatelessWidget {
     required this.progress,
     required this.stage,
     this.paymentConfirmed = false,
+    this.startedAt,
     this.onRefresh,
     this.onOpenSavedCases,
   });
 
   final double? progress;
   final String stage;
+
+  /// When packet writing started; with no server progress, the bar shows an
+  /// estimate from this time.
+  final DateTime? startedAt;
   final bool paymentConfirmed;
   final VoidCallback? onRefresh;
   final VoidCallback? onOpenSavedCases;
@@ -182,16 +194,20 @@ class _GenerationStatusCard extends StatelessWidget {
     final reduceMotion =
         MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     final complete = normalizedProgress == 1.0;
-    final progressValue = normalizedProgress == null
-        ? 'In progress'
-        : '${(normalizedProgress * 100).round()} percent';
+    final estimating = paymentConfirmed && normalizedProgress == null;
+    final progressValue = normalizedProgress != null
+        ? '${(normalizedProgress * 100).round()} percent'
+        : estimating
+            ? 'In progress. Usually 2 to 4 minutes.'
+            : 'In progress';
     return Semantics(
       container: true,
       liveRegion: true,
       label: paymentConfirmed ? 'Payment confirmed. $stage' : stage,
       value: progressValue,
       hint: paymentConfirmed
-          ? 'You may leave this page. Generation continues on your account.'
+          ? 'You can close this page. Your packet keeps being written and '
+              'is saved to your account.'
           : 'Refresh checks the existing payment status.',
       child: ExcludeSemantics(
         child: Center(
@@ -278,7 +294,14 @@ class _GenerationStatusCard extends StatelessWidget {
                           ),
                         ],
                         const SizedBox(height: 22),
-                        if (normalizedProgress == null && reduceMotion)
+                        if (estimating)
+                          EstimatedProgress(
+                            expected: const Duration(minutes: 3),
+                            typical: 'Usually 2–4 minutes',
+                            startedAt: startedAt,
+                            minHeight: 10,
+                          )
+                        else if (normalizedProgress == null && reduceMotion)
                           Container(
                             height: 10,
                             decoration: BoxDecoration(
@@ -326,7 +349,7 @@ class _GenerationStatusCard extends StatelessWidget {
                         const SizedBox(height: 16),
                         Text(
                           paymentConfirmed
-                              ? 'You may safely leave this page. Work continues on your account, and the packet will appear in My saved cases.'
+                              ? 'You can close this page. Your packet keeps being written and is saved to your account: open it later from My saved cases or the link in your purchase email.'
                               : 'Stripe confirmation can take a few seconds. Refreshing checks this payment; it does not start a new checkout.',
                           style: TextStyle(
                             fontSize: 16,
