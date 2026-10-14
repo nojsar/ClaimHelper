@@ -152,12 +152,14 @@ Post media is rendered by Remotion from the guide library itself — the headlin
 
 Every guide video is the homepage's dawn print, in motion (`video/src/guide/DawnGuide.tsx`): a night sky with the title rising, a letter falling and unfolding while the plain-English lens prints the summary line by line, the letter folding into a paper plane that flies off as the sun comes up, then the end card. The scenes are timed to the guide's voice-over, so the length follows the narration.
 
-The voice-over reads `video/library/guide-voice/scripts.json`: the guide's title, its summary, and the closing line. Each take is one ElevenLabs generation (eleven_v4, the Carolyn voice the dawn ad uses), saved as `video/library/guide-voice/<id>.mp3` and logged in `takes.json`. `tool/guide_voice.mjs` cuts each take into its three lines at the pauses nearest where the script says they should fall (`lines.json`); the render runs it first, and `node tool/guide_voice.mjs --check` lists guides that still need a take. A guide without one still renders, on fixed timing with no voice, so add the take before its first posting slot.
+The voice-over reads `video/library/guide-voice/scripts.json`: the guide's title, its summary, and the closing line. Each take is one ElevenLabs generation (eleven_v4, the Carolyn voice the dawn ad uses), saved as `video/library/guide-voice/<id>.mp3` and logged in `takes.json`. `tool/guide_voice.mjs` cuts each take into its three lines at the pauses nearest where the script says they should fall (`lines.json`); the render runs it first, and `node tool/guide_voice.mjs --check` lists guides that still need a take.
+
+**Only paid-plan narration, only narrated videos (since 2026-10-14).** Free-plan ElevenLabs output has no commercial licence, even after upgrading, so every take was regenerated on the paid plan on 2026-10-13 and `takes.json` records each take's `generated` date. `tool/social_video.mjs` accepts a take only from that date on (`PAID_VOICE_SINCE`); a guide without one is **not rendered**, and every poster now requires the video (`requireVideo` is forced on for every post in `tool/social_core.mjs`), so that guide is simply skipped until it is voiced. No still, link card or voiceless video goes out any more. Old posts from before the switch can be listed and removed with the *Clean up old autopilot posts* workflow (`tool/cleanup_posts.mjs`; list first, then run again with delete ticked).
 
 When adding or renaming a guide, after the OG cards:
 
 1. Add its entry to `video/library/guide-voice/scripts.json` (title with no dashes, the summary from `marketing/posts.json`, then "Read the free guide at getmyyes.com.").
-2. Generate the take with the ElevenLabs connector using the same voice and model, and save it as `video/library/guide-voice/<id>.mp3`; record the flow and session in `takes.json`.
+2. Generate the take with the ElevenLabs connector (paid plan) using the same voice and model, and save it as `video/library/guide-voice/<id>.mp3`; record the flow, session, generation and `"generated": "YYYY-MM-DD"` in `takes.json`.
 3. Render:
 
 ```bash
@@ -165,9 +167,9 @@ npm --prefix video install          # first time only
 node tool/render_social_video.mjs   # cuts new takes, renders whatever is out of date
 ```
 
-Commit the resulting `web/media/social/<id>-{square,vertical}.mp4` and `<id>-poster.png`, then **deploy hosting** — Instagram and Facebook fetch the file from the live site by URL, so an undeployed render is simply not used yet. `node tool/social_video.mjs --check` fails the workflow when a queue post has no render; the posters themselves fall back rather than skip a slot:
+Commit the resulting `web/media/social/<id>-{square,vertical}.mp4` and `<id>-poster.png`, then **deploy hosting** — Instagram and Facebook fetch the file from the live site by URL, so an undeployed render is simply not used yet. `node tool/social_video.mjs --check` warns in the workflow when a queue post has no narrated render. The posters no longer fall back: without the video, a network skips the slot. The table below is what each network does with the render; the old fallbacks are kept for reference but are switched off by `requireVideo`:
 
-| Network | With a deployed render | Fallback |
+| Network | With a deployed render | Old fallback (off since 2026-10-14) |
 | --- | --- | --- |
 | Instagram | vertical reel | square still → guide OG card → skip |
 | Facebook | square video, link in the description | link post with the unfurled card |

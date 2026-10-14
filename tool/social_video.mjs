@@ -103,16 +103,25 @@ async function assignMusic(guides) {
 }
 
 /**
- * Whether a guide's video carries its generated voice-over
- * (video/library/guide-voice/<id>.mp3, an ElevenLabs take; see takes.json).
+ * Free-plan ElevenLabs output carries no commercial licence, even after an
+ * upgrade, so only takes generated on the paid plan (from this date, recorded
+ * per take in takes.json) may narrate a post.
+ */
+export const PAID_VOICE_SINCE = "2026-10-13";
+
+/**
+ * Whether a guide's video carries a licensed voice-over: its take
+ * (video/library/guide-voice/<id>.mp3) exists and takes.json records it as
+ * generated on the paid plan.
  */
 export async function narrated(id) {
   try {
     await stat(path.join(libraryRoot, "guide-voice", `${id}.mp3`));
-    return true;
   } catch {
     return false;
   }
+  const { takes = {} } = await readJson(path.join(libraryRoot, "guide-voice", "takes.json"), {});
+  return String(takes[id]?.generated ?? "") >= PAID_VOICE_SINCE;
 }
 
 const siteOrigin = "https://getmyyes.com";
@@ -253,9 +262,10 @@ export async function videoModel() {
       console.warn(`[social-video] ${post.id}: no OG metadata on its guide page; skipping.`);
       continue;
     }
-    // The narration (tool/guide_voice.mjs) and one of the score's passages;
-    // a guide without its take yet renders with silent narration.
-    const take = voiceLines[post.id];
+    // The narration (tool/guide_voice.mjs) and one of the score's passages.
+    // A guide without a licensed take has no voice here, and render.mjs will
+    // not render it, so the posters skip it until it is narrated.
+    const take = (await narrated(post.id)) ? voiceLines[post.id] : null;
     guides.push({
       id: post.id,
       slug: slugOf(post),
@@ -309,6 +319,7 @@ export async function sync() {
 export async function check() {
   const missing = [];
   for (const guide of await videoModel()) {
+    if (!guide.voice) missing.push(`${guide.id}: no paid-plan narration (video/library/guide-voice/takes.json)`);
     for (const file of [...FORMATS.map((format) => videoFile(guide.id, format)), posterFile(guide.id)]) {
       if (!(await stat(file).then(() => true).catch(() => false))) {
         missing.push(path.relative(projectRoot, file));

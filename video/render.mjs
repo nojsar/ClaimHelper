@@ -239,8 +239,14 @@ if (args.includes("--meta-ads")) {
   const cutVoice = spawnSync(process.execPath, [path.join(projectRoot, "tool", "guide_voice.mjs")], { stdio: "inherit" });
   if (cutVoice.status !== 0) throw new Error("tool/guide_voice.mjs failed");
 }
-const guides = (await sync()).filter((guide) => !only || guide.id === only);
-if (!guides.length) throw new Error(only ? `No queue entry with id ${only}.` : "The post queue is empty.");
+const queued = (await sync()).filter((guide) => !only || guide.id === only);
+if (!queued.length) throw new Error(only ? `No queue entry with id ${only}.` : "The post queue is empty.");
+// Posts go out only as narrated videos: a guide without a paid-plan take is
+// not rendered, so no voiceless video can reach a network.
+const guides = queued.filter((guide) => {
+  if (!guide.voice) console.warn(`[social-video] ${guide.id}: no paid-plan narration yet; not rendered (the networks skip it until it has one).`);
+  return Boolean(guide.voice);
+});
 await mkdir(mediaRoot, { recursive: true });
 
 // Work out what is actually out of date before touching a browser: the common

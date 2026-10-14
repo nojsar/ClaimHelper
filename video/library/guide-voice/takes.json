@@ -1,89 +1,103 @@
 {
-  "note": "One ElevenLabs take per guide (eleven_v4, Carolyn - Warm Grounded Narrator, 4rgssJ1pg3E9c0U78Iid), generated 2026-10-13 on the paid plan (commercial licence) from scripts.json. flow/session identify the take; the audio is saved as <id>.mp3 beside this file and cut into lines by tool/guide_voice.mjs.",
+  "note": "One ElevenLabs take per guide (eleven_v4, Carolyn - Warm Grounded Narrator, 4rgssJ1pg3E9c0U78Iid), generated 2026-10-13 on the paid plan (commercial licence) from scripts.json. flow/session identify the take; the audio is saved as <id>.mp3 beside this file and cut into lines by tool/guide_voice.mjs. Each take records the date it was generated; only takes from the paid plan (2026-10-13 onwards, tool/social_video.mjs PAID_VOICE_SINCE) may narrate a post.",
   "takes": {
     "appeal-step-by-step": {
       "flow": "QIcnFTTiYWe0BF9Ts9XY",
       "session": "wkGGCuawQ8b5gukoLRDu",
       "generation": "i9zzhLV0Nz6tjG10Exup",
-      "credits": 189
+      "credits": 189,
+      "generated": "2026-10-13"
     },
     "appeal-letter-template": {
       "flow": "UFl1mIGDjGBWZ0kXNEV5",
       "session": "6kvHrztpzZEtpOxRBnws",
       "generation": "BNY0sp9IhzatlLOVoJd3",
-      "credits": 175
+      "credits": 175,
+      "generated": "2026-10-13"
     },
     "medical-necessity": {
       "flow": "lzVxGEkBtKo1DSkVXoST",
       "session": "18OTA1ddvfsu7lKKETYb",
       "generation": "w8yVPfgsi3K09mmRZtft",
-      "credits": 187
+      "credits": 187,
+      "generated": "2026-10-13"
     },
     "prior-authorization": {
       "flow": "5kdl8aINK4K8xKKrRdlA",
       "session": "asU8zZusbBETZyZ8SIQo",
       "generation": "NIIb295lS86U2NYjhVtY",
-      "credits": 185
+      "credits": 185,
+      "generated": "2026-10-13"
     },
     "step-therapy": {
       "flow": "EJeFKdLZUCz6Mw3hKAwr",
       "session": "cxxp8qIq7IGa9m5OuwfL",
       "generation": "BcQXU3aGBucvxzXcg2Lr",
-      "credits": 189
+      "credits": 189,
+      "generated": "2026-10-13"
     },
     "formulary-exclusion": {
       "flow": "hfoj9ghx9sjgwQDuHTfK",
       "session": "bg3aS9tXnbIz5rD4Rp9g",
       "generation": "PP3kmEM7FRHZqkg7oQnq",
-      "credits": 184
+      "credits": 184,
+      "generated": "2026-10-13"
     },
     "out-of-network": {
       "flow": "grUrozv5wK1uUWxSBACm",
       "session": "SWqWRV4E73PP5N0NxTC1",
       "generation": "5XuwDSKXlirBZMHo2Vf2",
-      "credits": 180
+      "credits": 180,
+      "generated": "2026-10-13"
     },
     "experimental-denial": {
       "flow": "NIiyzZ5IMcYsF1eorGXN",
       "session": "qMpvy6yayOoo8ndeuRPF",
       "generation": "a0yKkHwDI2Z8rus4Xjq4",
-      "credits": 198
+      "credits": 198,
+      "generated": "2026-10-13"
     },
     "external-review": {
       "flow": "25MvqP3gKW3Fz3pibWkJ",
       "session": "KLjzWmaxchsLXHAdvKL5",
       "generation": "NcyEpCObexSaTmrOE6KI",
-      "credits": 185
+      "credits": 185,
+      "generated": "2026-10-13"
     },
     "er-denial": {
       "flow": "hSIHwgep8yPN823hno2v",
       "session": "KePVdnEmiFH7LQA3c3lA",
       "generation": "EU5TWEYwR7izEzo4X04z",
-      "credits": 188
+      "credits": 188,
+      "generated": "2026-10-13"
     },
     "mental-health-parity": {
       "flow": "vIkl4NpRvju76gMTa3MZ",
       "session": "njLBapCiZ8hOgWHckgr8",
       "generation": "JYJumRBwVSnRAdOQtPo6",
-      "credits": 212
+      "credits": 212,
+      "generated": "2026-10-13"
     },
     "california-imr": {
       "flow": "VqJPwrxN1mKxttWtxfTD",
       "session": "BUFlekS1AwIXpHpUAYc5",
       "generation": "CyappYnwlTLeFHnHXTez",
-      "credits": 197
+      "credits": 197,
+      "generated": "2026-10-13"
     },
     "glp1-denial": {
       "flow": "D1sL9VtYnPRrsCop5pAh",
       "session": "t92BKkwD6D7FEbJfBYIA",
       "generation": "yuZBNzJdY0EGBsc6QPDQ",
-      "credits": 189
+      "credits": 189,
+      "generated": "2026-10-13"
     },
     "imaging-denial": {
       "flow": "5xJ6IRl3xMxRhD2IiYgC",
       "session": "hzc2dkLUPVs9uMi9uQN7",
       "generation": "xIJ0wzzGEd77np0Wdkib",
-      "credits": 177
+      "credits": 177,
+      "generated": "2026-10-13"
     }
   }
 }

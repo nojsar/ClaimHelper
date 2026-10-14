@@ -43,11 +43,12 @@ jobs:
         # Loud, but never fatal. This sat before the publish step as a hard
         # gate, so a single unrendered guide silenced all seven networks —
         # exactly what the weekly generator produces when it adds a queue
-        # entry. The posters already fall back to a still or a link card.
+        # entry. Since 2026-10-14 the posters post only narrated videos, so a
+        # guide without one is simply skipped on its slot.
         shell: bash
         run: |
           if ! node tool/social_video.mjs --check; then
-            echo "::warning title=Unrendered social media::A queue post has no Remotion render, so its network will fall back to a still or link card. Run node tool/render_social_video.mjs and commit the output."
+            echo "::warning title=Unrendered social media::A queue post has no narrated Remotion render, so the networks skip it. Generate its paid-plan ElevenLabs take, run node tool/render_social_video.mjs and commit the output."
           fi
       - name: Publish the day's guide to every configured network
         env:

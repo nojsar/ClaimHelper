@@ -8,9 +8,14 @@ import { fileURLToPath } from "node:url";
 // never invents copy at runtime, it only reformats approved text per network.
 
 export const projectRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
+// Since 2026-10-14 every network posts only the narrated dawn-print video. A
+// post whose video is missing (or has no paid-plan narration, so was never
+// rendered; see social_video.mjs) is skipped on that network, never replaced
+// by a still or a link card in the old style.
+const videoOnly = (post) => ({ ...post, requireVideo: true });
 export const posts = JSON.parse(
   await readFile(path.join(projectRoot, "marketing", "posts.json"), "utf8"),
-);
+).map(videoOnly);
 export const dryRun = process.argv.includes("--dry-run");
 
 // Hand-dispatched posts (marketing/one-off.json), chosen by the workflow's
@@ -18,7 +23,7 @@ export const dryRun = process.argv.includes("--dry-run");
 // day's guide; the schedule never sets it.
 export const oneOffs = JSON.parse(
   await readFile(path.join(projectRoot, "marketing", "one-off.json"), "utf8"),
-).posts;
+).posts.map(videoOnly);
 const oneOffId = (process.env.MARKETING_ONE_OFF || "").trim();
 export const oneOff = oneOffId ? oneOffs.find((post) => post.id === oneOffId) : null;
 if (oneOffId && !oneOff) {
