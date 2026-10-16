@@ -5,6 +5,7 @@ import { DawnGuide, guideTiming } from "./guide/DawnGuide";
 import { FILM_SECONDS, ProductFilm } from "./film/ProductFilm";
 import { DAWN_AD_SECONDS, DawnAd } from "./ad/DawnAd";
 import { DawnAdHook, DawnShort, HOOKS, HookFormat, hookAdFrames, shortFrames } from "./ad/DawnHook";
+import { PULSE_SECONDS, PulseAd } from "./ad/PulseAd";
 import queue from "./queue.json";
 
 /**
@@ -62,6 +63,19 @@ export const RemotionRoot: React.FC = () => (
       height={1350}
       defaultProps={{ format: "feed" as const }}
     />
+    {/* fb6, the Deadline angle as a fast cut: AI shots and motion graphics. */}
+    {(["vertical", "feed"] as const).map((format) => (
+      <Composition
+        key={`pulse-${format}`}
+        id={`pulse-ad-${format}`}
+        component={PulseAd}
+        durationInFrames={Math.round(PULSE_SECONDS * FPS)}
+        fps={FPS}
+        width={1080}
+        height={format === "feed" ? 1350 : 1920}
+        defaultProps={{ format }}
+      />
+    ))}
     {/* The Facebook angle test: a voiced hook per angle, then the ad, in
         9:16 for Reels and Stories and 4:5 for the Feed. */}
     {HOOKS.flatMap((hook) =>

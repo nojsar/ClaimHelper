@@ -1,0 +1,246 @@
+{
+  "note": "fb6 'Deadline, fast cut': AI video shots (Higgsfield), a new voiced script, motion graphics. Times are seconds on the ad's own clock.",
+  "seconds": 14.75,
+  "voice": {
+    "file": "pulse-ad/voice.mp3",
+    "voice": "Sia - Energetic, Confident and Commercial (ElevenLabs library voice qTRV75fy2dUja4REMifv)",
+    "model": "eleven_v4",
+    "generation": "kxBBmxPGLa4RvN20GehX",
+    "flow": "vzByDkpz8OOoOe3BKOFr",
+    "generated": "2026-10-16",
+    "script": "A denial letter starts a clock. Many plans give you about 180 days to appeal. Miss it — and the “no” can stick. GetMyYes finds the deadline in your letter and explains it in plain English. The summary is free.",
+    "edit": "Pauses tightened to 0.10–0.16 s, then atempo 1.15 and a 0.15 s lead-in (ffmpeg); word times mapped through the same edit from the Scribe alignment.",
+    "words": [
+      {
+        "text": "A",
+        "from": 0.197,
+        "to": 0.232
+      },
+      {
+        "text": "denial",
+        "from": 0.267,
+        "to": 0.614
+      },
+      {
+        "text": "letter",
+        "from": 0.684,
+        "to": 1.032
+      },
+      {
+        "text": "starts",
+        "from": 1.101,
+        "to": 1.31
+      },
+      {
+        "text": "a",
+        "from": 1.38,
+        "to": 1.414
+      },
+      {
+        "text": "clock.",
+        "from": 1.449,
+        "to": 1.875
+      },
+      {
+        "text": "Many",
+        "from": 2.022,
+        "to": 2.231
+      },
+      {
+        "text": "plans",
+        "from": 2.3,
+        "to": 2.718
+      },
+      {
+        "text": "give",
+        "from": 2.787,
+        "to": 2.857
+      },
+      {
+        "text": "you",
+        "from": 2.927,
+        "to": 2.961
+      },
+      {
+        "text": "about",
+        "from": 2.996,
+        "to": 3.274
+      },
+      {
+        "text": "180",
+        "from": 3.344,
+        "to": 4.144
+      },
+      {
+        "text": "days",
+        "from": 4.179,
+        "to": 4.457
+      },
+      {
+        "text": "to",
+        "from": 4.527,
+        "to": 4.596
+      },
+      {
+        "text": "appeal.",
+        "from": 4.735,
+        "to": 5.309
+      },
+      {
+        "text": "Miss",
+        "from": 5.41,
+        "to": 5.619
+      },
+      {
+        "text": "it",
+        "from": 5.688,
+        "to": 5.897
+      },
+      {
+        "text": "and",
+        "from": 6.144,
+        "to": 6.19
+      },
+      {
+        "text": "the",
+        "from": 6.26,
+        "to": 6.329
+      },
+      {
+        "text": "“no”",
+        "from": 6.399,
+        "to": 6.747
+      },
+      {
+        "text": "can",
+        "from": 6.816,
+        "to": 6.955
+      },
+      {
+        "text": "stick.",
+        "from": 7.025,
+        "to": 7.512
+      },
+      {
+        "text": "GetMyYes",
+        "from": 7.717,
+        "to": 8.273
+      },
+      {
+        "text": "finds",
+        "from": 8.482,
+        "to": 8.656
+      },
+      {
+        "text": "the",
+        "from": 8.691,
+        "to": 8.76
+      },
+      {
+        "text": "deadline",
+        "from": 8.9,
+        "to": 9.247
+      },
+      {
+        "text": "in",
+        "from": 9.317,
+        "to": 9.352
+      },
+      {
+        "text": "your",
+        "from": 9.387,
+        "to": 9.526
+      },
+      {
+        "text": "letter",
+        "from": 9.665,
+        "to": 9.804
+      },
+      {
+        "text": "and",
+        "from": 10.152,
+        "to": 10.221
+      },
+      {
+        "text": "explains",
+        "from": 10.291,
+        "to": 10.847
+      },
+      {
+        "text": "it",
+        "from": 10.917,
+        "to": 10.987
+      },
+      {
+        "text": "in",
+        "from": 11.056,
+        "to": 11.195
+      },
+      {
+        "text": "plain",
+        "from": 11.265,
+        "to": 11.543
+      },
+      {
+        "text": "English.",
+        "from": 11.613,
+        "to": 12.16
+      },
+      {
+        "text": "The",
+        "from": 12.335,
+        "to": 12.347
+      },
+      {
+        "text": "summary",
+        "from": 12.416,
+        "to": 12.694
+      },
+      {
+        "text": "is",
+        "from": 12.764,
+        "to": 12.833
+      },
+      {
+        "text": "free.",
+        "from": 12.973,
+        "to": 13.39
+      }
+    ]
+  },
+  "score": {
+    "file": "pulse-ad/score.mp3",
+    "id": "77",
+    "title": "Running Out of Time",
+    "artist": "Ahjay Stelino",
+    "source": "https://assets.mixkit.co/music/77/77.mp3",
+    "sourceStart": 81.69,
+    "length": 14.77,
+    "bpm": 130.4,
+    "beat": 0.46,
+    "firstBeat": 0.0,
+    "license": "Mixkit Stock Music Free License (https://mixkit.co/license/#musicFree)",
+    "downloaded": "2026-10-16"
+  },
+  "shots": [
+    {
+      "file": "pulse-ad/shots/hands.mp4",
+      "job": "c4fd3a0d-33da-4463-b1f7-28a2eb7babe9",
+      "model": "cinematic_studio_video_v2 (Higgsfield, std, silent)",
+      "what": "hands open an envelope and lay a letter on a night table"
+    },
+    {
+      "file": "pulse-ad/shots/hourglass.mp4",
+      "job": "36855815-6c1c-49f8-82f0-2e65c165e4c7",
+      "model": "cinematic_studio_video_v2 (Higgsfield, std, silent)",
+      "what": "hourglass beside the letter, sand pouring, night"
+    },
+    {
+      "file": "pulse-ad/shots/dawn.mp4",
+      "job": "682bab8c-17b8-4bd9-a853-667d98cb8cc9",
+      "model": "cinematic_studio_video_v2 (Higgsfield, std, silent)",
+      "what": "sunrise over the table, letter and steaming mug; crop out the green glint at the bottom edge"
+    }
+  ],
+  "rules": "No people shown as customers, no testimonials, no faces; the product scenes are the drawn SAMPLE LETTER; AI-made video and voice are disclosed in the ad (Meta 'AI info' toggle and the description line)."
+}
