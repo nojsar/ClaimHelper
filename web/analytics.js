@@ -166,6 +166,20 @@
     });
   }
 
+  // A queued visit is lost if the page closes before auth resolves, and a
+  // paid-ad click often leaves within seconds. Release the queue when the
+  // page is hidden or unloaded: an owner browser is still excluded by its
+  // stored opt-out (read at load) and by the server's HttpOnly cookie.
+  function releaseOnExit() {
+    if (!authResolved) resolveAnalyticsAuth();
+  }
+  if (window.addEventListener) window.addEventListener('pagehide', releaseOnExit);
+  if (document.addEventListener) {
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') releaseOnExit();
+    });
+  }
+
   // Every page that loads this script records one visit, unless it is the
   // dashboard or this browser has already been marked as the owner's device.
   track('visit');

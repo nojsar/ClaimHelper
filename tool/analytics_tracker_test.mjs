@@ -21,6 +21,7 @@ function trackerHarness({
   const storage = new Map(storedOptOut ? [[optOutKey, "1"]] : []);
   const timers = new Map();
   const listeners = new Map();
+  const windowListeners = new Map();
   let nextTimer = 1;
 
   const context = {
@@ -29,6 +30,9 @@ function trackerHarness({
     Promise,
     String,
     console,
+    addEventListener(type, callback) {
+      windowListeners.set(type, callback);
+    },
     document: {
       referrer: "https://search.example/results",
       addEventListener(type, callback) {
@@ -67,7 +71,7 @@ function trackerHarness({
   context.window = context;
   context.globalThis = context;
   vm.runInNewContext(trackerSource, context, { filename: "web/analytics.js" });
-  return { context, beacons, fetches, storage, timers, listeners };
+  return { context, beacons, fetches, storage, timers, listeners, windowListeners };
 }
 
 function eventOf(beacon) {
@@ -98,6 +102,34 @@ test("Flutter landing queues traffic until auth resolves", () => {
   ]);
   result.context.__resolveAnalyticsAuth();
   assert.equal(result.beacons.length, 2);
+});
+
+test("a visitor who leaves before auth resolves is still counted", () => {
+  const result = trackerHarness();
+  assert.equal(result.beacons.length, 0);
+
+  result.context.document.visibilityState = "hidden";
+  result.listeners.get("visibilitychange")();
+  assert.deepEqual(result.beacons.map(eventOf).map((event) => event.t), ["visit"]);
+  assert.equal(result.timers.size, 0);
+
+  // Leaving again, or the page unloading afterwards, never double counts.
+  result.windowListeners.get("pagehide")();
+  assert.equal(result.beacons.length, 1);
+});
+
+test("a tab that is merely shown again does not release the queue", () => {
+  const result = trackerHarness();
+  result.context.document.visibilityState = "visible";
+  result.listeners.get("visibilitychange")();
+  assert.equal(result.beacons.length, 0);
+  assert.equal(result.timers.size, 1);
+});
+
+test("a stored owner opt-out still wins when the page closes", () => {
+  const result = trackerHarness({ storedOptOut: true });
+  result.windowListeners.get("pagehide")();
+  assert.equal(result.beacons.length, 0);
 });
 
 test("static start links emit only the fixed appeal-intent event", () => {
