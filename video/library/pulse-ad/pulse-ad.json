@@ -1,5 +1,5 @@
 {
-  "note": "fb6 'Deadline, fast cut': AI video shots (Higgsfield), a new voiced script, motion graphics. Times are seconds on the ad's own clock.",
+  "note": "fb6 'Deadline, fast cut': AI video shots (Higgsfield), a new voiced script, motion graphics. Times are seconds on the ad's own clock. No music: voice and sound effects only (the owner found the score too loud, 2026-10-16).",
   "seconds": 14.75,
   "voice": {
     "file": "pulse-ad/voice.mp3",
@@ -207,20 +207,6 @@
         "to": 13.39
       }
     ]
-  },
-  "score": {
-    "file": "pulse-ad/score.mp3",
-    "id": "77",
-    "title": "Running Out of Time",
-    "artist": "Ahjay Stelino",
-    "source": "https://assets.mixkit.co/music/77/77.mp3",
-    "sourceStart": 81.69,
-    "length": 14.77,
-    "bpm": 130.4,
-    "beat": 0.46,
-    "firstBeat": 0.0,
-    "license": "Mixkit Stock Music Free License (https://mixkit.co/license/#musicFree)",
-    "downloaded": "2026-10-16"
   },
   "shots": [
     {

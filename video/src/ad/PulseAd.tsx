@@ -22,8 +22,8 @@ import "../fonts";
  * fb6, "Deadline, fast cut": the angle that won the first week (fb2), rebuilt
  * for a thumb that is already scrolling. A new, quicker read (pulse-ad.json),
  * real AI-shot scenes from Higgsfield for the night and the morning, and
- * motion graphics for every claim, cut on the words and on the score's beat
- * (130 bpm, a beat every 0.46 s).
+ * motion graphics for every claim, cut on the words and on a 0.46 s beat.
+ * Voice and a few sound effects only: the owner found a music bed too loud.
  *
  *   0.00  hook     hands open the letter        "A denial letter"
  *   1.10  clock    a ring starts, 180 ticks     "starts a clock."
@@ -73,40 +73,19 @@ const SFX: { at: number; sfx: string; volume: number }[] = [
   { at: 1.38, sfx: "tick", volume: 0.42 },
   { at: 1.84, sfx: "tick", volume: 0.38 },
   { at: C.sand, sfx: "card-swoosh", volume: 0.24 },
-  { at: C.big, sfx: "shutter", volume: 0.45 },
+  { at: C.big, sfx: "shutter", volume: 0.36 },
   { at: at(12), sfx: "card-swoosh", volume: 0.22 },
   { at: C.miss, sfx: "scan-sweep", volume: 0.34 },
-  { at: at(19), sfx: "paper-slide", volume: 0.5 },
+  { at: at(19), sfx: "paper-slide", volume: 0.4 },
   { at: at(21), sfx: "tick", volume: 0.38 },
   { at: C.find, sfx: "card-swoosh", volume: 0.3 },
   { at: at(23), sfx: "scan-sweep", volume: 0.24 },
-  { at: at(25) + 0.3, sfx: "node-pop", volume: 0.36 },
+  { at: at(25) + 0.3, sfx: "node-pop", volume: 0.24 },
   { at: at(30), sfx: "check", volume: 0.3 },
   ...[32, 33, 34].map((i) => ({ at: at(i), sfx: "node-pop", volume: 0.24 })),
   { at: C.end, sfx: "fly-swoosh", volume: 0.28 },
-  { at: at(38), sfx: "done-chime", volume: 0.34 },
+  { at: at(38), sfx: "done-chime", volume: 0.24 },
 ];
-
-/* ------------------------------------------------------------ the mix */
-
-// Words closer than a quarter second are one breath; the score sits 12 dB
-// under a breath, 7 dB under between them, and comes up after the last word.
-const SPEECH: [number, number][] = [];
-for (const w of W) {
-  const last = SPEECH[SPEECH.length - 1];
-  if (last && w.from - last[1] < 0.25) last[1] = w.to;
-  else SPEECH.push([w.from, w.to]);
-}
-const VO_END = W[W.length - 1].to;
-const duck = (t: number): number => {
-  if (t > VO_END + 0.2) return mix(10 ** (-7 / 20), 10 ** (-2 / 20), clamp01((t - VO_END - 0.2) / 0.4));
-  let near = Infinity;
-  for (const [a, b] of SPEECH) {
-    if (t >= a && t <= b) return 10 ** (-12 / 20);
-    near = Math.min(near, t < a ? a - t : t - b);
-  }
-  return mix(10 ** (-12 / 20), 10 ** (-7 / 20), clamp01(near / 0.2));
-};
 
 /* --------------------------------------------------------- the pieces */
 
@@ -356,7 +335,7 @@ const Card: React.FC<{ title: string; line: string; w: number; p: number }> = ({
 
 export const PulseAd: React.FC<{ format: PulseFormat }> = ({ format }) => {
   const frame = useCurrentFrame();
-  const { width, height, durationInFrames } = useVideoConfig();
+  const { width, height } = useVideoConfig();
   const feed = format === "feed";
   const u = width / 1080;
   const s = frame / FPS;
@@ -396,7 +375,6 @@ export const PulseAd: React.FC<{ format: PulseFormat }> = ({ format }) => {
 
   return (
     <AbsoluteFill style={{ background: NAVY_DARK, overflow: "hidden" }}>
-      <Html5Audio src={staticFile("pulse-ad/score.mp3")} volume={(fr) => duck(fr / FPS) * interpolate(fr, [0, 2, durationInFrames - f(0.5), durationInFrames - 1], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })} />
       <Html5Audio src={staticFile("pulse-ad/voice.mp3")} volume={1} />
       {SFX.map((cue, i) => (
         <Sequence key={`${cue.sfx}-${i}`} from={f(cue.at)} layout="none">
