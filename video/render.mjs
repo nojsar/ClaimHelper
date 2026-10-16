@@ -142,8 +142,7 @@ if (args.includes("--pulse-ad")) {
   const ad = JSON.parse(await readFile(path.join(here, "library", "pulse-ad", "pulse-ad.json"), "utf8"));
   // Captions: the read, grouped into the phrases the screen shows.
   const stamp = (seconds) => new Date(seconds * 1000).toISOString().slice(11, 23).replace(".", ",");
-  const groups = [[0, 5], [6, 10], [11, 14], [15, 16], [17, 21], [22, 28], [29, 34], [35, 38]];
-  const srt = groups
+  const srt = ad.captions
     .map(([a, b], i) => `${i + 1}\n${stamp(ad.voice.words[a].from)} --> ${stamp(ad.voice.words[b].to)}\n${ad.voice.words.slice(a, b + 1).map((w) => w.text).join(" ")}\n`)
     .join("\n");
   if (!review) await writeFile(path.join(outRoot, "getmyyes-fb6-15s.en_US.srt"), srt);
@@ -151,7 +150,7 @@ if (args.includes("--pulse-ad")) {
     const composition = await selectComposition({ serveUrl, id: `pulse-ad-${format}`, browserExecutable, chromiumOptions });
     const tag = format === "feed" ? "4x5" : "9x16";
     const frames = review
-      ? [0.7, 1.7, 2.9, 4.6, 5.8, 7.2, 8.6, 9.6, 10.6, 11.9, 13.9].map((t, i) => [`review-${i}-${t}`, Math.round(t * composition.fps)])
+      ? [0.6, 1.8, 3.1, 5.0, 6.2, 7.4, 9.3, 11.0, 12.8, 14.3, 15.7].map((t, i) => [`review-${i}-${t}`, Math.round(t * composition.fps)])
       : [["cover", Math.round(0.6 * composition.fps)]];
     for (const [name, frame] of frames) {
       await renderStill({ composition, serveUrl, browserExecutable, chromiumOptions, frame, imageFormat: "jpeg", jpegQuality: 90, output: path.join(review ? reviewRoot : outRoot, `getmyyes-fb6-15s-${tag}-${name}.jpg`) });

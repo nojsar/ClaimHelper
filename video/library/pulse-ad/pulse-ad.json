@@ -1,210 +1,225 @@
 {
-  "note": "fb6 'Deadline, fast cut': AI video shots (Higgsfield), a new voiced script, motion graphics. Times are seconds on the ad's own clock. No music: voice and sound effects only (the owner found the score too loud, 2026-10-16).",
-  "seconds": 14.75,
+  "note": "fb6 'Deadline, fast cut': AI video shots (Higgsfield), a voiced script that names the health plan and shows the appeal packet, motion graphics. No music: voice and sound effects only (the owner found the score too loud, 2026-10-16). Times are seconds on the ad's own clock.",
+  "seconds": 15.95,
   "voice": {
     "file": "pulse-ad/voice.mp3",
     "voice": "Sia - Energetic, Confident and Commercial (ElevenLabs library voice qTRV75fy2dUja4REMifv)",
     "model": "eleven_v4",
-    "generation": "kxBBmxPGLa4RvN20GehX",
+    "generation": "GUfK6HSBXSO2iBuhwHY6",
     "flow": "vzByDkpz8OOoOe3BKOFr",
     "generated": "2026-10-16",
-    "script": "A denial letter starts a clock. Many plans give you about 180 days to appeal. Miss it — and the “no” can stick. GetMyYes finds the deadline in your letter and explains it in plain English. The summary is free.",
-    "edit": "Pauses tightened to 0.10–0.16 s, then atempo 1.15 and a 0.15 s lead-in (ffmpeg); word times mapped through the same edit from the Scribe alignment.",
+    "script": "A denial letter starts a clock. Many health plans give you about 180 days to appeal. Miss it — and the “no” can stick. GetMyYes turns it into your appeal: the letter, the evidence checklist, the call script. Start with a free summary.",
+    "edit": "Pauses tightened to 0.06–0.14 s, then atempo 1.16 and a 0.15 s lead-in (ffmpeg); word times mapped through the same edit from the Scribe alignment of this take.",
     "words": [
       {
         "text": "A",
-        "from": 0.197,
-        "to": 0.232
+        "from": 0.185,
+        "to": 0.22
       },
       {
         "text": "denial",
-        "from": 0.267,
-        "to": 0.614
+        "from": 0.254,
+        "to": 0.599
       },
       {
         "text": "letter",
-        "from": 0.684,
-        "to": 1.032
+        "from": 0.668,
+        "to": 1.013
       },
       {
         "text": "starts",
-        "from": 1.101,
-        "to": 1.31
+        "from": 1.22,
+        "to": 1.427
       },
       {
         "text": "a",
-        "from": 1.38,
-        "to": 1.414
+        "from": 1.496,
+        "to": 1.565
       },
       {
         "text": "clock.",
-        "from": 1.449,
-        "to": 1.875
+        "from": 1.634,
+        "to": 2.013
       },
       {
         "text": "Many",
-        "from": 2.022,
-        "to": 2.231
+        "from": 2.308,
+        "to": 2.446
+      },
+      {
+        "text": "health",
+        "from": 2.515,
+        "to": 2.722
       },
       {
         "text": "plans",
-        "from": 2.3,
-        "to": 2.718
+        "from": 2.791,
+        "to": 3.204
       },
       {
         "text": "give",
-        "from": 2.787,
-        "to": 2.857
+        "from": 3.273,
+        "to": 3.342
       },
       {
         "text": "you",
-        "from": 2.927,
-        "to": 2.961
+        "from": 3.411,
+        "to": 3.446
       },
       {
         "text": "about",
-        "from": 2.996,
-        "to": 3.274
+        "from": 3.48,
+        "to": 3.687
       },
       {
         "text": "180",
-        "from": 3.344,
-        "to": 4.144
+        "from": 3.756,
+        "to": 4.653
       },
       {
         "text": "days",
-        "from": 4.179,
-        "to": 4.457
+        "from": 4.722,
+        "to": 4.997
       },
       {
         "text": "to",
-        "from": 4.527,
-        "to": 4.596
+        "from": 5.032,
+        "to": 5.066
       },
       {
         "text": "appeal.",
-        "from": 4.735,
-        "to": 5.309
+        "from": 5.135,
+        "to": 5.694
       },
       {
         "text": "Miss",
-        "from": 5.41,
-        "to": 5.619
+        "from": 5.789,
+        "to": 5.996
       },
       {
         "text": "it",
-        "from": 5.688,
-        "to": 5.897
+        "from": 6.065,
+        "to": 6.272
       },
       {
         "text": "and",
-        "from": 6.144,
-        "to": 6.19
+        "from": 6.498,
+        "to": 6.567
       },
       {
         "text": "the",
-        "from": 6.26,
-        "to": 6.329
+        "from": 6.602,
+        "to": 6.636
       },
       {
         "text": "“no”",
-        "from": 6.399,
-        "to": 6.747
+        "from": 6.774,
+        "to": 7.119
       },
       {
         "text": "can",
-        "from": 6.816,
-        "to": 6.955
+        "from": 7.188,
+        "to": 7.326
       },
       {
         "text": "stick.",
-        "from": 7.025,
-        "to": 7.512
+        "from": 7.464,
+        "to": 7.906
       },
       {
         "text": "GetMyYes",
-        "from": 7.717,
-        "to": 8.273
+        "from": 8.037,
+        "to": 8.658
       },
       {
-        "text": "finds",
-        "from": 8.482,
-        "to": 8.656
-      },
-      {
-        "text": "the",
-        "from": 8.691,
-        "to": 8.76
-      },
-      {
-        "text": "deadline",
-        "from": 8.9,
-        "to": 9.247
-      },
-      {
-        "text": "in",
-        "from": 9.317,
-        "to": 9.352
-      },
-      {
-        "text": "your",
-        "from": 9.387,
-        "to": 9.526
-      },
-      {
-        "text": "letter",
-        "from": 9.665,
-        "to": 9.804
-      },
-      {
-        "text": "and",
-        "from": 10.152,
-        "to": 10.221
-      },
-      {
-        "text": "explains",
-        "from": 10.291,
-        "to": 10.847
+        "text": "turns",
+        "from": 8.727,
+        "to": 8.934
       },
       {
         "text": "it",
-        "from": 10.917,
-        "to": 10.987
+        "from": 8.968,
+        "to": 9.003
       },
       {
-        "text": "in",
-        "from": 11.056,
-        "to": 11.195
+        "text": "into",
+        "from": 9.072,
+        "to": 9.278
       },
       {
-        "text": "plain",
-        "from": 11.265,
-        "to": 11.543
+        "text": "your",
+        "from": 9.347,
+        "to": 9.416
       },
       {
-        "text": "English.",
-        "from": 11.613,
-        "to": 12.16
+        "text": "appeal:",
+        "from": 9.485,
+        "to": 10.026
       },
       {
-        "text": "The",
-        "from": 12.335,
-        "to": 12.347
+        "text": "the",
+        "from": 10.134,
+        "to": 10.203
       },
       {
-        "text": "summary",
-        "from": 12.416,
-        "to": 12.694
+        "text": "letter,",
+        "from": 10.272,
+        "to": 10.823
       },
       {
-        "text": "is",
-        "from": 12.764,
-        "to": 12.833
+        "text": "the",
+        "from": 10.913,
+        "to": 10.982
       },
       {
-        "text": "free.",
-        "from": 12.973,
-        "to": 13.39
+        "text": "evidence",
+        "from": 11.051,
+        "to": 11.396
+      },
+      {
+        "text": "checklist,",
+        "from": 11.465,
+        "to": 12.114
+      },
+      {
+        "text": "the",
+        "from": 12.185,
+        "to": 12.254
+      },
+      {
+        "text": "call",
+        "from": 12.323,
+        "to": 12.53
+      },
+      {
+        "text": "script.",
+        "from": 12.599,
+        "to": 13.013
+      },
+      {
+        "text": "Start",
+        "from": 13.266,
+        "to": 13.472
+      },
+      {
+        "text": "with",
+        "from": 13.541,
+        "to": 13.61
+      },
+      {
+        "text": "a",
+        "from": 13.679,
+        "to": 13.748
+      },
+      {
+        "text": "free",
+        "from": 13.817,
+        "to": 13.955
+      },
+      {
+        "text": "summary.",
+        "from": 14.093,
+        "to": 14.645
       }
     ]
   },
@@ -228,5 +243,39 @@
       "what": "sunrise over the table, letter and steaming mug; crop out the green glint at the bottom edge"
     }
   ],
-  "rules": "No people shown as customers, no testimonials, no faces; the product scenes are the drawn SAMPLE LETTER; AI-made video and voice are disclosed in the ad (Meta 'AI info' toggle and the description line)."
+  "rules": "No people shown as customers, no testimonials, no faces; the product scenes are the drawn SAMPLE LETTER; AI-made video and voice are disclosed in the ad (Meta 'AI info' toggle and the description line).",
+  "captions": [
+    [
+      0,
+      5
+    ],
+    [
+      6,
+      11
+    ],
+    [
+      12,
+      15
+    ],
+    [
+      16,
+      17
+    ],
+    [
+      18,
+      22
+    ],
+    [
+      23,
+      28
+    ],
+    [
+      29,
+      36
+    ],
+    [
+      37,
+      41
+    ]
+  ]
 }
