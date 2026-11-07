@@ -128,14 +128,14 @@ const SFX: { at: number; sfx: string; volume: number }[] = [
 
 /* --------------------------------------------------------- the pieces */
 
-type Word = { t: string; at: number; accent?: boolean };
+export type Word = { t: string; at: number; accent?: boolean };
 
 /**
  * Captions that land word by word on the voice: each word arrives a hair
  * early, big and blurred, and snaps into place. Lines break where `lines`
  * says, never mid-phrase.
  */
-const Kinetic: React.FC<{ lines: Word[][]; size: number; top?: number; out?: number; color?: string; accent?: string; align?: "center" | "left"; left?: number; right?: number; relative?: boolean; plate?: boolean }> = ({
+export const Kinetic: React.FC<{ lines: Word[][]; size: number; top?: number; out?: number; color?: string; accent?: string; align?: "center" | "left"; left?: number; right?: number; relative?: boolean; plate?: boolean }> = ({
   lines,
   size,
   top = 0,
@@ -344,7 +344,7 @@ const Letter: React.FC<{ w: number; lensRow: number; lensOn: number; mark: numbe
 };
 
 /** A quiet paper card with a check, for the plain-English summary. */
-const Card: React.FC<{ title: string; line: string; w: number; p: number }> = ({ title, line, w, p }) => (
+export const Card: React.FC<{ title: string; line: string; w: number; p: number }> = ({ title, line, w, p }) => (
   <div
     style={{
       width: w,

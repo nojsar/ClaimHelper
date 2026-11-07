@@ -173,6 +173,56 @@ if (args.includes("--pulse-ad")) {
   process.exit(0);
 }
 
+// `--last-word` renders "Not the last word" (src/ad/LastWordFilm.tsx), the
+// narrated film cut from the Higgsfield b-roll library, in 9:16 and 4:5 with
+// a poster, a cover and captions, into web/media/ad/ for the one-off post.
+// /media is immutable for a year: bump LAST_WORD_VERSION on a re-render.
+// `--review` renders stills at each scene into video/out/last-word-review.
+const LAST_WORD_VERSION = "v1";
+if (args.includes("--last-word")) {
+  await sync();
+  const { readFile, writeFile, rm } = await import("node:fs/promises");
+  const { spawnSync } = await import("node:child_process");
+  const adRoot = path.join(projectRoot, "web", "media", "ad");
+  const reviewRoot = path.join(here, "out", "last-word-review");
+  const review = args.includes("--review");
+  await mkdir(review ? reviewRoot : adRoot, { recursive: true });
+  const browserExecutable = process.env.REMOTION_BROWSER_EXECUTABLE || null;
+  if (!browserExecutable) await ensureBrowser();
+  const chromiumOptions = { gl: process.env.REMOTION_GL || "angle" };
+  const serveUrl = await bundle({ entryPoint: path.join(here, "src", "index.ts"), publicDir: path.join(here, "public") });
+  const film = JSON.parse(await readFile(path.join(here, "library", "last-word", "last-word.json"), "utf8"));
+  const base = `last-word-${LAST_WORD_VERSION}`;
+  // Captions: the read, in the phrases last-word.json groups it into.
+  const words = film.voice.words;
+  const cue = (stampOf) => film.captions.map(([a, b, text], i) => `${i + 1}\n${stampOf(words[a].from)} --> ${stampOf(words[b].to)}\n${text}\n`).join("\n");
+  if (!review) {
+    await writeFile(path.join(adRoot, `${base}.vtt`), `WEBVTT\n\n${cue((s) => new Date(s * 1000).toISOString().slice(11, 23))}`);
+    await writeFile(path.join(adRoot, `${base}.en_US.srt`), cue((s) => new Date(s * 1000).toISOString().slice(11, 23).replace(".", ",")));
+  }
+  for (const format of ["vertical", "feed"]) {
+    const composition = await selectComposition({ serveUrl, id: `last-word-${format}`, browserExecutable, chromiumOptions });
+    const frames = review
+      ? [0.5, 1.4, 3.0, 4.2, 5.8, 7.6, 9.4, 11.6, 13.0, 14.2, 15.2, 16.3, 17.2, 18.0, 19.0, 20.2, 21.6, 24.5].map((t, i) => [`review-${String(i).padStart(2, "0")}-${t}`, Math.round(t * composition.fps)])
+      : [["poster", Math.round(0.6 * composition.fps)], ["cover", composition.durationInFrames - 20]];
+    for (const [name, frame] of frames) {
+      await renderStill({ composition, serveUrl, browserExecutable, chromiumOptions, frame, imageFormat: "jpeg", jpegQuality: 88, output: path.join(review ? reviewRoot : adRoot, `${base}-${format}-${name}.jpg`) });
+    }
+    if (review) continue;
+    const raw = path.join(here, "out", `${base}-${format}.raw.mp4`);
+    await renderMedia({
+      composition, serveUrl, browserExecutable, chromiumOptions, codec: "h264", crf: 20, imageFormat: "png",
+      enforceAudioTrack: true, audioCodec: "aac", audioBitrate: "192k", outputLocation: raw,
+    });
+    // Phones play posts loud; bring the voice to -16 LUFS (true peak -1.5 dB).
+    const norm = spawnSync("ffmpeg", ["-v", "error", "-y", "-i", raw, "-c:v", "copy", "-af", "loudnorm=I=-16:TP=-1.5:LRA=7", "-ar", "48000", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", path.join(adRoot, `${base}-${format}.mp4`)], { stdio: "inherit" });
+    if (norm.status !== 0) throw new Error("ffmpeg loudnorm failed");
+    await rm(raw);
+    console.log(`[last-word] ${format} done`);
+  }
+  process.exit(0);
+}
+
 if (args.includes("--dawn-ad")) {
   await sync();
   const adRoot = path.join(projectRoot, "web", "media", "ad");

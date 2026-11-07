@@ -50,6 +50,31 @@
           "height": 1920
         }
       }
+    },
+    {
+      "id": "last-word",
+      "path": "/",
+      "campaign": "last_word",
+      "tag": "#GetMyYes",
+      "syntheticMedia": true,
+      "requireVideo": true,
+      "title": "A “no” doesn’t have to be the last word",
+      "text": "The letter says no. That doesn't have to be the last word. GetMyYes reads your denial letter in plain English for free, then drafts the appeal packet. You review it and send it yourself.",
+      "alt": "A 25-second narrated GetMyYes film made of AI-generated footage of hands, no faces. At night a letter drops through a door's mail slot and the word No lands over reading glasses on a letter. Rain on a window, a hand reaching for a lamp, a pen picked up, an hourglass running. On a laptop, a sample line from a denial letter turns into plain English with a Free summary badge. A printer, a paper clip, a doctor signing and call notes appear as the appeal packet cards stack up: appeal letter, evidence checklist, call script. The pages are stapled, sealed and dropped in a mailbox, the blinds open on morning light, and it ends on: A no doesn't have to be the last word. Start with a free plain-English summary. No card needed, full appeal packet $5, you send it yourself. getmyyes.com.",
+      "media": {
+        "square": {
+          "video": "media/ad/last-word-v1-feed.mp4",
+          "poster": "media/ad/last-word-v1-feed-poster.jpg",
+          "width": 1080,
+          "height": 1350
+        },
+        "vertical": {
+          "video": "media/ad/last-word-v1-vertical.mp4",
+          "poster": "media/ad/last-word-v1-vertical-poster.jpg",
+          "width": 1080,
+          "height": 1920
+        }
+      }
     }
   ]
 }

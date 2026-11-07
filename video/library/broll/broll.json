@@ -1,0 +1,270 @@
+{
+ "note": "Silent AI b-roll for the social posts and ads, generated on Higgsfield before the Starter credits expired (2026-11-07). Hands only, never faces: nobody is presented as a customer. Re-encoded from the 1080x1920 originals at x264 CRF 22, no audio. Two came out sideways and are stored rotated as 16:9 landscape. AI paper often carries fake lettering: prompts ask for 'soft blurred grey lines', and notes flag every clip with visible pseudo-text — keep those cuts short or soft.",
+ "model": "cinematic_studio_video_v2 (Higgsfield, pro, 24 fps, silent, 9:16, 5 s)",
+ "acts": {
+  "arrive": "the letter comes in (night)",
+  "clock": "the deadline",
+  "build": "the appeal gets made",
+  "send": "it goes out (morning)",
+  "care": "what was denied"
+ },
+ "rejected": [
+  {
+   "id": "finger-traces-letter",
+   "job": "cfb43ef7-0294-4978-b0ca-ec6c55100389",
+   "why": "giant fake embossed letters on the page"
+  }
+ ],
+ "clips": [
+  {
+   "id": "mailbox-dusk",
+   "file": "broll/mailbox-dusk.mp4",
+   "act": "arrive",
+   "size": "1920x1080",
+   "seconds": 5.04,
+   "prompt": "Shot at dusk. A suburban American curbside mailbox with its little door open; a person's hand, no face visible, pulls out a small stack of white envelopes. Warm porch light, deep blue evening sky, light breeze in the trees. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "deb1e3cf-279c-4e1d-9bb2-4f354112b8e1",
+   "notes": "generated sideways (rotate 90 cw, use as 16:9)"
+  },
+  {
+   "id": "letter-opener-night",
+   "file": "broll/letter-opener-night.mp4",
+   "act": "arrive",
+   "size": "1080x1920",
+   "seconds": 5.04,
+   "prompt": "Close-up at night in a kitchen. A person's hands, no face visible, slit open a white envelope with a silver letter opener under a warm table lamp. Paper fibres catch the light. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "285a7fde-5b57-44f8-84e1-83596282bebc",
+   "notes": "good"
+  },
+  {
+   "id": "clock-second-hand",
+   "file": "broll/clock-second-hand.mp4",
+   "act": "clock",
+   "size": "1080x1920",
+   "seconds": 5.04,
+   "prompt": "Extreme close-up of an analog wall clock at night: the thin black second hand ticks forward steadily across a plain cream clock face with only simple numerals and no words. Warm lamp light from the side, dark blue room behind. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "d7a80b7d-acca-4876-8c59-9012f6309f77",
+   "notes": "fake text on dial (AIXBA) - flash cuts only"
+  },
+  {
+   "id": "glasses-on-letter",
+   "file": "broll/glasses-on-letter.mp4",
+   "act": "arrive",
+   "size": "1080x1920",
+   "seconds": 5.04,
+   "prompt": "Shot at night: a hand sets reading glasses down on top of a printed letter on a kitchen table, then slowly slides the letter away. Warm table lamp, deep blue window behind. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "b14b7037-1659-4dec-834c-5c07d2bc197a",
+   "notes": "good - letter text tiny/soft"
+  },
+  {
+   "id": "rain-window-night",
+   "file": "broll/rain-window-night.mp4",
+   "act": "arrive",
+   "size": "1080x1920",
+   "seconds": 5.04,
+   "prompt": "Shot from inside a dark kitchen at night: rain streaks down the window glass, a warm table lamp glows, an opened envelope lies on the windowsill. Moody and quiet. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "07df2a83-6194-426b-9899-c5dad1b4487d",
+   "notes": "good - moody rain, lamp reflection"
+  },
+  {
+   "id": "lamp-off-night",
+   "file": "broll/lamp-off-night.mp4",
+   "act": "arrive",
+   "size": "1080x1920",
+   "seconds": 5.04,
+   "prompt": "Night in a kitchen: a hand reaches to a warm table lamp beside an opened envelope and switches it off; the room falls into deep blue moonlight from the window. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "e3e6d45e-a997-4372-85b7-ed68de3b4047",
+   "notes": "ok - hand reaches toward lamp but light never switches off; use as 'reach' beat"
+  },
+  {
+   "id": "hourglass-turn",
+   "file": "broll/hourglass-turn.mp4",
+   "act": "clock",
+   "size": "1080x1920",
+   "seconds": 5.04,
+   "prompt": "Night: a hand turns a glass hourglass over on a wooden kitchen table and sets it down; sand begins to pour; warm lamp light from the side, deep blue room behind. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "df48c5e6-d59f-4cc5-8564-2ee75caac2b2",
+   "notes": "good from ~2s (hourglass set down, sand pouring); first 1.5s blurry turn"
+  },
+  {
+   "id": "hourglass-morning",
+   "file": "broll/hourglass-morning.mp4",
+   "act": "clock",
+   "size": "1080x1920",
+   "seconds": 5.04,
+   "prompt": "Macro shot: a glass hourglass on a sunlit wooden morning table, golden light through the window, fine sand pouring through the neck. Hopeful mood. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "c9f6c6f5-fd54-421d-97bc-f06bf2729078",
+   "notes": "good 0-3s (sand pouring, golden); sand stops ~3s; small green flare 1-2s"
+  },
+  {
+   "id": "laptop-typing-night",
+   "file": "broll/laptop-typing-night.mp4",
+   "act": "build",
+   "size": "1080x1920",
+   "seconds": 5.04,
+   "prompt": "Close-up at night: hands type on a laptop keyboard on a kitchen table; the laptop screen faces away from the camera and is not visible; warm lamp light, a plain white envelope beside the laptop. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "467380eb-9e0f-4965-9325-6513a68f5b37",
+   "notes": "good - hands typing, screen hidden, envelope foreground"
+  },
+  {
+   "id": "printer-pages",
+   "file": "broll/printer-pages.mp4",
+   "act": "build",
+   "size": "1080x1920",
+   "seconds": 5.04,
+   "prompt": "Close-up: a small plain white home printer with no branding feeds sheets of paper out into its tray, the pages show only soft grey blurred lines, soft morning light on a wooden kitchen table. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "927daf36-97cf-4433-92f8-c97595ea07fb",
+   "notes": "good - page with grey bars slides out (prompt trick 'soft grey blurred lines' works)"
+  },
+  {
+   "id": "staple-pages",
+   "file": "broll/staple-pages.mp4",
+   "act": "build",
+   "size": "1080x1920",
+   "seconds": 5.04,
+   "prompt": "Close-up: hands gather a small stack of white pages, tap them square on a wooden table, and staple the top corner; the pages show only soft blurred grey lines. Soft morning light. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "acb2cb60-fb8c-46c4-bf82-44d8e36815be",
+   "notes": "good - squaring stack, stapler comes in"
+  },
+  {
+   "id": "paperclip-stack",
+   "file": "broll/paperclip-stack.mp4",
+   "act": "build",
+   "size": "1080x1920",
+   "seconds": 5.04,
+   "prompt": "Top-down shot of a wooden table in soft morning light: hands slide a silver paper clip onto a small neat stack of white pages; the pages are seen from above at a distance and look plain. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "f0e61724-cd91-4975-87f6-f126ced1416c",
+   "notes": "good - clip slides onto blank stack (clip shape slightly odd)"
+  },
+  {
+   "id": "pen-on-notebook",
+   "file": "broll/pen-on-notebook.mp4",
+   "act": "build",
+   "size": "1080x1920",
+   "seconds": 5.04,
+   "prompt": "Close-up: a hand clicks a ballpoint pen and sets it down on a closed plain notebook beside a ceramic mug; warm lamp light, evening. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "ca585e28-7a6c-444d-a2c9-1c2c3c00ecff",
+   "notes": "good - pen set down by mug, edison lamp"
+  },
+  {
+   "id": "phone-call-notes",
+   "file": "broll/phone-call-notes.mp4",
+   "act": "build",
+   "size": "1080x1920",
+   "seconds": 5.04,
+   "prompt": "Close-up: a smartphone lies face-up on a wooden table with its screen dark and off while a hand writes quick notes on a notepad beside it, as if on a speaker call; the notes are soft blurred pencil scribbles. Warm afternoon light. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "23ea99a4-433d-4cc6-a78d-4efdd4ca52ea",
+   "notes": "ok - dark phone + pencil notes; scribbles are pseudo-handwriting (keep cuts short)"
+  },
+  {
+   "id": "doctor-signs",
+   "file": "broll/doctor-signs.mp4",
+   "act": "build",
+   "size": "1080x1920",
+   "seconds": 5.04,
+   "prompt": "Close-up in a clinic: a doctor's hands with white coat sleeves sign the bottom of a page on a clipboard with a pen; the page shows only soft blurred grey lines; no face visible; soft daylight, blurred clinic background. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "81039ff3-bf1c-4eb1-acaa-8adc0475c5ea",
+   "notes": "good - doctor signs a form of grey bars (letter of medical necessity beat)"
+  },
+  {
+   "id": "fold-and-seal",
+   "file": "broll/fold-and-seal.mp4",
+   "act": "send",
+   "size": "1080x1920",
+   "seconds": 5.04,
+   "prompt": "Close-up: hands fold a white page in thirds, slide it into a plain white envelope and press the flap closed; the page shows only soft blurred grey lines. Warm morning light on a wooden table. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "adda0a24-f8db-44f0-b24a-ad6621dc06a9",
+   "notes": "ok - fold/slide/press flap (kraft flap); page lines faint"
+  },
+  {
+   "id": "street-mailbox-drop",
+   "file": "broll/street-mailbox-drop.mp4",
+   "act": "send",
+   "size": "1080x1920",
+   "seconds": 5.04,
+   "prompt": "Shot outdoors in the morning: a hand drops a plain white envelope into the slot of a plain blue metal street mailbox; the mailbox is unbranded with no logo or lettering; soft golden sunlight, trees behind. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "c8c2bea4-1d0c-4849-9835-bf892fa31cb9",
+   "notes": "good drop at 1-3.5s; embossed pseudo-emblem on mailbox body (gibberish, keep it soft/short or crop high)"
+  },
+  {
+   "id": "paper-plane-sunlight",
+   "file": "broll/paper-plane-sunlight.mp4",
+   "act": "send",
+   "size": "1080x1920",
+   "seconds": 5.04,
+   "prompt": "Slow-motion shot: a plain white paper airplane glides across a sunlit living room toward a bright window, golden morning light, dust motes floating in the sunbeams. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "60bf082d-06e7-461f-b74c-7aa9379249d5",
+   "notes": "weak - real paper plane only ~0.8-1.6s, then morphs into an origami bird; green lens flares"
+  },
+  {
+   "id": "morning-mug-pages",
+   "file": "broll/morning-mug-pages.mp4",
+   "act": "send",
+   "size": "1080x1920",
+   "seconds": 5.04,
+   "prompt": "Shot: morning sunlight floods a kitchen through a window; a plain mug of coffee steams beside a neat stack of white pages on a wooden table; the pages show only soft blurred grey lines. Hopeful and calm. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "9317f30e-a3e7-463f-9155-ef5c78f56189",
+   "notes": "good - steaming mug, blank pages, morning kitchen"
+  },
+  {
+   "id": "sticky-note-fridge",
+   "file": "broll/sticky-note-fridge.mp4",
+   "act": "send",
+   "size": "1080x1920",
+   "seconds": 5.04,
+   "prompt": "Close-up: a hand presses a blank yellow sticky note onto a white fridge door in soft morning light, then smooths it flat with a thumb. The note is completely blank with no writing. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "dcd92042-a41e-442e-a0cc-eb4151eb92b0",
+   "notes": "good - blank yellow note pressed onto a fridge; a clean canvas for an overlaid deadline in motion graphics"
+  },
+  {
+   "id": "suburb-sunrise",
+   "file": "broll/suburb-sunrise.mp4",
+   "act": "send",
+   "size": "1920x1080",
+   "seconds": 5.04,
+   "prompt": "Establishing shot at sunrise: a quiet American suburban street with trees and houses in golden light, a few birds in the sky, no people, no moving cars. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "a3757cbd-3f7e-4cd1-8c3c-1142214f3126",
+   "notes": "generated sideways again (sky on the right): stored rotated 90 ccw as 16:9 landscape; birds, lens glint"
+  },
+  {
+   "id": "blinds-open",
+   "file": "broll/blinds-open.mp4",
+   "act": "send",
+   "size": "1080x1920",
+   "seconds": 5.04,
+   "prompt": "Shot: a hand opens plain white window blinds and warm golden morning sunlight floods into a dim room, light rays and dust in the air. No face visible. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "454275c1-da1f-40b2-8380-51a2df7bb275",
+   "notes": "good - hand pulls cord, blinds rise ~2-3s, sunlight floods"
+  },
+  {
+   "id": "pharmacy-bag",
+   "file": "broll/pharmacy-bag.mp4",
+   "act": "care",
+   "size": "1080x1920",
+   "seconds": 5.04,
+   "prompt": "Close-up at a pharmacy counter: a hand sets down a plain white folded paper bag on the counter; the bag is blank with no labels or logos; soft daylight, softly blurred shelves behind. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "6bf44a32-158a-4542-a8f5-fb71d0a9da61",
+   "notes": "good - blank white pharmacy bag set on a counter"
+  },
+  {
+   "id": "mri-room",
+   "file": "broll/mri-room.mp4",
+   "act": "care",
+   "size": "1080x1920",
+   "seconds": 5.04,
+   "prompt": "Shot: an empty, calm MRI scanner room in soft cool light, slow push-in toward the round scanner opening; clean modern hospital interior; no people, no logos, no screens with text. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "84687aa8-6526-4bc6-a006-81d4f578c2f6",
+   "notes": "good - push-in through a doorway to an empty MRI scanner; small blue panel shows no text"
+  },
+  {
+   "id": "mail-slot-drop",
+   "file": "broll/mail-slot-drop.mp4",
+   "act": "arrive",
+   "size": "1080x1920",
+   "seconds": 5.04,
+   "prompt": "Shot at night inside a dim hallway: the flap of a plain front-door mail slot opens and white envelopes drop through and land on a wooden floor, warm porch light glowing outside. Upright portrait framing, camera level. Shallow depth of field, slow camera drift, realistic, 35mm film look, soft grain. No logos, no lettering or readable text anywhere, no faces.",
+   "job": "3a7e393a-bb3d-43d3-8320-02320c94437c",
+   "notes": "great hook - envelopes drop through a lit mail slot at ~1s and land"
+  }
+ ]
+}

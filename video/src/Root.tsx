@@ -6,6 +6,7 @@ import { FILM_SECONDS, ProductFilm } from "./film/ProductFilm";
 import { DAWN_AD_SECONDS, DawnAd } from "./ad/DawnAd";
 import { DawnAdHook, DawnShort, HOOKS, HookFormat, hookAdFrames, shortFrames } from "./ad/DawnHook";
 import { PULSE_SECONDS, PulseAd } from "./ad/PulseAd";
+import { LAST_WORD_SECONDS, LastWordFilm } from "./ad/LastWordFilm";
 import queue from "./queue.json";
 
 /**
@@ -70,6 +71,19 @@ export const RemotionRoot: React.FC = () => (
         id={`pulse-ad-${format}`}
         component={PulseAd}
         durationInFrames={Math.round(PULSE_SECONDS * FPS)}
+        fps={FPS}
+        width={1080}
+        height={format === "feed" ? 1350 : 1920}
+        defaultProps={{ format }}
+      />
+    ))}
+    {/* "Not the last word": the narrated b-roll film for posts. */}
+    {(["vertical", "feed"] as const).map((format) => (
+      <Composition
+        key={`last-word-${format}`}
+        id={`last-word-${format}`}
+        component={LastWordFilm}
+        durationInFrames={Math.round(LAST_WORD_SECONDS * FPS)}
         fps={FPS}
         width={1080}
         height={format === "feed" ? 1350 : 1920}

@@ -1,0 +1,384 @@
+{
+ "note": "\"Not the last word\": a 25-second narrated film cut from the Higgsfield b-roll library (library/broll). Voice-led, soft effects, no music (the owner found music beds too loud).",
+ "seconds": 25.0,
+ "voice": {
+  "file": "last-word/voice.mp3",
+  "voice": "Carolyn - Warm Grounded Narrator (ElevenLabs 4rgssJ1pg3E9c0U78Iid)",
+  "model": "eleven_v4",
+  "generation": "ognPClhSJ1AHsGC9Zofv",
+  "flow": "71DsR3Lqwnl8l7Lyh2fc",
+  "generated": "2026-11-07",
+  "credits": 392,
+  "script": "[warmly] The letter says no. [pause] That doesn't have to be the last word. [serious] You usually have the right to appeal, but the clock is running. [warmly] GetMyYes reads your letter in plain English, free. Then it drafts your appeal: the letter, the evidence checklist, the call script. You review it, sign it, and send it yourself. [upbeat] Start with a free summary at GetMyYes dot com.",
+  "edit": "None: the take is used as generated (22.72 s). Word times are the ElevenLabs Scribe alignment of this same take (session lB59dgTIQewtabf5FZs7).",
+  "words": [
+   {
+    "text": "The",
+    "from": 0.16,
+    "to": 0.24
+   },
+   {
+    "text": "letter",
+    "from": 0.4,
+    "to": 0.56
+   },
+   {
+    "text": "says",
+    "from": 0.64,
+    "to": 0.88
+   },
+   {
+    "text": "no.",
+    "from": 1.04,
+    "to": 1.48
+   },
+   {
+    "text": "That",
+    "from": 2.28,
+    "to": 2.4
+   },
+   {
+    "text": "doesn't",
+    "from": 2.48,
+    "to": 2.72
+   },
+   {
+    "text": "have",
+    "from": 2.8,
+    "to": 2.96
+   },
+   {
+    "text": "to",
+    "from": 3,
+    "to": 3.04
+   },
+   {
+    "text": "be",
+    "from": 3.12,
+    "to": 3.2
+   },
+   {
+    "text": "the",
+    "from": 3.24,
+    "to": 3.28
+   },
+   {
+    "text": "last",
+    "from": 3.36,
+    "to": 3.6
+   },
+   {
+    "text": "word.",
+    "from": 3.68,
+    "to": 4.28
+   },
+   {
+    "text": "You",
+    "from": 4.56,
+    "to": 4.72
+   },
+   {
+    "text": "usually",
+    "from": 4.8,
+    "to": 5.2
+   },
+   {
+    "text": "have",
+    "from": 5.28,
+    "to": 5.36
+   },
+   {
+    "text": "the",
+    "from": 5.44,
+    "to": 5.52
+   },
+   {
+    "text": "right",
+    "from": 5.64,
+    "to": 5.76
+   },
+   {
+    "text": "to",
+    "from": 5.8,
+    "to": 5.84
+   },
+   {
+    "text": "appeal,",
+    "from": 5.92,
+    "to": 6.6
+   },
+   {
+    "text": "but",
+    "from": 6.8,
+    "to": 6.88
+   },
+   {
+    "text": "the",
+    "from": 6.92,
+    "to": 6.96
+   },
+   {
+    "text": "clock",
+    "from": 7.04,
+    "to": 7.28
+   },
+   {
+    "text": "is",
+    "from": 7.36,
+    "to": 7.44
+   },
+   {
+    "text": "running.",
+    "from": 7.52,
+    "to": 8.12
+   },
+   {
+    "text": "GetMyYes",
+    "from": 8.4,
+    "to": 9.04
+   },
+   {
+    "text": "reads",
+    "from": 9.2,
+    "to": 9.44
+   },
+   {
+    "text": "your",
+    "from": 9.52,
+    "to": 9.6
+   },
+   {
+    "text": "letter",
+    "from": 9.76,
+    "to": 9.92
+   },
+   {
+    "text": "in",
+    "from": 10,
+    "to": 10.08
+   },
+   {
+    "text": "plain",
+    "from": 10.16,
+    "to": 10.48
+   },
+   {
+    "text": "English,",
+    "from": 10.56,
+    "to": 11.16
+   },
+   {
+    "text": "free.",
+    "from": 11.28,
+    "to": 11.96
+   },
+   {
+    "text": "Then",
+    "from": 12,
+    "to": 12.32
+   },
+   {
+    "text": "it",
+    "from": 12.4,
+    "to": 12.48
+   },
+   {
+    "text": "drafts",
+    "from": 12.56,
+    "to": 12.88
+   },
+   {
+    "text": "your",
+    "from": 12.92,
+    "to": 12.96
+   },
+   {
+    "text": "appeal:",
+    "from": 13.04,
+    "to": 13.72
+   },
+   {
+    "text": "the",
+    "from": 13.76,
+    "to": 13.84
+   },
+   {
+    "text": "letter,",
+    "from": 13.92,
+    "to": 14.453
+   },
+   {
+    "text": "the",
+    "from": 14.507,
+    "to": 14.56
+   },
+   {
+    "text": "evidence",
+    "from": 14.6,
+    "to": 14.96
+   },
+   {
+    "text": "checklist,",
+    "from": 15.08,
+    "to": 15.64
+   },
+   {
+    "text": "the",
+    "from": 15.68,
+    "to": 15.76
+   },
+   {
+    "text": "call",
+    "from": 15.84,
+    "to": 15.92
+   },
+   {
+    "text": "script.",
+    "from": 16,
+    "to": 16.76
+   },
+   {
+    "text": "You",
+    "from": 16.8,
+    "to": 16.88
+   },
+   {
+    "text": "review",
+    "from": 16.96,
+    "to": 17.28
+   },
+   {
+    "text": "it,",
+    "from": 17.44,
+    "to": 17.64
+   },
+   {
+    "text": "sign",
+    "from": 17.68,
+    "to": 17.92
+   },
+   {
+    "text": "it,",
+    "from": 18.04,
+    "to": 18.24
+   },
+   {
+    "text": "and",
+    "from": 18.32,
+    "to": 18.4
+   },
+   {
+    "text": "send",
+    "from": 18.48,
+    "to": 18.64
+   },
+   {
+    "text": "it",
+    "from": 18.68,
+    "to": 18.72
+   },
+   {
+    "text": "yourself.",
+    "from": 18.84,
+    "to": 19.6
+   },
+   {
+    "text": "Start",
+    "from": 19.68,
+    "to": 19.92
+   },
+   {
+    "text": "with",
+    "from": 19.96,
+    "to": 20
+   },
+   {
+    "text": "a",
+    "from": 20.16,
+    "to": 20.2
+   },
+   {
+    "text": "free",
+    "from": 20.24,
+    "to": 20.48
+   },
+   {
+    "text": "summary",
+    "from": 20.72,
+    "to": 20.96
+   },
+   {
+    "text": "at",
+    "from": 21.08,
+    "to": 21.2
+   },
+   {
+    "text": "GetMyYes",
+    "from": 21.32,
+    "to": 21.92
+   },
+   {
+    "text": "dot",
+    "from": 22,
+    "to": 22.08
+   },
+   {
+    "text": "com.",
+    "from": 22.24,
+    "to": 22.8
+   }
+  ]
+ },
+ "captions": [
+  [
+   0,
+   3,
+   "The letter says no."
+  ],
+  [
+   4,
+   11,
+   "That doesn't have to be the last word."
+  ],
+  [
+   12,
+   18,
+   "You usually have the right to appeal,"
+  ],
+  [
+   19,
+   23,
+   "but the clock is running."
+  ],
+  [
+   24,
+   31,
+   "GetMyYes reads your letter in plain English, free."
+  ],
+  [
+   32,
+   36,
+   "Then it drafts your appeal:"
+  ],
+  [
+   37,
+   44,
+   "the letter, the evidence checklist, the call script."
+  ],
+  [
+   45,
+   53,
+   "You review it, sign it, and send it yourself."
+  ],
+  [
+   54,
+   62,
+   "Start with a free summary at getmyyes.com."
+  ]
+ ],
+ "rules": [
+  "Hands only, no faces: nobody on screen is presented as a customer.",
+  "The plain-English card is a SAMPLE, never a viewer's letter.",
+  "Claims stay inside what the product does: free summary, $5 packet (appeal letter, evidence checklist, call script), the user sends it."
+ ]
+}
