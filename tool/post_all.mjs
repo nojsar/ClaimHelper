@@ -8,7 +8,14 @@ import { fileURLToPath } from "node:url";
 // A single network failing must not silence the others — failures are
 // collected and reported at the end.
 
-const platforms = ["bluesky", "mastodon", "x", "threads", "linkedin", "facebook", "instagram", "youtube"];
+const every = ["bluesky", "mastodon", "x", "threads", "linkedin", "facebook", "instagram", "youtube"];
+// MARKETING_NETWORKS (the dispatch's `networks` input, e.g. "mastodon") limits
+// a run to some networks, so a one-off that failed on one network can be sent
+// there again without leaning on the others' duplicate checks.
+const wanted = (process.env.MARKETING_NETWORKS || "").split(",").map((name) => name.trim().toLowerCase()).filter(Boolean);
+const unknown = wanted.filter((name) => !every.includes(name));
+if (unknown.length) throw new Error(`MARKETING_NETWORKS has unknown network(s): ${unknown.join(", ")}`);
+const platforms = wanted.length ? every.filter((name) => wanted.includes(name)) : every;
 const args = process.argv.slice(2);
 const failed = [];
 

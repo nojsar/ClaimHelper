@@ -82,12 +82,18 @@ if (video) {
       body: form,
     });
     // A 202 comes back with url: null while the server transcodes; attaching
-    // an unfinished attachment to a status is rejected, so wait for it.
-    for (let attempt = 1; attempt <= 20 && !uploaded.url; attempt += 1) {
+    // an unfinished attachment to a status is rejected (422 "have not
+    // finished processing"), so wait for it. GET /media answers 206 Partial
+    // Content until it is done, and 206 is `ok` to fetch, so only a 200 with
+    // a url counts (2026-11-08: the 25 s last-word film failed on exactly
+    // that). Up to three minutes; a longer wait degrades to a skip.
+    let ready = Boolean(uploaded.url);
+    for (let attempt = 1; attempt <= 60 && !ready; attempt += 1) {
       await sleep(3_000);
-      const ready = await fetch(`${server}/api/v1/media/${uploaded.id}`, { headers: auth });
-      if (ready.ok) break;
+      const check = await fetch(`${server}/api/v1/media/${uploaded.id}`, { headers: auth });
+      if (check.status === 200) ready = Boolean((await check.json())?.url);
     }
+    if (!ready) throw new Error(`media ${uploaded.id} was still processing after three minutes`);
     mediaIds = [uploaded.id];
   } catch (error) {
     console.warn(`[marketing] mastodon: could not attach the video (${error.message}); posting the link alone.`);

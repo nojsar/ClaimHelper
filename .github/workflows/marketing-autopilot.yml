@@ -18,6 +18,11 @@ on:
         required: false
         default: ""
         type: string
+      networks:
+        description: "Only these networks, comma-separated (e.g. mastodon); blank = all"
+        required: false
+        default: ""
+        type: string
 
 permissions:
   contents: read
@@ -56,6 +61,7 @@ jobs:
           # are skipped with a log line (see tool/post_all.mjs).
           # Empty on the schedule; a manual dispatch may name a one-off.
           MARKETING_ONE_OFF: ${{ inputs.one_off }}
+          MARKETING_NETWORKS: ${{ inputs.networks }}
           BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
           BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
           MASTODON_SERVER: ${{ secrets.MASTODON_SERVER }}
