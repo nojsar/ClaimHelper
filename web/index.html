@@ -1216,246 +1216,6 @@
       }
     }
 
-    @media (forced-colors: active) {
-      :where(a, button, summary):focus-visible { outline-color: Highlight; box-shadow: none; }
-      .button, .preview-card, .packet-shell, .packet-manifest, .packet-item, .price-card, .operator-card, .faq details, .resource-links a, .evidence-grid, .proof-slide, .proof-arrow { border: 1px solid CanvasText; }
-      .packet-check { color: CanvasText; background: Canvas; border-color: CanvasText; }
-      .brand-mark { forced-color-adjust: none; }
-    }
-
-    /* Effort expectation and the single-action hero. */
-    .hero-sample { margin: 12px 0 0; font-size: 17px; }
-
-    /* Deadline check: a one-field answer before anything is asked of the visitor. */
-    .deadline-check {
-      margin: 22px 0 0;
-      padding: 18px;
-      border: 1px solid var(--border);
-      border-left: 4px solid var(--teal);
-      border-radius: 12px;
-      background: var(--surface);
-    }
-    .deadline-check-label {
-      display: block;
-      font-weight: 700;
-      margin-bottom: 10px;
-    }
-    .deadline-check-row { display: flex; flex-wrap: wrap; gap: 10px; }
-    .deadline-check-input {
-      flex: 1 1 190px;
-      min-height: 52px;
-      padding: 10px 14px;
-      border: 1px solid var(--control-border, var(--border-strong));
-      border-radius: 8px;
-      background: var(--surface);
-      color: var(--text);
-      font-size: 17px;
-    }
-    .deadline-check-input[aria-invalid="true"] { border-color: var(--error); }
-    .deadline-check-button { flex: 0 0 auto; }
-    .deadline-check-result {
-      margin: 14px 0 0;
-      font-size: 17px;
-      line-height: 1.6;
-    }
-    .deadline-check-result strong { display: block; font-size: 20px; }
-    .deadline-check-result .caveat {
-      display: block;
-      margin-top: 6px;
-      color: var(--text-soft);
-      font-size: 16px;
-    }
-
-    /* =====================================================================
-       Redesign layer (redesign-skill + taste-skill, Redesign-Preserve).
-       Design read: trust-first consumer health site, calm editorial-document
-       language. Dials VARIANCE 4 / MOTION 3 / DENSITY 4.
-       Overrides sit here, after the rules they refine, so every locked rule
-       in trust_design_test stays byte-for-byte where it was.
-       ===================================================================== */
-    :root {
-      /* Shape: one documented scale. Controls 10px, cards 14px, panels 20px,
-         chips pill. Nothing else. */
-      --radius-control: 10px;
-      --radius-card: 14px;
-      --radius-panel: 20px;
-      /* Elevation: tinted with the navy ink and lit from above. Never black. */
-      --shadow-1: 0 1px 2px rgba(16, 38, 59, 0.06), 0 4px 12px -4px rgba(16, 38, 59, 0.10);
-      --shadow-2: 0 1px 2px rgba(16, 38, 59, 0.05), 0 22px 44px -26px rgba(16, 38, 59, 0.38);
-    }
-
-    /* Typography: balanced headings, no orphaned last words, tighter display. */
-    h1 { letter-spacing: -0.02em; }
-    h3 { text-wrap: balance; }
-    p, li, .lede { text-wrap: pretty; }
-    .price, .rail-marker, .packet-cover-count strong { font-variant-numeric: tabular-nums; }
-
-    /* Buttons feel physical: a 1px press, 200ms colour shifts. */
-    .button { transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.12s ease; }
-    .button:active { transform: translateY(1px); }
-
-    /* Hero: one eyebrow, set as text rather than a pill. */
-    .hero-badge {
-      padding: 0;
-      border: 0;
-      border-radius: 0;
-      background: none;
-      font-size: 15px;
-      letter-spacing: 0.01em;
-    }
-    .preview-card { box-shadow: var(--shadow-2); }
-
-    /* Trust strip: four proofs in one band instead of two competing lists. */
-    .reassurance-list {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      border-radius: var(--radius-card);
-      box-shadow: var(--shadow-2);
-    }
-    .reassurance-list li { padding-inline: 18px; }
-
-    /* Deadline band: the one-field answer gets its own section. */
-    .deadline-band { padding-block: clamp(96px, 9vw, 124px) clamp(56px, 6vw, 80px); }
-    .deadline-band-inner {
-      display: grid;
-      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-      gap: clamp(28px, 5vw, 72px);
-      align-items: start;
-    }
-    .deadline-band-copy h2 { font-size: clamp(30px, 3.2vw, 40px); }
-    .deadline-band-copy p { margin-top: 12px; max-width: 44ch; color: var(--text-soft); }
-    .deadline-band .deadline-check {
-      margin: 0;
-      padding: clamp(20px, 2.4vw, 28px);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-card);
-      background: var(--surface);
-      box-shadow: var(--shadow-1);
-    }
-    .deadline-band .deadline-check-input { border-radius: var(--radius-control); }
-
-    /* Section headings: the teal bar repeated on six sections was the page's
-       one repeated motif. The headline now stands on its own. */
-    .section-heading { padding-inline-start: 0; border-inline-start: 0; }
-
-    /* How it works: a rail, not three identical cards. Same marker and line
-       language as the journey map on the guides, so the site reads as one system. */
-    .steps-rail {
-      --rail-gap: clamp(28px, 4vw, 56px);
-      position: relative;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      column-gap: var(--rail-gap);
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-    .rail-step { position: relative; }
-    .rail-marker {
-      position: relative;
-      z-index: 1;
-      width: 44px;
-      height: 44px;
-      display: grid;
-      place-items: center;
-      border-radius: 50%;
-      background: var(--teal);
-      color: #FFFFFF;
-      font-weight: 700;
-    }
-    .rail-step:not(:last-child)::after {
-      content: "";
-      position: absolute;
-      top: 21px;
-      left: 58px;
-      right: calc(14px - var(--rail-gap));
-      height: 2px;
-      background: var(--border-strong);
-    }
-    .rail-step h3 { margin-top: 22px; }
-    .rail-step p { margin-top: 8px; max-width: 32ch; color: var(--text-soft); font-size: 17px; }
-
-    /* Packet: rows fill the panel instead of leaving a dead band at the foot. */
-    .packet-shell { box-shadow: var(--shadow-2); }
-    .packet-manifest { display: flex; flex-direction: column; }
-    .packet-list { flex: 1; grid-auto-rows: 1fr; }
-    .packet-item { min-height: 0; grid-template-columns: 32px minmax(0, 1fr); }
-
-    /* Proof: one light theme for the page. The closing band stays the single
-       deliberate dark block. */
-    .proof-section { background: var(--surface-soft); color: var(--text); }
-    .proof-copy .eyebrow { color: var(--teal-dark); }
-    .proof-copy h2 { color: var(--navy-dark); }
-    .proof-copy .lede { color: var(--text-soft); }
-    .proof-promise {
-      border-inline-start-color: var(--teal);
-      background: var(--surface);
-      color: var(--text);
-    }
-    .proof-viewport { border-radius: var(--radius-panel); box-shadow: var(--shadow-2); }
-    .proof-slide { min-height: 0; }
-    .proof-arrow { border-color: var(--navy); background: var(--surface); color: var(--navy); }
-    .proof-arrow:hover { border-color: var(--navy); background: var(--navy); color: #FFFFFF; }
-    .proof-status { color: var(--text-soft); }
-
-    /* Pricing: alternate background with its neighbours, and keep the label on
-       one line at desktop. */
-    .section-blue { background: var(--background); }
-    .price-card { border-radius: var(--radius-card); }
-    .price-card .button { padding-inline: 12px; font-size: 17px; }
-    @media (max-width: 1120px) {
-      .price-grid { grid-template-columns: 1fr; }
-      .price-card { max-width: 700px; }
-    }
-
-    /* Footer: headings no longer sit on top of their first link. */
-    .footer-grid h2 { margin-bottom: 12px; }
-
-    /* Second pass, from looking at the render rather than the code. */
-    /* Hero copy sits at the top of its column instead of floating ~210px below
-       the nav while the taller example card sets the row height. */
-    .hero-grid { align-items: start; }
-    .hero-copy { padding-top: clamp(8px, 2vw, 28px); }
-    .preview-card-foot { flex-wrap: wrap; row-gap: 6px; }
-    .preview-card-foot a { white-space: nowrap; }
-    /* Trust strip titles share one top line even when a subline wraps. */
-    .reassurance-list li { justify-content: flex-start; }
-    /* Packet rows: spare height is shared above and below, not pooled under. */
-    .packet-item { align-content: center; }
-    /* Proof: give the headline room so it is not a four-line column. */
-    /* Scoped to desktop: unscoped, these beat the earlier mobile rules and left
-       the proof section two columns wide on a 320px phone. */
-    @media (min-width: 981px) {
-      .proof-layout { grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); }
-      .proof-copy { max-width: 500px; }
-      .packet-shell { grid-template-columns: minmax(330px, 0.85fr) minmax(0, 1.15fr); }
-    }
-    /* The carousel status may wrap; the arrows must never be pushed off-screen. */
-    .proof-controls { grid-template-columns: 54px minmax(0, 1fr) 54px; }
-    /* Full Case: the subline sits under the price like the other two tiers. */
-    /* The Full Case tier puts its price lines in <span>s inside a <summary>, so they
-       flowed inline; the other tiers use blocks. Match them. */
-    .optional-price-summary .price-label,
-    .optional-price-summary .price,
-    .optional-price-summary .price-sub { display: block; }
-    @media (max-width: 980px) {
-      .reassurance-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .reassurance-list li { border-right: 0; border-bottom: 1px solid var(--border); }
-      .reassurance-list li:nth-child(odd) { border-right: 1px solid var(--border); }
-      .reassurance-list li:last-child { grid-column: auto; }
-      .reassurance-list li:nth-last-child(-n + 2) { border-bottom: 0; }
-      .deadline-band-inner { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 760px) {
-      .steps-rail { grid-template-columns: 1fr; row-gap: 30px; }
-      .rail-step { padding-left: 64px; }
-      .rail-marker { position: absolute; top: 0; left: 0; }
-      .rail-step h3 { margin-top: 9px; }
-      .rail-step:not(:last-child)::after { top: 50px; bottom: -26px; left: 21px; right: auto; width: 2px; height: auto; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .button { transition: none; }
-    }
-
   </style>
   <link rel="stylesheet" href="/home.css">
 </head>
@@ -1646,6 +1406,77 @@
         </div>
       </aside>
 
+      <!-- Find your sentence. The phrases are the stock wording of denial
+           letters; each answer is the short form of its free guide and says
+           nothing the guide does not. Native <details> sharing one name, so it
+           works without script: home.js only keeps one answer open beside the
+           letter on a wide screen. -->
+      <section class="reasons" id="reasons" aria-labelledby="reasons-title">
+        <div class="wrap">
+          <div class="reasons-head">
+            <h2 id="reasons-title">Which sentence is in your letter?</h2>
+            <p>Denial letters reuse a handful of phrases. Pick the one closest to yours.</p>
+          </div>
+          <div class="reasons-desk">
+            <p class="reasons-letterhead" aria-hidden="true">Notice of adverse benefit determination</p>
+            <details class="reason" name="reason" open>
+              <summary><span class="reason-phrase">…is not medically necessary.</span></summary>
+              <div class="reason-answer">
+                <dl><dt>What the plan is saying</dt><dd>It applied its own clinical criteria to the information in your file. That file may be missing something.</dd><dt>What usually helps</dt><dd>Ask which criterion was not met. Then a letter from your doctor that answers that criterion from your records.</dd></dl>
+                <a class="reason-guide" href="/appeals/not-medically-necessary">Free guide to medical necessity denials&nbsp;→</a>
+              </div>
+            </details>
+            <details class="reason" name="reason">
+              <summary><span class="reason-phrase">…prior authorization was not obtained.</span></summary>
+              <div class="reason-answer">
+                <dl><dt>What the plan is saying</dt><dd>Approval was needed before the care. The refusal can be administrative, clinical, or about trying another treatment first.</dd><dt>What usually helps</dt><dd>Find out which of the three it is. If waiting could harm you, ask your doctor to document why: urgent requests can qualify for a faster review.</dd></dl>
+                <a class="reason-guide" href="/appeals/prior-authorization-denied">Free guide to prior authorization denials&nbsp;→</a>
+              </div>
+            </details>
+            <details class="reason" name="reason">
+              <summary><span class="reason-phrase">…the provider is out of network.</span></summary>
+              <div class="reason-answer">
+                <dl><dt>What the plan is saying</dt><dd>This can be two disputes at once: what your plan paid, and what the provider billed you.</dd><dt>What usually helps</dt><dd>Compare the plan’s explanation of benefits with the provider’s bill. Emergency care and some other situations have federal surprise-billing protections.</dd></dl>
+                <a class="reason-guide" href="/appeals/out-of-network-denial">Free guide to out-of-network denials&nbsp;→</a>
+              </div>
+            </details>
+            <details class="reason" name="reason">
+              <summary><span class="reason-phrase">…a preferred drug must be tried first.</span></summary>
+              <div class="reason-answer">
+                <dl><dt>What the plan is saying</dt><dd>This is step therapy: the plan wants a lower-cost drug tried before it covers yours.</dd><dt>What usually helps</dt><dd>A documented earlier failure, a medical reason you cannot take the alternative, or a risk from switching may support an exception. Your prescriber can usually request it.</dd></dl>
+                <a class="reason-guide" href="/appeals/step-therapy-denial">Free guide to step therapy denials&nbsp;→</a>
+              </div>
+            </details>
+            <details class="reason" name="reason">
+              <summary><span class="reason-phrase">…is experimental or investigational.</span></summary>
+              <div class="reason-answer">
+                <dl><dt>What the plan is saying</dt><dd>The plan applied its own definition and medical policy. The label is the plan’s decision, not a complete explanation.</dd><dt>What usually helps</dt><dd>Request the exact definition and policy it used. Then ask your treating clinician to answer that policy with evidence about your condition.</dd></dl>
+                <a class="reason-guide" href="/appeals/experimental-investigational-denial">Free guide to experimental treatment denials&nbsp;→</a>
+              </div>
+            </details>
+            <details class="reason" name="reason">
+              <summary><span class="reason-phrase">…was not an emergency.</span></summary>
+              <div class="reason-answer">
+                <dl><dt>What the plan is saying</dt><dd>The plan judged your emergency room visit by the final diagnosis.</dd><dt>What usually helps</dt><dd>Most U.S. coverage uses the prudent layperson standard: emergency care is judged by the symptoms you arrived with. The triage record shows them.</dd></dl>
+                <a class="reason-guide" href="/appeals/emergency-room-claim-denied">Free guide to emergency room denials&nbsp;→</a>
+              </div>
+            </details>
+            <details class="reason reason-unsure" name="reason">
+              <summary><span class="reason-phrase">None of these, or I can’t tell.</span></summary>
+              <div class="reason-answer">
+                <dl><dt>That is what the free summary is for</dt><dd>Upload the letter and it tells you what the plan decided, the likely appeal path, and what is missing.</dd></dl>
+                <a class="reason-guide" href="/codes/">Have a code like CO-50 instead? Look it up&nbsp;→</a>
+              </div>
+            </details>
+          </div>
+          <div class="reasons-foot">
+            <p>Your own letter holds the details that decide an appeal: the criterion, the deadline, the address.</p>
+            <button class="button button-primary" type="button" data-boot="/upload">See my free denial summary</button>
+            <a class="reasons-safe" href="#trust">What happens to my letter?</a>
+          </div>
+        </div>
+      </section>
+
       <!-- Three promises. Each row is a real heading and line beside its picture.
            With motion welcome on a wide screen, home.js pins one heading at a time
            and, as the next row arrives, the letters the two headings share fly
@@ -1822,6 +1653,18 @@
                   <div class="packet-item-copy"><h3>Deadline tracker + PDF</h3></div>
                 </li>
               </ul>
+              <!-- A page of each document, from the fictional sample packet. home.js
+                   turns the six names above into buttons and shows one page at a time;
+                   without it this stays hidden and the sample packet link does the job. -->
+              <div class="packet-peek" id="packet-peek" hidden>
+                <p class="peek-stamp">Sample page, fictional case</p>
+                <div class="peek-page" hidden><p>Example Health Plan denied Example Treatment at prior authorization. Its stated reason: two preferred alternatives must be tried first. Appeal route: an internal appeal, using the address and deadline printed on the notice.</p></div>
+                <div class="peek-page" hidden><p>Re: Request for reconsideration of prior-authorization denial</p><p>I am asking Example Health Plan to reconsider its denial of Example Treatment. The notice states that two preferred alternatives must be tried first. My prescribing clinician’s records should be reviewed because Alternative A was previously ineffective.</p></div>
+                <div class="peek-page" hidden><ul><li>Copy of the denial notice and appeal-rights page</li><li>Clinician statement addressing each stated requirement</li><li>Treatment-history records for Alternative A</li><li>Plan criteria or formulary page referenced by the denial</li></ul></div>
+                <div class="peek-page" hidden><p>Please confirm the requested treatment, explain why it is appropriate, address each alternative named by the plan, and identify the records supporting those statements. Please avoid adding facts that are not in the medical record.</p></div>
+                <div class="peek-page" hidden><ul><li>Confirm the exact appeal deadline, destination, and accepted submission methods.</li><li>Ask which plan criterion controlled the denial and request a copy.</li><li>Ask whether a peer-to-peer review is available without waiving formal appeal rights.</li><li>Record the representative’s name, call reference number, date, and time.</li></ul></div>
+                <div class="peek-page" hidden><ul><li>Denial-notice date: sample date</li><li>Deadline shown on notice: verify from your letter</li><li>Submitted: date, method, and confirmation number</li><li>Expected response: confirm directly with the plan</li></ul></div>
+              </div>
               <footer class="packet-manifest-footer"><span><strong>Plus:</strong> a follow-up plan</span></footer>
             </article>
           </div>
@@ -1933,17 +1776,20 @@
 
       <section class="section" id="trust" aria-labelledby="trust-title">
         <div class="wrap trust-grid">
-          <div>
+          <div class="trust-intro">
             <p class="eyebrow">Privacy and accountability</p>
-            <h2 id="trust-title">Who handles your documents.</h2>
+            <h2 id="trust-title">What happens to your letter.</h2>
             <p class="lede">A document drafting assistant. Not a law firm, clinic, insurer, or broker.</p>
-            <ul class="trust-list">
-              <li><span class="check" aria-hidden="true">✓</span><span><strong>Your documents are not used to train AI.</strong></span></li>
-              <li><span class="check" aria-hidden="true">✓</span><span><strong>You can delete your data</strong> from Settings.</span></li>
-              <li><span class="check" aria-hidden="true">✓</span><span><strong>No ad trackers</strong> or cookies.</span></li>
-              <li><span class="check" aria-hidden="true">✓</span><span><strong>Built to WCAG 2.2 AA.</strong></span></li>
-            </ul>
           </div>
+          <!-- A real sequence, so it is drawn as one: night at upload, morning
+               once the file is gone. Every line restates the Privacy Policy. -->
+          <ol class="journey">
+            <li><span class="journey-when">When you upload</span><strong>It travels and rests encrypted.</strong><span>Stored on Google Cloud in the United States.</span></li>
+            <li><span class="journey-when">While it is read</span><strong>It is not used to train AI.</strong><span>The text goes to OpenAI’s API with retention switched off for that request.</span></li>
+            <li><span class="journey-when">After 24 hours</span><strong>Guest files delete themselves.</strong><span>Normally a day after upload. What you choose to save is kept as the <a href="/privacy">Privacy Policy</a> describes.</span></li>
+            <li><span class="journey-when">Any time</span><strong>You can erase everything.</strong><span>Delete a case or your whole account in Settings.</span></li>
+          </ol>
+          <p class="trust-also">No ad trackers or cookies. Your card goes straight to Stripe and never reaches us. Built to WCAG 2.2 AA.</p>
           <details class="operator-card mobile-collapsible" aria-labelledby="operator-title" open>
             <summary class="operator-summary" id="operator-title">
               <span class="eyebrow">Service operator</span>

@@ -510,3 +510,76 @@ test.describe("continue your case", () => {
     }
   });
 });
+
+test.describe("find your sentence", () => {
+  test("each phrase opens its own answer, and every guide it points to exists", async ({ page, request }) => {
+    await page.goto("/");
+    const reasons = page.locator("details.reason");
+    await expect(reasons).toHaveCount(7);
+    // One answer at a time, whichever phrase is picked.
+    for (const index of [2, 5, 6]) {
+      await reasons.nth(index).locator("summary").click();
+      const open = await reasons.evaluateAll((all) => all.map((d) => d.open));
+      expect(open.filter(Boolean)).toHaveLength(1);
+      expect(open[index]).toBe(true);
+      await expect(reasons.nth(index).locator(".reason-answer")).toBeVisible();
+    }
+    const hrefs = await page.locator(".reason-guide").evaluateAll((links) => links.map((a) => a.getAttribute("href")));
+    expect(hrefs).toHaveLength(7);
+    for (const href of hrefs) expect((await request.get(href)).status(), href).toBe(200);
+    // The section's one action is the same upload button as everywhere else.
+    await expect(page.locator('.reasons-foot [data-boot="/upload"]')).toHaveText("See my free denial summary");
+  });
+
+  test("beside the letter on a wide screen, the answer sheet is never left empty", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/");
+    const first = page.locator("details.reason").first();
+    await first.locator("summary").click();
+    expect(await first.evaluate((d) => d.open)).toBe(true);
+    const fits = await page.evaluate(() => {
+      const desk = document.querySelector(".reasons-desk").getBoundingClientRect();
+      const answer = document.querySelector("details.reason[open] .reason-answer").getBoundingClientRect();
+      return answer.bottom <= desk.bottom + 1 && answer.left > desk.left + desk.width * 0.4;
+    });
+    expect(fits, "the open answer sits inside the right-hand sheet").toBe(true);
+  });
+
+  test("works without script as a plain list of answers", async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto("/");
+    await expect(page.locator("details.reason[open] .reason-answer")).toBeVisible();
+    // No dead controls in the case file either: names stay text, the pages stay hidden.
+    await expect(page.locator(".packet-pick")).toHaveCount(0);
+    await expect(page.locator("#packet-peek")).toBeHidden();
+    await context.close();
+  });
+});
+
+test("the case file shows a sample page of whichever document is picked", async ({ page }) => {
+  await page.goto("/");
+  const picks = page.locator(".packet-pick");
+  await expect(picks).toHaveCount(6);
+  await expect(page.locator(".peek-page:visible")).toHaveCount(1);
+  await picks.nth(4).click();
+  await expect(picks.nth(4)).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".peek-page:visible")).toHaveCount(1);
+  await expect(page.locator(".peek-page:visible")).toContainText("peer-to-peer");
+  await expect(page.locator(".peek-stamp")).toContainText("fictional");
+});
+
+test("the letter's journey states what the privacy policy states", async ({ page }) => {
+  await page.goto("/");
+  const steps = page.locator(".journey li");
+  await expect(steps).toHaveCount(4);
+  await expect(page.locator(".journey")).toContainText("not used to train AI");
+  await expect(page.locator(".journey")).toContainText("retention switched off");
+  await expect(page.locator('.journey a[href="/privacy"]')).toBeVisible();
+  // The policy must keep saying the same things the homepage promises.
+  await page.goto("/privacy");
+  const policy = await visibleText(page);
+  for (const fact of ["encrypted in transit", "retention disabled", "auto-delete after 24 hours", "United States"]) {
+    expect(policy, fact).toContain(fact);
+  }
+});

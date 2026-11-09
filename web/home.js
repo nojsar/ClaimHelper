@@ -581,3 +581,62 @@
     }
   }, { threshold: thresholds }).observe(video);
 })();
+
+/* Find your sentence: the denial-letter phrases are native <details> sharing
+   one name. This keeps exactly one answer open in browsers without exclusive
+   groups, and on a wide screen, where the answer lies on the sheet beside the
+   letter, keeps that sheet filled and the desk tall enough for it. */
+(function () {
+  var desk = document.querySelector('.reasons-desk');
+  if (!desk) return;
+  var items = Array.prototype.slice.call(desk.querySelectorAll('details.reason'));
+  var wide = window.matchMedia('(min-width: 900px)');
+  function fit() {
+    var answer = desk.querySelector('details.reason[open] .reason-answer');
+    desk.style.minHeight = wide.matches && answer ? answer.offsetHeight + 'px' : '';
+  }
+  items.forEach(function (item) {
+    item.addEventListener('toggle', function () {
+      if (item.open) items.forEach(function (other) { if (other !== item) other.open = false; });
+      fit();
+    });
+    item.querySelector('summary').addEventListener('click', function (event) {
+      if (wide.matches && item.open) event.preventDefault();
+    });
+  });
+  window.addEventListener('resize', fit, { passive: true });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+  fit();
+})();
+
+/* A page of each document: the six names in the case file become buttons, and
+   the sample page of the one picked shows below them. Built here, so without
+   script there are no dead controls, only the list and the sample packet link. */
+(function () {
+  var peek = document.getElementById('packet-peek');
+  if (!peek) return;
+  var rows = Array.prototype.slice.call(document.querySelectorAll('.packet-list .packet-item'));
+  var pages = Array.prototype.slice.call(peek.querySelectorAll('.peek-page'));
+  if (!rows.length || rows.length !== pages.length) return;
+  var buttons = rows.map(function (row, index) {
+    var title = row.querySelector('h3');
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'packet-pick';
+    button.setAttribute('aria-controls', 'packet-peek');
+    button.textContent = title.textContent;
+    title.textContent = '';
+    title.appendChild(button);
+    button.addEventListener('click', function () { pick(index); });
+    return button;
+  });
+  function pick(chosen) {
+    rows.forEach(function (row, index) {
+      row.classList.toggle('is-picked', index === chosen);
+      buttons[index].setAttribute('aria-pressed', index === chosen ? 'true' : 'false');
+      pages[index].hidden = index !== chosen;
+    });
+  }
+  peek.hidden = false;
+  pick(0);
+})();

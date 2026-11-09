@@ -6,6 +6,255 @@
    page's own CSS. */
 
 /* ==================================================================
+   Moved from the inline styles in index.html (2026-11-09) to keep the
+   page inside its 120 KB budget: forced colors, the app loader, and
+   every responsive override. They were the last rules of that inline
+   sheet and are the first rules here, so the cascade order is unchanged.
+   ================================================================== */
+@media (forced-colors: active) {
+  :where(a, button, summary):focus-visible { outline-color: Highlight; box-shadow: none; }
+  .button, .preview-card, .packet-shell, .packet-manifest, .packet-item, .price-card, .operator-card, .faq details, .resource-links a, .evidence-grid, .proof-slide, .proof-arrow { border: 1px solid CanvasText; }
+  .packet-check { color: CanvasText; background: Canvas; border-color: CanvasText; }
+  .brand-mark { forced-color-adjust: none; }
+}
+
+/* Effort expectation and the single-action hero. */
+.hero-sample { margin: 12px 0 0; font-size: 17px; }
+
+/* Deadline check: a one-field answer before anything is asked of the visitor. */
+.deadline-check {
+  margin: 22px 0 0;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--teal);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.deadline-check-label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.deadline-check-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.deadline-check-input {
+  flex: 1 1 190px;
+  min-height: 52px;
+  padding: 10px 14px;
+  border: 1px solid var(--control-border, var(--border-strong));
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 17px;
+}
+.deadline-check-input[aria-invalid="true"] { border-color: var(--error); }
+.deadline-check-button { flex: 0 0 auto; }
+.deadline-check-result {
+  margin: 14px 0 0;
+  font-size: 17px;
+  line-height: 1.6;
+}
+.deadline-check-result strong { display: block; font-size: 20px; }
+.deadline-check-result .caveat {
+  display: block;
+  margin-top: 6px;
+  color: var(--text-soft);
+  font-size: 16px;
+}
+
+/* =====================================================================
+   Redesign layer (redesign-skill + taste-skill, Redesign-Preserve).
+   Design read: trust-first consumer health site, calm editorial-document
+   language. Dials VARIANCE 4 / MOTION 3 / DENSITY 4.
+   Overrides sit here, after the rules they refine, so every locked rule
+   in trust_design_test stays byte-for-byte where it was.
+   ===================================================================== */
+:root {
+  /* Shape: one documented scale. Controls 10px, cards 14px, panels 20px,
+     chips pill. Nothing else. */
+  --radius-control: 10px;
+  --radius-card: 14px;
+  --radius-panel: 20px;
+  /* Elevation: tinted with the navy ink and lit from above. Never black. */
+  --shadow-1: 0 1px 2px rgba(16, 38, 59, 0.06), 0 4px 12px -4px rgba(16, 38, 59, 0.10);
+  --shadow-2: 0 1px 2px rgba(16, 38, 59, 0.05), 0 22px 44px -26px rgba(16, 38, 59, 0.38);
+}
+
+/* Typography: balanced headings, no orphaned last words, tighter display. */
+h1 { letter-spacing: -0.02em; }
+h3 { text-wrap: balance; }
+p, li, .lede { text-wrap: pretty; }
+.price, .rail-marker, .packet-cover-count strong { font-variant-numeric: tabular-nums; }
+
+/* Buttons feel physical: a 1px press, 200ms colour shifts. */
+.button { transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.12s ease; }
+.button:active { transform: translateY(1px); }
+
+/* Hero: one eyebrow, set as text rather than a pill. */
+.hero-badge {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+}
+.preview-card { box-shadow: var(--shadow-2); }
+
+/* Trust strip: four proofs in one band instead of two competing lists. */
+.reassurance-list {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-2);
+}
+.reassurance-list li { padding-inline: 18px; }
+
+/* Deadline band: the one-field answer gets its own section. */
+.deadline-band { padding-block: clamp(96px, 9vw, 124px) clamp(56px, 6vw, 80px); }
+.deadline-band-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: clamp(28px, 5vw, 72px);
+  align-items: start;
+}
+.deadline-band-copy h2 { font-size: clamp(30px, 3.2vw, 40px); }
+.deadline-band-copy p { margin-top: 12px; max-width: 44ch; color: var(--text-soft); }
+.deadline-band .deadline-check {
+  margin: 0;
+  padding: clamp(20px, 2.4vw, 28px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+.deadline-band .deadline-check-input { border-radius: var(--radius-control); }
+
+/* Section headings: the teal bar repeated on six sections was the page's
+   one repeated motif. The headline now stands on its own. */
+.section-heading { padding-inline-start: 0; border-inline-start: 0; }
+
+/* How it works: a rail, not three identical cards. Same marker and line
+   language as the journey map on the guides, so the site reads as one system. */
+.steps-rail {
+  --rail-gap: clamp(28px, 4vw, 56px);
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: var(--rail-gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rail-step { position: relative; }
+.rail-marker {
+  position: relative;
+  z-index: 1;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--teal);
+  color: #FFFFFF;
+  font-weight: 700;
+}
+.rail-step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 21px;
+  left: 58px;
+  right: calc(14px - var(--rail-gap));
+  height: 2px;
+  background: var(--border-strong);
+}
+.rail-step h3 { margin-top: 22px; }
+.rail-step p { margin-top: 8px; max-width: 32ch; color: var(--text-soft); font-size: 17px; }
+
+/* Packet: rows fill the panel instead of leaving a dead band at the foot. */
+.packet-shell { box-shadow: var(--shadow-2); }
+.packet-manifest { display: flex; flex-direction: column; }
+.packet-list { flex: 1; grid-auto-rows: 1fr; }
+.packet-item { min-height: 0; grid-template-columns: 32px minmax(0, 1fr); }
+
+/* Proof: one light theme for the page. The closing band stays the single
+   deliberate dark block. */
+.proof-section { background: var(--surface-soft); color: var(--text); }
+.proof-copy .eyebrow { color: var(--teal-dark); }
+.proof-copy h2 { color: var(--navy-dark); }
+.proof-copy .lede { color: var(--text-soft); }
+.proof-promise {
+  border-inline-start-color: var(--teal);
+  background: var(--surface);
+  color: var(--text);
+}
+.proof-viewport { border-radius: var(--radius-panel); box-shadow: var(--shadow-2); }
+.proof-slide { min-height: 0; }
+.proof-arrow { border-color: var(--navy); background: var(--surface); color: var(--navy); }
+.proof-arrow:hover { border-color: var(--navy); background: var(--navy); color: #FFFFFF; }
+.proof-status { color: var(--text-soft); }
+
+/* Pricing: alternate background with its neighbours, and keep the label on
+   one line at desktop. */
+.section-blue { background: var(--background); }
+.price-card { border-radius: var(--radius-card); }
+.price-card .button { padding-inline: 12px; font-size: 17px; }
+@media (max-width: 1120px) {
+  .price-grid { grid-template-columns: 1fr; }
+  .price-card { max-width: 700px; }
+}
+
+/* Footer: headings no longer sit on top of their first link. */
+.footer-grid h2 { margin-bottom: 12px; }
+
+/* Second pass, from looking at the render rather than the code. */
+/* Hero copy sits at the top of its column instead of floating ~210px below
+   the nav while the taller example card sets the row height. */
+.hero-grid { align-items: start; }
+.hero-copy { padding-top: clamp(8px, 2vw, 28px); }
+.preview-card-foot { flex-wrap: wrap; row-gap: 6px; }
+.preview-card-foot a { white-space: nowrap; }
+/* Trust strip titles share one top line even when a subline wraps. */
+.reassurance-list li { justify-content: flex-start; }
+/* Packet rows: spare height is shared above and below, not pooled under. */
+.packet-item { align-content: center; }
+/* Proof: give the headline room so it is not a four-line column. */
+/* Scoped to desktop: unscoped, these beat the earlier mobile rules and left
+   the proof section two columns wide on a 320px phone. */
+@media (min-width: 981px) {
+  .proof-layout { grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); }
+  .proof-copy { max-width: 500px; }
+  .packet-shell { grid-template-columns: minmax(330px, 0.85fr) minmax(0, 1.15fr); }
+}
+/* The carousel status may wrap; the arrows must never be pushed off-screen. */
+.proof-controls { grid-template-columns: 54px minmax(0, 1fr) 54px; }
+/* Full Case: the subline sits under the price like the other two tiers. */
+/* The Full Case tier puts its price lines in <span>s inside a <summary>, so they
+   flowed inline; the other tiers use blocks. Match them. */
+.optional-price-summary .price-label,
+.optional-price-summary .price,
+.optional-price-summary .price-sub { display: block; }
+@media (max-width: 980px) {
+  .reassurance-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .reassurance-list li { border-right: 0; border-bottom: 1px solid var(--border); }
+  .reassurance-list li:nth-child(odd) { border-right: 1px solid var(--border); }
+  .reassurance-list li:last-child { grid-column: auto; }
+  .reassurance-list li:nth-last-child(-n + 2) { border-bottom: 0; }
+  .deadline-band-inner { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .steps-rail { grid-template-columns: 1fr; row-gap: 30px; }
+  .rail-step { padding-left: 64px; }
+  .rail-marker { position: absolute; top: 0; left: 0; }
+  .rail-step h3 { margin-top: 9px; }
+  .rail-step:not(:last-child)::after { top: 50px; bottom: -26px; left: 21px; right: auto; width: 2px; height: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .button { transition: none; }
+}
+
+  
+
+
+/* ==================================================================
    Apple design layer: Human Interface Guidelines, applied to the web
    (apple-design skill: liquid-glass.md, dark-mode.md, color.md,
    accessibility.md, typography.md, writing.md).
@@ -1498,4 +1747,262 @@ html.motion-paused .usp-orn { animation-play-state: paused; }
   .postmark::after { font-size: 7.5px; letter-spacing: 0.1em; }
   .post-stamp { z-index: 0; }
   .proof-slide-kicker { padding-right: 116px; }
+}
+
+/* ==================================================================
+   Find your sentence (2026-11-09). A denial letter on the left, set in
+   the serif a letter is set in; the sentence a visitor picks takes the
+   highlighter, and its plain-English answer opens on the mint sheet
+   beside it (under it on a phone). Native <details>, so it reads and
+   works without script. The highlight is a pseudo-element, never the
+   text's own background, so contrast checks see the real surface.
+   ================================================================== */
+.reasons { position: relative; padding-block: clamp(84px, 9vw, 132px) clamp(28px, 4vw, 56px); }
+.reasons-head { max-width: 42rem; margin-bottom: clamp(26px, 3.6vw, 44px); }
+.reasons-head p { margin-top: 14px; color: var(--text-soft); font-size: clamp(18px, 1.7vw, 21px); line-height: 1.55; }
+.reasons-desk {
+  --hl: #CBEBE2;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-panel);
+  background: var(--surface);
+  box-shadow: var(--shadow-2);
+}
+.reasons-letterhead {
+  margin: 0;
+  padding: 15px clamp(18px, 2.4vw, 28px) 13px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+}
+.reason { border-bottom: 1px solid var(--border); }
+.reason:last-of-type { border-bottom: 0; }
+.reason summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 66px;
+  padding: 14px clamp(18px, 2.4vw, 28px);
+  color: var(--text);
+  font-family: var(--serif);
+  font-size: clamp(19px, 1.9vw, 23px);
+  line-height: 1.3;
+  list-style: none;
+  cursor: pointer;
+}
+.reason summary::-webkit-details-marker { display: none; }
+.reason summary::after {
+  content: "";
+  flex: none;
+  width: 9px;
+  height: 9px;
+  margin-left: auto;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: translateY(-3px) rotate(45deg);
+}
+.reason[open] summary::after { transform: translateY(2px) rotate(-135deg); }
+.reason-phrase { position: relative; z-index: 0; display: inline-block; }
+.reason-phrase::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -1px -7px -2px;
+  border-radius: 5px 9px 6px 8px;
+  background: var(--hl);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+.reason summary:hover .reason-phrase::before { transform: scaleX(1); opacity: 0.45; }
+.reason[open] .reason-phrase::before { transform: scaleX(1); opacity: 1; }
+.reason-unsure summary { color: var(--text-soft); font-family: var(--sans); font-size: 17px; font-weight: 600; }
+.reason[open] summary { background: var(--surface-soft); }
+.reason-answer { padding: 2px clamp(18px, 2.4vw, 28px) 22px; background: var(--surface-soft); }
+.reason-answer dl { margin: 0; }
+.reason-answer dt { padding-top: 16px; color: var(--teal-dark); font-size: 15px; font-weight: 700; }
+.reason-answer dd { max-width: 34em; margin: 4px 0 0; color: var(--text); font-size: 17px; line-height: 1.6; }
+.reason-guide { display: inline-block; margin-top: 6px; padding-block: 11px; color: var(--navy); font-size: 16px; font-weight: 700; line-height: 1.4; }
+.reasons-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 28px;
+  margin-top: clamp(22px, 3vw, 34px);
+}
+.reasons-foot p { flex: 1 1 22rem; max-width: 34rem; color: var(--text-soft); font-size: 17px; line-height: 1.55; }
+.reasons-safe { display: inline-flex; align-items: center; min-height: 44px; color: var(--navy); font-size: 16px; font-weight: 600; }
+
+@media (min-width: 900px) {
+  /* Letter left, answer right: one desk, two sheets. */
+  .reasons-desk { min-height: 31rem; }
+  .reasons-desk::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0 0 0 46%;
+    border-left: 1px solid var(--border);
+    background: var(--surface-soft);
+  }
+  .reasons-letterhead, .reason { width: 46%; }
+  .reason summary::after { display: none; }
+  .reason[open] summary { position: relative; margin-right: -1px; }
+  .reason-answer {
+    position: absolute;
+    top: 0;
+    left: 46%;
+    right: 0;
+    padding: clamp(30px, 3.4vw, 46px) clamp(30px, 3.6vw, 52px);
+    background: none;
+  }
+  .reason-answer::before {
+    content: "In plain English";
+    display: block;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 12.5px;
+    letter-spacing: 0.06em;
+  }
+  .reason-answer dt { padding-top: 22px; }
+  .reason-answer dd { font-size: 18px; }
+  .reason-answer dd:first-of-type { color: var(--navy-dark); font-family: var(--serif); font-size: clamp(22px, 2vw, 26px); line-height: 1.35; }
+  .reason-guide { margin-top: 12px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .reason-phrase::before { transition: transform 0.36s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.2s; }
+  .reason summary::after { transition: transform 0.2s; }
+}
+@media (prefers-color-scheme: dark) {
+  .reasons-desk { --hl: #24504A; }
+}
+@media (forced-colors: active) {
+  .reason[open] summary { outline: 2px solid Highlight; outline-offset: -2px; }
+}
+
+/* ==================================================================
+   What happens to your letter (2026-11-09). A real sequence, drawn as
+   one: the line runs from night at upload to morning once the file is
+   gone, the page's own dawn. Decoration lives in pseudo-elements; the
+   text sits on the page colour.
+   ================================================================== */
+.journey {
+  --j1: #17324D;
+  --j2: #4D5384;
+  --j3: #C48A86;
+  --j4: #EDB563;
+  position: relative;
+  display: grid;
+  gap: 26px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.journey::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 9px;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--j1), var(--j2) 38%, var(--j3) 72%, var(--j4));
+}
+.journey li { position: relative; display: grid; gap: 5px; align-content: start; padding-left: 40px; }
+.journey li::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 0;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--j1);
+  border-radius: 50%;
+  background: var(--paper, var(--background));
+}
+.journey li:nth-child(2)::before { border-color: var(--j2); }
+.journey li:nth-child(3)::before { border-color: var(--j3); }
+.journey li:nth-child(4)::before { border-color: var(--j4); background: var(--j4); box-shadow: 0 0 0 6px rgba(237, 181, 99, 0.22), 0 0 22px 4px rgba(237, 181, 99, 0.35); }
+.journey-when { color: var(--muted); font-family: var(--mono); font-size: 13px; letter-spacing: 0.02em; }
+.journey strong { color: var(--navy-dark); font-family: var(--serif); font-size: clamp(21px, 1.9vw, 24px); font-weight: 700; line-height: 1.25; }
+.journey li > span:last-child { color: var(--text-soft); font-size: 16px; line-height: 1.55; }
+.trust-also { margin: 0; padding-top: 18px; border-top: 1px solid var(--border); color: var(--text-soft); font-size: 16px; line-height: 1.6; }
+.trust-grid > .journey, .trust-grid > .trust-also, .trust-grid > .trust-intro { min-width: 0; }
+@media (min-width: 981px) {
+  /* The sequence reads down the left column, beside who runs the service. */
+  .trust-grid { row-gap: clamp(26px, 3vw, 40px); }
+  .trust-grid > .trust-intro { grid-column: 1; grid-row: 1; }
+  .trust-grid > .journey { grid-column: 1; grid-row: 2; max-width: 31rem; }
+  .trust-grid > .operator-card { grid-column: 2; grid-row: 1 / span 2; align-self: start; }
+  .trust-grid > .trust-also { grid-column: 1 / -1; grid-row: 3; }
+  .journey { gap: 30px; }
+}
+@media (prefers-color-scheme: dark) {
+  .journey { --j1: #6E90B4; --j2: #8A8FCB; }
+}
+
+/* ==================================================================
+   A page of each document (2026-11-09). The six names in the case file
+   become buttons (home.js) and the page of the one picked lies below
+   them: real text from the fictional sample packet, on letter paper.
+   Without script the names stay plain and this block stays hidden.
+   ================================================================== */
+.packet-item { position: relative; }
+.packet-pick {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+/* The whole row is the target, not just the words. */
+.packet-pick::after { content: ""; position: absolute; inset: 0; }
+.packet-item.is-picked { background: var(--surface-soft); }
+.packet-item.is-picked h3 { text-decoration: underline; text-decoration-color: var(--teal); text-decoration-thickness: 2px; text-underline-offset: 5px; }
+.packet-item:not(.is-picked):hover { background: color-mix(in srgb, var(--surface-soft) 55%, transparent); }
+.packet-peek {
+  position: relative;
+  padding: 22px clamp(18px, 2.6vw, 30px) 26px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+.peek-stamp {
+  display: inline-block;
+  margin: 0 0 12px;
+  padding: 3px 9px;
+  border: 1.5px solid var(--teal);
+  border-radius: 5px;
+  color: var(--teal-dark);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  transform: rotate(-1.5deg);
+}
+.peek-page { min-height: 9.5em; color: var(--text); font-family: var(--serif); font-size: 18px; line-height: 1.6; }
+.peek-page p { max-width: 36em; }
+.peek-page p + p { margin-top: 10px; }
+.peek-page ul { margin: 0; padding: 0; list-style: none; }
+.peek-page li { position: relative; max-width: 36em; padding: 5px 0 5px 30px; border-bottom: 1px solid var(--border); }
+.peek-page li:last-child { border-bottom: 0; }
+.peek-page li::before {
+  content: "";
+  position: absolute;
+  top: 0.62em;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 3px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .peek-page:not([hidden]) { animation: peek-in 0.28s cubic-bezier(0.2, 0.7, 0.2, 1); }
+  @keyframes peek-in { from { transform: translateY(8px); } }
+}
+@media (max-width: 560px) {
+  .peek-page { font-size: 17px; }
 }
