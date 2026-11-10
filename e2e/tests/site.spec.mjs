@@ -583,3 +583,24 @@ test("the letter's journey states what the privacy policy states", async ({ page
     expect(policy, fact).toContain(fact);
   }
 });
+
+test("the first screen offers the letter's own words, and a phrase opens its answer", async ({ page }) => {
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/");
+    // The source folder still carries Flutter's base placeholder; the build has "/".
+    await page.evaluate(() => {
+      const base = document.querySelector("base");
+      if (base && base.getAttribute("href").startsWith("$")) base.setAttribute("href", "/");
+    });
+    const strip = await page.locator(".hero-says").boundingBox();
+    expect(strip.y + strip.height, `picker below the fold at ${viewport.width}px`).toBeLessThanOrEqual(viewport.height);
+    const cta = await page.locator(".hero-actions .button-primary").boundingBox();
+    expect(cta.y, "the upload button stays first").toBeLessThan(strip.y);
+    await page.locator('.hero-says a[data-reason="1"]').click();
+    const second = page.locator("details.reason").nth(1);
+    await expect(second).toHaveAttribute("open", "");
+    await expect(second.locator(".reason-answer")).toBeInViewport();
+    await expect(page.locator("details.reason[open]")).toHaveCount(1);
+  }
+});

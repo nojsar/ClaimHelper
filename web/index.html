@@ -1265,6 +1265,7 @@
           <summary>Menu</summary>
           <nav class="mobile-menu-panel" aria-label="Mobile page navigation">
             <button type="button" class="mobile-case-button" data-boot="/upload">Free denial summary</button>
+            <a href="#reasons">What your letter says</a>
             <a href="#how-it-works">How it works</a>
             <a href="#included">What you get</a>
             <a href="#pricing">Pricing</a>
@@ -1361,6 +1362,18 @@
               <button type="button" class="button button-primary" data-boot="/upload" aria-describedby="hero-trust">See my free denial summary</button>
             </div>
             <p class="hero-sample"><a href="/sample-packet">See a sample first</a></p>
+            <!-- The sentence picker, reachable from the first screen: each phrase
+                 opens its answer in #reasons (home.js); without script they are
+                 plain links to that section. -->
+            <div class="hero-says">
+              <p>Or start with the words in your letter</p>
+              <ul>
+                <li><a href="#reasons" data-reason="0">“not medically necessary”</a></li>
+                <li><a href="#reasons" data-reason="1">“prior authorization”</a></li>
+                <li><a href="#reasons" data-reason="2">“out of network”</a></li>
+                <li><a href="#reasons" data-reason="6">something else</a></li>
+              </ul>
+            </div>
             <p class="hero-note" id="hero-trust"><strong>Preview $0; no credit card required.</strong> Full packet $5 or Full Case $20, one-time. Create an account only if you purchase. U.S. health plans only.</p>
           </div>
 

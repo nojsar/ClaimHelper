@@ -604,6 +604,14 @@
       if (wide.matches && item.open) event.preventDefault();
     });
   });
+  // The phrases on the first screen open their answer before the page
+  // scrolls to it; the link itself does the scrolling.
+  Array.prototype.forEach.call(document.querySelectorAll('a[data-reason]'), function (link) {
+    link.addEventListener('click', function () {
+      var target = items[Number(link.getAttribute('data-reason'))];
+      if (target) target.open = true;
+    });
+  });
   window.addEventListener('resize', fit, { passive: true });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
   fit();
